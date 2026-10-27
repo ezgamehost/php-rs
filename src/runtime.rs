@@ -18,6 +18,7 @@ mod constants;
 mod destructuring;
 mod function_arguments;
 mod functions;
+mod inheritance;
 mod jumps;
 mod loading;
 mod matching;
@@ -43,7 +44,7 @@ pub struct Runtime {
     current_function: Option<Vec<u8>>,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
-    classes: HashMap<Vec<u8>, Rc<crate::ast::ClassDecl>>,
+    classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
     strict_types: bool,
@@ -522,6 +523,9 @@ impl Runtime {
                 self.output
                     .extend(string_bytes(&value, line, &mut self.warnings)?);
                 Ok(Value::Int(1))
+            }
+            ExprKind::Binary(op, value, class) if op == "instanceof" => {
+                self.instance_of(value, class, line)
             }
             ExprKind::New(class, args) => self.new_object(class, args, line),
             ExprKind::Property(base, name) => {

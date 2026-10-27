@@ -1,9 +1,12 @@
-use crate::{PhpArray, ast::ClassDecl};
+use crate::{
+    PhpArray,
+    ast::{ClassDecl, Expr, FunctionDecl},
+};
 use std::{cell::RefCell, rc::Rc};
 
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
-    pub(crate) class: Rc<ClassDecl>,
+    pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,
     pub(crate) properties: RefCell<PhpArray>,
     pub(crate) object_id: usize,
@@ -37,5 +40,32 @@ impl std::fmt::Debug for PhpObject {
             .field("class", &self.class_name)
             .field("id", &self.object_id)
             .finish_non_exhaustive()
+    }
+}
+
+/// Linked class layout. Inherited methods retain their declaring function identity.
+#[derive(Debug)]
+pub(crate) struct Class {
+    pub declaration: Rc<ClassDecl>,
+    pub name: Vec<u8>,
+    pub parent: Option<Rc<Class>>,
+    pub properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub methods: Vec<Rc<FunctionDecl>>,
+    pub allow_dynamic: bool,
+}
+impl Class {
+    pub fn is_a(&self, name: &[u8]) -> bool {
+        let name = name.strip_prefix(b"\\").unwrap_or(name);
+        self.name.eq_ignore_ascii_case(name) || self.parent.as_ref().is_some_and(|p| p.is_a(name))
+    }
+    pub fn method_is_final(&self, name: &[u8]) -> bool {
+        self.declaration
+            .final_methods
+            .iter()
+            .any(|n| n.eq_ignore_ascii_case(name))
+            || self
+                .parent
+                .as_ref()
+                .is_some_and(|p| p.method_is_final(name))
     }
 }

@@ -134,7 +134,11 @@ impl Parser {
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
         if self.eat("class") {
-            return self.class_declaration();
+            return self.class_declaration(false);
+        }
+        if self.eat("final") {
+            self.expect("class")?;
+            return self.class_declaration(true);
         }
         let line = self.token().line;
         if self.eat("goto") {
@@ -852,7 +856,8 @@ impl Parser {
                 ExprKind::Group(Box::new(expr))
             }
             Kind::Symbol(op) if ["+", "-", "!", "~"].contains(&op.as_str()) => {
-                ExprKind::Unary(op, Box::new(self.expr(20)?))
+                let power = if op == "!" { 19 } else { 20 };
+                ExprKind::Unary(op, Box::new(self.expr(power)?))
             }
             Kind::Symbol(op) if op == "++" || op == "--" => {
                 let expr = self.expr(22)?;
@@ -968,7 +973,11 @@ impl Parser {
                 ));
             }
             self.pos += 1;
-            let rhs = self.expr(if right { power } else { power + 1 })?;
+            let rhs = if op == "instanceof" {
+                self.instanceof_target()?
+            } else {
+                self.expr(if right { power } else { power + 1 })?
+            };
             if op == "|>" && matches!(&rhs.kind, ExprKind::Lambda(lambda) if lambda.arrow) {
                 return Err(Error::parse(
                     "Arrow functions on the right hand side of |> must be parenthesized",
@@ -1010,6 +1019,7 @@ fn binding_power(op: &str) -> Option<(u8, bool)> {
         "<<" | ">>" => (16, false),
         "+" | "-" => (17, false),
         "*" | "/" | "%" => (18, false),
+        "instanceof" => (19, false),
         "**" => (21, true),
         _ => return None,
     })

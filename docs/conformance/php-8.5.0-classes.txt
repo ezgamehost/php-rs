@@ -6,7 +6,7 @@ Reference: PHP 8.5 (/privatesapi/cli/php)
 tests/classes/__call_001.phpt FAIL: Error: Call to undefined method Caller::test() on line 14
 tests/classes/__call_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/__call_003.phpt FAIL: ParseError: Expected expression on line 13
-tests/classes/__call_004.phpt FAIL: ParseError: Expected '{' on line 9
+tests/classes/__call_004.phpt FAIL: ParseError: Expected expression on line 16
 tests/classes/__call_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/__call_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_001.phpt UNSUPPORTED: EXPECTF
@@ -47,7 +47,7 @@ tests/classes/autoload_003.phpt UNSUPPORTED: SKIPIF
 tests/classes/autoload_004.phpt UNSUPPORTED: SKIPIF
 tests/classes/autoload_005.phpt UNSUPPORTED: EXPECTF, SKIPIF
 tests/classes/autoload_006.phpt UNSUPPORTED: EXPECTF, SKIPIF
-tests/classes/autoload_007.phpt FAIL: ParseError: Expected ')' on line 8
+tests/classes/autoload_007.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
 tests/classes/autoload_008.phpt FAIL: ParseError: Expected ';' on line 9
 tests/classes/autoload_009.phpt UNSUPPORTED: EXPECTF
 tests/classes/autoload_010.phpt UNSUPPORTED: EXPECTF
@@ -62,7 +62,7 @@ tests/classes/autoload_018.phpt FAIL: Error: Call to undefined function spl_auto
 tests/classes/autoload_019.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
 tests/classes/autoload_020.phpt UNSUPPORTED: EXPECTF
 tests/classes/autoload_021.phpt UNSUPPORTED: EXPECTF
-tests/classes/bug23951.phpt FAIL: ParseError: Expected '{' on line 12
+tests/classes/bug23951.phpt FAIL: Error: Call to undefined function print_r() on line 21
 tests/classes/bug24399.phpt FAIL: Error: Call to undefined function is_subclass_of() on line 6
 tests/classes/bug24445.phpt FAIL: Error: Call to undefined function get_parent_class() on line 3
 tests/classes/bug26737.phpt UNSUPPORTED: EXPECTF
@@ -108,7 +108,7 @@ tests/classes/constants_visibility_error_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_dtor.phpt FAIL: Expected "early::__construct\nearly::__construct\nearly::__destruct\nlate::__construct\nDone\nlate::__destruct\n", got "early::__construct\nearly::__construct\nlate::__construct\nDone\n"
-tests/classes/ctor_dtor_inheritance.phpt FAIL: ParseError: Expected '{' on line 23
+tests/classes/ctor_dtor_inheritance.phpt FAIL: ParseError: Expected expression on line 30
 tests/classes/ctor_failure.phpt FAIL: ParseError: Expected ';' on line 7
 tests/classes/ctor_in_interface_01.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_in_interface_02.phpt UNSUPPORTED: EXPECTF
@@ -120,7 +120,7 @@ tests/classes/destructor_and_echo.phpt FAIL: Expected "Test::__construct\n===DON
 tests/classes/destructor_and_exceptions.phpt FAIL: ParseError: Expected ';' on line 10
 tests/classes/destructor_and_globals.phpt FAIL: ParseError: Expected public property or method on line 11
 tests/classes/destructor_and_references.phpt FAIL: ParseError: Expected expression on line 13
-tests/classes/destructor_inheritance.phpt FAIL: ParseError: Expected '{' on line 12
+tests/classes/destructor_inheritance.phpt FAIL: Expected "base::__construct\nbase::__destruct\nDone\n", got "base::__construct\nDone"
 tests/classes/destructor_visibility_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/destructor_visibility_002.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/destructor_visibility_003.phpt FAIL: ParseError: Expected public property or method on line 4
@@ -135,7 +135,7 @@ tests/classes/factory_and_singleton_007.phpt FAIL: ParseError: Expected public p
 tests/classes/factory_and_singleton_008.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/factory_and_singleton_009.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/factory_and_singleton_010.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/final.phpt FAIL: ParseError: Expected '{' on line 12
+tests/classes/final.phpt PASS
 tests/classes/final_abstract.phpt UNSUPPORTED: EXPECTF
 tests/classes/final_ctor1.phpt UNSUPPORTED: EXPECTF
 tests/classes/final_private_ctor.phpt UNSUPPORTED: EXPECTF
@@ -144,7 +144,7 @@ tests/classes/incdec_property_001.phpt FAIL: ParseError: Expected public propert
 tests/classes/incdec_property_002.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/incdec_property_003.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/incdec_property_004.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/inheritance.phpt FAIL: ParseError: Expected '{' on line 18
+tests/classes/inheritance.phpt PASS
 tests/classes/inheritance_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/inheritance_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/inheritance_006.phpt UNSUPPORTED: EXPECTF
@@ -232,7 +232,7 @@ tests/classes/property_override_public_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_public_privateStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_public_protected.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_public_protectedStatic.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_public_public.phpt FAIL: ParseError: Expected '{' on line 11
+tests/classes/property_override_public_public.phpt PASS
 tests/classes/property_override_public_publicStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_recreate_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_recreate_protected.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt FAIL: ParseError: Expected public property or
 tests/classes/visibility_004b.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_004c.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_005.phpt FAIL: ParseError: Expected public property or method on line 7
-6 passed, 119 failed, 158 unsupported
+9 passed, 116 failed, 158 unsupported

@@ -57,6 +57,12 @@ new request. The CLI returns the low eight bits of the requested status.
   iteration. Instance methods bind `$this`, support named/typed arguments, and
   expose bound first-class callables. Non-static closures retain `$this`.
   Method-array callbacks and invokable objects work with pipes and array callbacks.
+- Public class inheritance with inherited constructors/properties/methods,
+  virtual dispatch, shared inherited method statics, and `final` classes/methods.
+  Overrides validate arity, variadic parameters, parameter contravariance, and
+  return covariance for implemented types. Class types accept descendants.
+  `instanceof` supports named/dynamic class operands and skips dynamic operands
+  for non-object values. Class linking preserves forward-declaration timing.
 - Object identity and property comparisons, recursive comparison errors,
   recursive-safe object dumps, object-to-array casts, and explicit-object
   `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and
@@ -110,9 +116,9 @@ new request. The CLI returns the low eight bits of the requested status.
 
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
-The object implementation is a foundation: inheritance, interfaces, traits,
+The object implementation is a foundation: interfaces, traits,
 visibility modifiers other than public, typed/static/readonly properties, hooks,
-class constants, static calls, `self`/`parent` resolution, `instanceof`, cloning,
+class constants, static calls, `self`/`parent` resolution, cloning,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.

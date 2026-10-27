@@ -63,7 +63,10 @@ definition of completion.
 4. **Objects and execution semantics (instance foundation started):** public
    classes, constructors, instance properties and methods, bound `$this` and
    method callables, invokable objects, basic property iteration, comparisons,
-   array casts, and object inspection implemented. Remaining: inheritance, interfaces, traits,
+   array casts, and object inspection implemented. Public inheritance, `final`
+   restrictions, compatible method overrides, descendant type checks, and
+   `instanceof` implemented. Remaining: interfaces, traits, abstract members,
+   parent/static calls, context-dependent class types,
    visibility, properties and hooks, magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,

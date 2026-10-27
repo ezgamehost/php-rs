@@ -231,7 +231,9 @@ fn constant(expr: &Expr) -> Option<Value> {
                 eligible(value) && !(op == "!" && matches!(constant(value), Some(Value::Float(_))))
             }
             ExprKind::Binary(op, left, right) => {
-                !matches!(op.as_str(), "??" | "|>") && eligible(left) && eligible(right)
+                !matches!(op.as_str(), "??" | "|>" | "instanceof")
+                    && eligible(left)
+                    && eligible(right)
             }
             ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 elements.iter().all(|element| match element {

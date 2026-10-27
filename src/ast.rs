@@ -129,6 +129,9 @@ impl Expr {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ClassDecl {
+    pub parent: Option<Vec<u8>>,
+    pub is_final: bool,
+    pub final_methods: Vec<Vec<u8>>,
     pub name: Vec<u8>,
     pub properties: Vec<(Vec<u8>, Option<Expr>)>,
     pub methods: Vec<Rc<FunctionDecl>>,
@@ -182,11 +185,7 @@ impl TypeDecl {
         self.contains("mixed")
             || self.members.iter().any(|member| {
                 if let Value::Object(object) = value
-                    && (member == "object"
-                        || member
-                            .trim_start_matches('\\')
-                            .as_bytes()
-                            .eq_ignore_ascii_case(&object.class.name))
+                    && (member == "object" || object.class.is_a(member.as_bytes()))
                 {
                     return true;
                 }
@@ -242,7 +241,7 @@ impl Expr {
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
             ExprKind::Cast(kind, e) => *kind != CastKind::Void && e.is_constant_expression(),
-            ExprKind::Binary(op, _, _) if op == "|>" => false,
+            ExprKind::Binary(op, _, _) if matches!(op.as_str(), "|>" | "instanceof") => false,
             ExprKind::Index(a, Some(b)) | ExprKind::Binary(_, a, b) => {
                 a.is_constant_expression() && b.is_constant_expression()
             }

@@ -2,52 +2,178 @@ use super::*;
 use crate::{
     PhpObject,
     ast::{Argument, ClassDecl},
+    object::Class,
     runtime::functions::CallTarget,
 };
 
 impl Runtime {
     pub(super) fn prepare_classes(&mut self, statements: &mut [Stmt]) -> Result<(), Error> {
+        let mut linked = Vec::new();
+        // Early binding follows declaration order. An inherited class whose
+        // parent is not linked yet stays as a runtime declaration.
+        self.link_available_classes(statements, &mut linked)?;
+        for class in linked {
+            self.validate_overrides(&class)?;
+        }
+        Ok(())
+    }
+    fn link_available_classes(
+        &mut self,
+        statements: &mut [Stmt],
+        linked: &mut Vec<Rc<Class>>,
+    ) -> Result<(), Error> {
         for statement in statements {
             match statement {
-                Stmt::Class(class) => {
-                    self.register_class(class.clone())?;
+                Stmt::Class(decl)
+                    if decl
+                        .parent
+                        .as_ref()
+                        .is_none_or(|name| self.find_class(name).is_some()) =>
+                {
+                    let class = self.link_class(decl.clone())?;
+                    self.classes
+                        .insert(class.name.to_ascii_lowercase(), class.clone());
+                    linked.push(class);
                     *statement = Stmt::Block(Vec::new());
                 }
-                Stmt::Block(body) => self.prepare_classes(body)?,
+                Stmt::Block(body) => self.link_available_classes(body, linked)?,
                 _ => {}
             }
         }
         Ok(())
     }
-    pub(super) fn register_class(&mut self, class: Rc<ClassDecl>) -> Result<(), Error> {
-        let name = class.name.to_ascii_lowercase();
+    pub(super) fn register_class(&mut self, decl: Rc<ClassDecl>) -> Result<(), Error> {
+        let class = self.link_class(decl)?;
+        self.validate_overrides(&class)?;
+        self.classes.insert(class.name.to_ascii_lowercase(), class);
+        Ok(())
+    }
+    fn link_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
+        let name = decl.name.to_ascii_lowercase();
         if self.classes.contains_key(&name) || name == b"stdclass" || name == b"closure" {
             return Err(Error::new(
                 ErrorKind::Error,
                 format!(
                     "Cannot declare class {}, because the name is already in use",
-                    String::from_utf8_lossy(&class.name)
+                    String::from_utf8_lossy(&decl.name)
                 ),
-                class.line,
+                decl.line,
             ));
         }
-        self.classes.insert(name, class);
-        Ok(())
+        let parent = if let Some(name) = &decl.parent {
+            Some(self.find_class(name).ok_or_else(|| {
+                Error::new(
+                    ErrorKind::Error,
+                    format!("Class \"{}\" not found", String::from_utf8_lossy(name)),
+                    decl.line,
+                )
+            })?)
+        } else {
+            None
+        };
+        if parent.as_ref().is_some_and(|p| p.declaration.is_final) {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Class {} cannot extend final class {}",
+                    String::from_utf8_lossy(&decl.name),
+                    String::from_utf8_lossy(&parent.as_ref().unwrap().name)
+                ),
+                decl.line,
+            ));
+        }
+        let mut properties = parent
+            .as_ref()
+            .map_or_else(Vec::new, |p| p.properties.clone());
+        for property in &decl.properties {
+            if let Some(slot) = properties.iter_mut().find(|(name, _)| name == &property.0) {
+                *slot = property.clone();
+            } else {
+                properties.push(property.clone());
+            }
+        }
+        let mut methods = parent.as_ref().map_or_else(Vec::new, |p| p.methods.clone());
+        for function in &decl.methods {
+            if let Some(slot) = methods
+                .iter_mut()
+                .find(|f| method_name(f).eq_ignore_ascii_case(method_name(function)))
+            {
+                *slot = function.clone();
+            } else {
+                methods.push(function.clone());
+            }
+        }
+        let allow_dynamic = parent.as_ref().is_some_and(|p| p.allow_dynamic);
+        Ok(Rc::new(Class {
+            name: decl.name.clone(),
+            declaration: decl,
+            parent,
+            properties,
+            methods,
+            allow_dynamic,
+        }))
     }
-    pub(super) fn find_class(&self, name: &[u8]) -> Option<Rc<ClassDecl>> {
+    pub(super) fn find_class(&self, name: &[u8]) -> Option<Rc<Class>> {
         let name = name
             .strip_prefix(b"\\")
             .unwrap_or(name)
             .to_ascii_lowercase();
         if name == b"stdclass" {
-            return Some(Rc::new(ClassDecl {
+            return Some(Rc::new(Class {
                 name: b"stdClass".to_vec(),
+                parent: None,
                 properties: Vec::new(),
                 methods: Vec::new(),
-                line: 0,
+                allow_dynamic: true,
+                declaration: Rc::new(ClassDecl {
+                    name: b"stdClass".to_vec(),
+                    parent: None,
+                    is_final: false,
+                    final_methods: Vec::new(),
+                    properties: Vec::new(),
+                    methods: Vec::new(),
+                    line: 0,
+                }),
             }));
         }
         self.classes.get(&name).cloned()
+    }
+    pub(super) fn instance_of(
+        &mut self,
+        value: &Expr,
+        class: &Expr,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let value = self.eval(value)?;
+        if !matches!(value, Value::Object(_) | Value::Closure(_)) {
+            return Ok(Value::Bool(false));
+        }
+
+        let name = if let ExprKind::Constant(name) = &class.kind {
+            Some(name.clone())
+        } else {
+            match self.eval(class)? {
+                Value::String(name) => Some(name),
+                Value::Object(object) => Some(object.class.name.clone()),
+                Value::Closure(_) => Some(b"Closure".to_vec()),
+                _ => None,
+            }
+        };
+        let name = name.ok_or_else(|| {
+            Error::new(
+                ErrorKind::Error,
+                "Class name must be a valid object or a string",
+                line,
+            )
+        })?;
+        Ok(Value::Bool(match value {
+            Value::Object(object) => object.class.is_a(&name),
+            Value::Closure(_) => name
+                .strip_prefix(b"\\")
+                .unwrap_or(&name)
+                .eq_ignore_ascii_case(b"Closure"),
+            _ => false,
+        }))
     }
     pub(super) fn new_object(
         &mut self,
@@ -218,7 +344,7 @@ impl Runtime {
         }
         let key = ArrayKey::String(name.to_vec());
         if object.properties.borrow().get(&key).is_none()
-            && object.class.name != b"stdClass"
+            && !object.class.allow_dynamic
             && !object.class.properties.iter().any(|(n, _)| n == name)
         {
             self.warnings.push(format!(
@@ -232,7 +358,7 @@ impl Runtime {
     }
 }
 
-pub(super) fn method(class: &ClassDecl, name: &[u8]) -> Option<Rc<FunctionDecl>> {
+pub(super) fn method(class: &Class, name: &[u8]) -> Option<Rc<FunctionDecl>> {
     class
         .methods
         .iter()
@@ -321,4 +447,8 @@ fn validate_property_name(name: &[u8], line: usize) -> Result<(), Error> {
         ));
     }
     Ok(())
+}
+
+fn method_name(function: &FunctionDecl) -> &[u8] {
+    function.name.rsplit(|b| *b == b':').next().unwrap()
 }
