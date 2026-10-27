@@ -1,0 +1,64 @@
+PHP 8.5.0 Zend/tests/list baseline, 2026-10-26
+Runner: cargo run --bin php-rs-phpt -- --reference /path/to/php-8.5.0/sapi/cli/php /path/to/php-8.5.0/Zend/tests/list
+Unsupported cases were not executed. Exit status: 1.
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/list/bug27598.phpt PASS
+Zend/tests/list/bug39304.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/bug40899.phpt PASS
+Zend/tests/list/bug65969.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/list/bug71030.phpt FAIL: ParseError: Expected variable name on line 13
+Zend/tests/list/bug72395.phpt PASS
+Zend/tests/list/bug73663.phpt FAIL: ParseError: Expected parameter variable on line 2
+Zend/tests/list/bug73663_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/destruct_bool.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/destruct_float.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/destruct_int.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/destruct_null.phpt PASS
+Zend/tests/list/destruct_object_not_ArrayAccess.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/destruct_resource.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/destruct_string.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/gh11320_1.phpt PASS
+Zend/tests/list/gh11320_2.phpt FAIL: Error: Undefined constant "__FILE__" on line 2
+Zend/tests/list/gh11320_3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_001.phpt FAIL: ParseError: Expected ')' on line 3
+Zend/tests/list/list_002.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/list/list_004.phpt FAIL: ParseError: Expected expression on line 4
+Zend/tests/list/list_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_010.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_011.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_012.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_013.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_014.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_assign_ref_string_offset_error.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_destructuring_to_special_variables.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_empty_error.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_empty_error_keyed.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_keyed.phpt FAIL: Error: Undefined constant "PHP_EOL" on line 11
+Zend/tests/list/list_keyed_ArrayAccess.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_keyed_conversions.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_keyed_evaluation_order.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_keyed_evaluation_order_2.phpt PASS
+Zend/tests/list/list_keyed_evaluation_order_3.phpt PASS
+Zend/tests/list/list_keyed_evaluation_order_nested.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_keyed_leading_comma.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_keyed_non_literals.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/list/list_keyed_trailing_comma.phpt FAIL: Error: Undefined constant "PHP_EOL" on line 15
+Zend/tests/list/list_keyed_undefined.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_mixed_keyed_unkeyed.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_mixed_nested_keyed_unkeyed.phpt FAIL: Error: Undefined constant "PHP_EOL" on line 11
+Zend/tests/list/list_reference_001.phpt FAIL: ParseError: Expected expression on line 3
+Zend/tests/list/list_reference_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_reference_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_reference_004.phpt FAIL: ParseError: Expected expression on line 3
+Zend/tests/list/list_reference_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_reference_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_reference_007.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_reference_008.phpt FAIL: ParseError: Expected expression on line 3
+Zend/tests/list/list_reference_009.phpt FAIL: ParseError: Expected expression on line 4
+Zend/tests/list/list_reference_010.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_reference_011.phpt UNSUPPORTED: EXPECTF
+Zend/tests/list/list_self_assign.phpt PASS
+8 passed, 20 failed, 30 unsupported

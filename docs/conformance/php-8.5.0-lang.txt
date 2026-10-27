@@ -127,7 +127,7 @@ tests/lang/empty_variation.phpt PASS
 tests/lang/engine_assignExecutionOrder_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/engine_assignExecutionOrder_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/engine_assignExecutionOrder_003.phpt FAIL: ParseError: Expected variable name on line 19
-tests/lang/engine_assignExecutionOrder_004.phpt FAIL: ParseError: Expected expression on line 19
+tests/lang/engine_assignExecutionOrder_004.phpt PASS
 tests/lang/engine_assignExecutionOrder_005.phpt PASS
 tests/lang/engine_assignExecutionOrder_006.phpt PASS
 tests/lang/engine_assignExecutionOrder_007.phpt FAIL: ParseError: Expected ';' on line 3
@@ -296,4 +296,4 @@ tests/lang/type_hints_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_003.phpt UNSUPPORTED: EXPECTF
 tests/lang/zend_throw_exception_001.phpt FAIL: ParseError: Expected ';' on line 2
-33 passed, 134 failed, 127 unsupported
+34 passed, 133 failed, 127 unsupported

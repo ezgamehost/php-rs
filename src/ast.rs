@@ -17,6 +17,9 @@ pub(crate) enum ExprKind {
     Unary(String, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
     Array(Vec<ArrayElement>),
+    LongArray(Vec<ArrayElement>),
+    List(Vec<ArrayElement>),
+    Destructure(Vec<ArrayElement>),
     Index(Box<Expr>, Option<Box<Expr>>),
     Call(Box<Expr>, Vec<Argument>),
     Isset(Vec<Expr>),
@@ -32,6 +35,7 @@ pub(crate) enum ExprKind {
 pub(crate) enum ArrayElement {
     Entry(Option<Expr>, Expr),
     Unpack(Expr),
+    Hole,
 }
 
 #[derive(Debug, Clone)]
@@ -109,13 +113,16 @@ impl Expr {
                     && b.as_ref().is_none_or(|b| b.is_constant_expression())
                     && c.is_constant_expression()
             }
-            ExprKind::Array(elements) => elements.iter().all(|element| match element {
-                ArrayElement::Entry(k, v) => {
-                    k.as_ref().is_none_or(Expr::is_constant_expression)
-                        && v.is_constant_expression()
-                }
-                ArrayElement::Unpack(v) => v.is_constant_expression(),
-            }),
+            ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
+                elements.iter().all(|element| match element {
+                    ArrayElement::Entry(k, v) => {
+                        k.as_ref().is_none_or(Expr::is_constant_expression)
+                            && v.is_constant_expression()
+                    }
+                    ArrayElement::Unpack(v) => v.is_constant_expression(),
+                    ArrayElement::Hole => false,
+                })
+            }
             _ => false,
         }
     }

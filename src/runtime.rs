@@ -6,6 +6,7 @@ use crate::{
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 mod builtins;
+mod destructuring;
 mod functions;
 mod matching;
 mod offsets;
@@ -155,8 +156,7 @@ impl Runtime {
                 let value = self.eval(iter)?;
                 if let Value::Array(array) = value {
                     for (key, value) in array.entries() {
-                        let mut location = self.location(value_target)?;
-                        self.write_location(&mut location, value.clone(), value_target.line)?;
+                        self.assign_target(value_target, value.clone())?;
                         if let Some(target) = key_target {
                             let mut location = self.location(target)?;
                             self.write_location(&mut location, key.to_value(), target.line)?;
@@ -334,7 +334,10 @@ impl Runtime {
             }
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(name) => Ok(self.read(name, line)),
-            ExprKind::Array(elements) => {
+            ExprKind::List(_) | ExprKind::Destructure(_) => {
+                Err(Error::parse("Cannot read a destructuring pattern", line))
+            }
+            ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 let mut array = PhpArray::default();
                 for element in elements {
                     let ArrayElement::Entry(key, expr) = element else {
@@ -431,6 +434,10 @@ impl Runtime {
                 }
             }
             ExprKind::Assign(target, op, expr) => {
+                if matches!(target.kind, ExprKind::Destructure(_)) {
+                    let value = self.eval(expr)?;
+                    return self.assign_target(target, value);
+                }
                 let mut location = self.location(target)?;
                 let value = if op == "=" {
                     self.eval(expr)?

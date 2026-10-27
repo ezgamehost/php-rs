@@ -7,14 +7,17 @@ use crate::{
 };
 
 use std::rc::Rc;
+mod targets;
 
 pub(crate) fn parse(tokens: Vec<Token>) -> Result<Vec<Stmt>, Error> {
-    Parser {
+    let statements = Parser {
         tokens,
         pos: 0,
         control_depth: 0,
     }
-    .program()
+    .program()?;
+    targets::validate(&statements)?;
+    Ok(statements)
 }
 struct Parser {
     tokens: Vec<Token>,
@@ -123,7 +126,8 @@ impl Parser {
             } else {
                 (None, first)
             };
-            if !value.is_writable() || key.as_ref().is_some_and(|key| !key.is_writable()) {
+            let value = targets::assignment_target(value)?;
+            if key.as_ref().is_some_and(|key| !key.is_writable()) {
                 return Err(Error::parse(
                     "Invalid foreach assignment target",
                     value.line,
@@ -453,6 +457,10 @@ impl Parser {
     fn array_elements(&mut self, close: &str) -> Result<Vec<ArrayElement>, Error> {
         let mut elements = Vec::new();
         while !self.eat(close) {
+            if self.eat(",") {
+                elements.push(ArrayElement::Hole);
+                continue;
+            }
             let element = if self.eat("...") {
                 ArrayElement::Unpack(self.expr(0)?)
             } else {
@@ -553,7 +561,11 @@ impl Parser {
                 b"print" => ExprKind::Print(Box::new(self.expr(4)?)),
                 b"array" => {
                     self.expect("(")?;
-                    ExprKind::Array(self.array_elements(")")?)
+                    ExprKind::LongArray(self.array_elements(")")?)
+                }
+                b"list" => {
+                    self.expect("(")?;
+                    ExprKind::List(self.array_elements(")")?)
                 }
                 b"isset" => {
                     self.expect("(")?;
@@ -686,7 +698,9 @@ impl Parser {
             self.pos += 1;
             let rhs = self.expr(if right { power } else { power + 1 })?;
             let kind = if power == 4 {
-                if !lhs.is_writable() {
+                if op == "=" {
+                    lhs = targets::assignment_target(lhs)?;
+                } else if !lhs.is_writable() {
                     return Err(Error::parse("Cannot assign to expression", line));
                 }
                 ExprKind::Assign(Box::new(lhs), op, Box::new(rhs))

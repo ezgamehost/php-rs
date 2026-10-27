@@ -1,0 +1,19 @@
+PHP 8.5.0 Zend/tests/array_unpack baseline, 2026-10-26
+Runner: cargo run --bin php-rs-phpt -- --reference /path/to/php-8.5.0/sapi/cli/php /path/to/php-8.5.0/Zend/tests/array_unpack
+Unsupported cases were not executed. Exit status: 1.
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/array_unpack/already_occupied.phpt UNSUPPORTED: SKIPIF
+Zend/tests/array_unpack/basic.phpt FAIL: ParseError: Expected ';' on line 10
+Zend/tests/array_unpack/classes.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/array_unpack/gh19303.phpt PASS
+Zend/tests/array_unpack/gh9769.phpt UNSUPPORTED: EXPECTF
+Zend/tests/array_unpack/in_destructuring.phpt UNSUPPORTED: EXPECTF
+Zend/tests/array_unpack/in_destructuring_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/array_unpack/non_integer_keys.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/array_unpack/ref1.phpt FAIL: ParseError: Expected expression on line 4
+Zend/tests/array_unpack/string_keys.phpt FAIL: ParseError: Expected ';' on line 7
+Zend/tests/array_unpack/undef_var.phpt UNSUPPORTED: EXPECTF
+Zend/tests/array_unpack/unpack_invalid_type_compile_time.phpt UNSUPPORTED: EXPECTF
+Zend/tests/array_unpack/unpack_string_keys_compile_time.phpt PASS
+2 passed, 5 failed, 6 unsupported
