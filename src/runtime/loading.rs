@@ -70,10 +70,7 @@ impl Runtime {
     }
 
     fn execute_document(&mut self, code: &[u8], source: Rc<Source>) -> Result<Value, Error> {
-        self.scope = std::mem::take(&mut self.variables)
-            .into_iter()
-            .map(|(name, value)| (name, cell(value)))
-            .collect();
+        self.scope.reconcile(std::mem::take(&mut self.variables));
         self.static_variables.remove(&None);
         let result = self.execute_unit(code, source, Value::Null);
         self.variables = self
@@ -96,6 +93,7 @@ impl Runtime {
             self.record_include(path.clone());
         }
         self.warnings.extend(warnings);
+        self.scope.reserve_variables(&statements);
         self.prepare_functions(&mut statements)?;
         let previous_source = std::mem::replace(&mut self.source, source);
         let previous_strict = std::mem::replace(&mut self.strict_types, strict);

@@ -97,10 +97,24 @@ pub(crate) struct SwitchCase {
 }
 
 impl Expr {
+    pub fn is_globals(&self) -> bool {
+        match &self.kind {
+            ExprKind::Variable(name) => name == b"GLOBALS",
+            ExprKind::Group(inner) => inner.is_globals(),
+            _ => false,
+        }
+    }
+
     pub fn is_writable(&self) -> bool {
         match &self.kind {
             ExprKind::Variable(_) | ExprKind::DynamicVariable(_) => true,
-            ExprKind::Index(base, _) => base.is_writable(),
+            ExprKind::Index(base, _) => {
+                let mut base = base.as_ref();
+                while let ExprKind::Group(inner) = &base.kind {
+                    base = inner;
+                }
+                base.is_writable()
+            }
             _ => false,
         }
     }

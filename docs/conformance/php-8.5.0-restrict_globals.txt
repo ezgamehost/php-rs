@@ -1,0 +1,21 @@
+PHP 8.5.0 restrict_globals baseline
+Command: php-rs-phpt --cwd PHP_SRC --reference PHP_SRC/sapi/cli/php PHP_SRC/Zend/tests/restrict_globals
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/restrict_globals/globals_in_globals.phpt PASS
+Zend/tests/restrict_globals/invalid_append.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_append_isset.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_append_unset.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_assign.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_assign_list.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_assign_list_ref.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_assign_op.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_assign_ref_lhs.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_assign_ref_rhs.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_foreach.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_foreach_ref.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/invalid_pass_by_ref.phpt FAIL: ParseError: Expected parameter variable on line 3
+Zend/tests/restrict_globals/invalid_unset.phpt UNSUPPORTED: EXPECTF
+Zend/tests/restrict_globals/key_canonicalization.phpt PASS
+Zend/tests/restrict_globals/valid.phpt UNSUPPORTED: EXPECTF
+2 passed, 1 failed, 13 unsupported

@@ -12,7 +12,7 @@ impl Runtime {
         while let ExprKind::Group(inner) = &subject.kind {
             subject = inner;
         }
-        let variable = matches!(subject.kind, ExprKind::Variable(_));
+        let variable = matches!(subject.kind, ExprKind::Variable(_)) && !subject.is_globals();
         let value = if variable {
             None
         } else {

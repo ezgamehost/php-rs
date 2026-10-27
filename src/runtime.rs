@@ -18,6 +18,7 @@ mod functions;
 mod loading;
 mod matching;
 mod offsets;
+mod scope_slots;
 mod types;
 mod variables;
 use offsets::{Access, Offset, read_offset, unset_path, write_path};
@@ -44,6 +45,7 @@ pub struct Runtime {
 }
 struct Location {
     name: Vec<u8>,
+    global: bool,
     keys: Vec<Offset>,
 }
 enum Flow {
@@ -150,11 +152,12 @@ impl Runtime {
                 while let ExprKind::Group(inner) = &subject.kind {
                     subject = inner;
                 }
-                let value = if matches!(subject.kind, ExprKind::Variable(_)) {
-                    None
-                } else {
-                    Some(self.eval(subject)?)
-                };
+                let value =
+                    if matches!(subject.kind, ExprKind::Variable(_)) && !subject.is_globals() {
+                        None
+                    } else {
+                        Some(self.eval(subject)?)
+                    };
                 let mut selected = None;
                 let mut default = None;
                 for (index, case) in cases.iter().enumerate() {
@@ -208,8 +211,10 @@ impl Runtime {
                 for target in targets {
                     let mut location = self.location(target)?;
                     if location.keys.is_empty() {
-                        self.scope.remove(&location.name);
-                    } else if let Some(value) = self.scope.get(&location.name).cloned() {
+                        self.location_scope(&location).remove(&location.name);
+                    } else if let Some(value) =
+                        self.location_scope(&location).get(&location.name).cloned()
+                    {
                         unset_path(
                             &mut value.borrow_mut(),
                             &mut location.keys,
@@ -252,12 +257,25 @@ impl Runtime {
         match &expr.kind {
             ExprKind::Variable(name) => Ok(Location {
                 name: name.clone(),
+                global: false,
                 keys: Vec::new(),
             }),
             ExprKind::DynamicVariable(name) => Ok(Location {
                 name: self.variable_name(name)?,
+                global: false,
                 keys: Vec::new(),
             }),
+            ExprKind::Group(inner) => self.location(inner),
+            ExprKind::Index(base, key) if base.is_globals() => {
+                let key = key.as_ref().ok_or_else(|| {
+                    Error::new(ErrorKind::Error, "Cannot append to $GLOBALS", expr.line)
+                })?;
+                Ok(Location {
+                    name: self.variable_name(key)?,
+                    global: true,
+                    keys: Vec::new(),
+                })
+            }
             ExprKind::Index(base, key) => {
                 let mut location = self.location(base)?;
                 let value = match key {
@@ -281,10 +299,19 @@ impl Runtime {
         silent: bool,
         string_error: Option<&str>,
     ) -> Result<Value, Error> {
-        let mut value = if silent {
-            self.lookup(&location.name).unwrap_or(Value::Null)
-        } else {
-            self.read(&location.name, line)
+        let stored = self.location_scope(location).get(&location.name).cloned();
+        let mut value = match stored {
+            Some(value) => value.borrow().clone(),
+            None => {
+                if !silent {
+                    self.warnings.push(format!(
+                        "Undefined {}variable ${} on line {line}",
+                        if location.global { "global " } else { "" },
+                        String::from_utf8_lossy(&location.name)
+                    ));
+                }
+                Value::Null
+            }
         };
         for key in &mut location.keys {
             if matches!(value, Value::String(_))
@@ -313,10 +340,8 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let value = self
-            .scope
-            .entry(location.name.clone())
-            .or_insert_with(|| cell(Value::Null))
-            .clone();
+            .location_scope(location)
+            .get_or_insert(&location.name, Value::Null);
         write_path(
             &mut value.borrow_mut(),
             &mut location.keys,
@@ -327,12 +352,17 @@ impl Runtime {
     }
     fn coalesce_read(&mut self, expr: &Expr, probe: bool) -> Result<Value, Error> {
         match &expr.kind {
+            ExprKind::Variable(_) if expr.is_globals() => Ok(self.globals_snapshot()),
             ExprKind::Variable(name) => Ok(self.lookup(name).unwrap_or(Value::Null)),
             ExprKind::DynamicVariable(name) => {
                 let name = self.variable_name(name)?;
                 Ok(self.lookup(&name).unwrap_or(Value::Null))
             }
             ExprKind::Group(inner) => self.coalesce_read(inner, probe),
+            ExprKind::Index(base, Some(_)) if base.is_globals() => {
+                let mut location = self.location(expr)?;
+                self.read_location(&mut location, expr.line, true, None)
+            }
             ExprKind::Index(base, Some(key)) => {
                 let value = self.coalesce_read(base, probe)?;
                 let key = self.eval(key)?;
@@ -386,6 +416,7 @@ impl Runtime {
                 Ok(Value::String(result))
             }
             ExprKind::Group(inner) => self.eval(inner),
+            ExprKind::Variable(_) if expr.is_globals() => Ok(self.globals_snapshot()),
             ExprKind::Variable(name) => Ok(self.read(name, line)),
             ExprKind::DynamicVariable(name) => {
                 let name = self.variable_name(name)?;
@@ -432,6 +463,10 @@ impl Runtime {
                     }
                 }
                 Ok(Value::Array(Rc::new(array)))
+            }
+            ExprKind::Index(base, Some(_)) if base.is_globals() => {
+                let mut location = self.location(expr)?;
+                self.read_location(&mut location, line, false, None)
             }
             ExprKind::Index(base, key) => {
                 let value = self.eval(base)?;

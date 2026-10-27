@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 25 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 26 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 54 | 113 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -15,6 +15,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
 | PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 2 | 16 | 71 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
+| PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -43,6 +44,14 @@ storage persistence, dynamic and recursive initializers, and global/static
 rebinding. Remaining failures need objects, traits, and exceptions.
 Real-file PHPT execution and suite-root path resolution add six passing
 language-suite cases. All six were individually checked against PHP 8.5.0.
+
+The [$GLOBALS report](conformance/php-8.5.0-restrict_globals.txt) records two
+passing upstream cases. The remaining exact-output case needs by-reference
+parameters and exceptions; diagnostic cases require unsupported `EXPECTF`.
+Project regressions separately cover live access, snapshots, alias detachment,
+key conversion, compiled symbol ordering, and mutation restrictions. Thirteen
+normal-output snippets and the project PHPT fixture were checked against PHP 8.5.0.
+Automatic initialization of the other superglobals remains unimplemented.
 
 The upstream basic-suite failures are:
 

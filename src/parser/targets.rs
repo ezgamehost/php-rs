@@ -71,6 +71,12 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
             }
             Stmt::Function(function) => {
                 for parameter in &function.parameters {
+                    if parameter.name == b"GLOBALS" {
+                        return Err(Error::parse(
+                            "Cannot re-assign auto-global variable GLOBALS",
+                            function.line,
+                        ));
+                    }
                     if let Some(default) = &parameter.default {
                         expression(default, false)?;
                     }
@@ -78,7 +84,12 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                 validate(&function.body)?;
             }
             Stmt::Text(_) | Stmt::Break(_) | Stmt::Continue(_, _) => {}
-            Stmt::Echo(expressions) | Stmt::Unset(expressions) => {
+            Stmt::Unset(expressions) => {
+                for expr in expressions {
+                    expression(expr, true)?;
+                }
+            }
+            Stmt::Echo(expressions) => {
                 for expr in expressions {
                     expression(expr, false)?;
                 }
@@ -114,7 +125,7 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
             Stmt::Foreach(iter, key, value, body) => {
                 expression(iter, false)?;
                 if let Some(key) = key {
-                    expression(key, false)?;
+                    expression(key, true)?;
                 }
                 expression(value, true)?;
                 validate(std::slice::from_ref(body))?;
@@ -130,6 +141,12 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
 }
 
 fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
+    if target && expr.is_globals() {
+        return Err(Error::parse(
+            "$GLOBALS can only be modified using the $GLOBALS[$name] = $value syntax",
+            expr.line,
+        ));
+    }
     match &expr.kind {
         ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
         ExprKind::List(_) => {
@@ -179,8 +196,8 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         | ExprKind::Cast(_, value)
         | ExprKind::Unary(_, value)
         | ExprKind::Empty(value)
-        | ExprKind::Print(value)
-        | ExprKind::Increment(value, _, _) => expression(value, false)?,
+        | ExprKind::Print(value) => expression(value, false)?,
+        ExprKind::Increment(value, _, _) => expression(value, true)?,
         ExprKind::Binary(_, left, right) => {
             expression(left, false)?;
             expression(right, false)?;
@@ -190,6 +207,9 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
             expression(right, false)?;
         }
         ExprKind::Index(base, key) => {
+            if key.is_none() && base.is_globals() {
+                return Err(Error::parse("Cannot append to $GLOBALS", expr.line));
+            }
             expression(base, false)?;
             if let Some(key) = key {
                 expression(key, false)?;

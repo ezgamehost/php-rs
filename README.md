@@ -44,6 +44,9 @@ request without changing the host process's working directory.
 - Live `global` bindings and function-local `static` storage, including dynamic
   initializers, recursive calls, and local `unset` behavior. Variable variables
   (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
+- `$GLOBALS` element reads/writes, nested mutation, probes, and unsetting, with
+  independent whole-array snapshots and compile-time mutation restrictions.
+  Symbol-table ordering preserves compiled variable slots and dynamic names.
 - `eval`, local-file `include`/`require` and their `_once` variants, preserving
   caller variables, per-unit strictness, return values, and canonical file identity.
   Loaded functions retain their defining source directory for later includes.
@@ -77,7 +80,9 @@ generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 Class-name and object type declarations can be parsed, but objects and class
 resolution are not implemented. Callable checks currently cover function names.
 Other `declare` directives are not implemented.
-`$GLOBALS` and the other superglobals are not implemented. File loading currently
+Automatic initialization and scope handling for the other superglobals are not
+implemented; `$GLOBALS` currently exposes the variables created by PHP code or
+provided through `Runtime::variables`. File loading currently
 uses the working directory and the executing source directory; configurable
 `include_path`, stream wrappers, and PHP configuration are not implemented.
 Deprecated `${...}` and object interpolation,
@@ -113,6 +118,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)
+- [$GLOBALS](https://www.php.net/manual/en/reserved.variables.globals.php)
 - [File inclusion](https://www.php.net/manual/en/function.include.php)
 - [Eval](https://www.php.net/manual/en/function.eval.php)
 - [Upstream PHP tests](https://github.com/php/php-src/tree/PHP-8.5/tests)

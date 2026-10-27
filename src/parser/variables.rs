@@ -75,6 +75,24 @@ impl Parser {
             };
             Expr { kind, line }
         };
+        // Literal string names (including concatenated literals) are compiled
+        // as ordinary named variables by PHP, including its auto-globals.
+        if let Some(name) = literal_name(&name) {
+            return Ok(ExprKind::Variable(name));
+        }
         Ok(ExprKind::DynamicVariable(Box::new(name)))
+    }
+}
+
+fn literal_name(expr: &Expr) -> Option<Vec<u8>> {
+    match &expr.kind {
+        ExprKind::Literal(Value::String(name)) => Some(name.clone()),
+        ExprKind::Group(inner) => literal_name(inner),
+        ExprKind::Binary(op, left, right) if op == "." => {
+            let mut name = literal_name(left)?;
+            name.extend(literal_name(right)?);
+            Some(name)
+        }
+        _ => None,
     }
 }
