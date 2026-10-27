@@ -1,4 +1,5 @@
 use super::builtins::Builtin;
+use super::function_arguments::FunctionArguments;
 use super::*;
 use crate::ast::{Argument, Parameter};
 use std::collections::HashSet;
@@ -119,10 +120,45 @@ impl Runtime {
                     line,
                 ));
             }
-            return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line);
+            return self.call_builtin(
+                builtin,
+                &name,
+                bound.fixed,
+                bound.extra,
+                line,
+                !matches!(callee.kind, ExprKind::Constant(_)),
+            );
         }
         let function = function.unwrap();
+        let extra: Vec<_> = bound
+            .extra
+            .entries()
+            .iter()
+            .filter(|(key, _)| matches!(key, ArrayKey::Int(_)))
+            .map(|(_, value)| value.clone())
+            .collect();
+        let supplied_fixed = if extra.is_empty() {
+            bound
+                .fixed
+                .iter()
+                .rposition(Option::is_some)
+                .map_or(0, |i| i + 1)
+        } else {
+            function
+                .parameters
+                .iter()
+                .take_while(|p| !p.variadic)
+                .count()
+        };
+        let mut arguments = FunctionArguments {
+            fixed: function.parameters[..supplied_fixed]
+                .iter()
+                .map(|p| p.name.clone())
+                .collect(),
+            extra,
+        };
         self.callers.push(std::mem::take(&mut self.scope));
+        let caller_arguments = self.current_arguments.take();
         let caller_function = self
             .current_function
             .replace(function.name.to_ascii_lowercase());
@@ -136,6 +172,7 @@ impl Runtime {
             for (index, param) in function.parameters.iter().enumerate() {
                 let value = if param.variadic {
                     let mut values = PhpArray::default();
+                    arguments.extra.clear();
                     for (offset, (key, value)) in bound.extra.entries().iter().enumerate() {
                         let value = self.check_argument(
                             value.clone(),
@@ -145,6 +182,9 @@ impl Runtime {
                             caller_strict,
                             line,
                         )?;
+                        if matches!(key, ArrayKey::Int(_)) {
+                            arguments.extra.push(value.clone());
+                        }
                         values.insert(key.clone(), value);
                     }
                     Value::Array(Rc::new(values))
@@ -175,11 +215,13 @@ impl Runtime {
             }
             self.strict_types = function.strict_types;
             self.source = function.source.clone();
+            self.current_arguments = Some(arguments);
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
         })();
         self.scope = self.callers.pop().unwrap();
         self.current_function = caller_function;
+        self.current_arguments = caller_arguments;
         self.strict_types = caller_strict;
         self.source = caller_source;
         result

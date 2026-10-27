@@ -1,0 +1,26 @@
+PHP 8.5.0 function argument inspection baseline
+Selection: func_get_arg*.phpt and func_num_args*.phpt in tests/lang and Zend/tests, plus Zend/tests/named_params/func_get_args.phpt
+Command: php-rs-phpt --cwd PHP_SRC --reference PHP_SRC/sapi/cli/php SELECTED_FILES
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/func_get_arg_basic.phpt UNSUPPORTED: EXPECTF
+Zend/tests/func_get_arg_invalid.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/func_get_args.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/func_get_args_basic.phpt UNSUPPORTED: EXPECTF
+Zend/tests/func_num_args_basic.phpt UNSUPPORTED: EXPECTF
+Zend/tests/named_params/func_get_args.phpt PASS
+tests/lang/func_get_arg.001.phpt PASS
+tests/lang/func_get_arg.002.phpt PASS
+tests/lang/func_get_arg.003.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/func_get_arg.004.phpt FAIL: ParseError: Expected ';' on line 5
+tests/lang/func_get_arg.005.phpt FAIL: ParseError: Expected expression on line 10
+tests/lang/func_get_arg_variation.phpt FAIL: ParseError: Expected ';' on line 6
+tests/lang/func_get_args.001.phpt PASS
+tests/lang/func_get_args.002.phpt PASS
+tests/lang/func_get_args.003.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/func_get_args.004.phpt FAIL: ParseError: Expected parameter variable on line 2
+tests/lang/func_num_args.001.phpt PASS
+tests/lang/func_num_args.002.phpt PASS
+tests/lang/func_num_args.003.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/func_num_args.004.phpt FAIL: ParseError: Expected parameter variable on line 2
+7 passed, 10 failed, 3 unsupported

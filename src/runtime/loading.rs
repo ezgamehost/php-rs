@@ -98,11 +98,13 @@ impl Runtime {
         let previous_source = std::mem::replace(&mut self.source, source);
         let previous_strict = std::mem::replace(&mut self.strict_types, strict);
         let previous_function = self.current_function.take();
+        let previous_arguments = self.current_arguments.take();
         let previous_statics = self.static_variables.remove(&None);
         let result = self.block(&statements);
         self.source = previous_source;
         self.strict_types = previous_strict;
         self.current_function = previous_function;
+        self.current_arguments = previous_arguments;
         self.static_variables.remove(&None);
         if let Some(statics) = previous_statics {
             self.static_variables.insert(None, statics);

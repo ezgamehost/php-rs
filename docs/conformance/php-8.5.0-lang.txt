@@ -164,18 +164,18 @@ tests/lang/foreachLoopObjects.005.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.006.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreach_with_object_001.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/foreach_with_references_001.phpt FAIL: ParseError: Expected expression on line 11
-tests/lang/func_get_arg.001.phpt FAIL: Error: Call to undefined function func_get_arg() on line 6
-tests/lang/func_get_arg.002.phpt FAIL: Error: Call to undefined function func_get_arg() on line 5
+tests/lang/func_get_arg.001.phpt PASS
+tests/lang/func_get_arg.002.phpt PASS
 tests/lang/func_get_arg.003.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/func_get_arg.004.phpt FAIL: ParseError: Expected ';' on line 5
 tests/lang/func_get_arg.005.phpt FAIL: ParseError: Expected expression on line 10
 tests/lang/func_get_arg_variation.phpt FAIL: ParseError: Expected ';' on line 6
-tests/lang/func_get_args.001.phpt FAIL: Error: Call to undefined function func_get_args() on line 5
-tests/lang/func_get_args.002.phpt FAIL: Error: Call to undefined function func_get_args() on line 5
+tests/lang/func_get_args.001.phpt PASS
+tests/lang/func_get_args.002.phpt PASS
 tests/lang/func_get_args.003.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/func_get_args.004.phpt FAIL: ParseError: Expected parameter variable on line 2
-tests/lang/func_num_args.001.phpt FAIL: Error: Call to undefined function func_num_args() on line 5
-tests/lang/func_num_args.002.phpt FAIL: Error: Call to undefined function func_num_args() on line 5
+tests/lang/func_num_args.001.phpt PASS
+tests/lang/func_num_args.002.phpt PASS
 tests/lang/func_num_args.003.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/func_num_args.004.phpt FAIL: ParseError: Expected parameter variable on line 2
 tests/lang/include_variation1.phpt PASS
@@ -296,4 +296,4 @@ tests/lang/type_hints_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_003.phpt UNSUPPORTED: EXPECTF
 tests/lang/zend_throw_exception_001.phpt FAIL: ParseError: Expected ';' on line 2
-54 passed, 113 failed, 127 unsupported
+60 passed, 107 failed, 127 unsupported

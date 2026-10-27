@@ -7,9 +7,9 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 26 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 27 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
-| PHP 8.5.0 `tests/lang`, Rust | 54 | 113 | 127 |
+| PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
@@ -52,6 +52,14 @@ Project regressions separately cover live access, snapshots, alias detachment,
 key conversion, compiled symbol ordering, and mutation restrictions. Thirteen
 normal-output snippets and the project PHPT fixture were checked against PHP 8.5.0.
 Automatic initialization of the other superglobals remains unimplemented.
+
+The [function argument inspection report](conformance/php-8.5.0-function_arguments.txt)
+records seven passing cases, ten failing cases, and three unsupported cases.
+All seven passing cases match PHP 8.5.0, including six newly passing language
+fixtures and a named-argument fixture. Remaining cases require references,
+exceptions, anonymous functions, or diagnostic matching. Project regressions
+also cover live parameter changes, variadic copies, recursion, context boundaries,
+and validation order; fifteen normal-output examples match the reference.
 
 The upstream basic-suite failures are:
 

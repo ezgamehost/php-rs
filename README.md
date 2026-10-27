@@ -41,6 +41,8 @@ request without changing the host process's working directory.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
 - Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
+  `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
+  with live parameter values, default gaps, and separate variadic argument copies.
 - Live `global` bindings and function-local `static` storage, including dynamic
   initializers, recursive calls, and local `unset` behavior. Variable variables
   (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
@@ -117,6 +119,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Operator precedence](https://www.php.net/manual/en/language.operators.precedence.php)
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
+- [Function argument inspection](https://www.php.net/manual/en/function.func-get-args.php)
 - [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)
 - [$GLOBALS](https://www.php.net/manual/en/reserved.variables.globals.php)
 - [File inclusion](https://www.php.net/manual/en/function.include.php)

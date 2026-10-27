@@ -14,6 +14,7 @@ mod builtins;
 mod casting;
 mod constants;
 mod destructuring;
+mod function_arguments;
 mod functions;
 mod loading;
 mod matching;
@@ -35,6 +36,7 @@ pub struct Runtime {
     callers: Vec<Scope>,
     static_variables: HashMap<Option<Vec<u8>>, Scope>,
     current_function: Option<Vec<u8>>,
+    current_arguments: Option<function_arguments::FunctionArguments>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
     strict_types: bool,

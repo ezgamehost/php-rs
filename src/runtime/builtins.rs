@@ -17,6 +17,9 @@ pub(super) enum Builtin {
     Defined,
     Constant,
     GetIncludedFiles,
+    FuncNumArgs,
+    FuncGetArg,
+    FuncGetArgs,
 }
 impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
@@ -40,12 +43,16 @@ impl Builtin {
             b"defined" => Self::Defined,
             b"constant" => Self::Constant,
             b"get_included_files" | b"get_required_files" => Self::GetIncludedFiles,
+            b"func_num_args" => Self::FuncNumArgs,
+            b"func_get_arg" => Self::FuncGetArg,
+            b"func_get_args" => Self::FuncGetArgs,
             _ => return None,
         })
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
-            Self::GetIncludedFiles => &[],
+            Self::GetIncludedFiles | Self::FuncNumArgs | Self::FuncGetArgs => &[],
+            Self::FuncGetArg => &[("position", false, false)],
             Self::Strlen => &[("string", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
@@ -88,7 +95,19 @@ impl Runtime {
         args: Vec<Option<Value>>,
         extra: PhpArray,
         line: usize,
+        dynamic: bool,
     ) -> Result<Value, Error> {
+        if matches!(
+            builtin,
+            Builtin::FuncNumArgs | Builtin::FuncGetArg | Builtin::FuncGetArgs
+        ) {
+            return self.inspect_arguments(
+                builtin,
+                args.first().and_then(Option::as_ref),
+                dynamic,
+                line,
+            );
+        }
         if matches!(builtin, Builtin::GetIncludedFiles) {
             let mut paths = PhpArray::default();
             for path in &self.included_files {
@@ -102,7 +121,10 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
-            Builtin::GetIncludedFiles => unreachable!(),
+            Builtin::GetIncludedFiles
+            | Builtin::FuncNumArgs
+            | Builtin::FuncGetArg
+            | Builtin::FuncGetArgs => unreachable!(),
             Builtin::Define => {
                 let constant = self.native_string(first, &name, 1, line)?;
                 if constant.windows(2).any(|part| part == b"::") {
@@ -250,7 +272,7 @@ impl Runtime {
         self.warn_null(value, function, position, "string", line);
         Ok(value.to_bytes())
     }
-    fn native_int(
+    pub(super) fn native_int(
         &mut self,
         value: &Value,
         function: &str,
