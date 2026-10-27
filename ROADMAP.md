@@ -1,0 +1,39 @@
+# PHP 8.5 implementation and conformance plan
+
+The goal is a PHP 8.5 runtime in Rust, with all project unit tests passing and
+upstream conformance measured explicitly. Each completed slice is tested,
+committed, and pushed. This roadmap records unfinished scope, not a reduced
+definition of completion.
+
+1. **Interpreter foundation (initial slice implemented):** byte strings, scalar
+   values, source locations, parsing, variables, expression evaluation, basic
+   control flow, CLI, and regression tests. Continue tightening scalar and syntax
+   edge cases with the reference interpreter.
+2. **Conformance infrastructure:** version-pinned PHP oracle, differential fixtures,
+   PHPT runner supporting upstream sections, explicit unsupported/skipped reports,
+   CI and reproducible test commands. Never count skipped tests as passing.
+3. **Core language:** arrays and key coercion, copy-on-write semantics, references,
+   destructuring, all loops and control flow, interpolation/heredoc, casts, complete
+   operators, constants, includes, functions, argument binding, closures, types,
+   namespaces, and error/exception behavior.
+4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,
+   visibility, properties and hooks, magic methods, reflection, attributes, enums,
+   generators, fibers, garbage collection, and weak references.
+5. **Standard runtime and extensions:** core and standard builtins, streams and
+   filesystem, output buffering, serialization, date/time, JSON, PCRE, SPL,
+   encoding, networking, sessions, and remaining bundled extension surfaces.
+6. **PHP 8.5 specifics:** pipe operator, clone-with, URI extension, new APIs and
+   attributes, and migration-guide compatibility changes.
+7. **Deployment and completion audit:** configuration, environment and SAPI
+   behavior, resource limits, supported-platform validation, upstream unit and
+   PHPT suites, diagnostic fidelity, real-application integration, performance,
+   and requirement-by-requirement review of remaining unsupported behavior.
+
+## Validation gates for every slice
+
+- Add failing behavioral regressions before implementation.
+- Run `cargo fmt --check`, `cargo test`, and
+  `cargo clippy --all-targets -- -D warnings`.
+- Compare relevant behavior against PHP 8.5; record reference version and scope.
+- Inspect changes, check disk/build-cache usage, commit, and push to `origin`.
+- Keep this document and the README honest about incomplete implementation.

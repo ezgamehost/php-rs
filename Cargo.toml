@@ -1,0 +1,21 @@
+[package]
+name = "php-rs"
+version = "0.1.0"
+edition = "2024"
+description = "A PHP 8.5 runtime implemented in Rust"
+license = "MIT"
+
+[lib]
+name = "php_rs"
+
+[[bin]]
+name = "php-rs"
+path = "src/main.rs"
+
+[profile.dev]
+debug = 1
+incremental = false
+
+[profile.test]
+debug = 1
+incremental = false
