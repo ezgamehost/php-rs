@@ -5,6 +5,7 @@ use crate::{
 };
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
+mod builtins;
 mod functions;
 
 /// One request's variable scope, output, and diagnostics. Output survives errors.
@@ -254,6 +255,8 @@ impl Runtime {
                 Ok(Value::Bool(true))
             }
             ExprKind::Empty(arg) => Ok(Value::Bool(!self.coalesce_read(arg)?.is_truthy())),
+            ExprKind::Constant(name) if name == b"COUNT_NORMAL" => Ok(Value::Int(0)),
+            ExprKind::Constant(name) if name == b"COUNT_RECURSIVE" => Ok(Value::Int(1)),
             ExprKind::Constant(name) => Err(Error::new(
                 ErrorKind::Error,
                 format!("Undefined constant \"{}\"", String::from_utf8_lossy(name)),

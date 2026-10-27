@@ -5,10 +5,16 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 7 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 8 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
+| PHP 8.5.0 `tests/lang`, Rust | 18 | 149 | 127 |
 
-The upstream failures are:
+Every language-suite result, including failing test names and reasons, is in
+[the language baseline report](conformance/php-8.5.0-lang.txt). The language
+suite is not green; interpolation, references, typed declarations, missing
+control structures, and runtime APIs account for many of the remaining failures.
+
+The upstream basic-suite failures are:
 
 - `bug54514.phpt`: environment/path APIs and executable constants are not implemented.
 - `bug71273.phpt`: shell execution and regular-expression APIs are not implemented.

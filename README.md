@@ -30,12 +30,15 @@ output and warnings when execution fails. Parsing happens before execution.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
 - Untyped named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
+- Core builtins: `var_dump`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
+  scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
+  and `function_exists`.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `foreach` by value, `break`,
   `continue`, and `return`.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 
-Known gaps include typed functions, closures, builtins, objects, references, exceptions,
+Known gaps include typed functions, closures, most builtins, objects, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions. String
 interpolation, string offsets, array unpacking and destructuring, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also

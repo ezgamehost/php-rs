@@ -1,3 +1,4 @@
+use super::builtins::Builtin;
 use super::*;
 use crate::ast::{Argument, Parameter};
 use std::collections::HashSet;
@@ -10,7 +11,10 @@ impl Runtime {
         let mut names = HashSet::new();
         for decl in &declarations {
             let name = decl.name.to_ascii_lowercase();
-            if self.functions.contains_key(&name) || !names.insert(name) {
+            if self.functions.contains_key(&name)
+                || Builtin::lookup(&name).is_some()
+                || !names.insert(name)
+            {
                 return Err(redeclared(decl));
             }
         }
@@ -21,7 +25,7 @@ impl Runtime {
     }
     pub(super) fn register_function(&mut self, decl: Rc<FunctionDecl>) -> Result<(), Error> {
         let name = decl.name.to_ascii_lowercase();
-        if self.functions.contains_key(&name) {
+        if self.functions.contains_key(&name) || Builtin::lookup(&name).is_some() {
             return Err(redeclared(&decl));
         }
         self.functions.insert(name, decl);
@@ -40,30 +44,36 @@ impl Runtime {
                 _ => return Err(Error::new(ErrorKind::Error, "Value is not callable", line)),
             },
         };
-        let function = self
-            .functions
-            .get(&name.to_ascii_lowercase())
-            .cloned()
-            .ok_or_else(|| {
-                Error::new(
-                    ErrorKind::Error,
-                    format!(
-                        "Call to undefined function {}()",
-                        String::from_utf8_lossy(&name)
-                    ),
-                    line,
-                )
-            })?;
-        let mut bound = BoundArguments::new(&function.parameters);
+        let normalized_name = name
+            .strip_prefix(b"\\")
+            .unwrap_or(&name)
+            .to_ascii_lowercase();
+        let function = self.functions.get(&normalized_name).cloned();
+        let builtin = Builtin::lookup(&normalized_name);
+        let parameters = if let Some(function) = &function {
+            function.parameters.clone()
+        } else if let Some(builtin) = builtin {
+            builtin.parameters()
+        } else {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Call to undefined function {}()",
+                    String::from_utf8_lossy(&name)
+                ),
+                line,
+            ));
+        };
+        let mut bound = BoundArguments::new(&parameters);
         for arg in args {
             match arg {
                 Argument::Positional(expr) => {
                     let value = self.eval(expr)?;
-                    bound.push(None, value, &function.parameters, line)?;
+                    bound.push(None, value, &parameters, line)?;
                 }
                 Argument::Named(name, expr) => {
                     let value = self.eval(expr)?;
-                    bound.push(Some(name.clone()), value, &function.parameters, line)?;
+                    bound.push(Some(name.clone()), value, &parameters, line)?;
                 }
                 Argument::Unpack(expr) => {
                     let Value::Array(array) = self.eval(expr)? else {
@@ -78,11 +88,40 @@ impl Runtime {
                             ArrayKey::Int(_) => None,
                             ArrayKey::String(name) => Some(name.clone()),
                         };
-                        bound.push(name, value.clone(), &function.parameters, line)?;
+                        bound.push(name, value.clone(), &parameters, line)?;
                     }
                 }
             }
         }
+        if let Some(builtin) = builtin {
+            for (index, param) in parameters.iter().enumerate() {
+                if !param.variadic && param.default.is_none() && bound.fixed[index].is_none() {
+                    return Err(Error::new(
+                        ErrorKind::ArgumentCountError,
+                        format!(
+                            "{}(): Argument #{} (${}) not passed",
+                            String::from_utf8_lossy(&name),
+                            index + 1,
+                            String::from_utf8_lossy(&param.name)
+                        ),
+                        line,
+                    ));
+                }
+            }
+            if !bound.variadic && !bound.extra.is_empty() {
+                return Err(Error::new(
+                    ErrorKind::ArgumentCountError,
+                    format!(
+                        "{}() expects at most {} arguments",
+                        String::from_utf8_lossy(&name),
+                        parameters.len()
+                    ),
+                    line,
+                ));
+            }
+            return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line);
+        }
+        let function = function.unwrap();
         let caller = std::mem::take(&mut self.variables);
         let result = (|| {
             let last_required = function
