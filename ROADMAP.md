@@ -10,9 +10,10 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, twenty-eight differential fixtures, explicit unsupported reports, and CI.
+   runner, thirty differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Supported fixtures execute as real files with
-   a selectable suite working directory and generated-file cleanup.
+   a selectable suite working directory and generated-file cleanup. Reference
+   comparisons include process exit status, including intentional nonzero exits.
    Remaining: full upstream sections, reproducible reference provisioning in CI,
    diagnostic comparison, isolation, and timeouts.
    Never count skipped tests as passing.
@@ -26,6 +27,8 @@ definition of completion.
    offset reads/writes implemented.
    All loop forms, alternative loop syntax, and numbered break/continue implemented.
    Switch selection/fall-through, alternative syntax, and control-flow diagnostics implemented.
+   Exit/die support PHP 8.5 callable syntax, scalar coercion, and request-local
+   termination with CLI exit status.
    Goto and labels support block/branch jumps, loop exits, and active-loop/switch
    jumps, with compile-time scope and entry validation.
    Match expressions with strict identity, lazy arms, and unmatched errors implemented.
@@ -54,7 +57,7 @@ definition of completion.
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function
    existence implemented. Remaining: configurable include paths, stream wrappers,
    the other core and standard builtins, streams and
-   filesystem, output buffering, serialization, date/time, JSON, PCRE, SPL,
+   filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.
 6. **PHP 8.5 specifics:** pipe operator, clone-with, URI extension, new APIs and
    attributes, and migration-guide compatibility changes.

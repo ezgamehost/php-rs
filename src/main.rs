@@ -78,7 +78,7 @@ fn execute() -> Result<u8, Box<dyn std::error::Error>> {
         eprintln!("Warning: {warning}");
     }
     match result {
-        Ok(_) => Ok(0),
+        Ok(_) => Ok(runtime.exit_status().unwrap_or(0) as u8),
         Err(error) => {
             eprintln!("{error}");
             Ok(255)

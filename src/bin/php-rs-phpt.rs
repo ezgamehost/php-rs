@@ -73,10 +73,16 @@ fn run() -> Result<bool, String> {
             Ok(case) => match case.prepare(&path) {
                 Err(error) => Outcome::Failed(error),
                 Ok(prepared) => {
-                    let outcome = prepared.run(&working_directory);
+                    let (outcome, status) = prepared.run_with_status(&working_directory);
                     if outcome == Outcome::Passed {
                         if let Some(binary) = &reference {
-                            reference_check(binary, &case, prepared.path(), &working_directory)?
+                            reference_check(
+                                binary,
+                                &case,
+                                prepared.path(),
+                                &working_directory,
+                                status,
+                            )?
                         } else {
                             outcome
                         }
@@ -144,6 +150,7 @@ fn reference_check(
     case: &Case,
     path: &Path,
     working_directory: &Path,
+    expected_status: u8,
 ) -> Result<Outcome, String> {
     let output = Command::new(binary)
         .args(["-n", "-d", "display_errors=stderr", "-d", "log_errors=0"])
@@ -152,9 +159,10 @@ fn reference_check(
         .stdin(Stdio::null())
         .output()
         .map_err(|error| error.to_string())?;
-    if !output.status.success() || !output.stderr.is_empty() {
+    if output.status.code() != Some(i32::from(expected_status)) || !output.stderr.is_empty() {
         return Ok(Outcome::Failed(format!(
-            "Reference PHP failed: {}",
+            "Reference PHP failed (expected exit status {expected_status}, got {}): {}",
+            output.status,
             String::from_utf8_lossy(&output.stderr)
         )));
     }

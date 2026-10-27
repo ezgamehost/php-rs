@@ -3,6 +3,7 @@ use crate::ast::Parameter;
 
 #[derive(Debug, Clone, Copy)]
 pub(super) enum Builtin {
+    Exit,
     Strlen,
     Count,
     VarDump,
@@ -24,6 +25,7 @@ pub(super) enum Builtin {
 impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
         Some(match name {
+            b"exit" | b"die" => Self::Exit,
             b"strlen" => Self::Strlen,
             b"count" | b"sizeof" => Self::Count,
             b"var_dump" => Self::VarDump,
@@ -51,6 +53,7 @@ impl Builtin {
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
+            Self::Exit => &[("status", true, false)],
             Self::GetIncludedFiles | Self::FuncNumArgs | Self::FuncGetArgs => &[],
             Self::FuncGetArg => &[("position", false, false)],
             Self::Strlen => &[("string", false, false)],
@@ -97,6 +100,9 @@ impl Runtime {
         line: usize,
         dynamic: bool,
     ) -> Result<Value, Error> {
+        if matches!(builtin, Builtin::Exit) {
+            return self.terminate(args[0].as_ref().unwrap_or(&Value::Int(0)), line);
+        }
         if matches!(
             builtin,
             Builtin::FuncNumArgs | Builtin::FuncGetArg | Builtin::FuncGetArgs
@@ -121,7 +127,8 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
-            Builtin::GetIncludedFiles
+            Builtin::Exit
+            | Builtin::GetIncludedFiles
             | Builtin::FuncNumArgs
             | Builtin::FuncGetArg
             | Builtin::FuncGetArgs => unreachable!(),

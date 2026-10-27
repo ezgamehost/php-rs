@@ -23,6 +23,10 @@ Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
 `Runtime::set_working_directory` configures relative path resolution for one
 request without changing the host process's working directory.
+`Runtime::exit_status()` reports termination requested by `exit`/`die`; execution
+returns successfully with `Value::Null`, preserving output and global state.
+A terminated request does not execute further PHP; create a new `Runtime` for a
+new request. The CLI returns the low eight bits of the requested status.
 
 ## Current coverage
 
@@ -64,6 +68,8 @@ request without changing the host process's working directory.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
   by value, numbered `break`/`continue`, and `return`. Loops support alternative
   `: … endfor` / `endwhile` / `endforeach` syntax.
+- `exit`/`die` with bare syntax, ordinary/dynamic calls, named and unpacked
+  arguments, PHP 8.5 scalar coercion, strict types, and request-local unwinding.
 - `goto` and case-sensitive labels, with jumps across ordinary blocks/branches,
   loop exits, and jumps within active loops/switches. Invalid label targets and
   jumps into loop/switch regions are rejected before execution.
@@ -84,7 +90,8 @@ Known gaps include intersection/DNF types, closures, most builtins, objects, ref
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 Class-name and object type declarations can be parsed, but objects and class
 resolution are not implemented. Callable checks currently cover function names.
-Other `declare` directives are not implemented.
+Other `declare` directives are not implemented. Shutdown callbacks, output
+handlers, and object destructor execution remain unimplemented.
 Automatic initialization and scope handling for the other superglobals are not
 implemented; `$GLOBALS` currently exposes the variables created by PHP code or
 provided through `Runtime::variables`. File loading currently
@@ -100,7 +107,9 @@ The PHPT runner currently supports `TEST`, `FILE`, and exact `EXPECT` output,
 plus descriptive `DESCRIPTION` and `CREDITS` sections. Other sections are reported
 as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
 fail a test. `--reference` checks the PHP major/minor version and validates passing
-fixtures against both interpreters. It does not compare exact diagnostic text.
+fixtures against both interpreters, including process exit status. Intentional
+nonzero exits can pass when output and reference status match. It does not
+compare exact diagnostic text.
 The runner writes each supported `FILE` section to a temporary `.php` sibling
 of the `.phpt` fixture and runs both interpreters against that filename. It
 refuses to overwrite an existing file and removes generated files after the run.
@@ -123,6 +132,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Function argument inspection](https://www.php.net/manual/en/function.func-get-args.php)
+- [Exit](https://www.php.net/manual/en/function.exit.php)
 - [Goto](https://www.php.net/manual/en/control-structures.goto.php)
 - [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)
 - [$GLOBALS](https://www.php.net/manual/en/reserved.variables.globals.php)

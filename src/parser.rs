@@ -722,6 +722,13 @@ impl Parser {
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Symbol(op) if op == "$" => self.dynamic_variable()?,
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
+                b"exit" | b"die" if !self.is("(") => ExprKind::Call(
+                    Box::new(Expr {
+                        kind: ExprKind::Constant(name),
+                        line,
+                    }),
+                    Vec::new(),
+                ),
                 b"__line__" => ExprKind::Literal(Value::Int(line as i64)),
                 b"__file__" => ExprKind::Literal(Value::String(self.source.name.clone())),
                 b"__dir__" => ExprKind::Literal(Value::String(

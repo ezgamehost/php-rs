@@ -78,3 +78,26 @@ fn rejects_unknown_options_and_missing_arguments() {
         assert!(!result.stderr.is_empty());
     }
 }
+
+#[test]
+fn exit_sets_process_status_without_fatal_diagnostics() {
+    for (code, status, output) in [
+        ("echo 'a';exit(7);echo 'b';", 7, "a"),
+        ("die('message');", 0, "message"),
+        ("exit(-1);", 255, ""),
+        ("exit(258);", 2, ""),
+    ] {
+        let result = cli(&["-r", code], b"");
+        assert_eq!(result.status.code(), Some(status));
+        assert_eq!(result.stdout, output.as_bytes());
+        assert!(result.stderr.is_empty(), "{:?}", result.stderr);
+    }
+    let result = cli(&[], b"<?php exit('stdin'); ?>bad");
+    assert!(result.status.success());
+    assert_eq!(result.stdout, b"stdin");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/terminate.php");
+    let result = cli(&[path], b"");
+    assert_eq!(result.status.code(), Some(12));
+    assert_eq!(result.stdout, b"included");
+    assert!(result.stderr.is_empty());
+}

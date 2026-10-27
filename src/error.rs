@@ -2,6 +2,9 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorKind {
+    /// Internal control signal, consumed at the request execution boundary.
+    #[doc(hidden)]
+    UnwindExit,
     ParseError,
     TypeError,
     DivisionByZeroError,

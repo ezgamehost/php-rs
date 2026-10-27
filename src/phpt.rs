@@ -36,12 +36,22 @@ impl PreparedCase<'_> {
     }
 
     pub fn run(&self, working_directory: &Path) -> Outcome {
+        self.run_with_status(working_directory).0
+    }
+
+    /// Run the fixture and return its CLI-compatible process status as well.
+    pub fn run_with_status(&self, working_directory: &Path) -> (Outcome, u8) {
         let mut runtime = Runtime::default();
         if let Err(error) = runtime.set_working_directory(working_directory) {
-            return Outcome::Failed(format!("Working directory: {error}"));
+            return (Outcome::Failed(format!("Working directory: {error}")), 255);
         }
         let result = runtime.execute_file(&self.path);
-        self.case.runtime_outcome(&runtime, result)
+        let status = if result.is_err() {
+            255
+        } else {
+            runtime.exit_status().unwrap_or(0) as u8
+        };
+        (self.case.runtime_outcome(&runtime, result), status)
     }
 }
 

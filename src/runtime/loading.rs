@@ -51,6 +51,9 @@ impl Runtime {
 
     /// Execute a file with its canonical path as the source identity.
     pub fn execute_file(&mut self, path: impl AsRef<Path>) -> Result<Value, Error> {
+        if self.exit_status.is_some() {
+            return Ok(Value::Null);
+        }
         let requested = path.as_ref();
         let path = fs::canonicalize(self.working_directory().join(requested)).map_err(|error| {
             Error::new(
@@ -70,6 +73,9 @@ impl Runtime {
     }
 
     fn execute_document(&mut self, code: &[u8], source: Rc<Source>) -> Result<Value, Error> {
+        if self.exit_status.is_some() {
+            return Ok(Value::Null);
+        }
         self.scope.reconcile(std::mem::take(&mut self.variables));
         self.static_variables.remove(&None);
         let result = self.execute_unit(code, source, Value::Null);
@@ -78,7 +84,10 @@ impl Runtime {
             .iter()
             .map(|(name, value)| (name.clone(), value.borrow().clone()))
             .collect();
-        result
+        match result {
+            Err(error) if error.kind == ErrorKind::UnwindExit => Ok(Value::Null),
+            result => result,
+        }
     }
 
     fn execute_unit(

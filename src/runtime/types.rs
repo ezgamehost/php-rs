@@ -53,6 +53,11 @@ impl Runtime {
             return Some(Value::Float(number.as_float()));
         }
         if ty.contains("string") {
+            if matches!(value, Value::Float(n) if n.is_nan()) {
+                self.warnings.push(format!(
+                    "unexpected NAN value was coerced to string on line {line}"
+                ));
+            }
             return Some(Value::String(value.to_bytes()));
         }
         if ty.contains("bool") {

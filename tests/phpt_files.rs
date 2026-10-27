@@ -148,3 +148,34 @@ fn invalid_working_directory_fails_without_running_tests() {
     assert!(!result.status.success());
     assert!(!path.with_extension("php").exists());
 }
+
+#[cfg(unix)]
+#[test]
+fn reference_checks_intentional_exit_status_and_still_rejects_diagnostics() {
+    use std::os::unix::fs::PermissionsExt;
+    let suite = Suite::new();
+    let path = suite.case("exit.phpt", "<?php echo 'ok';exit(7);echo 'bad';", "ok");
+    for (status, diagnostic, passed) in [
+        (7, "", true),
+        (0, "", false),
+        (255, "", false),
+        (7, "echo diagnostic >&2", false),
+    ] {
+        let reference=suite.write("reference.sh", &format!("#!/bin/sh\nif [ \"$2\" = \"-r\" ]; then printf 8.5; exit 0; fi\nprintf ok\n{diagnostic}\nexit {status}\n"));
+        fs::set_permissions(&reference, fs::Permissions::from_mode(0o755)).unwrap();
+        let result = Command::new(env!("CARGO_BIN_EXE_php-rs-phpt"))
+            .arg("--reference")
+            .arg(&reference)
+            .arg(&path)
+            .output()
+            .unwrap();
+        assert_eq!(
+            result.status.success(),
+            passed,
+            "{}{}",
+            String::from_utf8_lossy(&result.stdout),
+            String::from_utf8_lossy(&result.stderr)
+        );
+        assert!(!path.with_extension("php").exists());
+    }
+}

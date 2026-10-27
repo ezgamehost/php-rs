@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 28 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 30 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -17,6 +17,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
+| PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 0 | 5 | 22 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -68,6 +69,14 @@ classes, non-strict `declare` directives, or `try`/`catch`/`finally`; five diagn
 cases require unsupported `EXPECTF`. Project regressions cover invalid targets,
 case-sensitive labels, branch entry, loop exits, and switch resumption. Eighteen
 normal-output examples also match the reference.
+
+The [exit-suite report](conformance/php-8.5.0-exit.txt) records zero passing cases,
+five failures, and 22 unsupported cases. These require process execution APIs,
+objects/closures, output handling, or additional PHPT sections. Separately,
+108 exit cases (18 values × weak/strict typing × three call forms) match PHP 8.5.0
+for output, process status, and diagnostic presence. This does not compare
+exact diagnostic text or establish shutdown/destructor compatibility. Project
+PHPT checks now compare intentional nonzero exit codes with the reference.
 
 The upstream basic-suite failures are:
 

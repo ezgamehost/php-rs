@@ -21,6 +21,7 @@ mod loading;
 mod matching;
 mod offsets;
 mod scope_slots;
+mod termination;
 mod types;
 mod variables;
 use offsets::{Access, Offset, read_offset, unset_path, write_path};
@@ -45,6 +46,7 @@ pub struct Runtime {
     included_files: Vec<std::path::PathBuf>,
     included_set: HashSet<std::path::PathBuf>,
     working_directory: Option<std::path::PathBuf>,
+    exit_status: Option<i32>,
 }
 struct Location {
     name: Vec<u8>,
@@ -68,6 +70,11 @@ impl Flow {
     }
 }
 impl Runtime {
+    /// Status requested by exit/die. A terminated request cannot execute more PHP.
+    pub fn exit_status(&self) -> Option<i32> {
+        self.exit_status
+    }
+
     fn block(&mut self, stmts: &[Stmt]) -> Result<Flow, Error> {
         self.block_from(stmts, 0, None)
     }
