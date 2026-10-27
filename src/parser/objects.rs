@@ -112,7 +112,9 @@ impl Parser {
                 }
                 *flag = true;
             }
-            if visibility != Visibility::Public && (!self.is("function") || is_interface) {
+            if visibility != Visibility::Public
+                && ((!self.is("function") && !self.is("const")) || is_interface)
+            {
                 return Err(Error::parse(
                     "Invalid non-public member declaration",
                     self.token().line,
@@ -283,6 +285,12 @@ impl Parser {
                 function.name = qualified;
                 methods.push(method);
             } else if self.eat("const") && !static_method {
+                if final_method && visibility == Visibility::Private {
+                    return Err(Error::parse(
+                        "Private constants cannot be final",
+                        self.token().line,
+                    ));
+                }
                 // An untyped constant has a name immediately followed by '='.
                 let ty = if self
                     .tokens
@@ -336,6 +344,7 @@ impl Parser {
                         self.validate_constant_value(&constant, ty, &value)?;
                     }
                     constants.push(ClassConstant {
+                        visibility,
                         name: constant,
                         value,
                         ty: ty.clone(),

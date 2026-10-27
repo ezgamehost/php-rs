@@ -13,7 +13,7 @@ Zend/tests/type_declarations/typed_class_constants_inheritance_error5.phpt UNSUP
 Zend/tests/type_declarations/typed_class_constants_inheritance_error6.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_class_constants_inheritance_success1.phpt PASS
 Zend/tests/type_declarations/typed_class_constants_inheritance_success2.phpt UNSUPPORTED: EXPECTF
-Zend/tests/type_declarations/typed_class_constants_inheritance_success3.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/type_declarations/typed_class_constants_inheritance_success3.phpt PASS
 Zend/tests/type_declarations/typed_class_constants_inheritance_success4.phpt FAIL: ParseError: Constant expression contains invalid operations on line 3
 Zend/tests/type_declarations/typed_class_constants_inheritance_success5.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/type_declarations/typed_class_constants_multiple_constants.phpt UNSUPPORTED: EXPECTF
@@ -32,4 +32,4 @@ Zend/tests/type_declarations/typed_class_constants_type_error9.phpt FAIL: ParseE
 Zend/tests/type_declarations/typed_class_constants_type_success1.phpt PASS
 Zend/tests/type_declarations/typed_class_constants_type_success2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_class_constants_type_success3.phpt FAIL: ParseError: Expected ';' on line 2
-3 passed, 12 failed, 14 unsupported
+4 passed, 11 failed, 14 unsupported

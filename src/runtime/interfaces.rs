@@ -61,6 +61,13 @@ impl Runtime {
                     .unwrap();
                 let own = class.declaration.constants.iter().find(|c| c.name == name);
                 if let Some(own) = own {
+                    if own.visibility != crate::ast::Visibility::Public {
+                        return Err(Error::new(
+                            ErrorKind::Error,
+                            "Interface constant implementations must be public",
+                            own.value.line,
+                        ));
+                    }
                     if required.is_final {
                         return Err(Error::new(
                             ErrorKind::Error,
@@ -85,7 +92,7 @@ impl Runtime {
                     let inherited_owner = class
                         .parent
                         .as_ref()
-                        .and_then(|p| p.constant_owner(&name))
+                        .and_then(|p| p.inheritable_constant_owner(&name))
                         .or_else(|| {
                             class
                                 .interfaces

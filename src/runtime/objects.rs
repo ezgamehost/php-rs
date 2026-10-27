@@ -123,7 +123,7 @@ impl Runtime {
         }
         if let Some(parent) = &parent {
             for constant in &decl.constants {
-                if let Some(owner) = parent.constant_owner(&constant.name)
+                if let Some(owner) = parent.inheritable_constant_owner(&constant.name)
                     && owner
                         .declaration
                         .constants

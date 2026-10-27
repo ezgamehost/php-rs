@@ -160,6 +160,7 @@ pub(crate) struct PropertyDecl {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ClassConstant {
+    pub visibility: Visibility,
     pub name: Vec<u8>,
     pub value: Expr,
     pub ty: Option<TypeDecl>,

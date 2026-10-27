@@ -97,12 +97,12 @@ tests/classes/constants_error_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_007.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_scope_001.phpt PASS
 tests/classes/constants_visibility_001.phpt PASS
-tests/classes/constants_visibility_002.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
-tests/classes/constants_visibility_003.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+tests/classes/constants_visibility_002.phpt FAIL: ParseError: Expected ';' on line 14
+tests/classes/constants_visibility_003.phpt FAIL: ParseError: Expected ';' on line 14
 tests/classes/constants_visibility_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_006.phpt UNSUPPORTED: EXPECTF
-tests/classes/constants_visibility_008.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
+tests/classes/constants_visibility_008.phpt PASS
 tests/classes/constants_visibility_error_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_003.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt PASS
 tests/classes/visibility_004b.phpt PASS
 tests/classes/visibility_004c.phpt PASS
 tests/classes/visibility_005.phpt FAIL: ParseError: Invalid non-public member declaration on line 7
-44 passed, 81 failed, 158 unsupported
+45 passed, 80 failed, 158 unsupported

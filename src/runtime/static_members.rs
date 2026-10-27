@@ -1,4 +1,5 @@
 use super::*;
+use crate::ast::Visibility;
 use crate::object::{Class, ClassContext};
 
 impl Runtime {
@@ -73,7 +74,11 @@ impl Runtime {
                     .map(|_| Value::Null)
             };
         };
-        if defined && class.constant_owner(name).is_none() {
+        if defined
+            && !class
+                .constant_owner(name)
+                .is_some_and(|owner| self.can_access_constant(&owner, name))
+        {
             return Ok(Value::Bool(false));
         }
         let value = self.read_class_constant(&class, name, line)?;
@@ -97,6 +102,53 @@ impl Runtime {
                 line,
             )
         })?;
+        if !self.can_access_constant(&owner, name) {
+            let constant = owner
+                .declaration
+                .constants
+                .iter()
+                .find(|c| c.name == name)
+                .unwrap();
+            let visibility = if constant.visibility == Visibility::Private {
+                "private"
+            } else {
+                "protected"
+            };
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot access {visibility} constant {}::{}",
+                    String::from_utf8_lossy(&class.name),
+                    String::from_utf8_lossy(name)
+                ),
+                line,
+            ));
+        }
+        self.evaluate_class_constant(&owner, name, line)
+    }
+
+    fn can_access_constant(&self, owner: &Class, name: &[u8]) -> bool {
+        let constant = owner
+            .declaration
+            .constants
+            .iter()
+            .find(|c| c.name == name)
+            .expect("constant owner");
+        constant.visibility == Visibility::Public
+            || self.class_context.as_ref().is_some_and(|context| {
+                context.scope.name.eq_ignore_ascii_case(&owner.name)
+                    || (constant.visibility == Visibility::Protected
+                        && !context.scope.declaration.is_interface
+                        && (context.scope.is_a(&owner.name) || owner.is_a(&context.scope.name)))
+            })
+    }
+
+    fn evaluate_class_constant(
+        &mut self,
+        owner: &Rc<Class>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
         if let Some(value) = owner.constant_values.borrow().get(name) {
             return Ok(value.clone());
         }
@@ -169,7 +221,8 @@ impl Runtime {
 
     fn initialize_class_values(&mut self, class: &Rc<Class>) -> Result<(), Error> {
         for name in class.constant_names() {
-            self.read_class_constant(class, &name, class.declaration.line)?;
+            let owner = class.constant_owner(&name).expect("class constant");
+            self.evaluate_class_constant(&owner, &name, class.declaration.line)?;
         }
         self.initialize_property_values(class)
     }

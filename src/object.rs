@@ -75,9 +75,16 @@ impl Class {
         } else {
             self.parent
                 .as_ref()
-                .and_then(|p| p.constant_owner(name))
+                .and_then(|p| p.inheritable_constant_owner(name))
                 .or_else(|| self.interfaces.iter().find_map(|i| i.constant_owner(name)))
         }
+    }
+    pub fn inheritable_constant_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
+        self.constant_owner(name).filter(|owner| {
+            owner.declaration.constants.iter().any(|constant| {
+                constant.name == name && constant.visibility != crate::ast::Visibility::Private
+            })
+        })
     }
     pub fn constant_names(&self) -> Vec<Vec<u8>> {
         let mut names: Vec<_> = self
@@ -88,7 +95,7 @@ impl Class {
             .collect();
         for ancestor in self.parent.iter().chain(&self.interfaces) {
             for name in ancestor.constant_names() {
-                if !names.contains(&name) {
+                if !names.contains(&name) && ancestor.inheritable_constant_owner(&name).is_some() {
                     names.push(name);
                 }
             }

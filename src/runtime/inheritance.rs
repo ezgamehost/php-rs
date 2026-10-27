@@ -149,7 +149,7 @@ impl Runtime {
             }
         }
         for constant in &class.declaration.constants {
-            let Some(owner) = parent.constant_owner(&constant.name) else {
+            let Some(owner) = parent.inheritable_constant_owner(&constant.name) else {
                 continue;
             };
             let inherited = owner
@@ -158,6 +158,13 @@ impl Runtime {
                 .iter()
                 .find(|c| c.name == constant.name)
                 .expect("constant owner");
+            if constant.visibility > inherited.visibility {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "Cannot narrow inherited class constant visibility",
+                    constant.value.line,
+                ));
+            }
             if let Some(parent_type) = &inherited.ty {
                 let child_type = constant.ty.as_ref().map(|ty| class_type(ty, class));
                 let parent_type = class_type(parent_type, &owner);
