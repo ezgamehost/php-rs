@@ -226,8 +226,12 @@ impl Runtime {
                 let exists = if matches!(builtin, Builtin::MethodExists) {
                     class.is_some_and(|c| objects::method(&c, &member).is_some())
                 } else {
-                    class.is_some_and(|c| c.properties.iter().any(|(n, _)| *n == member))
-                        || matches!(first, Value::Object(o) if o.properties.borrow().get(&ArrayKey::String(member)).is_some())
+                    class.is_some_and(|c| {
+                        c.properties
+                            .iter()
+                            .chain(c.static_properties.iter())
+                            .any(|(n, _)| *n == member)
+                    }) || matches!(first, Value::Object(o) if o.properties.borrow().get(&ArrayKey::String(member)).is_some())
                 };
                 Ok(Value::Bool(exists))
             }
@@ -261,7 +265,9 @@ impl Runtime {
             }
             Builtin::Defined | Builtin::Constant => {
                 let constant = self.native_string(first, &name, 1, line)?;
-                if matches!(builtin, Builtin::Defined) {
+                if constant.windows(2).any(|p| p == b"::") {
+                    self.named_class_constant(&constant, matches!(builtin, Builtin::Defined), line)
+                } else if matches!(builtin, Builtin::Defined) {
                     Ok(Value::Bool(self.lookup_constant(&constant).is_some()))
                 } else {
                     self.read_constant(&constant, line)

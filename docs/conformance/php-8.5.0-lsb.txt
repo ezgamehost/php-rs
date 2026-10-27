@@ -2,7 +2,7 @@ PHP 8.5.0 Zend/tests/lsb baseline (2026-10-26)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/lsb
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
-Reference: PHP 8.5 (/privatesapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/lsb/bug47699.phpt UNSUPPORTED: EXPECTF
 Zend/tests/lsb/lsb_001.phpt FAIL: ParseError: Expected public property or method on line 4
 Zend/tests/lsb/lsb_002.phpt FAIL: ParseError: Expected public property or method on line 4
@@ -17,15 +17,15 @@ Zend/tests/lsb/lsb_010.phpt FAIL: ParseError: Expected public property or method
 Zend/tests/lsb/lsb_011.phpt UNSUPPORTED: EXPECTF
 Zend/tests/lsb/lsb_012.phpt UNSUPPORTED: EXPECTF
 Zend/tests/lsb/lsb_013.phpt UNSUPPORTED: EXPECTF
-Zend/tests/lsb/lsb_014.phpt FAIL: ParseError: Expected public property or method on line 13
+Zend/tests/lsb/lsb_014.phpt PASS
 Zend/tests/lsb/lsb_015.phpt FAIL: ParseError: Expected ';' on line 20
 Zend/tests/lsb/lsb_016.phpt FAIL: Error: Call to undefined method TestChild::test() on line 29
 Zend/tests/lsb/lsb_017.phpt PASS
 Zend/tests/lsb/lsb_018.phpt UNSUPPORTED: EXPECTF
 Zend/tests/lsb/lsb_019.phpt FAIL: ParseError: Expected public property or method on line 3
-Zend/tests/lsb/lsb_020.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/lsb/lsb_020.phpt PASS
 Zend/tests/lsb/lsb_021.phpt UNSUPPORTED: EXPECTF
 Zend/tests/lsb/lsb_022.phpt UNSUPPORTED: EXPECTF
 Zend/tests/lsb/lsb_023.phpt FAIL: ParseError: Expected public property or method on line 7
 Zend/tests/lsb/lsb_024.phpt FAIL: ParseError: Expected public property or method on line 3
-4 passed, 10 failed, 11 unsupported
+6 passed, 8 failed, 11 unsupported

@@ -2,7 +2,7 @@ PHP 8.5.0 tests/classes baseline (2026-10-26)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/tests/classes
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
-Reference: PHP 8.5 (/privatesapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 tests/classes/__call_001.phpt FAIL: Error: Call to undefined method Caller::test() on line 14
 tests/classes/__call_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/__call_003.phpt FAIL: ParseError: Expected expression on line 13
@@ -14,7 +14,7 @@ tests/classes/__set__get_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_004.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/classes/__set__get_005.phpt UNSUPPORTED: EXPECTF
-tests/classes/__set_data_corrupt.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/__set_data_corrupt.phpt FAIL: Unexpected diagnostics: Deprecated: Creation of dynamic property foo::$t is deprecated on line 8
 tests/classes/abstract.phpt UNSUPPORTED: EXPECTF
 tests/classes/abstract_by_interface_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/abstract_by_interface_002.phpt UNSUPPORTED: EXPECTF
@@ -83,20 +83,20 @@ tests/classes/clone_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/clone_006.phpt UNSUPPORTED: EXPECTF, INI
 tests/classes/constants_basic_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_basic_002.phpt UNSUPPORTED: EXPECTF
-tests/classes/constants_basic_003.phpt FAIL: ParseError: Expected public property or method on line 5
+tests/classes/constants_basic_003.phpt PASS
 tests/classes/constants_basic_004.phpt UNSUPPORTED: EXPECTF
-tests/classes/constants_basic_005.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/constants_basic_006.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/constants_basic_005.phpt PASS
+tests/classes/constants_basic_006.phpt PASS
 tests/classes/constants_comments_001.phpt UNSUPPORTED: INI
 tests/classes/constants_error_001.phpt UNSUPPORTED: EXPECTF
-tests/classes/constants_error_002.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/constants_error_002.phpt PASS
 tests/classes/constants_error_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_007.phpt UNSUPPORTED: EXPECTF
-tests/classes/constants_scope_001.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/constants_visibility_001.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/classes/constants_scope_001.phpt PASS
+tests/classes/constants_visibility_001.phpt PASS
 tests/classes/constants_visibility_002.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/classes/constants_visibility_003.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/classes/constants_visibility_004.phpt UNSUPPORTED: EXPECTF
@@ -227,7 +227,7 @@ tests/classes/property_override_publicStatic_privateStatic.phpt UNSUPPORTED: EXP
 tests/classes/property_override_publicStatic_protected.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_publicStatic_protectedStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_publicStatic_public.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_publicStatic_publicStatic.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/property_override_publicStatic_publicStatic.phpt PASS
 tests/classes/property_override_public_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_public_privateStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_public_protected.phpt UNSUPPORTED: EXPECTF
@@ -243,18 +243,18 @@ tests/classes/serialize_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/singleton_001.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/static_mix_1.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_mix_2.phpt UNSUPPORTED: EXPECTF
-tests/classes/static_properties_001.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/static_properties_001.phpt PASS
 tests/classes/static_properties_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_003_error1.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_003_error2.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_003_error3.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_003_error4.phpt UNSUPPORTED: EXPECTF
-tests/classes/static_properties_004.phpt FAIL: ParseError: Expected public property or method on line 2
+tests/classes/static_properties_004.phpt FAIL: ParseError: Expected expression on line 15
 tests/classes/static_properties_undeclared_assign.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_undeclared_assignInc.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_undeclared_assignRef.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_undeclared_inc.phpt UNSUPPORTED: EXPECTF
-tests/classes/static_properties_undeclared_isset.phpt FAIL: ParseError: Cannot use isset() on an expression on line 3
+tests/classes/static_properties_undeclared_isset.phpt PASS
 tests/classes/static_properties_undeclared_read.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_this.phpt UNSUPPORTED: EXPECTF
 tests/classes/this.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt FAIL: ParseError: Expected public property or
 tests/classes/visibility_004b.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_004c.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_005.phpt FAIL: ParseError: Expected public property or method on line 7
-10 passed, 115 failed, 158 unsupported
+19 passed, 106 failed, 158 unsupported

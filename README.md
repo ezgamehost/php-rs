@@ -69,6 +69,11 @@ new request. The CLI returns the low eight bits of the requested status.
   retain their declaring and called class contexts. `::class`, `get_called_class`,
   and `get_parent_class` expose class names. Static closure defaults use the
   declaring scope; property defaults are cached separately for each class.
+- Public static properties with inherited shared storage, redeclaration, dynamic
+  names, array mutation, and `isset`/`empty`/coalescing. Public class constants
+  support inheritance, `final`, dynamic names, lazy dependency resolution,
+  cycle errors, and lookup through `constant`/`defined`. `self`, `parent`, and
+  `static` select the appropriate class for both kinds of member access.
 - Object identity and property comparisons, recursive comparison errors,
   recursive-safe object dumps, object-to-array casts, and explicit-object
   `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and
@@ -123,8 +128,8 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: interfaces, traits,
-visibility modifiers other than public, typed/static/readonly properties, hooks,
-class constants beyond `::class`, cloning,
+visibility modifiers other than public, typed/readonly properties, hooks,
+typed class constants, complete constant/default-expression compatibility, cloning,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.

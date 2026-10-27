@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 39 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 40 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -23,9 +23,10 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
-| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 10 | 115 | 158 |
-| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 2 | 32 | 36 |
-| PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 4 | 10 | 11 |
+| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 19 | 106 | 158 |
+| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 3 | 31 | 36 |
+| PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
+| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -169,7 +170,7 @@ it is not bundled with this repository. Test isolation and execution timeouts
 remain unfinished, so large upstream scans should use an external timeout.
 
 The [class-suite report](conformance/php-8.5.0-classes.txt) establishes the
-public-instance object baseline. Ten cases pass both runtimes; 115 fail and 158
+public-instance object baseline. Nineteen cases pass both runtimes; 106 fail and 158
 require unsupported PHPT sections. Public declarations, constructors, property
 access, shared identity, bound method/closure calls, invokable callbacks, and
 basic object inspection now have project regressions. The new project PHPT
@@ -177,12 +178,12 @@ fixture matches PHP 8.5.0. Separately, 251 focused examples matched stdout, exit
 status, and diagnostic presence; they do not establish exact diagnostic wording.
 These examples include scalar/object comparisons, property-name validation,
 object callbacks, type checking, recursive dumps/comparison errors, and mutation
-during property iteration. Visibility, typed properties, static
-members, most magic methods, reflection, handle reuse, and complete object
+during property iteration. Visibility, typed properties,
+most magic methods, reflection, handle reuse, and complete object
 iteration semantics remain targets, not supported features.
 
-The [inheritance report](conformance/php-8.5.0-inheritance.txt) now has two passing
-upstream cases, with 32 failures and 36 unsupported fixtures. Three additional
+The [inheritance report](conformance/php-8.5.0-inheritance.txt) now has three passing
+upstream cases, with 31 failures and 36 unsupported fixtures. Three additional
 class-suite cases now pass. A new project PHPT covers inherited constructors,
 virtual dispatch, compatible overrides, inherited static locals, descendants in
 type checks, `instanceof`, and early versus runtime class registration.
@@ -192,14 +193,25 @@ class declaration permutations, and dynamic `instanceof` operands. Diagnostic
 wording, interfaces, abstract methods, autoloading, and deferred variance
 dependencies remain unfinished.
 
-The [late-static-binding report](conformance/php-8.5.0-lsb.txt) records four
-passing cases, ten failures, and eleven unsupported fixtures. The class-scope
+The [late-static-binding report](conformance/php-8.5.0-lsb.txt) records six
+passing cases, eight failures, and eleven unsupported fixtures. The class-scope
 slice also adds one passing class fixture, one inheritance fixture, and four
 return-type fixtures. All passing fixtures were checked against PHP 8.5.0.
 A 300-case differential check matched stdout, exit status, and diagnostic
 presence across static/instance calls, forwarding, saved callbacks, contextual
 type variance, and class-name inspection. Project regressions additionally
 cover caller-context restoration, eval, default closure scope, and per-class
-property-default identity. Static properties, general class constants, magic
-method dispatch, complete closure reflection/debugging, and all previously
-listed unsupported language features remain incomplete.
+property-default identity. Magic method dispatch, typed members, non-public
+visibility, and complete closure reflection/debugging remain incomplete.
+
+The static-member slice adds nine class-suite passes, two late-static-binding
+passes, and one inheritance pass without regressing prior passing cases.
+The new [constant-suite report](conformance/php-8.5.0-constants.txt) records 19
+passes, 37 failures, and 39 unsupported fixtures. Twenty project regressions
+and a reference-checked PHPT cover public class constants, final overrides,
+shared and redeclared static properties, dynamic access, array mutations,
+probes, initializer timing, and cyclic constant errors. A 214-case differential
+check and the existing 300-case class-scope matrix matched stdout, exit status,
+and diagnostic presence against PHP 8.5.0. These checks do not claim exact
+diagnostic wording. Typed class constants, non-public members, all constant
+expression forms, and the remaining upstream failures are still unfinished.

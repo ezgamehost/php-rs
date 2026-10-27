@@ -284,7 +284,9 @@ impl Runtime {
         if let Some(context) = &mut self.class_context {
             context.called = context.scope.clone();
         }
+        let constant_expression = std::mem::replace(&mut self.in_constant_expression, true);
         let result = self.eval(expr);
+        self.in_constant_expression = constant_expression;
         self.class_context = outer;
         result
     }
@@ -312,7 +314,7 @@ impl Runtime {
                 called: declaring,
             });
             let result = match expr {
-                Some(expr) => self.eval(expr),
+                Some(expr) => self.eval_default(expr),
                 None => Ok(Value::Null),
             };
             self.class_context = outer;

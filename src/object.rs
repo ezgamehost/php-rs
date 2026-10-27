@@ -53,11 +53,36 @@ pub(crate) struct Class {
     pub methods: Vec<Rc<FunctionDecl>>,
     pub allow_dynamic: bool,
     pub defaults: RefCell<Option<PhpArray>>,
+    pub static_properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub static_values: RefCell<std::collections::HashMap<Vec<u8>, Rc<RefCell<crate::Value>>>>,
+    pub constant_values: RefCell<std::collections::HashMap<Vec<u8>, crate::Value>>,
+    pub evaluating_constants: RefCell<std::collections::HashSet<Vec<u8>>>,
+    pub initialized: std::cell::Cell<bool>,
+    pub initializing: std::cell::Cell<bool>,
 }
 impl Class {
     pub fn is_a(&self, name: &[u8]) -> bool {
         let name = name.strip_prefix(b"\\").unwrap_or(name);
         self.name.eq_ignore_ascii_case(name) || self.parent.as_ref().is_some_and(|p| p.is_a(name))
+    }
+    pub fn constant_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
+        if self.declaration.constants.iter().any(|(n, _)| n == name) {
+            Some(self.clone())
+        } else {
+            self.parent.as_ref().and_then(|p| p.constant_owner(name))
+        }
+    }
+    pub fn static_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
+        if self
+            .declaration
+            .static_properties
+            .iter()
+            .any(|(n, _)| n == name)
+        {
+            Some(self.clone())
+        } else {
+            self.parent.as_ref().and_then(|p| p.static_owner(name))
+        }
     }
     pub fn method_is_final(&self, name: &[u8]) -> bool {
         self.declaration

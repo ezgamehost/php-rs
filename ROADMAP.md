@@ -67,9 +67,11 @@ definition of completion.
    restrictions, compatible method overrides, descendant type checks, and
    `instanceof` implemented. Public static methods, parent/scoped calls, late
    static binding, contextual class types, scoped callables, and `::class` are
-   implemented. Remaining: interfaces, traits, abstract members, static properties,
-   class constants, complete constant/default resolution,
-   visibility, properties and hooks, magic methods, reflection, attributes, enums,
+   implemented. Public static properties share inherited storage unless redeclared;
+   public class constants support inheritance, final restrictions, dynamic names,
+   and lazy dependency resolution. Remaining: interfaces, traits, abstract members,
+   typed class constants, complete constant/default resolution,
+   visibility, typed/readonly properties and hooks, magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function

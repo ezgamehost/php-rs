@@ -26,6 +26,7 @@ mod matching;
 mod objects;
 mod offsets;
 mod scope_slots;
+mod static_members;
 mod termination;
 mod types;
 mod variables;
@@ -44,6 +45,7 @@ pub struct Runtime {
     static_variables: HashMap<Option<Vec<u8>>, Scope>,
     current_function: Option<Vec<u8>>,
     class_context: Option<crate::object::ClassContext>,
+    in_constant_expression: bool,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
@@ -58,6 +60,7 @@ pub struct Runtime {
     next_object_id: usize,
 }
 struct Location {
+    static_class: Option<Rc<crate::object::Class>>,
     object: Option<Rc<crate::PhpObject>>,
     name: Vec<u8>,
     global: bool,
@@ -105,7 +108,7 @@ impl Runtime {
             }
             Stmt::Const(constants) => {
                 for (name, expr) in constants {
-                    let value = self.eval(expr)?;
+                    let value = self.eval_default(expr)?;
                     self.define_constant(name.clone(), value, expr.line);
                 }
             }
@@ -232,7 +235,29 @@ impl Runtime {
                     let Some(mut location) = self.unset_location(target)? else {
                         continue;
                     };
-                    if let Some(object) = &location.object {
+                    if let Some(class) = &location.static_class {
+                        if location.keys.is_empty() {
+                            return Err(Error::new(
+                                ErrorKind::Error,
+                                format!(
+                                    "Attempt to unset static property {}::${}",
+                                    String::from_utf8_lossy(&class.name),
+                                    String::from_utf8_lossy(&location.name)
+                                ),
+                                target.line,
+                            ));
+                        }
+                        if let Some(value) =
+                            self.static_cell(class, &location.name, target.line, false)?
+                        {
+                            unset_path(
+                                &mut value.borrow_mut(),
+                                &mut location.keys,
+                                target.line,
+                                &mut self.warnings,
+                            )?;
+                        }
+                    } else if let Some(object) = &location.object {
                         let key = ArrayKey::String(location.name.clone());
                         if location.keys.is_empty() {
                             object.properties.borrow_mut().remove(&key);
@@ -301,17 +326,20 @@ impl Runtime {
     fn location(&mut self, expr: &Expr) -> Result<Location, Error> {
         match &expr.kind {
             ExprKind::Variable(name) => Ok(Location {
+                static_class: None,
                 object: None,
                 name: name.clone(),
                 global: false,
                 keys: Vec::new(),
             }),
             ExprKind::DynamicVariable(name) => Ok(Location {
+                static_class: None,
                 object: None,
                 name: self.variable_name(name)?,
                 global: false,
                 keys: Vec::new(),
             }),
+            ExprKind::StaticProperty(class, name) => self.static_location(class, name, expr.line),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;
                 let name = self.variable_name(name)?;
@@ -327,6 +355,7 @@ impl Runtime {
                     ));
                 };
                 Ok(Location {
+                    static_class: None,
                     object: Some(object),
                     name,
                     global: false,
@@ -339,6 +368,7 @@ impl Runtime {
                     Error::new(ErrorKind::Error, "Cannot append to $GLOBALS", expr.line)
                 })?;
                 Ok(Location {
+                    static_class: None,
                     object: None,
                     name: self.variable_name(key)?,
                     global: true,
@@ -390,7 +420,11 @@ impl Runtime {
             }
             return Ok(value);
         }
-        let stored = self.location_scope(location).get(&location.name).cloned();
+        let stored = if let Some(class) = &location.static_class {
+            self.static_cell(class, &location.name, line, silent)?
+        } else {
+            self.location_scope(location).get(&location.name).cloned()
+        };
         let mut value = match stored {
             Some(value) => value.borrow().clone(),
             None => {
@@ -430,7 +464,8 @@ impl Runtime {
         new_value: Value,
         line: usize,
     ) -> Result<Value, Error> {
-        if location.object.is_none() && location.name == b"this" {
+        if location.object.is_none() && location.static_class.is_none() && location.name == b"this"
+        {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }
         if let Some(object) = &location.object {
@@ -451,9 +486,13 @@ impl Runtime {
             self.write_property_value(object, &location.name, value, line)?;
             return Ok(result);
         }
-        let value = self
-            .location_scope(location)
-            .get_or_insert(&location.name, Value::Null);
+        let value = if let Some(class) = &location.static_class {
+            self.static_cell(class, &location.name, line, false)?
+                .expect("declared static property")
+        } else {
+            self.location_scope(location)
+                .get_or_insert(&location.name, Value::Null)
+        };
         write_path(
             &mut value.borrow_mut(),
             &mut location.keys,
@@ -469,6 +508,10 @@ impl Runtime {
             ExprKind::DynamicVariable(name) => {
                 let name = self.variable_name(name)?;
                 Ok(self.lookup(&name).unwrap_or(Value::Null))
+            }
+            ExprKind::StaticProperty(class, name) => {
+                let mut location = self.static_location(class, name, expr.line)?;
+                self.read_location(&mut location, expr.line, true, None)
             }
             ExprKind::Property(base, name) => {
                 let value = self.coalesce_read(base, probe)?;
@@ -530,11 +573,11 @@ impl Runtime {
                 self.instance_of(value, class, line)
             }
             ExprKind::ClassName(class) => self.class_name_expression(class, line),
-            ExprKind::ScopedMember(_, _) => Err(Error::new(
-                ErrorKind::Error,
-                "Undefined class constant",
-                line,
-            )),
+            ExprKind::ScopedMember(class, name) => self.class_constant(class, name, line),
+            ExprKind::StaticProperty(class, name) => {
+                let mut location = self.static_location(class, name, line)?;
+                self.read_location(&mut location, line, false, None)
+            }
             ExprKind::New(class, args) => self.new_object(class, args, line),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;

@@ -39,16 +39,23 @@ impl Parser {
         let outer_parent = std::mem::replace(&mut self.class_parent, parent.clone());
         let outer_class = std::mem::replace(&mut self.class_name, name.clone());
         let mut properties = Vec::new();
+        let mut static_properties = Vec::new();
+        let mut constants = Vec::new();
+        let mut final_constants = Vec::new();
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
         while !self.eat("}") {
             let mut final_method = false;
             let mut public = false;
+            let mut var = false;
             let mut static_method = false;
             loop {
                 let flag = if self.eat("final") {
                     &mut final_method
-                } else if self.eat("public") || self.eat("var") {
+                } else if self.eat("public") {
+                    &mut public
+                } else if self.eat("var") {
+                    var = true;
                     &mut public
                 } else if self.eat("static") {
                     &mut static_method
@@ -62,6 +69,16 @@ impl Parser {
                     ));
                 }
                 *flag = true;
+            }
+            if var
+                && (static_method
+                    || final_method
+                    || !matches!(self.token().kind, Kind::Variable(_)))
+            {
+                return Err(Error::parse(
+                    "Expected property after var",
+                    self.token().line,
+                ));
             }
             if self.eat("function") {
                 let Stmt::Function(mut method) = self.function(true)? else {
@@ -121,7 +138,45 @@ impl Parser {
                 qualified.extend(&function.name);
                 function.name = qualified;
                 methods.push(method);
-            } else if public && !final_method && !static_method {
+            } else if self.eat("const") && !static_method {
+                loop {
+                    let Kind::Word(constant) = self.token().kind.clone() else {
+                        return Err(Error::parse(
+                            "Expected class constant name",
+                            self.token().line,
+                        ));
+                    };
+                    self.pos += 1;
+                    if constant.eq_ignore_ascii_case(b"class") || constant.contains(&b'\\') {
+                        return Err(Error::parse(
+                            "Invalid class constant name",
+                            self.token().line,
+                        ));
+                    }
+                    if constants.iter().any(|(n, _)| n == &constant) {
+                        return Err(Error::parse(
+                            "Cannot redefine class constant",
+                            self.token().line,
+                        ));
+                    }
+                    self.expect("=")?;
+                    let value = self.expr(0)?;
+                    if !value.is_constant_expression() {
+                        return Err(Error::parse(
+                            "Constant expression contains invalid operations",
+                            value.line,
+                        ));
+                    }
+                    if final_method {
+                        final_constants.push(constant.clone());
+                    }
+                    constants.push((constant, value));
+                    if !self.eat(",") {
+                        break;
+                    }
+                }
+                self.expect(";")?;
+            } else if (public || static_method) && !final_method {
                 loop {
                     let Kind::Variable(property) = self.token().kind.clone() else {
                         return Err(Error::parse(
@@ -130,7 +185,11 @@ impl Parser {
                         ));
                     };
                     self.pos += 1;
-                    if properties.iter().any(|(n, _)| n == &property) {
+                    if properties
+                        .iter()
+                        .chain(static_properties.iter())
+                        .any(|(n, _)| n == &property)
+                    {
                         return Err(Error::parse("Cannot redeclare property", self.token().line));
                     }
                     let default = if self.eat("=") {
@@ -147,7 +206,11 @@ impl Parser {
                             self.token().line,
                         ));
                     }
-                    properties.push((property, default));
+                    if static_method {
+                        static_properties.push((property, default));
+                    } else {
+                        properties.push((property, default));
+                    }
                     if !self.eat(",") {
                         break;
                     }
@@ -168,6 +231,9 @@ impl Parser {
             final_methods,
             name,
             properties,
+            static_properties,
+            constants,
+            final_constants,
             methods,
             line,
         })))
@@ -286,6 +352,30 @@ impl Parser {
             }
         }
         ExprKind::ClassName(Box::new(value))
+    }
+
+    pub(super) fn scoped_member(&mut self, class: Expr) -> Result<ExprKind, Error> {
+        let line = self.token().line;
+        let variable = matches!(self.token().kind, Kind::Variable(_)) || self.is("$");
+        let mut name = self.property_name()?;
+        if variable && !self.is("(") {
+            name.kind = match name.kind {
+                ExprKind::Variable(name) => ExprKind::Literal(Value::String(name)),
+                ExprKind::DynamicVariable(inner) => {
+                    return Ok(ExprKind::StaticProperty(Box::new(class), inner));
+                }
+                kind => kind,
+            };
+            Ok(ExprKind::StaticProperty(
+                Box::new(class),
+                Box::new(Expr {
+                    kind: name.kind,
+                    line,
+                }),
+            ))
+        } else {
+            Ok(ExprKind::ScopedMember(Box::new(class), Box::new(name)))
+        }
     }
 
     pub(super) fn property_name(&mut self) -> Result<Expr, Error> {

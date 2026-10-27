@@ -892,8 +892,7 @@ impl Parser {
                 let kind = if self.eat("class") {
                     self.class_name_expression(lhs)
                 } else {
-                    let name = self.property_name()?;
-                    ExprKind::ScopedMember(Box::new(lhs), Box::new(name))
+                    self.scoped_member(lhs)?
                 };
                 lhs = Expr { kind, line };
                 continue;

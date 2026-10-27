@@ -12,10 +12,17 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
             | Stmt::Continue(_, _) => {}
             Stmt::Class(class) => {
                 let class = Rc::make_mut(class);
-                for (_, value) in &mut class.properties {
+                for (_, value) in class
+                    .properties
+                    .iter_mut()
+                    .chain(class.static_properties.iter_mut())
+                {
                     if let Some(value) = value {
                         initializer(value, warnings);
                     }
+                }
+                for (_, value) in &mut class.constants {
+                    initializer(value, warnings);
                 }
                 for method in &mut class.methods {
                     fold(&mut Rc::make_mut(method).body, warnings);
@@ -153,7 +160,8 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         | ExprKind::Empty(value)
         | ExprKind::Print(value)
         | ExprKind::Increment(value, _, _) => expression(value, warnings),
-        ExprKind::ScopedMember(left, right)
+        ExprKind::StaticProperty(left, right)
+        | ExprKind::ScopedMember(left, right)
         | ExprKind::Property(left, right)
         | ExprKind::Assign(left, _, right) => {
             expression(left, warnings);

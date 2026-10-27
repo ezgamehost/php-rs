@@ -70,10 +70,17 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                 }
             }
             Stmt::Class(class) => {
-                for (_, value) in &class.properties {
+                for (_, value) in class
+                    .properties
+                    .iter()
+                    .chain(class.static_properties.iter())
+                {
                     if let Some(value) = value {
                         expression(value, false)?;
                     }
+                }
+                for (_, value) in &class.constants {
+                    expression(value, false)?;
                 }
                 for method in &class.methods {
                     validate(&[Stmt::Function(method.clone())])?;
@@ -226,7 +233,8 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         | ExprKind::Empty(value)
         | ExprKind::Print(value) => expression(value, false)?,
         ExprKind::Increment(value, _, _) => expression(value, true)?,
-        ExprKind::ScopedMember(left, right)
+        ExprKind::StaticProperty(left, right)
+        | ExprKind::ScopedMember(left, right)
         | ExprKind::Property(left, right)
         | ExprKind::Binary(_, left, right) => {
             expression(left, false)?;

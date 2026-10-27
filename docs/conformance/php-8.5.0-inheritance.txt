@@ -2,7 +2,7 @@ PHP 8.5.0 Zend/tests/inheritance baseline (2026-10-26)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/inheritance
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
-Reference: PHP 8.5 (/privatesapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/inheritance/abstract_inheritance_001.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/abstract_inheritance_002.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/abstract_inheritance_003.phpt UNSUPPORTED: EXPECTF
@@ -22,7 +22,7 @@ Zend/tests/inheritance/bug37632.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug38772.phpt FAIL: ParseError: Expected public property or method on line 8
 Zend/tests/inheritance/bug39721.phpt FAIL: ParseError: Expected public property or method on line 3
 Zend/tests/inheritance/bug41961.phpt FAIL: ParseError: Expected public property or method on line 10
-Zend/tests/inheritance/bug42211.phpt FAIL: ParseError: Expected public property or method on line 11
+Zend/tests/inheritance/bug42211.phpt FAIL: ParseError: Expected public property or method on line 12
 Zend/tests/inheritance/bug43200.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug43200_2.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/bug43703.phpt FAIL: ParseError: Expected ';' on line 6
@@ -44,7 +44,7 @@ Zend/tests/inheritance/bug63816.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/bug66286.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/bug70873.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug70957.phpt UNSUPPORTED: EXPECTF
-Zend/tests/inheritance/bug70997.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/inheritance/bug70997.phpt PASS
 Zend/tests/inheritance/bug71248.phpt FAIL: ParseError: Expected ';' on line 5
 Zend/tests/inheritance/bug71414.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/inheritance/bug71428.1.phpt UNSUPPORTED: EXPECTF
@@ -73,4 +73,4 @@ Zend/tests/inheritance/interface_constructor_prototype_001.phpt UNSUPPORTED: EXP
 Zend/tests/inheritance/interface_constructor_prototype_002.phpt UNSUPPORTED: EXPECTF, XFAIL
 Zend/tests/inheritance/unused_shared_static_variables.phpt PASS
 Zend/tests/inheritance/update_consts_shadowed_private_prop.phpt FAIL: ParseError: Expected public property or method on line 3
-2 passed, 32 failed, 36 unsupported
+3 passed, 31 failed, 36 unsupported

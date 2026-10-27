@@ -1,0 +1,101 @@
+PHP 8.5.0 Zend/tests/constants baseline (2026-10-26)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/constants
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/constants/008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/018.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/bug24699.phpt FAIL: Error: Undefined constant "SEEK_CUR" on line 2
+Zend/tests/constants/bug30702.phpt PASS
+Zend/tests/constants/bug33732.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/constants/bug41633_1.phpt PASS
+Zend/tests/constants/bug41633_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/bug41633_3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/bug41633_4.phpt PASS
+Zend/tests/constants/bug41640.phpt FAIL: Error: Call to undefined function get_class_vars() on line 7
+Zend/tests/constants/bug42820.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/constants/bug44827.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/bug45742.phpt PASS
+Zend/tests/constants/bug45910.phpt FAIL: ParseError: Expected public property or method on line 9
+Zend/tests/constants/bug45910_2.phpt FAIL: ParseError: Expected public property or method on line 9
+Zend/tests/constants/bug46304.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/bug49472.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/bug50816.phpt PASS
+Zend/tests/constants/bug51791.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/constants/bug63976.phpt PASS
+Zend/tests/constants/bug65291.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/bug69676.phpt PASS
+Zend/tests/constants/bug69676_2.phpt PASS
+Zend/tests/constants/bug69676_3.phpt PASS
+Zend/tests/constants/bug69832.phpt PASS
+Zend/tests/constants/bug74657.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/bug76430.phpt FAIL: Expected "string(0) \"\"\nstring(0) \"\"\n", got "string(0) \"\"\nstring(8) \"Bar::foo\"\n"
+Zend/tests/constants/bug76754.phpt FAIL: ParseError: Expected public property or method on line 5
+Zend/tests/constants/class_constant_inheritance_mutable_data.phpt UNSUPPORTED: EXPECTF, SKIPIF
+Zend/tests/constants/class_constant_to_reference_cached.phpt FAIL: ParseError: Expected public property or method on line 6
+Zend/tests/constants/class_constants_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/class_constants_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/class_constants_003.phpt FAIL: Error: Call to undefined function file_put_contents() on line 12
+Zend/tests/constants/class_constants_004.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/class_constants_005.phpt UNSUPPORTED: INI
+Zend/tests/constants/class_constants_006.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/constants/class_constants_007.phpt PASS
+Zend/tests/constants/const_deprecation.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/constants/constants_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/constants_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/constants_003.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/constants_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/constants_005.phpt PASS
+Zend/tests/constants/constants_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/constants_007.phpt PASS
+Zend/tests/constants/constants_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/constants_009.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/defined_fn_no_ns_fallback.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/dir-constant-eval.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/dir-constant-includes.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/dir-constant-nested_includes.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/dir-constant-normal.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/dynamic_class_const_fetch.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/dynamic_class_const_fetch_cache_slot.phpt FAIL: Error: Call to a member function bindTo() on Closure on line 36
+Zend/tests/constants/dynamic_class_const_fetch_const_expr.phpt PASS
+Zend/tests/constants/dynamic_class_const_fetch_order.phpt FAIL: ParseError: Expected ';' on line 18
+Zend/tests/constants/final_constants/final_const1.phpt PASS
+Zend/tests/constants/final_constants/final_const10.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/final_constants/final_const11.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/final_constants/final_const12.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/final_constants/final_const13.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/constants/final_constants/final_const2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/final_constants/final_const3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/final_constants/final_const4.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/final_constants/final_const5.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/final_constants/final_const6.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/final_constants/final_const7.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/final_constants/final_const8.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/final_constants/final_const9.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/constants/gh10709.phpt FAIL: ParseError: Expected ';' on line 10
+Zend/tests/constants/gh10709_2.phpt FAIL: ParseError: Expected ';' on line 12
+Zend/tests/constants/gh10709_3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/gh17222.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/constants/gh18463-class-constant.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/constants/gh18850.phpt FAIL: Error: Undefined constant "__COMPILER_HALT_OFFSET__" on line 3
+Zend/tests/constants/halt_compiler/bug48930.phpt FAIL: Error: Call to undefined function printf() on line 7
+Zend/tests/constants/halt_compiler/bug53305.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/halt_compiler/bug54804.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/constants/halt_compiler/bug70164.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/halt_compiler/bug77738.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/halt_compiler/halt01.phpt FAIL: ParseError: Expected ';' on line 7
+Zend/tests/constants/halt_compiler/halt02.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/constants/halt_compiler/halt03.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/halt_compiler/halt_compiler1.phpt FAIL: Error: Undefined constant "__COMPILER_HALT_OFFSET__" on line 1
+Zend/tests/constants/halt_compiler/halt_compiler2.phpt UNSUPPORTED: CLEAN
+Zend/tests/constants/halt_compiler/halt_compiler3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/halt_compiler/halt_compiler4.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/halt_compiler/halt_compiler5.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/iface_constant_visibility_variance.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/line_const_in_array.phpt PASS
+Zend/tests/constants/magic_const_in_global_scope.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/oss_fuzz_416302790.phpt UNSUPPORTED: EXPECTF
+Zend/tests/constants/oss_fuzz_57821.phpt PASS
+Zend/tests/constants/selfParent_001.phpt PASS
+Zend/tests/constants/selfParent_002.phpt PASS
+19 passed, 37 failed, 39 unsupported

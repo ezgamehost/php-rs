@@ -82,6 +82,47 @@ impl Runtime {
                 decl.line,
             ));
         }
+        if let Some(parent) = &parent {
+            for (name, _) in &decl.constants {
+                if let Some(owner) = parent.constant_owner(name)
+                    && owner.declaration.final_constants.contains(name)
+                {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot override final class constant",
+                        decl.line,
+                    ));
+                }
+            }
+            if decl
+                .properties
+                .iter()
+                .any(|(n, _)| parent.static_owner(n).is_some())
+                || decl
+                    .static_properties
+                    .iter()
+                    .any(|(n, _)| parent.properties.iter().any(|(p, _)| p == n))
+            {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "Cannot change property staticness",
+                    decl.line,
+                ));
+            }
+        }
+        let mut static_properties = parent
+            .as_ref()
+            .map_or_else(Vec::new, |p| p.static_properties.clone());
+        for property in &decl.static_properties {
+            if let Some(slot) = static_properties
+                .iter_mut()
+                .find(|(name, _)| name == &property.0)
+            {
+                *slot = property.clone();
+            } else {
+                static_properties.push(property.clone());
+            }
+        }
         let mut properties = parent
             .as_ref()
             .map_or_else(Vec::new, |p| p.properties.clone());
@@ -112,6 +153,12 @@ impl Runtime {
             methods,
             allow_dynamic,
             defaults: RefCell::new(None),
+            static_properties,
+            static_values: RefCell::default(),
+            constant_values: RefCell::default(),
+            evaluating_constants: RefCell::default(),
+            initialized: std::cell::Cell::new(false),
+            initializing: std::cell::Cell::new(false),
         }))
     }
     pub(super) fn find_class(&self, name: &[u8]) -> Option<Rc<Class>> {
@@ -127,12 +174,21 @@ impl Runtime {
                 methods: Vec::new(),
                 allow_dynamic: true,
                 defaults: RefCell::new(None),
+                static_properties: Vec::new(),
+                static_values: RefCell::default(),
+                constant_values: RefCell::default(),
+                evaluating_constants: RefCell::default(),
+                initialized: std::cell::Cell::new(false),
+                initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
                     name: b"stdClass".to_vec(),
                     parent: None,
                     is_final: false,
                     final_methods: Vec::new(),
                     properties: Vec::new(),
+                    static_properties: Vec::new(),
+                    constants: Vec::new(),
+                    final_constants: Vec::new(),
                     methods: Vec::new(),
                     line: 0,
                 }),
@@ -205,6 +261,7 @@ impl Runtime {
                 line,
             )
         })?;
+        self.initialize_class(&class)?;
         let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;
         let object = Rc::new(PhpObject {
@@ -290,6 +347,15 @@ impl Runtime {
         })?;
         self.method_target(function, object.class.clone(), Some(object), line)
     }
+    fn warn_static_as_instance(&mut self, object: &PhpObject, name: &[u8], line: usize) {
+        if object.class.static_owner(name).is_some() {
+            self.warnings.push(format!(
+                "Notice: Accessing static property {}::${} as non static on line {line}",
+                object.class_name,
+                String::from_utf8_lossy(name)
+            ));
+        }
+    }
     pub(super) fn read_property_value(
         &mut self,
         object: &PhpObject,
@@ -299,6 +365,7 @@ impl Runtime {
     ) -> Result<Value, Error> {
         if !silent {
             validate_property_name(name, line)?;
+            self.warn_static_as_instance(object, name, line);
         }
         if let Some(value) = object
             .properties
@@ -330,6 +397,7 @@ impl Runtime {
                 line,
             ));
         }
+        self.warn_static_as_instance(object, name, line);
         let key = ArrayKey::String(name.to_vec());
         if object.properties.borrow().get(&key).is_none()
             && !object.class.allow_dynamic
@@ -368,7 +436,9 @@ impl Runtime {
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
                     validate_property_name(&name, expr.line)?;
+                    self.warn_static_as_instance(&object, &name, expr.line);
                     Some(Location {
+                        static_class: None,
                         object: Some(object),
                         name,
                         global: false,

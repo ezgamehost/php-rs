@@ -163,7 +163,8 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
         | ExprKind::Empty(e)
         | ExprKind::Print(e)
         | ExprKind::Increment(e, _, _) => collect_captures(e, captures),
-        ExprKind::ScopedMember(a, b)
+        ExprKind::StaticProperty(a, b)
+        | ExprKind::ScopedMember(a, b)
         | ExprKind::Property(a, b)
         | ExprKind::Binary(_, a, b)
         | ExprKind::Assign(a, _, b) => {

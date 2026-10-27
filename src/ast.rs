@@ -29,6 +29,7 @@ pub(crate) enum ExprKind {
     New(Box<Expr>, Vec<Argument>),
     Property(Box<Expr>, Box<Expr>),
     ScopedMember(Box<Expr>, Box<Expr>),
+    StaticProperty(Box<Expr>, Box<Expr>),
     ClassName(Box<Expr>),
     Eval(Box<Expr>),
     Include(IncludeKind, Box<Expr>),
@@ -116,7 +117,10 @@ impl Expr {
 
     pub fn is_writable(&self) -> bool {
         match &self.kind {
-            ExprKind::Variable(_) | ExprKind::DynamicVariable(_) | ExprKind::Property(_, _) => true,
+            ExprKind::Variable(_)
+            | ExprKind::DynamicVariable(_)
+            | ExprKind::Property(_, _)
+            | ExprKind::StaticProperty(_, _) => true,
             ExprKind::Index(base, _) => {
                 let mut base = base.as_ref();
                 while let ExprKind::Group(inner) = &base.kind {
@@ -136,6 +140,9 @@ pub(crate) struct ClassDecl {
     pub final_methods: Vec<Vec<u8>>,
     pub name: Vec<u8>,
     pub properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub static_properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub constants: Vec<(Vec<u8>, Expr)>,
+    pub final_constants: Vec<Vec<u8>>,
     pub methods: Vec<Rc<FunctionDecl>>,
     pub line: usize,
 }
@@ -248,6 +255,10 @@ impl Expr {
                 }
                 _ => false,
             },
+            ExprKind::ScopedMember(class, name) => {
+                matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
+                    && name.is_constant_expression()
+            }
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::ClassName(class) => {
                 matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
