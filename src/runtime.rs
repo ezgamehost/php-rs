@@ -216,6 +216,14 @@ impl Runtime {
         match &expr.kind {
             ExprKind::Call(callee, args) => self.call(callee, args, line),
             ExprKind::Literal(value) => Ok(value.clone()),
+            ExprKind::Interpolated(parts) => {
+                let mut result = Vec::new();
+                for part in parts {
+                    let value = self.eval(part)?;
+                    result.extend(string_bytes(&value, part.line, &mut self.warnings));
+                }
+                Ok(Value::String(result))
+            }
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(name) => Ok(self.read(name, line)),
             ExprKind::Array(elements) => {

@@ -1,7 +1,7 @@
 use crate::{
     Error, Value,
     ast::{Argument, Expr, ExprKind, FunctionDecl, Parameter, Stmt},
-    lexer::{Kind, Token},
+    lexer::{Kind, StringPart, Token},
 };
 
 use std::rc::Rc;
@@ -313,6 +313,40 @@ impl Parser {
         self.pos += 1;
         let kind = match token.kind {
             Kind::Value(value) => ExprKind::Literal(value),
+            Kind::Interpolated(parts) => {
+                let mut expressions = Vec::new();
+                for part in parts {
+                    expressions.push(match part {
+                        StringPart::Bytes(bytes) => Expr {
+                            kind: ExprKind::Literal(Value::String(bytes)),
+                            line,
+                        },
+                        StringPart::Expression(tokens) => {
+                            let mut parser = Parser {
+                                tokens,
+                                pos: 0,
+                                loops: 0,
+                            };
+                            let expr = parser.expr(0)?;
+                            if parser.token().kind != Kind::End
+                                || !matches!(
+                                    expr.kind,
+                                    ExprKind::Variable(_)
+                                        | ExprKind::Index(_, _)
+                                        | ExprKind::Call(_, _)
+                                )
+                            {
+                                return Err(Error::parse(
+                                    "Invalid string interpolation expression",
+                                    expr.line,
+                                ));
+                            }
+                            expr
+                        }
+                    });
+                }
+                ExprKind::Interpolated(expressions)
+            }
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
                 b"array" => {

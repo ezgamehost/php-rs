@@ -1,18 +1,26 @@
 use crate::{Error, Value};
+mod strings;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Kind {
     Text(Vec<u8>),
+    Interpolated(Vec<StringPart>),
     Value(Value),
     Variable(Vec<u8>),
     Word(Vec<u8>),
     Symbol(String),
     End,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token {
     pub kind: Kind,
     pub line: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum StringPart {
+    Bytes(Vec<u8>),
+    Expression(Vec<Token>),
 }
 
 pub(crate) fn lex(source: &[u8]) -> Result<Vec<Token>, Error> {
@@ -21,6 +29,7 @@ pub(crate) fn lex(source: &[u8]) -> Result<Vec<Token>, Error> {
         pos: 0,
         line: 1,
         php: false,
+        interpolation: false,
         tokens: Vec::new(),
     }
     .scan()
@@ -30,6 +39,7 @@ struct Lexer<'a> {
     pos: usize,
     line: usize,
     php: bool,
+    interpolation: bool,
     tokens: Vec<Token>,
 }
 impl Lexer<'_> {
@@ -64,7 +74,8 @@ impl Lexer<'_> {
             0
         }
     }
-    fn scan(mut self) -> Result<Vec<Token>, Error> {
+    fn scan(&mut self) -> Result<Vec<Token>, Error> {
+        let mut depth = usize::from(self.interpolation);
         while self.pos < self.source.len() {
             let line = self.line;
             if !self.php {
@@ -86,6 +97,19 @@ impl Lexer<'_> {
                 continue;
             }
             let c = self.source[self.pos];
+            if self.interpolation {
+                if c == b'{' {
+                    depth += 1;
+                }
+                if c == b'}' {
+                    depth -= 1;
+                    if depth == 0 {
+                        self.bump();
+                        self.emit(Kind::End, line);
+                        return Ok(std::mem::take(&mut self.tokens));
+                    }
+                }
+            }
             if c.is_ascii_whitespace() {
                 self.bump();
                 continue;
@@ -122,8 +146,15 @@ impl Lexer<'_> {
                 self.pos += 2;
                 continue;
             }
-            let kind = if c == b'\'' || c == b'"' {
-                Kind::Value(Value::String(self.string()?))
+            let kind = if self.starts(b"<<<") {
+                self.heredoc()?
+            } else if (c == b'b' || c == b'B')
+                && matches!(self.source.get(self.pos + 1), Some(b'\'' | b'"'))
+            {
+                self.bump();
+                self.string()?
+            } else if c == b'\'' || c == b'"' {
+                self.string()?
             } else if c.is_ascii_digit()
                 || c == b'.'
                     && self
@@ -156,8 +187,11 @@ impl Lexer<'_> {
             };
             self.emit(kind, line);
         }
+        if self.interpolation {
+            return Err(Error::parse("Unterminated string interpolation", self.line));
+        }
         self.emit(Kind::End, self.line);
-        Ok(self.tokens)
+        Ok(std::mem::take(&mut self.tokens))
     }
     fn identifier(&mut self) -> Vec<u8> {
         let start = self.pos;
@@ -169,76 +203,6 @@ impl Lexer<'_> {
             self.bump();
         }
         self.source[start..self.pos].to_vec()
-    }
-    fn string(&mut self) -> Result<Vec<u8>, Error> {
-        let line = self.line;
-        let quote = self.bump();
-        let mut out = Vec::new();
-        while self.pos < self.source.len() {
-            let c = self.bump();
-            if c == quote {
-                return Ok(out);
-            }
-            if c != b'\\' {
-                out.push(c);
-                continue;
-            }
-            if self.pos == self.source.len() {
-                break;
-            }
-            let c = self.bump();
-            if c == quote || c == b'\\' {
-                out.push(c);
-                continue;
-            }
-            if quote == b'\'' {
-                out.extend_from_slice(&[b'\\', c]);
-                continue;
-            }
-            match c {
-                b'n' => out.push(b'\n'),
-                b'r' => out.push(b'\r'),
-                b't' => out.push(b'\t'),
-                b'v' => out.push(11),
-                b'e' => out.push(27),
-                b'f' => out.push(12),
-                b'$' => out.push(b'$'),
-                b'x' | b'X' => {
-                    let mut value = 0;
-                    let mut count = 0;
-                    while count < 2 {
-                        let Some(d) = self
-                            .source
-                            .get(self.pos)
-                            .and_then(|c| (*c as char).to_digit(16))
-                        else {
-                            break;
-                        };
-                        value = value * 16 + d;
-                        self.bump();
-                        count += 1;
-                    }
-                    if count == 0 {
-                        out.extend_from_slice(&[b'\\', c]);
-                    } else {
-                        out.push(value as u8);
-                    }
-                }
-                b'0'..=b'7' => {
-                    let mut value = u32::from(c - b'0');
-                    for _ in 0..2 {
-                        let Some(c @ b'0'..=b'7') = self.source.get(self.pos).copied() else {
-                            break;
-                        };
-                        value = value * 8 + u32::from(c - b'0');
-                        self.bump();
-                    }
-                    out.push(value as u8);
-                }
-                _ => out.extend_from_slice(&[b'\\', c]),
-            }
-        }
-        Err(Error::parse("Unterminated string", line))
     }
     fn digits(&mut self, radix: u32) -> Result<usize, Error> {
         let mut count = 0;

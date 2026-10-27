@@ -37,10 +37,13 @@ output and warnings when execution fails. Parsing happens before execution.
   `continue`, and `return`.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
+- Variable/array interpolation, braced variable calls, Unicode escapes, binary
+  string prefixes, and indented heredoc/nowdoc strings.
 
 Known gaps include typed functions, closures, most builtins, objects, references, exceptions,
-generators, namespaces, attributes, extensions, and most PHP 8.5 additions. String
-interpolation, string offsets, array unpacking and destructuring, some scalar edge cases, complete
+generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
+Deprecated `${...}` and object interpolation, string offsets, array unpacking and
+destructuring, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP
 conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation plan.
