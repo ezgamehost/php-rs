@@ -201,6 +201,12 @@ impl Parser {
                 continue;
             };
             if matches!(value, Value::Null) && !ty.accepts(&value) {
+                if param.promotion.is_some() {
+                    return Err(Error::parse(
+                        "Promoted properties cannot have implicitly nullable types",
+                        default.line,
+                    ));
+                }
                 param.implicit_nullable = true;
                 ty.members.push("null".into());
                 self.warnings.push(format!("Deprecated: {}(): Implicitly marking parameter ${} as nullable is deprecated, the explicit nullable type must be used instead on line {line}", String::from_utf8_lossy(function), String::from_utf8_lossy(&param.name)));

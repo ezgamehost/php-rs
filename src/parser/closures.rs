@@ -14,7 +14,7 @@ impl Parser {
         )
         .into_bytes();
         let outer_name = std::mem::replace(&mut self.function_name, name.clone());
-        let mut parameters = self.function_parameters()?;
+        let mut parameters = self.function_parameters(false)?;
         let mut captures = Vec::<Capture>::new();
         if !arrow && self.eat("use") {
             self.expect("(")?;

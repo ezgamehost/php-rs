@@ -73,6 +73,8 @@ definition of completion.
    Typed public instance/static properties support uninitialized state, strict
    defaults, assignment coercion, and invariant inherited declarations. Readonly
    properties/classes enforce initialization scope and mutation restrictions.
+   Public and readonly constructor promotion initializes properties before the
+   constructor body, with separate parameter defaults and property storage.
    Remaining: interfaces, traits, abstract members, intersection/DNF constant types,
    complete constant/default resolution,
    visibility, cloning (including readonly reinitialization), property hooks, magic methods, reflection, attributes, enums,

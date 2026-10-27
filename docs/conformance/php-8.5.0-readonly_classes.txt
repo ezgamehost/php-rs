@@ -20,7 +20,7 @@ Zend/tests/readonly_classes/readonly_class_inheritance_success.phpt PASS
 Zend/tests/readonly_classes/readonly_class_missing_type1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_class_missing_type2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_class_property1.phpt FAIL: ParseError: Expected ';' on line 14
-Zend/tests/readonly_classes/readonly_class_property2.phpt FAIL: ParseError: Expected parameter variable on line 6
+Zend/tests/readonly_classes/readonly_class_property2.phpt FAIL: ParseError: Expected ';' on line 12
 Zend/tests/readonly_classes/readonly_class_property3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_class_unserialize_error.phpt FAIL: ParseError: Expected ';' on line 5
 Zend/tests/readonly_classes/readonly_enum.phpt UNSUPPORTED: EXPECTF

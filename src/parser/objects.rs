@@ -143,6 +143,12 @@ impl Parser {
                 if final_method {
                     final_methods.push(method.name.to_ascii_lowercase());
                 }
+                self.promote_properties(
+                    &mut method,
+                    &mut properties,
+                    &static_properties,
+                    is_readonly,
+                )?;
                 // Validate each method as an independent function/label scope.
                 targets::validate(&[Stmt::Function(method.clone())])?;
                 jumps::validate(&method.body)?;

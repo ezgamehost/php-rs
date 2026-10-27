@@ -11,17 +11,17 @@ Zend/tests/readonly_props/initialization_scope.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/magic_get_set.phpt FAIL: ParseError: Expected ';' on line 33
 Zend/tests/readonly_props/multiple_modifiers.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/override_with_attributes.phpt FAIL: Error: Class "ReflectionProperty" not found on line 18
-Zend/tests/readonly_props/promotion.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/readonly_props/promotion.phpt FAIL: ParseError: Expected ';' on line 13
 Zend/tests/readonly_props/promotion_error1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/public_set_non_readonly.phpt FAIL: ParseError: Multiple access type modifiers are not allowed on line 4
-Zend/tests/readonly_props/readonly_assign_no_sideeffect.phpt FAIL: ParseError: Expected parameter variable on line 5
-Zend/tests/readonly_props/readonly_clone_error1.phpt FAIL: ParseError: Expected parameter variable on line 5
-Zend/tests/readonly_props/readonly_clone_error2.phpt FAIL: ParseError: Expected parameter variable on line 5
-Zend/tests/readonly_props/readonly_clone_error3.phpt FAIL: ParseError: Expected parameter variable on line 5
-Zend/tests/readonly_props/readonly_clone_error4.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/readonly_props/readonly_assign_no_sideeffect.phpt FAIL: ParseError: Expected ';' on line 22
+Zend/tests/readonly_props/readonly_clone_error1.phpt FAIL: ParseError: Expected ';' on line 18
+Zend/tests/readonly_props/readonly_clone_error2.phpt FAIL: ParseError: Expected ';' on line 11
+Zend/tests/readonly_props/readonly_clone_error3.phpt FAIL: ParseError: Expected ';' on line 13
+Zend/tests/readonly_props/readonly_clone_error4.phpt FAIL: ParseError: Expected ';' on line 18
 Zend/tests/readonly_props/readonly_clone_error5.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/readonly_props/readonly_clone_error6.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/readonly_clone_error7.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/readonly_props/readonly_clone_error7.phpt FAIL: ParseError: Expected ';' on line 16
 Zend/tests/readonly_props/readonly_clone_success1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_clone_success2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_clone_success4.phpt UNSUPPORTED: EXPECTF
@@ -37,7 +37,7 @@ Zend/tests/readonly_props/readonly_trait_mismatch.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_with_default.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_without_type.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readwrite_to_readonly.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/serialization.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/readonly_props/serialization.phpt FAIL: Error: Call to undefined function serialize() on line 9
 Zend/tests/readonly_props/static.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/unset.phpt FAIL: ParseError: Expected ';' on line 12
 Zend/tests/readonly_props/variation.phpt FAIL: ParseError: Expected ';' on line 88

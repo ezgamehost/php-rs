@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 43 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 44 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -31,6 +31,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 9 | 67 | 44 |
 | PHP 8.5.0 `Zend/tests/readonly_props`, Rust | 0 | 22 | 18 |
 | PHP 8.5.0 `Zend/tests/readonly_classes`, Rust and reference PHP for passing cases | 1 | 6 | 16 |
+| PHP 8.5.0 `Zend/tests/ctor_promotion`, Rust and reference PHP for passing cases | 1 | 6 | 11 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -255,7 +256,7 @@ counts do not establish compatibility with those features.
 The readonly slice adds [class](conformance/php-8.5.0-readonly_classes.txt) and
 [property](conformance/php-8.5.0-readonly_props.txt) baselines. One class fixture
 passes. None of the property fixtures pass yet: they need combinations of
-constructor promotion, exceptions, references, cloning, magic accessors, and
+exceptions, references, cloning, magic accessors, and
 reflection that remain unimplemented. Unsupported PHPT sections are not run.
 Fifteen project regressions and a reference-checked PHPT cover permitted
 initialization scopes, initialized-null storage, readonly arrays, interior
@@ -265,4 +266,19 @@ and PHP 8.5.0 probes establish the protected-set initialization behavior.
 A 447-case matrix matches stdout, exit status, and diagnostic presence; the
 existing 716-case typed-property matrix also passes. Class and inheritance
 suite counts are unchanged. Cloning, explicit asymmetric visibility, property
-hooks, constructor promotion, and the other previously noted gaps remain.
+hooks, and the other previously noted gaps remain.
+
+The [constructor-promotion report](conformance/php-8.5.0-ctor_promotion.txt)
+records one passing fixture, six failures, and eleven unsupported fixtures.
+Ten project regressions and a reference-checked PHPT cover public and readonly
+promotion, parameter coercion, assignment before the constructor body, inherited
+constructors, declaration order, and separate parameter/property storage.
+Defaults belong to parameters, as described in the
+[PHP constructor manual](https://www.php.net/manual/en/language.oop5.decon.php).
+A 269-case matrix matches PHP 8.5.0 stdout, exit status, and diagnostic presence.
+Failed argument validation leaves existing properties unchanged when calling a
+constructor again. Remaining upstream failures involve reflection, references,
+traits, exception handling, and object-ID reuse. Private/protected visibility,
+advanced promotion modifiers, and object construction in parameter defaults
+remain unsupported.
+The readonly suite counts are unchanged.

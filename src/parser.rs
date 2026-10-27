@@ -12,6 +12,7 @@ mod closures;
 mod jumps;
 mod logical_constants;
 mod objects;
+mod promotion;
 mod targets;
 mod types;
 mod variables;
@@ -468,7 +469,8 @@ impl Parser {
         }
         self.pos += 1;
         let outer_function_name = std::mem::replace(&mut self.function_name, name.clone());
-        let mut parameters = self.function_parameters()?;
+        let mut parameters =
+            self.function_parameters(method && name.eq_ignore_ascii_case(b"__construct"))?;
         let return_type = if self.eat(":") {
             Some(self.type_declaration(true)?)
         } else {
@@ -503,11 +505,12 @@ impl Parser {
             source: self.source.clone(),
         })))
     }
-    fn function_parameters(&mut self) -> Result<Vec<Parameter>, Error> {
+    fn function_parameters(&mut self, allow_promotion: bool) -> Result<Vec<Parameter>, Error> {
         let line = self.token().line;
         self.expect("(")?;
         let mut parameters = Vec::new();
         while !self.eat(")") {
+            let promotion = self.parameter_promotion(allow_promotion)?;
             let ty = if self.is("?") || matches!(self.token().kind, Kind::Word(_)) {
                 Some(self.type_declaration(false)?)
             } else {
@@ -544,7 +547,15 @@ impl Parser {
                     line,
                 ));
             }
+            if let Some(promotion) = &promotion
+                && (variadic
+                    || ty.as_ref().is_some_and(|ty| ty.contains("callable"))
+                    || (promotion.is_readonly && ty.is_none()))
+            {
+                return Err(Error::parse("Invalid promoted property declaration", line));
+            }
             parameters.push(Parameter {
+                promotion,
                 ty,
                 implicit_nullable: false,
                 name,

@@ -164,7 +164,13 @@ pub(crate) struct ClassConstant {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct Promotion {
+    pub is_readonly: bool,
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct Parameter {
+    pub promotion: Option<Promotion>,
     pub name: Vec<u8>,
     pub ty: Option<TypeDecl>,
     pub implicit_nullable: bool,

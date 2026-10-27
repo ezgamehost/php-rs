@@ -124,6 +124,7 @@ impl Builtin {
         definitions
             .iter()
             .map(|(name, optional, variadic)| Parameter {
+                promotion: None,
                 name: name.as_bytes().to_vec(),
                 ty: None,
                 implicit_nullable: false,

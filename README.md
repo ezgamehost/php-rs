@@ -83,6 +83,9 @@ new request. The CLI returns the low eight bits of the requested status.
   class scopes, mutation/unset checks, and readonly inheritance restrictions.
   Readonly classes require typed instance properties and reject dynamic ones.
   Objects stored directly in readonly properties can still be mutated.
+- Public and readonly constructor property promotion, including typed parameters,
+  argument coercion, inherited constructors, and assignment before the body runs.
+  Parameter defaults remain separate from uninitialized property storage.
 - Object identity and property comparisons, recursive comparison errors,
   recursive-safe object dumps, object-to-array casts, and explicit-object
   `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and

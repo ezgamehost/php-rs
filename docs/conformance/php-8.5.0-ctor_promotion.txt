@@ -1,0 +1,24 @@
+PHP 8.5.0 Zend/tests/ctor_promotion baseline (2026-10-26)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/ctor_promotion
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/ctor_promotion/bug79897.phpt FAIL: Error: Class "ReflectionParameter" not found on line 20
+Zend/tests/ctor_promotion/ctor_promotion_abstract.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_additional_modifiers.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_attributes.phpt FAIL: Error: Class "ReflectionProperty" not found on line 10
+Zend/tests/ctor_promotion/ctor_promotion_basic.phpt FAIL: ParseError: Expected ';' on line 10
+Zend/tests/ctor_promotion/ctor_promotion_by_ref.phpt FAIL: ParseError: Expected parameter variable on line 4
+Zend/tests/ctor_promotion/ctor_promotion_callable_type.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_defaults.phpt FAIL: Expected "object(Point)#1 (3) {\n  [\"x\"]=>\n  float(10)\n  [\"y\"]=>\n  float(1)\n  [\"z\"]=>\n  float(2)\n}\nobject(Point)#1 (3) {\n  [\"x\"]=>\n  float(10)\n  [\"y\"]=>\n  float(11)\n  [\"z\"]=>\n  float(2)\n}\nobject(Point)#1 (3) {\n  [\"x\"]=>\n  float(10)\n  [\"y\"]=>\n  float(11)\n  [\"z\"]=>\n  float(12)\n}\n", got "object(Point)#1 (3) {\n  [\"x\"]=>\n  float(10)\n  [\"y\"]=>\n  float(1)\n  [\"z\"]=>\n  float(2)\n}\nobject(Point)#2 (3) {\n  [\"x\"]=>\n  float(10)\n  [\"y\"]=>\n  float(11)\n  [\"z\"]=>\n  float(2)\n}\nobject(Point)#3 (3) {\n  [\"x\"]=>\n  float(10)\n  [\"y\"]=>\n  float(11)\n  [\"z\"]=>\n  float(12)\n}\n"
+Zend/tests/ctor_promotion/ctor_promotion_final.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_free_function.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_interface.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_mixing.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_not_a_ctor.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_null_default.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_repeated_prop.phpt UNSUPPORTED: EXPECTF
+Zend/tests/ctor_promotion/ctor_promotion_trait.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/ctor_promotion/ctor_promotion_untyped_default.phpt PASS
+Zend/tests/ctor_promotion/ctor_promotion_variadic.phpt UNSUPPORTED: EXPECTF
+1 passed, 6 failed, 11 unsupported
