@@ -7,9 +7,10 @@ use crate::{
     lexer::{Kind, StringPart, Token},
 };
 
-use std::rc::Rc;
+use std::{collections::HashSet, rc::Rc};
 mod targets;
 mod types;
+mod variables;
 
 pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>, bool), Error> {
     let mut parser = Parser {
@@ -19,6 +20,7 @@ pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>, bool)
         warnings: Vec::new(),
         strict_types: false,
         return_type: None,
+        static_names: HashSet::new(),
     };
     let statements = parser.program()?;
     targets::validate(&statements)?;
@@ -31,6 +33,7 @@ struct Parser {
     warnings: Vec<String>,
     strict_types: bool,
     return_type: Option<TypeDecl>,
+    static_names: HashSet<Vec<u8>>,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -110,6 +113,12 @@ impl Parser {
         Ok(Stmt::Const(constants))
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
+        if self.eat("global") {
+            return self.global_declaration();
+        }
+        if self.eat("static") {
+            return self.static_declaration();
+        }
         if self.eat("function") {
             return self.function();
         }
@@ -435,6 +444,7 @@ impl Parser {
         self.validate_defaults(&name, &mut parameters, line)?;
         self.expect("{")?;
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
+        let outer_static_names = std::mem::take(&mut self.static_names);
         let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
         let mut body = Vec::new();
         while !self.eat("}") {
@@ -445,6 +455,7 @@ impl Parser {
         }
         self.control_depth = outer_control_depth;
         self.return_type = outer_return_type;
+        self.static_names = outer_static_names;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
             name,
             parameters,
@@ -652,6 +663,7 @@ impl Parser {
                                 warnings: Vec::new(),
                                 strict_types: false,
                                 return_type: None,
+                                static_names: HashSet::new(),
                             };
                             let expr = parser.expr(0)?;
                             self.warnings.append(&mut parser.warnings);
@@ -659,6 +671,7 @@ impl Parser {
                                 || !matches!(
                                     expr.kind,
                                     ExprKind::Variable(_)
+                                        | ExprKind::DynamicVariable(_)
                                         | ExprKind::Index(_, _)
                                         | ExprKind::Call(_, _)
                                 )
@@ -675,6 +688,7 @@ impl Parser {
                 ExprKind::Interpolated(expressions)
             }
             Kind::Variable(name) => ExprKind::Variable(name),
+            Kind::Symbol(op) if op == "$" => self.dynamic_variable()?,
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
                 b"match" => self.match_expression()?,
                 b"print" => ExprKind::Print(Box::new(self.expr(4)?)),

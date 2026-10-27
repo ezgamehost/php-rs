@@ -10,7 +10,7 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, twenty-one differential fixtures, explicit unsupported reports, and CI.
+   runner, twenty-three differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Remaining: full upstream sections, reproducible
    reference provisioning in CI, diagnostic comparison, isolation, and timeouts.
    Never count skipped tests as passing.
@@ -31,9 +31,11 @@ definition of completion.
    Global constants, dynamic definition/lookup, and core predefined constants implemented.
    Parameter/return types for available values, nullable/union types, typed variadics,
    default validation, void/never returns, and strict_types implemented.
+   Live global bindings, persistent static locals with dynamic initializers,
+   and variable variables implemented.
    Remaining: references,
    goto, advanced interpolation, object casts, complete
-   operators, magic constants, includes, by-reference functions, closures,
+   operators, magic constants, includes/eval, superglobals, by-reference functions, closures,
    intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
 4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,

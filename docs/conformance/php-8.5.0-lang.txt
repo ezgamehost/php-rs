@@ -8,11 +8,11 @@ tests/lang/003.phpt PASS
 tests/lang/004.phpt PASS
 tests/lang/005.phpt PASS
 tests/lang/006.phpt PASS
-tests/lang/007.phpt FAIL: ParseError: Expected ';' on line 7
-tests/lang/008.phpt FAIL: ParseError: Expected ';' on line 5
+tests/lang/007.phpt FAIL: Error: Call to undefined function error_reporting() on line 2
+tests/lang/008.phpt PASS
 tests/lang/009.phpt PASS
 tests/lang/010.phpt PASS
-tests/lang/011.phpt FAIL: ParseError: Expected ';' on line 10
+tests/lang/011.phpt PASS
 tests/lang/012.phpt PASS
 tests/lang/013.phpt FAIL: Error: Call to undefined function error_reporting() on line 2
 tests/lang/014.phpt FAIL: Error: Call to undefined function error_reporting() on line 6
@@ -25,11 +25,11 @@ tests/lang/020.phpt PASS
 tests/lang/021.phpt PASS
 tests/lang/022.phpt PASS
 tests/lang/023.phpt UNSUPPORTED: INI
-tests/lang/024.phpt FAIL: ParseError: Expected variable name on line 14
+tests/lang/024.phpt FAIL: Error: Call to undefined function include() on line 361
 tests/lang/025.phpt PASS
 tests/lang/026.phpt PASS
 tests/lang/027.phpt PASS
-tests/lang/028.phpt FAIL: ParseError: Expected ';' on line 18
+tests/lang/028.phpt FAIL: ParseError: Expected ';' on line 27
 tests/lang/030.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/032.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/033.phpt UNSUPPORTED: EXPECTF
@@ -70,7 +70,7 @@ tests/lang/bug23524.phpt FAIL: Error: Call to undefined function print_r() on li
 tests/lang/bug23584.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug23624.phpt FAIL: Error: Call to undefined function current() on line 3
 tests/lang/bug24054.phpt FAIL: Error: Call to undefined function printf() on line 5
-tests/lang/bug24396.phpt FAIL: ParseError: Expected variable name on line 6
+tests/lang/bug24396.phpt PASS
 tests/lang/bug24436.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug24499.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug24573.phpt UNSUPPORTED: EXPECTF
@@ -87,7 +87,7 @@ tests/lang/bug25922.phpt UNSUPPORTED: INI
 tests/lang/bug26182.phpt UNSUPPORTED: INI
 tests/lang/bug26696.phpt PASS
 tests/lang/bug26866.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/bug26869.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/bug26869.phpt PASS
 tests/lang/bug27354.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug27439.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug27443.phpt PASS
@@ -126,12 +126,12 @@ tests/lang/constants/PHP_INT_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/empty_variation.phpt PASS
 tests/lang/engine_assignExecutionOrder_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/engine_assignExecutionOrder_002.phpt UNSUPPORTED: EXPECTF
-tests/lang/engine_assignExecutionOrder_003.phpt FAIL: ParseError: Expected variable name on line 19
+tests/lang/engine_assignExecutionOrder_003.phpt PASS
 tests/lang/engine_assignExecutionOrder_004.phpt PASS
 tests/lang/engine_assignExecutionOrder_005.phpt PASS
 tests/lang/engine_assignExecutionOrder_006.phpt PASS
 tests/lang/engine_assignExecutionOrder_007.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/engine_assignExecutionOrder_008.phpt FAIL: ParseError: Expected variable name on line 13
+tests/lang/engine_assignExecutionOrder_008.phpt FAIL: ParseError: Expected ';' on line 29
 tests/lang/engine_assignExecutionOrder_009.phpt PASS
 tests/lang/error_2_exception_001.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/execution_order.phpt FAIL: ParseError: Expected ';' on line 5
@@ -148,7 +148,7 @@ tests/lang/foreachLoop.012.phpt FAIL: Error: Call to undefined function eval() o
 tests/lang/foreachLoop.013.phpt FAIL: ParseError: Expected expression on line 17
 tests/lang/foreachLoop.014.phpt FAIL: ParseError: Expected expression on line 13
 tests/lang/foreachLoop.015.phpt FAIL: ParseError: Expected expression on line 13
-tests/lang/foreachLoop.016.phpt FAIL: ParseError: Expected variable name on line 13
+tests/lang/foreachLoop.016.phpt FAIL: ParseError: Expected expression on line 5
 tests/lang/foreachLoop.017.phpt PASS
 tests/lang/foreachLoopIterator.001.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopIterator.002.phpt UNSUPPORTED: EXPECTF
@@ -168,7 +168,7 @@ tests/lang/func_get_arg.001.phpt FAIL: Error: Call to undefined function func_ge
 tests/lang/func_get_arg.002.phpt FAIL: Error: Call to undefined function func_get_arg() on line 5
 tests/lang/func_get_arg.003.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/func_get_arg.004.phpt FAIL: ParseError: Expected ';' on line 5
-tests/lang/func_get_arg.005.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/func_get_arg.005.phpt FAIL: ParseError: Expected expression on line 10
 tests/lang/func_get_arg_variation.phpt FAIL: ParseError: Expected ';' on line 6
 tests/lang/func_get_args.001.phpt FAIL: Error: Call to undefined function func_get_args() on line 5
 tests/lang/func_get_args.002.phpt FAIL: Error: Call to undefined function func_get_args() on line 5
@@ -275,9 +275,9 @@ tests/lang/returnByReference.009.phpt UNSUPPORTED: EXPECTF
 tests/lang/short_tags.001.phpt UNSUPPORTED: INI
 tests/lang/short_tags.002.phpt UNSUPPORTED: INI
 tests/lang/short_tags.004.phpt UNSUPPORTED: EXPECTF, INI
-tests/lang/static_basic_001.phpt FAIL: ParseError: Expected ';' on line 8
+tests/lang/static_basic_001.phpt PASS
 tests/lang/static_basic_002.phpt UNSUPPORTED: EXPECTF
-tests/lang/static_variation_001.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/static_variation_001.phpt FAIL: Error: Call to undefined function eval() on line 21
 tests/lang/static_variation_002.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/string/unicode_escape.phpt PASS
 tests/lang/string/unicode_escape_empty.phpt UNSUPPORTED: EXPECTF
@@ -296,4 +296,4 @@ tests/lang/type_hints_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_003.phpt UNSUPPORTED: EXPECTF
 tests/lang/zend_throw_exception_001.phpt FAIL: ParseError: Expected ';' on line 2
-41 passed, 126 failed, 127 unsupported
+47 passed, 120 failed, 127 unsupported

@@ -37,6 +37,9 @@ output and warnings when execution fails. Parsing happens before execution.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
 - Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
+- Live `global` bindings and function-local `static` storage, including dynamic
+  initializers, recursive calls, and local `unset` behavior. Variable variables
+  (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
 - Parameter and return types for available values, nullable/union types, scalar
   coercion, typed variadics, default validation, and `void`/`never` return rules.
   `declare(strict_types=1)` preserves caller and declaration scope across calls;
@@ -65,6 +68,7 @@ generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 Class-name and object type declarations can be parsed, but objects and class
 resolution are not implemented. Callable checks currently cover function names.
 Other `declare` directives are not implemented.
+`$GLOBALS`, the other superglobals, and `eval` are not implemented.
 Deprecated `${...}` and object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
@@ -92,6 +96,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Operator precedence](https://www.php.net/manual/en/language.operators.precedence.php)
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
+- [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)
 - [Upstream PHP tests](https://github.com/php/php-src/tree/PHP-8.5/tests)
 
 The implementation uses a byte-oriented lexer, a precedence parser, and an AST

@@ -13,6 +13,7 @@ pub(crate) enum ExprKind {
     Interpolated(Vec<Expr>),
     Group(Box<Expr>),
     Variable(Vec<u8>),
+    DynamicVariable(Box<Expr>),
     Constant(Vec<u8>),
     Unary(String, Box<Expr>),
     Cast(CastKind, Box<Expr>),
@@ -58,6 +59,8 @@ pub(crate) struct MatchArm {
 
 #[derive(Debug, Clone)]
 pub(crate) enum Stmt {
+    Global(Vec<Expr>),
+    Static(Vec<(Vec<u8>, Option<Expr>)>),
     Const(Vec<(Vec<u8>, Expr)>),
     Function(Rc<FunctionDecl>),
     Text(Vec<u8>),
@@ -86,7 +89,7 @@ pub(crate) struct SwitchCase {
 impl Expr {
     pub fn is_writable(&self) -> bool {
         match &self.kind {
-            ExprKind::Variable(_) => true,
+            ExprKind::Variable(_) | ExprKind::DynamicVariable(_) => true,
             ExprKind::Index(base, _) => base.is_writable(),
             _ => false,
         }

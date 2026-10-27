@@ -197,10 +197,11 @@ impl Lexer<'_> {
                 Kind::Value(self.number()?)
             } else if c == b'$' {
                 self.bump();
-                if !self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
-                    return Err(Error::parse("Expected variable name", line));
+                if self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
+                    Kind::Variable(self.identifier())
+                } else {
+                    Kind::Symbol("$".into())
                 }
-                Kind::Variable(self.identifier())
             } else if ident_start(c) || c == b'\\' {
                 let start = self.pos;
                 if c == b'\\' {

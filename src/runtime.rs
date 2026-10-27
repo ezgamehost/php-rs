@@ -3,7 +3,7 @@ use crate::{
     ast::{ArrayElement, Expr, ExprKind, FunctionDecl, Stmt},
     lexer, parser,
 };
-use std::{cmp::Ordering, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, cmp::Ordering, collections::HashMap, rc::Rc};
 
 mod builtins;
 mod casting;
@@ -13,14 +13,21 @@ mod functions;
 mod matching;
 mod offsets;
 mod types;
+mod variables;
 use offsets::{Access, Offset, read_offset, unset_path, write_path};
+use variables::{Scope, cell};
 
 /// One request's variable scope, output, and diagnostics. Output survives errors.
 #[derive(Default)]
 pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
+    /// Global inputs before execute, and the global values after it returns.
     pub variables: HashMap<Vec<u8>, Value>,
+    scope: Scope,
+    callers: Vec<Scope>,
+    static_variables: HashMap<Option<Vec<u8>>, Scope>,
+    current_function: Option<Vec<u8>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
     strict_types: bool,
@@ -50,9 +57,19 @@ impl Runtime {
         let (mut stmts, warnings, strict_types) = parser::parse(lexer::lex(source)?)?;
         self.warnings.extend(warnings);
         self.prepare_functions(&mut stmts)?;
+        self.scope = std::mem::take(&mut self.variables)
+            .into_iter()
+            .map(|(name, value)| (name, cell(value)))
+            .collect();
+        self.static_variables.remove(&None);
         let previous = std::mem::replace(&mut self.strict_types, strict_types);
         let result = self.block(&stmts);
         self.strict_types = previous;
+        self.variables = self
+            .scope
+            .iter()
+            .map(|(name, value)| (name.clone(), value.borrow().clone()))
+            .collect();
         match result? {
             Flow::Return(value) => Ok(value),
             _ => Ok(Value::Null),
@@ -69,6 +86,17 @@ impl Runtime {
     }
     fn statement(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
         match stmt {
+            Stmt::Global(variables) => {
+                for variable in variables {
+                    let location = self.location(variable)?;
+                    self.bind_global(location.name);
+                }
+            }
+            Stmt::Static(declarations) => {
+                for (name, initializer) in declarations {
+                    self.bind_static(name, initializer.as_ref())?;
+                }
+            }
             Stmt::Const(constants) => {
                 for (name, expr) in constants {
                     let value = self.eval(expr)?;
@@ -193,9 +221,14 @@ impl Runtime {
                 for target in targets {
                     let mut location = self.location(target)?;
                     if location.keys.is_empty() {
-                        self.variables.remove(&location.name);
-                    } else if let Some(value) = self.variables.get_mut(&location.name) {
-                        unset_path(value, &mut location.keys, target.line, &mut self.warnings)?;
+                        self.scope.remove(&location.name);
+                    } else if let Some(value) = self.scope.get(&location.name).cloned() {
+                        unset_path(
+                            &mut value.borrow_mut(),
+                            &mut location.keys,
+                            target.line,
+                            &mut self.warnings,
+                        )?;
                     }
                 }
             }
@@ -218,8 +251,8 @@ impl Runtime {
         Ok(value)
     }
     fn read(&mut self, name: &[u8], line: usize) -> Value {
-        if let Some(value) = self.variables.get(name) {
-            value.clone()
+        if let Some(value) = self.lookup(name) {
+            value
         } else {
             self.warnings.push(format!(
                 "Undefined variable ${} on line {line}",
@@ -232,6 +265,10 @@ impl Runtime {
         match &expr.kind {
             ExprKind::Variable(name) => Ok(Location {
                 name: name.clone(),
+                keys: Vec::new(),
+            }),
+            ExprKind::DynamicVariable(name) => Ok(Location {
+                name: self.variable_name(name)?,
                 keys: Vec::new(),
             }),
             ExprKind::Index(base, key) => {
@@ -258,10 +295,7 @@ impl Runtime {
         string_error: Option<&str>,
     ) -> Result<Value, Error> {
         let mut value = if silent {
-            self.variables
-                .get(&location.name)
-                .cloned()
-                .unwrap_or(Value::Null)
+            self.lookup(&location.name).unwrap_or(Value::Null)
         } else {
             self.read(&location.name, line)
         };
@@ -292,11 +326,12 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let value = self
-            .variables
+            .scope
             .entry(location.name.clone())
-            .or_insert(Value::Null);
+            .or_insert_with(|| cell(Value::Null))
+            .clone();
         write_path(
-            value,
+            &mut value.borrow_mut(),
             &mut location.keys,
             new_value,
             line,
@@ -305,8 +340,10 @@ impl Runtime {
     }
     fn coalesce_read(&mut self, expr: &Expr, probe: bool) -> Result<Value, Error> {
         match &expr.kind {
-            ExprKind::Variable(name) => {
-                Ok(self.variables.get(name).cloned().unwrap_or(Value::Null))
+            ExprKind::Variable(name) => Ok(self.lookup(name).unwrap_or(Value::Null)),
+            ExprKind::DynamicVariable(name) => {
+                let name = self.variable_name(name)?;
+                Ok(self.lookup(&name).unwrap_or(Value::Null))
             }
             ExprKind::Group(inner) => self.coalesce_read(inner, probe),
             ExprKind::Index(base, Some(key)) => {
@@ -353,6 +390,10 @@ impl Runtime {
             }
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(name) => Ok(self.read(name, line)),
+            ExprKind::DynamicVariable(name) => {
+                let name = self.variable_name(name)?;
+                Ok(self.read(&name, line))
+            }
             ExprKind::List(_) | ExprKind::Destructure(_) => {
                 Err(Error::parse("Cannot read a destructuring pattern", line))
             }

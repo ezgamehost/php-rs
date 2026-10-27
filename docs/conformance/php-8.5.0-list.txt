@@ -7,7 +7,7 @@ Zend/tests/list/bug27598.phpt PASS
 Zend/tests/list/bug39304.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/bug40899.phpt PASS
 Zend/tests/list/bug65969.phpt FAIL: ParseError: Expected ';' on line 2
-Zend/tests/list/bug71030.phpt FAIL: ParseError: Expected variable name on line 13
+Zend/tests/list/bug71030.phpt FAIL: ParseError: Expected expression on line 5
 Zend/tests/list/bug72395.phpt PASS
 Zend/tests/list/bug73663.phpt FAIL: ParseError: Expected parameter variable on line 2
 Zend/tests/list/bug73663_2.phpt UNSUPPORTED: EXPECTF

@@ -53,7 +53,7 @@ impl Runtime {
             return self.eval(&arm.result);
         }
         let value = value.unwrap_or_else(|| match &subject.kind {
-            ExprKind::Variable(name) => self.variables.get(name).cloned().unwrap_or(Value::Null),
+            ExprKind::Variable(name) => self.lookup(name).unwrap_or(Value::Null),
             _ => unreachable!(),
         });
         Err(unhandled(&value, line))

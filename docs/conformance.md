@@ -5,17 +5,18 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 21 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 23 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
-| PHP 8.5.0 `tests/lang`, Rust | 41 | 126 | 127 |
+| PHP 8.5.0 `tests/lang`, Rust | 47 | 120 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 11 | 17 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
 | PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 2 | 16 | 71 |
+| PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 5 | 7 | 1 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
-suite is not green; interpolation, references, typed declarations, missing
+suite is not green; interpolation, references, object declarations, missing
 control structures, and runtime APIs account for many of the remaining failures.
 
 The [match-suite report](conformance/php-8.5.0-match.txt) records a separate
@@ -34,6 +35,12 @@ Separately, 1,152 argument conversions (24 declarations × 24 values × weak/str
 mode) matched PHP 8.5.0 for output and success/failure status. This matrix did not
 compare diagnostic text. Project regressions cover nullable/union types, typed
 variadics and defaults, return validation, and strictness across compilation units.
+
+The [static-variable report](conformance/php-8.5.0-static_variables.txt) covers
+storage persistence, dynamic and recursive initializers, and global/static
+rebinding. Remaining failures need `eval`, objects, traits, and exceptions.
+This slice also raised language-suite passes from 41 to 47; all six newly passing
+cases were individually checked against PHP 8.5.0.
 
 The upstream basic-suite failures are:
 

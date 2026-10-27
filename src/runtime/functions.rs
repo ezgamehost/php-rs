@@ -122,7 +122,10 @@ impl Runtime {
             return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line);
         }
         let function = function.unwrap();
-        let caller = std::mem::take(&mut self.variables);
+        self.callers.push(std::mem::take(&mut self.scope));
+        let caller_function = self
+            .current_function
+            .replace(function.name.to_ascii_lowercase());
         let caller_strict = self.strict_types;
         let result = (|| {
             let last_required = function
@@ -167,13 +170,14 @@ impl Runtime {
                 } else {
                     self.check_argument(value, param, &function, index + 1, caller_strict, line)?
                 };
-                self.variables.insert(param.name.clone(), value);
+                self.scope.insert(param.name.clone(), cell(value));
             }
             self.strict_types = function.strict_types;
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
         })();
-        self.variables = caller;
+        self.scope = self.callers.pop().unwrap();
+        self.current_function = caller_function;
         self.strict_types = caller_strict;
         result
     }

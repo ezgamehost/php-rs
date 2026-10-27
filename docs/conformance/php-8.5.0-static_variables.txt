@@ -1,0 +1,20 @@
+PHP 8.5.0 static-variable conformance baseline
+Reference: PHP 8.5.0
+Measured: 2026-10-26
+Command: php-rs-phpt --reference /path/to/php-8.5 Zend/tests/static_variables
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/static_variables/static_variable.phpt PASS
+Zend/tests/static_variables/static_variable_func_call.phpt PASS
+Zend/tests/static_variables/static_variable_in_dynamic_function.phpt FAIL: Error: Call to undefined function eval() on line 12
+Zend/tests/static_variables/static_variable_in_dynamic_function_2.phpt FAIL: Error: Call to undefined function eval() on line 11
+Zend/tests/static_variables/static_variable_in_private_method.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/static_variables/static_variable_in_private_trait_method.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/static_variables/static_variables_closure_bind.phpt UNSUPPORTED: EXPECTF
+Zend/tests/static_variables/static_variables_destructor.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/static_variables/static_variables_global.phpt PASS
+Zend/tests/static_variables/static_variables_global_2.phpt PASS
+Zend/tests/static_variables/static_variables_recursive.phpt PASS
+Zend/tests/static_variables/static_variables_throwing_initializer.phpt FAIL: ParseError: Expected ')' on line 4
+Zend/tests/static_variables/static_variables_traits.phpt FAIL: ParseError: Expected ';' on line 3
+5 passed, 7 failed, 1 unsupported

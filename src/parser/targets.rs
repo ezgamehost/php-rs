@@ -52,6 +52,18 @@ fn pattern(mut expr: Expr, outer_list: Option<bool>) -> Result<Expr, Error> {
 pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
     for statement in statements {
         match statement {
+            Stmt::Global(variables) => {
+                for variable in variables {
+                    expression(variable, false)?;
+                }
+            }
+            Stmt::Static(declarations) => {
+                for (_, initializer) in declarations {
+                    if let Some(expr) = initializer {
+                        expression(expr, false)?;
+                    }
+                }
+            }
             Stmt::Const(constants) => {
                 for (_, value) in constants {
                     expression(value, false)?;
@@ -161,6 +173,7 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
             }
         }
         ExprKind::Group(value)
+        | ExprKind::DynamicVariable(value)
         | ExprKind::Cast(_, value)
         | ExprKind::Unary(_, value)
         | ExprKind::Empty(value)
