@@ -33,8 +33,9 @@ output and warnings when execution fails. Parsing happens before execution.
 - Core builtins: `var_dump`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
   and `function_exists`.
-- `echo`, blocks, `if` / `elseif` / `else`, `while`, `foreach` by value, `break`,
-  `continue`, and `return`.
+- `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
+  by value, numbered `break`/`continue`, and `return`. Loops support alternative
+  `: … endfor` / `endwhile` / `endforeach` syntax.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 - Variable/array interpolation, braced variable calls, Unicode escapes, binary

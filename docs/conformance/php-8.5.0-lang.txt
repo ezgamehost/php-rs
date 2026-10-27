@@ -19,16 +19,16 @@ tests/lang/014.phpt FAIL: Error: Call to undefined function error_reporting() on
 tests/lang/015.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/016.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/017.phpt PASS
-tests/lang/018.phpt FAIL: ParseError: Expected ')' on line 7
+tests/lang/018.phpt FAIL: Error: Call to undefined function error_reporting() on line 3
 tests/lang/019.phpt UNSUPPORTED: EXPECTF
-tests/lang/020.phpt FAIL: ParseError: Expected ')' on line 5
-tests/lang/021.phpt FAIL: ParseError: Expected ')' on line 3
+tests/lang/020.phpt FAIL: ParseError: Expected ';' on line 6
+tests/lang/021.phpt FAIL: ParseError: Expected ';' on line 7
 tests/lang/022.phpt FAIL: ParseError: Expected ';' on line 5
 tests/lang/023.phpt UNSUPPORTED: INI
 tests/lang/024.phpt FAIL: ParseError: Expected variable name on line 14
 tests/lang/025.phpt PASS
 tests/lang/026.phpt PASS
-tests/lang/027.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/027.phpt PASS
 tests/lang/028.phpt FAIL: ParseError: Expected ';' on line 7
 tests/lang/030.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/032.phpt FAIL: ParseError: Expected ';' on line 2
@@ -85,7 +85,7 @@ tests/lang/bug25547.phpt FAIL: Error: Call to undefined function set_error_handl
 tests/lang/bug25652.phpt FAIL: ParseError: Expected ';' on line 7
 tests/lang/bug25922.phpt UNSUPPORTED: INI
 tests/lang/bug26182.phpt UNSUPPORTED: INI
-tests/lang/bug26696.phpt FAIL: ParseError: Expected ')' on line 5
+tests/lang/bug26696.phpt FAIL: ParseError: Expected ';' on line 6
 tests/lang/bug26866.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug26869.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/bug27354.phpt UNSUPPORTED: EXPECTF
@@ -144,10 +144,10 @@ tests/lang/foreachLoop.006.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoop.009.phpt FAIL: ParseError: Expected expression on line 7
 tests/lang/foreachLoop.010.phpt FAIL: ParseError: Expected expression on line 4
 tests/lang/foreachLoop.011.phpt FAIL: ParseError: Expected expression on line 4
-tests/lang/foreachLoop.012.phpt FAIL: ParseError: Expected ')' on line 8
-tests/lang/foreachLoop.013.phpt FAIL: ParseError: Expected ')' on line 8
-tests/lang/foreachLoop.014.phpt FAIL: ParseError: Expected ')' on line 8
-tests/lang/foreachLoop.015.phpt FAIL: ParseError: Expected ')' on line 8
+tests/lang/foreachLoop.012.phpt FAIL: Error: Call to undefined function define() on line 3
+tests/lang/foreachLoop.013.phpt FAIL: ParseError: Expected expression on line 17
+tests/lang/foreachLoop.014.phpt FAIL: ParseError: Expected expression on line 13
+tests/lang/foreachLoop.015.phpt FAIL: ParseError: Expected expression on line 13
 tests/lang/foreachLoop.016.phpt FAIL: ParseError: Expected variable name on line 13
 tests/lang/foreachLoop.017.phpt PASS
 tests/lang/foreachLoopIterator.001.phpt UNSUPPORTED: EXPECTF
@@ -215,32 +215,32 @@ tests/lang/operators/multiply_variationStr.phpt FAIL: ParseError: Unexpected byt
 tests/lang/operators/nan-comparison-false.phpt FAIL: Error: Undefined constant "NAN" on line 4
 tests/lang/operators/negate_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/negate_variationStr.phpt UNSUPPORTED: EXPECTF
-tests/lang/operators/operator_equals_basic.phpt FAIL: ParseError: Expected ')' on line 31
+tests/lang/operators/operator_equals_basic.phpt PASS
 tests/lang/operators/operator_equals_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_equals_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_gt_basic.phpt FAIL: ParseError: Expected ')' on line 32
-tests/lang/operators/operator_gt_or_equal_basic.phpt FAIL: ParseError: Expected ')' on line 30
+tests/lang/operators/operator_gt_basic.phpt PASS
+tests/lang/operators/operator_gt_or_equal_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 21
 tests/lang/operators/operator_gt_or_equal_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_gt_or_equal_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_gt_variation.phpt FAIL: ParseError: Expected ')' on line 22
+tests/lang/operators/operator_gt_variation.phpt FAIL: Error: Call to undefined function define() on line 3
 tests/lang/operators/operator_gt_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_identical_basic.phpt FAIL: ParseError: Expected ')' on line 31
+tests/lang/operators/operator_identical_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 22
 tests/lang/operators/operator_identical_recusion-01.phpt FAIL: ParseError: Expected expression on line 4
 tests/lang/operators/operator_identical_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_identical_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_lt_basic.phpt FAIL: ParseError: Expected ')' on line 29
-tests/lang/operators/operator_lt_or_equal_basic.phpt FAIL: ParseError: Expected ')' on line 29
+tests/lang/operators/operator_lt_basic.phpt PASS
+tests/lang/operators/operator_lt_or_equal_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 21
 tests/lang/operators/operator_lt_or_equal_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_lt_or_equal_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_lt_variation.phpt FAIL: ParseError: Expected ')' on line 20
+tests/lang/operators/operator_lt_variation.phpt FAIL: Error: Call to undefined function define() on line 3
 tests/lang/operators/operator_lt_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_notequals_basic.phpt FAIL: ParseError: Expected ')' on line 31
+tests/lang/operators/operator_notequals_basic.phpt PASS
 tests/lang/operators/operator_notequals_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_notequals_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_notidentical_basic.phpt FAIL: ParseError: Expected ')' on line 31
+tests/lang/operators/operator_notidentical_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 22
 tests/lang/operators/operator_notidentical_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_notidentical_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_spaceship_basic.phpt FAIL: ParseError: Expected ')' on line 32
+tests/lang/operators/operator_spaceship_basic.phpt PASS
 tests/lang/operators/overloaded_property_ref.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/operators/postdec_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/postdec_variationStr.phpt UNSUPPORTED: EXPECTF
@@ -296,4 +296,4 @@ tests/lang/type_hints_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_003.phpt UNSUPPORTED: EXPECTF
 tests/lang/zend_throw_exception_001.phpt FAIL: ParseError: Expected ';' on line 2
-22 passed, 145 failed, 127 unsupported
+28 passed, 139 failed, 127 unsupported

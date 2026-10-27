@@ -35,10 +35,12 @@ pub(crate) enum Stmt {
     Block(Vec<Stmt>),
     If(Expr, Box<Stmt>, Option<Box<Stmt>>),
     While(Expr, Box<Stmt>),
+    DoWhile(Box<Stmt>, Expr),
+    For(Vec<Expr>, Vec<Expr>, Vec<Expr>, Box<Stmt>),
     Foreach(Expr, Option<Expr>, Expr, Box<Stmt>),
     Unset(Vec<Expr>),
-    Break,
-    Continue,
+    Break(usize),
+    Continue(usize),
     Return(Option<Expr>),
 }
 

@@ -88,10 +88,25 @@ impl Parser {
             self.expect("(")?;
             let cond = self.expr(0)?;
             self.expect(")")?;
-            self.loops += 1;
-            let body = self.statement()?;
-            self.loops -= 1;
+            let body = self.loop_body(Some("endwhile"))?;
             return Ok(Stmt::While(cond, Box::new(body)));
+        }
+        if self.eat("do") {
+            let body = self.loop_body(None)?;
+            self.expect("while")?;
+            self.expect("(")?;
+            let cond = self.expr(0)?;
+            self.expect(")")?;
+            self.expect(";")?;
+            return Ok(Stmt::DoWhile(Box::new(body), cond));
+        }
+        if self.eat("for") {
+            self.expect("(")?;
+            let init = self.expression_list(";")?;
+            let cond = self.expression_list(";")?;
+            let step = self.expression_list(")")?;
+            let body = self.loop_body(Some("endfor"))?;
+            return Ok(Stmt::For(init, cond, step, Box::new(body)));
         }
         if self.eat("foreach") {
             self.expect("(")?;
@@ -110,9 +125,7 @@ impl Parser {
                 ));
             }
             self.expect(")")?;
-            self.loops += 1;
-            let body = self.statement()?;
-            self.loops -= 1;
+            let body = self.loop_body(Some("endforeach"))?;
             return Ok(Stmt::Foreach(iter, key, value, Box::new(body)));
         }
         if self.eat("unset") {
@@ -143,11 +156,30 @@ impl Parser {
             if !is_break {
                 self.expect("continue")?;
             }
+            let level = if self.is(";") {
+                1
+            } else {
+                let expr = self.expr(0)?;
+                let mut operand = &expr;
+                while let ExprKind::Group(inner) = &operand.kind {
+                    operand = inner;
+                }
+                let ExprKind::Literal(Value::Int(level)) = operand.kind else {
+                    return Err(Error::parse(
+                        "Loop control requires a positive integer literal",
+                        expr.line,
+                    ));
+                };
+                if level <= 0 || level as u64 > self.loops as u64 {
+                    return Err(Error::parse("Invalid loop control depth", expr.line));
+                }
+                level as usize
+            };
             self.expect(";")?;
             return Ok(if is_break {
-                Stmt::Break
+                Stmt::Break(level)
             } else {
-                Stmt::Continue
+                Stmt::Continue(level)
             });
         }
         if self.eat("return") {
@@ -162,6 +194,35 @@ impl Parser {
         let expr = self.expr(0)?;
         self.expect(";")?;
         Ok(Stmt::Expr(expr))
+    }
+    fn expression_list(&mut self, end: &str) -> Result<Vec<Expr>, Error> {
+        let mut expressions = Vec::new();
+        if self.eat(end) {
+            return Ok(expressions);
+        }
+        loop {
+            expressions.push(self.expr(0)?);
+            if !self.eat(",") {
+                self.expect(end)?;
+                return Ok(expressions);
+            }
+        }
+    }
+    fn loop_body(&mut self, end: Option<&str>) -> Result<Stmt, Error> {
+        self.loops += 1;
+        let body = if let Some(end) = end.filter(|_| self.is(":")) {
+            self.expect(":")?;
+            let mut body = Vec::new();
+            while !self.eat(end) {
+                body.push(self.statement()?);
+            }
+            self.expect(";")?;
+            Stmt::Block(body)
+        } else {
+            self.statement()?
+        };
+        self.loops -= 1;
+        Ok(body)
     }
     fn function(&mut self) -> Result<Stmt, Error> {
         let line = self.token().line;

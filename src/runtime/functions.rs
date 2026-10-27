@@ -286,7 +286,10 @@ fn diagnose_functions(stmts: &[Stmt], warnings: &mut Vec<String>) {
                     diagnose_functions(std::slice::from_ref(no), warnings);
                 }
             }
-            Stmt::While(_, body) | Stmt::Foreach(_, _, _, body) => {
+            Stmt::While(_, body)
+            | Stmt::DoWhile(body, _)
+            | Stmt::For(_, _, _, body)
+            | Stmt::Foreach(_, _, _, body) => {
                 diagnose_functions(std::slice::from_ref(body), warnings)
             }
             _ => {}

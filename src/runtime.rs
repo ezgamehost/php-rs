@@ -24,9 +24,18 @@ struct Location {
 }
 enum Flow {
     Next,
-    Break,
-    Continue,
+    Break(usize),
+    Continue(usize),
     Return(Value),
+}
+impl Flow {
+    fn leave_loop(self) -> Self {
+        match self {
+            Self::Break(level) => Self::Break(level - 1),
+            Self::Continue(level) => Self::Continue(level - 1),
+            other => other,
+        }
+    }
 }
 impl Runtime {
     /// Parse the complete document before executing any of it.
@@ -75,10 +84,31 @@ impl Runtime {
             Stmt::While(cond, body) => {
                 while self.eval(cond)?.is_truthy() {
                     match self.statement(body)? {
-                        Flow::Next | Flow::Continue => {}
-                        Flow::Break => break,
-                        flow => return Ok(flow),
+                        Flow::Next | Flow::Continue(1) => {}
+                        Flow::Break(1) => break,
+                        flow => return Ok(flow.leave_loop()),
                     }
+                }
+            }
+            Stmt::DoWhile(body, cond) => loop {
+                match self.statement(body)? {
+                    Flow::Next | Flow::Continue(1) => {}
+                    Flow::Break(1) => break,
+                    flow => return Ok(flow.leave_loop()),
+                }
+                if !self.eval(cond)?.is_truthy() {
+                    break;
+                }
+            },
+            Stmt::For(init, cond, step, body) => {
+                self.eval_sequence(init)?;
+                while self.eval_sequence(cond)?.is_truthy() {
+                    match self.statement(body)? {
+                        Flow::Next | Flow::Continue(1) => {}
+                        Flow::Break(1) => break,
+                        flow => return Ok(flow.leave_loop()),
+                    }
+                    self.eval_sequence(step)?;
                 }
             }
             Stmt::Foreach(iter, key_target, value_target, body) => {
@@ -92,9 +122,9 @@ impl Runtime {
                             self.write_location(&mut location, key.to_value(), target.line)?;
                         }
                         match self.statement(body)? {
-                            Flow::Next | Flow::Continue => {}
-                            Flow::Break => break,
-                            flow => return Ok(flow),
+                            Flow::Next | Flow::Continue(1) => {}
+                            Flow::Break(1) => break,
+                            flow => return Ok(flow.leave_loop()),
                         }
                     }
                 } else {
@@ -114,8 +144,8 @@ impl Runtime {
                     }
                 }
             }
-            Stmt::Break => return Ok(Flow::Break),
-            Stmt::Continue => return Ok(Flow::Continue),
+            Stmt::Break(level) => return Ok(Flow::Break(*level)),
+            Stmt::Continue(level) => return Ok(Flow::Continue(*level)),
             Stmt::Return(value) => {
                 return Ok(Flow::Return(match value {
                     Some(expr) => self.eval(expr)?,
@@ -124,6 +154,13 @@ impl Runtime {
             }
         }
         Ok(Flow::Next)
+    }
+    fn eval_sequence(&mut self, expressions: &[Expr]) -> Result<Value, Error> {
+        let mut value = Value::Bool(true);
+        for expression in expressions {
+            value = self.eval(expression)?;
+        }
+        Ok(value)
     }
     fn read(&mut self, name: &[u8], line: usize) -> Value {
         if let Some(value) = self.variables.get(name) {
