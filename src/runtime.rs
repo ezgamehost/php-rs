@@ -25,6 +25,7 @@ mod interfaces;
 mod jumps;
 mod loading;
 mod matching;
+mod method_visibility;
 mod objects;
 mod offsets;
 mod readonly;

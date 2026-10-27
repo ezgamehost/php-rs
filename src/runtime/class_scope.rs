@@ -147,6 +147,17 @@ impl Runtime {
         this: Option<Rc<crate::PhpObject>>,
         line: usize,
     ) -> Result<CallTarget, Error> {
+        self.check_method_access(&function, line)?;
+        self.unchecked_method_target(function, called, this, line)
+    }
+
+    pub(super) fn unchecked_method_target(
+        &self,
+        function: Rc<FunctionDecl>,
+        called: Rc<Class>,
+        this: Option<Rc<crate::PhpObject>>,
+        line: usize,
+    ) -> Result<CallTarget, Error> {
         if function.is_abstract {
             return Err(Error::new(
                 ErrorKind::Error,

@@ -2,7 +2,7 @@ use crate::{
     Error, Value,
     ast::{
         Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, IncludeKind, MatchArm,
-        Parameter, Stmt, SwitchCase, TypeDecl,
+        Parameter, Stmt, SwitchCase, TypeDecl, Visibility,
     },
     lexer::{Kind, StringPart, Token},
 };
@@ -502,6 +502,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            visibility: Visibility::Public,
             is_abstract,
             is_static: false,
             name,

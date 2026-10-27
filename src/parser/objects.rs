@@ -76,6 +76,7 @@ impl Parser {
             let mut final_method = false;
             let mut abstract_method = false;
             let mut public = false;
+            let mut visibility = Visibility::Public;
             let mut var = false;
             let mut static_method = false;
             let mut readonly_property = false;
@@ -85,6 +86,13 @@ impl Parser {
                 } else if self.eat("abstract") {
                     &mut abstract_method
                 } else if self.eat("public") {
+                    visibility = Visibility::Public;
+                    &mut public
+                } else if self.eat("protected") {
+                    visibility = Visibility::Protected;
+                    &mut public
+                } else if self.eat("private") {
+                    visibility = Visibility::Private;
                     &mut public
                 } else if self.eat("var") {
                     var = true;
@@ -103,6 +111,18 @@ impl Parser {
                     ));
                 }
                 *flag = true;
+            }
+            if visibility != Visibility::Public && (!self.is("function") || is_interface) {
+                return Err(Error::parse(
+                    "Invalid non-public member declaration",
+                    self.token().line,
+                ));
+            }
+            if abstract_method && visibility == Visibility::Private {
+                return Err(Error::parse(
+                    "Abstract methods cannot be private",
+                    self.token().line,
+                ));
             }
             if is_interface
                 && (abstract_method
@@ -209,6 +229,41 @@ impl Parser {
                     ));
                 }
                 Rc::make_mut(&mut method).is_static = static_method;
+                Rc::make_mut(&mut method).visibility = visibility;
+                if final_method
+                    && visibility == Visibility::Private
+                    && !method.name.eq_ignore_ascii_case(b"__construct")
+                {
+                    self.warnings.push(format!("Private methods cannot be final as they are never overridden by other classes on line {}", method.line));
+                    final_method = false;
+                }
+                if visibility != Visibility::Public
+                    && [
+                        b"__invoke".as_slice(),
+                        b"__get",
+                        b"__set",
+                        b"__isset",
+                        b"__unset",
+                        b"__call",
+                        b"__callstatic",
+                        b"__tostring",
+                        b"__sleep",
+                        b"__wakeup",
+                        b"__serialize",
+                        b"__unserialize",
+                        b"__set_state",
+                        b"__debuginfo",
+                    ]
+                    .iter()
+                    .any(|name| method.name.eq_ignore_ascii_case(name))
+                {
+                    self.warnings.push(format!(
+                        "The magic method {}::{}() must have public visibility on line {}",
+                        String::from_utf8_lossy(&name),
+                        String::from_utf8_lossy(&method.name),
+                        method.line
+                    ));
+                }
                 if final_method {
                     final_methods.push(method.name.to_ascii_lowercase());
                 }

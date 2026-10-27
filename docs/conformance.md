@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 47 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 48 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -19,12 +19,12 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
-| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 5 | 16 | 44 |
+| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 6 | 15 | 44 |
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
-| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 29 | 96 | 158 |
-| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 13 | 21 | 36 |
+| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 44 | 81 | 158 |
+| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 21 | 13 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 28 | 28 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 3 | 12 | 14 |
@@ -208,7 +208,7 @@ presence across static/instance calls, forwarding, saved callbacks, contextual
 type variance, and class-name inspection. Project regressions additionally
 cover caller-context restoration, eval, default closure scope, and per-class
 property-default identity. Most magic method dispatch, non-public
-visibility, and complete closure reflection/debugging remain incomplete.
+property/constant visibility, and complete closure reflection/debugging remain incomplete.
 
 The static-member slice adds nine class-suite passes, two late-static-binding
 passes, and one inheritance pass without regressing prior passing cases.
@@ -219,7 +219,7 @@ shared and redeclared static properties, dynamic access, array mutations,
 probes, initializer timing, and cyclic constant errors. A 214-case differential
 check and the existing 300-case class-scope matrix matched stdout, exit status,
 and diagnostic presence against PHP 8.5.0. These checks do not claim exact
-diagnostic wording. Intersection/DNF constant types, non-public members, all constant
+diagnostic wording. Intersection/DNF constant types, non-public properties/constants, all constant
 expression forms, and the remaining upstream failures are still unfinished.
 
 
@@ -279,7 +279,7 @@ Defaults belong to parameters, as described in the
 A 269-case matrix matches PHP 8.5.0 stdout, exit status, and diagnostic presence.
 Failed argument validation leaves existing properties unchanged when calling a
 constructor again. Remaining upstream failures involve reflection, references,
-traits, exception handling, and object-ID reuse. Private/protected visibility,
+traits, exception handling, and object-ID reuse. Private/protected property visibility,
 advanced promotion modifiers, and object construction in parameter defaults
 remain unsupported.
 The readonly suite counts are unchanged.
@@ -302,7 +302,7 @@ output is still missing. Assignment operands such as `clone $copy = $original`
 now parse correctly, and destructuring objects raises a PHP error instead of
 panicking. The class suite gains two passes; the refreshed language baseline
 gains eleven passes without losing any prior passing fixtures. Readonly suite
-counts remain unchanged. Non-public clone methods, asymmetric visibility,
+counts remain unchanged. Asymmetric visibility,
 property hooks, general references, exceptions, destructors, and exact object-ID
 reuse remain incomplete; unsupported PHPT sections are not counted as passes.
 
@@ -320,7 +320,7 @@ arguments; abstract construction fails before resolving defaults or evaluating
 constructor arguments. A 321-case differential matrix matches stdout, exit
 status, and diagnostic presence against PHP 8.5.0. The
 [PHP abstraction manual](https://www.php.net/manual/en/language.oop5.abstract.php)
-and local PHP 8.5.0 source/probes establish the rules. Protected/private method
+and local PHP 8.5.0 source/probes establish the rules. Protected/private property
 visibility, built-in interfaces, traits, abstract property hooks, reflection, and deferred
 signature checks involving unresolved class dependencies remain incomplete.
 
@@ -338,5 +338,22 @@ and PHP 8.5.0 probes establish the rules. A 379-case differential matrix matches
 stdout, exit status, and diagnostic presence. Interfaces participate in class
 constant initialization without eagerly evaluating overridden constants. Built-in
 interfaces and their runtime protocols, interface property hooks, autoloading,
-reflection, non-public members, and deferred signature checks involving unresolved
+reflection, non-public properties/constants, and deferred signature checks involving unresolved
 class dependencies remain incomplete.
+
+
+The method-visibility slice adds fifteen class-suite passes, eight inheritance
+passes, and one first-class callable pass without losing previous passing
+fixtures. Sixteen project regressions and a reference-checked PHPT cover
+private/protected methods, lexical private dispatch, constructor and clone
+access, inherited visibility, saved method callables, and method_exists behavior.
+An 863-case differential matrix matches PHP 8.5.0 stdout, exit status, and
+diagnostic presence. Native callbacks can bind the active object within the
+named class scope; ordinary variable calls retain their separate static-call
+restrictions. Non-public `__invoke` warns but remains callable implicitly;
+non-public `__toString` warns and fails when its class is linked, as required
+by PHP's implicit Stringable contract. Full Stringable behavior is still missing.
+The [PHP visibility manual](https://www.php.net/manual/en/language.oop5.visibility.php)
+and local PHP 8.5.0 probes establish the access rules. Non-public properties and
+constants, property promotion visibility, most magic-method protocols, and the
+previously documented gaps remain incomplete.

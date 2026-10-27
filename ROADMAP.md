@@ -77,13 +77,15 @@ definition of completion.
    constructor body, with separate parameter defaults and property storage.
    Shallow object/closure cloning, inherited `__clone()`, readonly reinitialization,
    and PHP 8.5 clone-with property updates are implemented.
-   Abstract classes and public abstract methods enforce implementation requirements,
+   Abstract classes and public/protected abstract methods enforce implementation requirements,
    signature compatibility, and inherited abstract constructor contracts.
    User-defined interfaces support multiple inheritance, method contracts,
    constants, type checks, and interface_exists.
+   Private/protected methods support access checks, lexical private dispatch,
+   constructor/clone visibility, and saved method callables.
    Remaining: built-in interfaces, interface properties, traits, abstract properties, intersection/DNF constant types,
    complete constant/default resolution,
-   visibility, property hooks, remaining magic methods, reflection, attributes, enums,
+   property/constant visibility, property hooks, remaining magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function

@@ -36,7 +36,8 @@ impl Runtime {
             for required in &interface.methods {
                 let name = required.name.rsplit(|b| *b == b':').next().unwrap();
                 let implementation = objects::method(class, name).expect("interface method linked");
-                if implementation.is_static != required.is_static
+                if implementation.visibility != crate::ast::Visibility::Public
+                    || implementation.is_static != required.is_static
                     || !self.compatible_method(&implementation, required, class)
                 {
                     return Err(Error::new(

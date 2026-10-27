@@ -234,7 +234,14 @@ impl Runtime {
                     }
                 };
                 let exists = if matches!(builtin, Builtin::MethodExists) {
-                    class.is_some_and(|c| objects::method(&c, &member).is_some())
+                    class.is_some_and(|c| {
+                        objects::method(&c, &member).is_some_and(|m| {
+                            matches!(first, Value::Object(_))
+                                || m.visibility != crate::ast::Visibility::Private
+                                || method_visibility::declaring_name(&m)
+                                    .eq_ignore_ascii_case(&c.name)
+                        })
+                    })
                 } else {
                     class.is_some_and(|c| {
                         c.properties

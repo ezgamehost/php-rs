@@ -12,7 +12,7 @@ tests/classes/__call_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_003.phpt UNSUPPORTED: EXPECTF
-tests/classes/__set__get_004.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/classes/__set__get_004.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
 tests/classes/__set__get_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set_data_corrupt.phpt FAIL: Unexpected diagnostics: Deprecated: Creation of dynamic property foo::$t is deprecated on line 8
 tests/classes/abstract.phpt UNSUPPORTED: EXPECTF
@@ -39,8 +39,8 @@ tests/classes/array_access_010.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_011.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_012.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_013.phpt FAIL: ParseError: Expected ';' on line 5
-tests/classes/array_conversion_keys.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/assign_op_property_001.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/array_conversion_keys.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/assign_op_property_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/autoload_001.phpt UNSUPPORTED: SKIPIF
 tests/classes/autoload_002.phpt UNSUPPORTED: SKIPIF
 tests/classes/autoload_003.phpt UNSUPPORTED: SKIPIF
@@ -67,7 +67,7 @@ tests/classes/bug24399.phpt FAIL: Error: Call to undefined function is_subclass_
 tests/classes/bug24445.phpt PASS
 tests/classes/bug26737.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug27468.phpt UNSUPPORTED: EXPECTF
-tests/classes/bug27504.phpt FAIL: ParseError: Expected public property or method on line 6
+tests/classes/bug27504.phpt FAIL: ParseError: Expected ';' on line 13
 tests/classes/bug29446.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug65768.phpt UNSUPPORTED: EXPECTF, INI
 tests/classes/bug75765.phpt UNSUPPORTED: EXPECTF
@@ -77,8 +77,8 @@ tests/classes/class_final.phpt UNSUPPORTED: EXPECTF
 tests/classes/class_stdclass.phpt PASS
 tests/classes/clone_001.phpt PASS
 tests/classes/clone_002.phpt PASS
-tests/classes/clone_003.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/classes/clone_004.phpt FAIL: ParseError: Expected public property or method on line 6
+tests/classes/clone_003.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+tests/classes/clone_004.phpt PASS
 tests/classes/clone_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/clone_006.phpt UNSUPPORTED: EXPECTF, INI
 tests/classes/constants_basic_001.phpt UNSUPPORTED: EXPECTF
@@ -97,12 +97,12 @@ tests/classes/constants_error_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_007.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_scope_001.phpt PASS
 tests/classes/constants_visibility_001.phpt PASS
-tests/classes/constants_visibility_002.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/classes/constants_visibility_003.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/classes/constants_visibility_002.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+tests/classes/constants_visibility_003.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
 tests/classes/constants_visibility_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_006.phpt UNSUPPORTED: EXPECTF
-tests/classes/constants_visibility_008.phpt FAIL: ParseError: Expected public property or method on line 5
+tests/classes/constants_visibility_008.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
 tests/classes/constants_visibility_error_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_003.phpt UNSUPPORTED: EXPECTF
@@ -115,42 +115,42 @@ tests/classes/ctor_in_interface_02.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_in_interface_03.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_in_interface_04.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_visibility.phpt UNSUPPORTED: EXPECTF
-tests/classes/dereferencing_001.phpt FAIL: ParseError: Expected public property or method on line 12
+tests/classes/dereferencing_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 12
 tests/classes/destructor_and_echo.phpt FAIL: Expected "Test::__construct\n===DONE===\nTest::__destruct\n", got "Test::__construct\n===DONE===\n"
 tests/classes/destructor_and_exceptions.phpt FAIL: ParseError: Expected ';' on line 10
-tests/classes/destructor_and_globals.phpt FAIL: ParseError: Expected public property or method on line 11
+tests/classes/destructor_and_globals.phpt FAIL: ParseError: Invalid non-public member declaration on line 11
 tests/classes/destructor_and_references.phpt FAIL: ParseError: Expected expression on line 13
 tests/classes/destructor_inheritance.phpt FAIL: Expected "base::__construct\nbase::__destruct\nDone\n", got "base::__construct\nDone"
 tests/classes/destructor_visibility_001.phpt UNSUPPORTED: EXPECTF
-tests/classes/destructor_visibility_002.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/destructor_visibility_003.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/destructor_visibility_002.phpt FAIL: Expected "===DONE===\n\nWarning: Call to private Derived::__destruct() from global scope during shutdown ignored in Unknown on line 0\n", got "===DONE===\n"
+tests/classes/destructor_visibility_003.phpt FAIL: Expected "Derived::__destruct\n", got ""
 tests/classes/factory_001.phpt PASS
-tests/classes/factory_and_singleton_001.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/classes/factory_and_singleton_002.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/classes/factory_and_singleton_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+tests/classes/factory_and_singleton_002.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
 tests/classes/factory_and_singleton_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/factory_and_singleton_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/factory_and_singleton_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/factory_and_singleton_006.phpt UNSUPPORTED: EXPECTF
-tests/classes/factory_and_singleton_007.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/factory_and_singleton_008.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/factory_and_singleton_009.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/factory_and_singleton_010.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/factory_and_singleton_007.phpt FAIL: ParseError: Expected ';' on line 8
+tests/classes/factory_and_singleton_008.phpt FAIL: ParseError: Expected ';' on line 8
+tests/classes/factory_and_singleton_009.phpt FAIL: Expected "===DONE===\n\nWarning: Call to protected test::__destruct() from global scope during shutdown ignored in Unknown on line 0\n", got "===DONE===\n"
+tests/classes/factory_and_singleton_010.phpt FAIL: Expected "===DONE===\n\nWarning: Call to private test::__destruct() from global scope during shutdown ignored in Unknown on line 0\n", got "===DONE===\n"
 tests/classes/final.phpt PASS
 tests/classes/final_abstract.phpt UNSUPPORTED: EXPECTF
 tests/classes/final_ctor1.phpt UNSUPPORTED: EXPECTF
 tests/classes/final_private_ctor.phpt UNSUPPORTED: EXPECTF
 tests/classes/final_redeclare.phpt UNSUPPORTED: EXPECTF
-tests/classes/incdec_property_001.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/incdec_property_002.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/incdec_property_003.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/incdec_property_004.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/incdec_property_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/incdec_property_002.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/incdec_property_003.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/incdec_property_004.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/inheritance.phpt PASS
 tests/classes/inheritance_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/inheritance_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/inheritance_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/inheritance_007.phpt UNSUPPORTED: EXPECTF
-tests/classes/inheritance_008.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/classes/inheritance_009.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/classes/inheritance_008.phpt PASS
+tests/classes/inheritance_009.phpt PASS
 tests/classes/interface_and_extends.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_class.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_constant_inheritance_001.phpt PASS
@@ -172,14 +172,14 @@ tests/classes/interface_optional_arg_003.phpt PASS
 tests/classes/interfaces_001.phpt PASS
 tests/classes/interfaces_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/interfaces_003.phpt UNSUPPORTED: EXPECTF
-tests/classes/iterators_001.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/iterators_002.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/iterators_003.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/iterators_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/iterators_002.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/iterators_003.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/iterators_004.phpt PASS
 tests/classes/iterators_005.phpt UNSUPPORTED: EXPECTF
-tests/classes/iterators_006.phpt FAIL: ParseError: Expected public property or method on line 5
+tests/classes/iterators_006.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
 tests/classes/iterators_007.phpt FAIL: ParseError: Expected ';' on line 7
-tests/classes/iterators_008.phpt FAIL: ParseError: Expected public property or method on line 6
+tests/classes/iterators_008.phpt FAIL: ParseError: Invalid non-public member declaration on line 6
 tests/classes/method_call_variation_001.phpt PASS
 tests/classes/method_override_optional_arg_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/method_override_optional_arg_002.phpt UNSUPPORTED: EXPECTF
@@ -191,36 +191,36 @@ tests/classes/private_003b.phpt UNSUPPORTED: EXPECTF
 tests/classes/private_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/private_004b.phpt UNSUPPORTED: EXPECTF
 tests/classes/private_005.phpt UNSUPPORTED: EXPECTF
-tests/classes/private_006.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/classes/private_006b.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/private_007.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/private_007b.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/private_members.phpt FAIL: ParseError: Expected public property or method on line 5
-tests/classes/private_members_serialization.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/private_006.phpt PASS
+tests/classes/private_006b.phpt PASS
+tests/classes/private_007.phpt PASS
+tests/classes/private_007b.phpt PASS
+tests/classes/private_members.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
+tests/classes/private_members_serialization.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/private_redeclare.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_privateStatic_private.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_privateStatic_privateStatic.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_privateStatic_protected.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_privateStatic_protectedStatic.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_privateStatic_public.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_privateStatic_publicStatic.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_private_private.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_private_privateStatic.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_private_protected.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_private_protectedStatic.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_private_public.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/property_override_private_publicStatic.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/property_override_privateStatic_private.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_privateStatic_privateStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_privateStatic_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_privateStatic_protectedStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_privateStatic_public.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_privateStatic_publicStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_private_private.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_private_privateStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_private_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_private_protectedStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_private_public.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_private_publicStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_protectedStatic_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protectedStatic_privateStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protectedStatic_protected.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_protectedStatic_protectedStatic.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/property_override_protectedStatic_protectedStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_protectedStatic_public.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_protectedStatic_publicStatic.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/property_override_protectedStatic_publicStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_protected_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protected_privateStatic.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_protected_protected.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/property_override_protected_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_protected_protectedStatic.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_protected_public.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/property_override_protected_public.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_protected_publicStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_publicStatic_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_publicStatic_privateStatic.phpt UNSUPPORTED: EXPECTF
@@ -240,7 +240,7 @@ tests/classes/protected_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/protected_001b.phpt UNSUPPORTED: EXPECTF
 tests/classes/protected_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/serialize_001.phpt UNSUPPORTED: EXPECTF
-tests/classes/singleton_001.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/singleton_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/static_mix_1.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_mix_2.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_001.phpt PASS
@@ -269,21 +269,21 @@ tests/classes/type_hinting_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/type_hinting_005a.phpt UNSUPPORTED: EXPECTF
 tests/classes/type_hinting_005c.phpt UNSUPPORTED: EXPECTF
 tests/classes/type_hinting_005d.phpt UNSUPPORTED: EXPECTF
-tests/classes/unset_properties.phpt FAIL: ParseError: Expected public property or method on line 7
+tests/classes/unset_properties.phpt FAIL: ParseError: Invalid non-public member declaration on line 7
 tests/classes/visibility_000a.phpt UNSUPPORTED: EXPECTF
 tests/classes/visibility_000b.phpt UNSUPPORTED: EXPECTF
-tests/classes/visibility_000c.phpt FAIL: ParseError: Expected public property or method on line 7
+tests/classes/visibility_000c.phpt PASS
 tests/classes/visibility_001a.phpt UNSUPPORTED: EXPECTF
 tests/classes/visibility_001b.phpt UNSUPPORTED: EXPECTF
-tests/classes/visibility_001c.phpt FAIL: ParseError: Expected public property or method on line 7
+tests/classes/visibility_001c.phpt PASS
 tests/classes/visibility_002a.phpt UNSUPPORTED: EXPECTF
 tests/classes/visibility_002b.phpt UNSUPPORTED: EXPECTF
-tests/classes/visibility_002c.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/visibility_003a.phpt FAIL: ParseError: Expected public property or method on line 7
+tests/classes/visibility_002c.phpt PASS
+tests/classes/visibility_003a.phpt PASS
 tests/classes/visibility_003b.phpt UNSUPPORTED: EXPECTF
-tests/classes/visibility_003c.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/visibility_004a.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/visibility_004b.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/visibility_004c.phpt FAIL: ParseError: Expected public property or method on line 7
-tests/classes/visibility_005.phpt FAIL: ParseError: Expected public property or method on line 7
-29 passed, 96 failed, 158 unsupported
+tests/classes/visibility_003c.phpt PASS
+tests/classes/visibility_004a.phpt PASS
+tests/classes/visibility_004b.phpt PASS
+tests/classes/visibility_004c.phpt PASS
+tests/classes/visibility_005.phpt FAIL: ParseError: Invalid non-public member declaration on line 7
+44 passed, 81 failed, 158 unsupported

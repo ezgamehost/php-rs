@@ -35,6 +35,11 @@ impl Runtime {
                 ));
             }
         };
+        if let Value::Object(object) = original
+            && let Some(method) = objects::method(&object.class, b"__clone")
+        {
+            self.check_method_access(&method, line)?;
+        }
         self.next_object_id += 1;
         if let Value::Closure(closure) = original {
             if let Some((key, _)) = updates.and_then(|a| a.entries().first()) {
@@ -90,10 +95,10 @@ impl Runtime {
             reinitializable: RefCell::new(original.reinitializable.borrow().clone()),
             object_id: self.next_object_id,
         });
-        if objects::method(&object.class, b"__clone").is_some() {
+        if let Some(method) = objects::method(&object.class, b"__clone") {
             unlock_readonly(&object);
             let result = self
-                .resolve_method(Value::Object(object.clone()), b"__clone", line)
+                .method_target(method, object.class.clone(), Some(object.clone()), line)
                 .and_then(|target| self.invoke(target, &[], line, false));
             // Escaped copies must be locked even if the method fails.
             object.reinitializable.borrow_mut().clear();

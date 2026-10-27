@@ -46,7 +46,7 @@ Zend/tests/first_class_callable/constexpr/userland.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_001.phpt FAIL: Error: Call to undefined function sprintf() on line 2
 Zend/tests/first_class_callable/first_class_callable_002.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_003.phpt PASS
-Zend/tests/first_class_callable/first_class_callable_004.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/first_class_callable/first_class_callable_004.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_005.phpt FAIL: Error: Call to undefined method Foo::anythingInstance() on line 15
 Zend/tests/first_class_callable/first_class_callable_006.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_007.phpt PASS
@@ -63,9 +63,9 @@ Zend/tests/first_class_callable/first_class_callable_assert.phpt FAIL: ParseErro
 Zend/tests/first_class_callable/first_class_callable_assert2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_assert3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_dynamic.phpt FAIL: Unexpected diagnostics: Undefined variable $nam on line 41
-Zend/tests/first_class_callable/first_class_callable_errors.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/first_class_callable/first_class_callable_errors.phpt FAIL: ParseError: Expected ';' on line 9
 Zend/tests/first_class_callable/first_class_callable_optimization.phpt FAIL: Expected "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n", got "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#2 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n"
 Zend/tests/first_class_callable/first_class_callable_refs.phpt FAIL: ParseError: Expected '(' on line 3
 Zend/tests/first_class_callable/first_class_callable_signature.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/gh18062.phpt FAIL: Error: Call to undefined function is_callable() on line 17
-5 passed, 16 failed, 44 unsupported
+6 passed, 15 failed, 44 unsupported

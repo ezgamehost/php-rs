@@ -63,10 +63,14 @@ new request. The CLI returns the low eight bits of the requested status.
   return covariance for implemented types. Class types accept descendants.
   `instanceof` supports named/dynamic class operands and skips dynamic operands
   for non-object values. Class linking preserves forward-declaration timing.
-- Abstract classes and public abstract methods, including static methods and
+- Abstract classes and public/protected abstract methods, including static methods and
   constructor contracts that remain binding through intermediate implementations.
   Concrete subclasses must implement all inherited abstract methods with compatible
   signatures; abstract classes cannot be instantiated or their abstract methods called.
+- Private/protected instance and static methods, constructor and clone access checks,
+  lexical private-method dispatch, and visibility-preserving method callables.
+  Private methods have independent override signatures; final private constructors
+  still prevent replacement.
 - User-defined interfaces with multiple inheritance, method contracts, typed/final
   constants, and implementation checks. Interface types work with arguments, returns,
   properties, and `instanceof`; `interface_exists` distinguishes them from classes.
@@ -151,7 +155,7 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties, traits,
-visibility modifiers other than public, property hooks,
+non-public properties and constants, property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases

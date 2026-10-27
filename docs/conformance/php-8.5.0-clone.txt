@@ -26,7 +26,7 @@ Zend/tests/clone/clone_with_007.phpt UNSUPPORTED: EXPECTF
 Zend/tests/clone/clone_with_008.phpt UNSUPPORTED: EXPECTF
 Zend/tests/clone/clone_with_009.phpt UNSUPPORTED: EXPECTF
 Zend/tests/clone/clone_with_010.phpt FAIL: ParseError: Expected ';' on line 3
-Zend/tests/clone/clone_with_011.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/clone/clone_with_011.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 Zend/tests/clone/clone_with_012.phpt UNSUPPORTED: EXPECTF
 Zend/tests/clone/clone_with_013.phpt UNSUPPORTED: EXPECTF
 2 passed, 10 failed, 14 unsupported

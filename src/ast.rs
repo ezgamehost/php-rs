@@ -182,6 +182,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub visibility: Visibility,
     pub is_abstract: bool,
     pub is_static: bool,
     pub name: Vec<u8>,
@@ -191,6 +192,13 @@ pub(crate) struct FunctionDecl {
     pub return_type: Option<TypeDecl>,
     pub strict_types: bool,
     pub source: Rc<crate::source::Source>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum Visibility {
+    Public,
+    Protected,
+    Private,
 }
 
 #[derive(Debug, Clone)]

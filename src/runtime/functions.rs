@@ -113,7 +113,7 @@ impl Runtime {
         if nullable && matches!(value, Value::Null) {
             return Ok(None);
         }
-        self.resolve_callable(value.clone(), line).map(Some).map_err(|error| {
+        self.resolve_native_callback(value, line).map(Some).map_err(|error| {
             Error::new(ErrorKind::TypeError, format!(
                 "{function}(): Argument #{position} ($callback) must be a valid callback{}, {}",
                 if nullable { " or null" } else { "" }, error.message,
@@ -146,7 +146,13 @@ impl Runtime {
 
     pub(super) fn resolve_callable(&self, value: Value, line: usize) -> Result<CallTarget, Error> {
         match value {
-            Value::Object(object) => self.resolve_method(Value::Object(object), b"__invoke", line),
+            Value::Object(object) => {
+                if let Some(function) = objects::method(&object.class, b"__invoke") {
+                    self.unchecked_method_target(function, object.class.clone(), Some(object), line)
+                } else {
+                    self.resolve_method(Value::Object(object), b"__invoke", line)
+                }
+            }
             Value::Array(array) if array.len() == 2 => {
                 let base = array.get(&ArrayKey::Int(0));
                 let method = array.get(&ArrayKey::Int(1));

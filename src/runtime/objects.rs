@@ -27,6 +27,10 @@ impl Runtime {
             match statement {
                 Stmt::Class(decl)
                     if decl.interfaces.is_empty()
+                        && !decl
+                            .methods
+                            .iter()
+                            .any(|m| method_name(m).eq_ignore_ascii_case(b"__tostring"))
                         && decl
                             .parent
                             .as_ref()
@@ -54,6 +58,18 @@ impl Runtime {
         Ok(())
     }
     fn link_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
+        // __toString implies Stringable in PHP, so its public visibility is
+        // checked when the class is linked rather than when its body is parsed.
+        if decl.methods.iter().any(|m| {
+            method_name(m).eq_ignore_ascii_case(b"__tostring")
+                && m.visibility != crate::ast::Visibility::Public
+        }) {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Method __toString() must have public visibility",
+                decl.line,
+            ));
+        }
         let name = decl.name.to_ascii_lowercase();
         if self.classes.contains_key(&name) || name == b"stdclass" || name == b"closure" {
             return Err(Error::new(
@@ -325,6 +341,9 @@ impl Runtime {
                 line,
             ));
         }
+        if let Some(constructor) = method(&class, b"__construct") {
+            self.check_method_access(&constructor, line)?;
+        }
         self.initialize_class(&class)?;
         let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;
@@ -335,9 +354,13 @@ impl Runtime {
             reinitializable: RefCell::default(),
             object_id: self.next_object_id,
         });
-        if method(&object.class, b"__construct").is_some() {
-            let target =
-                self.resolve_method(Value::Object(object.clone()), b"__construct", line)?;
+        if let Some(constructor) = method(&object.class, b"__construct") {
+            let target = self.method_target(
+                constructor,
+                object.class.clone(),
+                Some(object.clone()),
+                line,
+            )?;
             self.invoke(target, args, line, false)?;
         } else {
             // PHP evaluates positional arguments even without a constructor.
@@ -399,7 +422,7 @@ impl Runtime {
                 line,
             ));
         };
-        let function = method(&object.class, name).ok_or_else(|| {
+        let function = self.instance_method(&object.class, name).ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
                 format!(

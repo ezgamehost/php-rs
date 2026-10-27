@@ -42,5 +42,5 @@ Zend/tests/readonly_props/static.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/unset.phpt FAIL: ParseError: Expected ';' on line 12
 Zend/tests/readonly_props/variation.phpt FAIL: ParseError: Expected ';' on line 88
 Zend/tests/readonly_props/variation_nested.phpt FAIL: ParseError: Expected ';' on line 57
-Zend/tests/readonly_props/visibility_change.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/readonly_props/visibility_change.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 0 passed, 22 failed, 18 unsupported

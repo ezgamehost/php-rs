@@ -184,6 +184,16 @@ impl Runtime {
             let Some(inherited) = objects::method(parent, name) else {
                 continue;
             };
+            if inherited.visibility == crate::ast::Visibility::Private {
+                if name.eq_ignore_ascii_case(b"__construct") && parent.method_is_final(name) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot override final constructor",
+                        function.line,
+                    ));
+                }
+                continue;
+            }
             if function.is_abstract && !inherited.is_abstract {
                 return Err(Error::new(
                     ErrorKind::Error,
@@ -221,6 +231,13 @@ impl Runtime {
             } else {
                 inherited
             };
+            if function.visibility > inherited.visibility {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "Cannot restrict inherited method visibility",
+                    function.line,
+                ));
+            }
             if !self.compatible_method(function, &inherited, class) {
                 return Err(Error::new(
                     ErrorKind::Error,
