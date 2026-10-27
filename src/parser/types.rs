@@ -72,7 +72,21 @@ impl Parser {
                     line,
                 ));
             }
-            if matches!(bare, "self" | "parent" | "static") {
+            if matches!(bare, "self" | "parent" | "static") && lower.starts_with('\\') {
+                return Err(Error::parse(
+                    "Contextual class types must be unqualified",
+                    line,
+                ));
+            }
+            if bare == "parent" && self.class_parent.is_none() {
+                return Err(Error::parse(
+                    "Cannot use parent when current class scope has no parent",
+                    line,
+                ));
+            }
+            if matches!(bare, "self" | "parent" | "static")
+                && (self.class_name.is_empty() || bare == "static" && !returns)
+            {
                 return Err(Error::parse(
                     format!("Cannot use {bare} outside a class"),
                     line,
@@ -92,7 +106,7 @@ impl Parser {
                     "\"{original}\" will be interpreted as a class name on line {line}"
                 ));
             }
-            let member = if builtin {
+            let member = if builtin || matches!(bare, "self" | "parent" | "static") {
                 lower
             } else {
                 original.trim_start_matches('\\').to_owned()

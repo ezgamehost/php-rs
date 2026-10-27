@@ -36,15 +36,32 @@ impl Parser {
             None
         };
         self.expect("{")?;
+        let outer_parent = std::mem::replace(&mut self.class_parent, parent.clone());
         let outer_class = std::mem::replace(&mut self.class_name, name.clone());
         let mut properties = Vec::new();
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
         while !self.eat("}") {
-            let mut final_method = self.eat("final");
-            let public = self.eat("public") || self.eat("var");
-            if !final_method {
-                final_method = self.eat("final");
+            let mut final_method = false;
+            let mut public = false;
+            let mut static_method = false;
+            loop {
+                let flag = if self.eat("final") {
+                    &mut final_method
+                } else if self.eat("public") || self.eat("var") {
+                    &mut public
+                } else if self.eat("static") {
+                    &mut static_method
+                } else {
+                    break;
+                };
+                if *flag {
+                    return Err(Error::parse(
+                        "Multiple access type modifiers are not allowed",
+                        self.token().line,
+                    ));
+                }
+                *flag = true;
             }
             if self.eat("function") {
                 let Stmt::Function(mut method) = self.function(true)? else {
@@ -65,6 +82,33 @@ impl Parser {
                         method.line,
                     ));
                 }
+                if static_method
+                    && [
+                        b"__construct".as_slice(),
+                        b"__destruct",
+                        b"__clone",
+                        b"__invoke",
+                        b"__get",
+                        b"__set",
+                        b"__isset",
+                        b"__unset",
+                        b"__call",
+                        b"__tostring",
+                        b"__sleep",
+                        b"__wakeup",
+                        b"__serialize",
+                        b"__unserialize",
+                        b"__debuginfo",
+                    ]
+                    .iter()
+                    .any(|name| method.name.eq_ignore_ascii_case(name))
+                {
+                    return Err(Error::parse(
+                        "This magic method cannot be static",
+                        method.line,
+                    ));
+                }
+                Rc::make_mut(&mut method).is_static = static_method;
                 if final_method {
                     final_methods.push(method.name.to_ascii_lowercase());
                 }
@@ -77,7 +121,7 @@ impl Parser {
                 qualified.extend(&function.name);
                 function.name = qualified;
                 methods.push(method);
-            } else if public && !final_method {
+            } else if public && !final_method && !static_method {
                 loop {
                     let Kind::Variable(property) = self.token().kind.clone() else {
                         return Err(Error::parse(
@@ -117,6 +161,7 @@ impl Parser {
             }
         }
         self.class_name = outer_class;
+        self.class_parent = outer_parent;
         Ok(Stmt::Class(Rc::new(ClassDecl {
             parent,
             is_final,
@@ -223,6 +268,24 @@ impl Parser {
             return Err(Error::parse("Illegal class name", line));
         }
         Ok(target)
+    }
+
+    pub(super) fn class_name_expression(&self, value: Expr) -> ExprKind {
+        if let ExprKind::Constant(name) = &value.kind {
+            let name = match name.to_ascii_lowercase().as_slice() {
+                b"self" if !self.class_name.is_empty() => Some(self.class_name.clone()),
+                b"parent" => self
+                    .class_parent
+                    .as_ref()
+                    .map(|name| name.strip_prefix(b"\\").unwrap_or(name).to_vec()),
+                b"self" | b"static" => None,
+                _ => Some(name.strip_prefix(b"\\").unwrap_or(name).to_vec()),
+            };
+            if let Some(name) = name {
+                return ExprKind::Literal(Value::String(name));
+            }
+        }
+        ExprKind::ClassName(Box::new(value))
     }
 
     pub(super) fn property_name(&mut self) -> Result<Expr, Error> {

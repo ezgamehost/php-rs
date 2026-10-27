@@ -111,6 +111,7 @@ impl Runtime {
             properties,
             methods,
             allow_dynamic,
+            defaults: RefCell::new(None),
         }))
     }
     pub(super) fn find_class(&self, name: &[u8]) -> Option<Rc<Class>> {
@@ -125,6 +126,7 @@ impl Runtime {
                 properties: Vec::new(),
                 methods: Vec::new(),
                 allow_dynamic: true,
+                defaults: RefCell::new(None),
                 declaration: Rc::new(ClassDecl {
                     name: b"stdClass".to_vec(),
                     parent: None,
@@ -150,7 +152,7 @@ impl Runtime {
         }
 
         let name = if let ExprKind::Constant(name) = &class.kind {
-            Some(name.clone())
+            Some(self.contextual_class_name(name, line)?)
         } else {
             match self.eval(class)? {
                 Value::String(name) => Some(name),
@@ -182,7 +184,7 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let name = if let ExprKind::Constant(name) = &class.kind {
-            name.clone()
+            self.contextual_class_name(name, line)?
         } else {
             match self.eval(class)? {
                 Value::String(name) => name,
@@ -203,15 +205,7 @@ impl Runtime {
                 line,
             )
         })?;
-        let mut properties = PhpArray::default();
-        for (name, default) in &class.properties {
-            let value = if let Some(default) = default {
-                self.eval(default)?
-            } else {
-                Value::Null
-            };
-            properties.insert(ArrayKey::String(name.clone()), value);
-        }
+        let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;
         let object = Rc::new(PhpObject {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
@@ -294,13 +288,7 @@ impl Runtime {
                 line,
             )
         })?;
-        Ok(CallTarget {
-            name: function.name.clone(),
-            function: Some(function),
-            builtin: None,
-            closure: None,
-            this: Some(object),
-        })
+        self.method_target(function, object.class.clone(), Some(object), line)
     }
     pub(super) fn read_property_value(
         &mut self,

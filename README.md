@@ -63,6 +63,12 @@ new request. The CLI returns the low eight bits of the requested status.
   return covariance for implemented types. Class types accept descendants.
   `instanceof` supports named/dynamic class operands and skips dynamic operands
   for non-object values. Class linking preserves forward-declaration timing.
+- Public static methods, parent implementation calls, scoped method callables,
+  static-method string/array callbacks, and late static binding. `self`, `parent`,
+  and `static` resolve in calls, construction, and contextual types; closures
+  retain their declaring and called class contexts. `::class`, `get_called_class`,
+  and `get_parent_class` expose class names. Static closure defaults use the
+  declaring scope; property defaults are cached separately for each class.
 - Object identity and property comparisons, recursive comparison errors,
   recursive-safe object dumps, object-to-array casts, and explicit-object
   `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and
@@ -118,9 +124,9 @@ Known gaps include intersection/DNF types, most builtins, references, exceptions
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: interfaces, traits,
 visibility modifiers other than public, typed/static/readonly properties, hooks,
-class constants, static calls, `self`/`parent` resolution, cloning,
+class constants beyond `::class`, cloning,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
-complete closure debugging, exact object handle reuse, and iteration edge cases
+complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.
 Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.

@@ -19,6 +19,8 @@ impl Runtime {
         strict: bool,
         line: usize,
     ) -> Option<Value> {
+        let resolved = self.resolve_context_type(ty)?;
+        let ty = &resolved;
         if ty.accepts(&value) || (ty.contains("callable") && self.is_callable(&value)) {
             return Some(value);
         }

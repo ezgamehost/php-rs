@@ -10,6 +10,8 @@ pub(super) enum Builtin {
     GetType,
     GetDebugType,
     GetClass,
+    GetParentClass,
+    GetCalledClass,
     ClassExists,
     MethodExists,
     PropertyExists,
@@ -40,6 +42,8 @@ impl Builtin {
             b"gettype" => Self::GetType,
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
+            b"get_parent_class" => Self::GetParentClass,
+            b"get_called_class" => Self::GetCalledClass,
             b"class_exists" => Self::ClassExists,
             b"method_exists" => Self::MethodExists,
             b"property_exists" => Self::PropertyExists,
@@ -70,7 +74,9 @@ impl Builtin {
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
-            Self::GetClass => &[("object", false, false)],
+            Self::GetClass => &[("object", true, false)],
+            Self::GetParentClass => &[("object_or_class", true, false)],
+            Self::GetCalledClass => &[],
             Self::GetObjectVars => &[("object", false, false)],
             Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
             Self::MethodExists => &[("object_or_class", false, false), ("method", false, false)],
@@ -140,6 +146,12 @@ impl Runtime {
         line: usize,
         dynamic: bool,
     ) -> Result<Value, Error> {
+        if matches!(
+            builtin,
+            Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass
+        ) {
+            return self.inspect_class(builtin, args.first().and_then(Option::as_ref), line);
+        }
         if matches!(builtin, Builtin::Exit) {
             return self.terminate(args[0].as_ref().unwrap_or(&Value::Int(0)), line);
         }
@@ -167,15 +179,7 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
-            Builtin::GetClass => match first {
-                Value::Object(object) => Ok(Value::String(object.class.name.clone())),
-                Value::Closure(_) => Ok(Value::String(b"Closure".to_vec())),
-                _ => Err(Error::new(
-                    ErrorKind::TypeError,
-                    "get_class(): Argument #1 ($object) must be of type object",
-                    line,
-                )),
-            },
+            Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
             Builtin::GetObjectVars => match first {
                 Value::Object(_) => casting::cast(
                     crate::ast::CastKind::Array,

@@ -215,7 +215,8 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
                 expression(value, false)?;
             }
         }
-        ExprKind::Group(value)
+        ExprKind::ClassName(value)
+        | ExprKind::Group(value)
         | ExprKind::Callable(value)
         | ExprKind::DynamicVariable(value)
         | ExprKind::Eval(value)
@@ -225,7 +226,9 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         | ExprKind::Empty(value)
         | ExprKind::Print(value) => expression(value, false)?,
         ExprKind::Increment(value, _, _) => expression(value, true)?,
-        ExprKind::Property(left, right) | ExprKind::Binary(_, left, right) => {
+        ExprKind::ScopedMember(left, right)
+        | ExprKind::Property(left, right)
+        | ExprKind::Binary(_, left, right) => {
             expression(left, false)?;
             expression(right, false)?;
         }

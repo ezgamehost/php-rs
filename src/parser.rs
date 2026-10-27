@@ -35,6 +35,7 @@ pub(crate) fn parse_source(
         source,
         function_name: Vec::new(),
         class_name: Vec::new(),
+        class_parent: None,
     };
     let mut statements = parser.program()?;
     targets::validate(&statements)?;
@@ -53,6 +54,7 @@ struct Parser {
     source: Rc<crate::source::Source>,
     function_name: Vec<u8>,
     class_name: Vec<u8>,
+    class_parent: Option<Vec<u8>>,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -420,6 +422,11 @@ impl Parser {
         Ok(body)
     }
     fn function(&mut self, method: bool) -> Result<Stmt, Error> {
+        let outer_parent = if method {
+            self.class_parent.clone()
+        } else {
+            self.class_parent.take()
+        };
         let outer_class = if method {
             self.class_name.clone()
         } else {
@@ -460,7 +467,9 @@ impl Parser {
         self.static_names = outer_static_names;
         self.function_name = outer_function_name;
         self.class_name = outer_class;
+        self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            is_static: false,
             name,
             parameters,
             body,
@@ -733,6 +742,7 @@ impl Parser {
                                 source: self.source.clone(),
                                 function_name: self.function_name.clone(),
                                 class_name: self.class_name.clone(),
+                                class_parent: self.class_parent.clone(),
                             };
                             let expr = parser.expr(0)?;
                             self.warnings.append(&mut parser.warnings);
@@ -877,6 +887,16 @@ impl Parser {
                     "Parenthesize this expression before dereferencing it",
                     self.token().line,
                 ));
+            }
+            if min <= 23 && self.eat("::") {
+                let kind = if self.eat("class") {
+                    self.class_name_expression(lhs)
+                } else {
+                    let name = self.property_name()?;
+                    ExprKind::ScopedMember(Box::new(lhs), Box::new(name))
+                };
+                lhs = Expr { kind, line };
+                continue;
             }
             if min <= 23 && self.eat("->") {
                 let name = self.property_name()?;

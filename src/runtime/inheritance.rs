@@ -11,6 +11,13 @@ impl Runtime {
             let Some(inherited) = objects::method(parent, name) else {
                 continue;
             };
+            if function.is_static != inherited.is_static {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "Cannot change staticness of inherited method",
+                    function.line,
+                ));
+            }
             if parent.method_is_final(name) {
                 return Err(Error::new(
                     ErrorKind::Error,
@@ -77,7 +84,9 @@ impl Runtime {
                 let Some(child_param) = child_param else {
                     return false;
                 };
-                if !self.type_subset(parent_param.ty.as_ref(), child_param.ty.as_ref(), class) {
+                let parent_type = self.signature_type(parent_param.ty.as_ref(), parent, class);
+                let child_type = self.signature_type(child_param.ty.as_ref(), child, class);
+                if !self.type_subset(parent_type.as_ref(), child_type.as_ref(), class) {
                     return false;
                 }
             }
@@ -85,10 +94,40 @@ impl Runtime {
         parent.return_type.is_none()
             || child.return_type.is_some()
                 && self.type_subset(
-                    child.return_type.as_ref(),
-                    parent.return_type.as_ref(),
+                    self.signature_type(child.return_type.as_ref(), child, class)
+                        .as_ref(),
+                    self.signature_type(parent.return_type.as_ref(), parent, class)
+                        .as_ref(),
                     class,
                 )
+    }
+
+    fn signature_type(
+        &self,
+        ty: Option<&TypeDecl>,
+        function: &FunctionDecl,
+        candidate: &Class,
+    ) -> Option<TypeDecl> {
+        let mut ty = ty?.clone();
+        let declaring = function.name.windows(2).position(|part| part == b"::")?;
+        let name = &function.name[..declaring];
+        let stored = self.find_class(name);
+        let scope = if candidate.name.eq_ignore_ascii_case(name) {
+            candidate
+        } else {
+            stored.as_deref()?
+        };
+        for member in &mut ty.members {
+            let class = match member.as_str() {
+                "self" => Some(scope),
+                "parent" => scope.parent.as_deref(),
+                _ => None,
+            };
+            if let Some(class) = class {
+                *member = String::from_utf8_lossy(&class.name).into_owned();
+            }
+        }
+        Some(ty)
     }
 
     fn type_subset(
@@ -108,6 +147,12 @@ impl Runtime {
                 let w = w.trim_start_matches('\\');
                 if n.eq_ignore_ascii_case(w) || n == "never" {
                     return true;
+                }
+                if w == "static" {
+                    return false;
+                }
+                if n == "static" {
+                    return w == "mixed" || w == "object" || class.is_a(w.as_bytes());
                 }
                 if w == "mixed" && n != "void" {
                     return true;

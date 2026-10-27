@@ -56,7 +56,7 @@ definition of completion.
    magic constants, and included-file tracking implemented.
    Remaining: references,
    advanced interpolation, object casts beyond implemented array casts, complete
-   operators, class-context magic constants, other superglobals, by-reference functions,
+   operators, complete class-context magic constants, other superglobals, by-reference functions,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
@@ -65,8 +65,10 @@ definition of completion.
    method callables, invokable objects, basic property iteration, comparisons,
    array casts, and object inspection implemented. Public inheritance, `final`
    restrictions, compatible method overrides, descendant type checks, and
-   `instanceof` implemented. Remaining: interfaces, traits, abstract members,
-   parent/static calls, context-dependent class types,
+   `instanceof` implemented. Public static methods, parent/scoped calls, late
+   static binding, contextual class types, scoped callables, and `::class` are
+   implemented. Remaining: interfaces, traits, abstract members, static properties,
+   class constants, complete constant/default resolution,
    visibility, properties and hooks, magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,

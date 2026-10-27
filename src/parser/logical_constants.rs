@@ -142,7 +142,8 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
             }
         }
         ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
-        ExprKind::Group(value)
+        ExprKind::ClassName(value)
+        | ExprKind::Group(value)
         | ExprKind::Callable(value)
         | ExprKind::DynamicVariable(value)
         | ExprKind::Unary(_, value)
@@ -152,7 +153,9 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         | ExprKind::Empty(value)
         | ExprKind::Print(value)
         | ExprKind::Increment(value, _, _) => expression(value, warnings),
-        ExprKind::Property(left, right) | ExprKind::Assign(left, _, right) => {
+        ExprKind::ScopedMember(left, right)
+        | ExprKind::Property(left, right)
+        | ExprKind::Assign(left, _, right) => {
             expression(left, warnings);
             expression(right, warnings);
         }
@@ -226,7 +229,7 @@ fn constant(expr: &Expr) -> Option<Value> {
     fn eligible(expr: &Expr) -> bool {
         match &expr.kind {
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
-            ExprKind::Group(value) => eligible(value),
+            ExprKind::ClassName(value) | ExprKind::Group(value) => eligible(value),
             ExprKind::Unary(op, value) => {
                 eligible(value) && !(op == "!" && matches!(constant(value), Some(Value::Float(_))))
             }
@@ -310,7 +313,10 @@ fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
             }
             initializer(no, warnings);
         }
-        ExprKind::Group(value) | ExprKind::Unary(_, value) | ExprKind::Cast(_, value) => {
+        ExprKind::ClassName(value)
+        | ExprKind::Group(value)
+        | ExprKind::Unary(_, value)
+        | ExprKind::Cast(_, value) => {
             initializer(value, warnings);
         }
         ExprKind::Array(elements) | ExprKind::LongArray(elements) => {

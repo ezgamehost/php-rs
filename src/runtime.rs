@@ -13,6 +13,7 @@ use std::{
 mod array_callbacks;
 mod builtins;
 mod casting;
+mod class_scope;
 mod closures;
 mod constants;
 mod destructuring;
@@ -42,6 +43,7 @@ pub struct Runtime {
     callers: Vec<Scope>,
     static_variables: HashMap<Option<Vec<u8>>, Scope>,
     current_function: Option<Vec<u8>>,
+    class_context: Option<crate::object::ClassContext>,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
@@ -527,6 +529,12 @@ impl Runtime {
             ExprKind::Binary(op, value, class) if op == "instanceof" => {
                 self.instance_of(value, class, line)
             }
+            ExprKind::ClassName(class) => self.class_name_expression(class, line),
+            ExprKind::ScopedMember(_, _) => Err(Error::new(
+                ErrorKind::Error,
+                "Undefined class constant",
+                line,
+            )),
             ExprKind::New(class, args) => self.new_object(class, args, line),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;

@@ -99,6 +99,7 @@ impl Parser {
         self.static_names = outer_statics;
         self.control_depth = outer_depth;
         let function = Rc::new(FunctionDecl {
+            is_static: false,
             name,
             parameters,
             body,
@@ -151,7 +152,8 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
             }
         }
         ExprKind::Literal(_) | ExprKind::Constant(_) => {}
-        ExprKind::Group(e)
+        ExprKind::ClassName(e)
+        | ExprKind::Group(e)
         | ExprKind::DynamicVariable(e)
         | ExprKind::Unary(_, e)
         | ExprKind::Cast(_, e)
@@ -161,7 +163,10 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
         | ExprKind::Empty(e)
         | ExprKind::Print(e)
         | ExprKind::Increment(e, _, _) => collect_captures(e, captures),
-        ExprKind::Property(a, b) | ExprKind::Binary(_, a, b) | ExprKind::Assign(a, _, b) => {
+        ExprKind::ScopedMember(a, b)
+        | ExprKind::Property(a, b)
+        | ExprKind::Binary(_, a, b)
+        | ExprKind::Assign(a, _, b) => {
             collect_captures(a, captures);
             collect_captures(b, captures);
         }

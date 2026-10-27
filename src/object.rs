@@ -52,6 +52,7 @@ pub(crate) struct Class {
     pub properties: Vec<(Vec<u8>, Option<Expr>)>,
     pub methods: Vec<Rc<FunctionDecl>>,
     pub allow_dynamic: bool,
+    pub defaults: RefCell<Option<PhpArray>>,
 }
 impl Class {
     pub fn is_a(&self, name: &[u8]) -> bool {
@@ -67,5 +68,25 @@ impl Class {
                 .parent
                 .as_ref()
                 .is_some_and(|p| p.method_is_final(name))
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct ClassContext {
+    pub scope: Rc<Class>,
+    pub called: Rc<Class>,
+}
+impl PartialEq for ClassContext {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.scope, &other.scope) && Rc::ptr_eq(&self.called, &other.called)
+    }
+}
+
+impl std::fmt::Debug for ClassContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClassContext")
+            .field("scope", &String::from_utf8_lossy(&self.scope.name))
+            .field("called", &String::from_utf8_lossy(&self.called.name))
+            .finish()
     }
 }

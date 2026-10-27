@@ -28,6 +28,8 @@ pub(crate) enum ExprKind {
     Lambda(Rc<LambdaDecl>),
     New(Box<Expr>, Vec<Argument>),
     Property(Box<Expr>, Box<Expr>),
+    ScopedMember(Box<Expr>, Box<Expr>),
+    ClassName(Box<Expr>),
     Eval(Box<Expr>),
     Include(IncludeKind, Box<Expr>),
     Isset(Vec<Expr>),
@@ -148,6 +150,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub is_static: bool,
     pub name: Vec<u8>,
     pub parameters: Vec<Parameter>,
     pub body: Vec<Stmt>,
@@ -237,8 +240,18 @@ impl Expr {
             ExprKind::Lambda(lambda) => {
                 lambda.is_static && !lambda.arrow && lambda.captures.is_empty()
             }
-            ExprKind::Callable(callee) => matches!(callee.kind, ExprKind::Constant(_)),
+            ExprKind::Callable(callee) => match &callee.kind {
+                ExprKind::Constant(_) => true,
+                ExprKind::ScopedMember(class, name) => {
+                    matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
+                        && matches!(name.kind, ExprKind::Literal(Value::String(_)))
+                }
+                _ => false,
+            },
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
+            ExprKind::ClassName(class) => {
+                matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
+            }
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
             ExprKind::Cast(kind, e) => *kind != CastKind::Void && e.is_constant_expression(),
             ExprKind::Binary(op, _, _) if matches!(op.as_str(), "|>" | "instanceof") => false,

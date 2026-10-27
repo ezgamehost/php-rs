@@ -101,7 +101,8 @@ impl Scope {
             }
             ExprKind::Variable(name) if !expr.is_globals() => self.reserve(name),
             ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
-            ExprKind::Group(inner)
+            ExprKind::ClassName(inner)
+            | ExprKind::Group(inner)
             | ExprKind::Callable(inner)
             | ExprKind::DynamicVariable(inner)
             | ExprKind::Unary(_, inner)
@@ -115,7 +116,8 @@ impl Scope {
                 self.reserve_expression(right);
                 self.reserve_expression(left);
             }
-            ExprKind::Property(left, right)
+            ExprKind::ScopedMember(left, right)
+            | ExprKind::Property(left, right)
             | ExprKind::Binary(_, left, right)
             | ExprKind::Assign(left, _, right) => {
                 self.reserve_expression(left);

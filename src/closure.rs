@@ -6,6 +6,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 pub struct Closure {
     pub(crate) name: Vec<u8>,
     pub(crate) this: Option<Rc<crate::PhpObject>>,
+    pub(crate) context: Option<crate::object::ClassContext>,
     pub(crate) function: Option<Rc<FunctionDecl>>,
     pub(crate) object_id: usize,
     pub(crate) environment: Option<Environment>,
@@ -34,7 +35,7 @@ impl Closure {
         if self.environment.is_some() || other.environment.is_some() {
             return std::ptr::eq(self, other);
         }
-        if self.this != other.this {
+        if self.this != other.this || self.context != other.context {
             return false;
         }
         match (&self.function, &other.function) {

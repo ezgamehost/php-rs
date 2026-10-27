@@ -6,7 +6,7 @@ Reference: PHP 8.5 (/privatesapi/cli/php)
 tests/classes/__call_001.phpt FAIL: Error: Call to undefined method Caller::test() on line 14
 tests/classes/__call_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/__call_003.phpt FAIL: ParseError: Expected expression on line 13
-tests/classes/__call_004.phpt FAIL: ParseError: Expected expression on line 16
+tests/classes/__call_004.phpt FAIL: Error: Call to undefined method A::test1() on line 16
 tests/classes/__call_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/__call_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/__set__get_001.phpt UNSUPPORTED: EXPECTF
@@ -64,7 +64,7 @@ tests/classes/autoload_020.phpt UNSUPPORTED: EXPECTF
 tests/classes/autoload_021.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug23951.phpt FAIL: Error: Call to undefined function print_r() on line 21
 tests/classes/bug24399.phpt FAIL: Error: Call to undefined function is_subclass_of() on line 6
-tests/classes/bug24445.phpt FAIL: Error: Call to undefined function get_parent_class() on line 3
+tests/classes/bug24445.phpt PASS
 tests/classes/bug26737.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug27468.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug27504.phpt FAIL: ParseError: Expected public property or method on line 6
@@ -108,7 +108,7 @@ tests/classes/constants_visibility_error_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_dtor.phpt FAIL: Expected "early::__construct\nearly::__construct\nearly::__destruct\nlate::__construct\nDone\nlate::__destruct\n", got "early::__construct\nearly::__construct\nlate::__construct\nDone\n"
-tests/classes/ctor_dtor_inheritance.phpt FAIL: ParseError: Expected expression on line 30
+tests/classes/ctor_dtor_inheritance.phpt FAIL: Error: Call to undefined function print_r() on line 14
 tests/classes/ctor_failure.phpt FAIL: ParseError: Expected ';' on line 7
 tests/classes/ctor_in_interface_01.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_in_interface_02.phpt UNSUPPORTED: EXPECTF
@@ -193,7 +193,7 @@ tests/classes/private_004b.phpt UNSUPPORTED: EXPECTF
 tests/classes/private_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/private_006.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/classes/private_006b.phpt FAIL: ParseError: Expected public property or method on line 4
-tests/classes/private_007.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/private_007.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/private_007b.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/private_members.phpt FAIL: ParseError: Expected public property or method on line 5
 tests/classes/private_members_serialization.phpt FAIL: ParseError: Expected public property or method on line 4
@@ -254,7 +254,7 @@ tests/classes/static_properties_undeclared_assign.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_undeclared_assignInc.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_undeclared_assignRef.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_properties_undeclared_inc.phpt UNSUPPORTED: EXPECTF
-tests/classes/static_properties_undeclared_isset.phpt FAIL: ParseError: Expected ')' on line 3
+tests/classes/static_properties_undeclared_isset.phpt FAIL: ParseError: Cannot use isset() on an expression on line 3
 tests/classes/static_properties_undeclared_read.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_this.phpt UNSUPPORTED: EXPECTF
 tests/classes/this.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt FAIL: ParseError: Expected public property or
 tests/classes/visibility_004b.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_004c.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_005.phpt FAIL: ParseError: Expected public property or method on line 7
-9 passed, 116 failed, 158 unsupported
+10 passed, 115 failed, 158 unsupported

@@ -61,6 +61,7 @@ impl Runtime {
                 target.name
             },
             this: target.this,
+            context: target.context,
             function: target.function,
             object_id: self.next_object_id,
             environment: None,
@@ -87,6 +88,7 @@ impl Runtime {
 
     fn resolve_callee(&mut self, callee: &Expr, line: usize) -> Result<CallTarget, Error> {
         match &callee.kind {
+            ExprKind::ScopedMember(class, name) => self.resolve_scoped_call(class, name, line),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;
                 let name = self.variable_name(name)?;
@@ -150,6 +152,10 @@ impl Runtime {
                 let method = array.get(&ArrayKey::Int(1));
                 if let (Some(Value::Object(object)), Some(Value::String(name))) = (base, method) {
                     self.resolve_method(Value::Object(object.clone()), name, line)
+                } else if let (Some(Value::String(class)), Some(Value::String(name))) =
+                    (base, method)
+                {
+                    self.resolve_class_method(class, name, false, false, line)
                 } else {
                     Err(Error::new(
                         ErrorKind::Error,
@@ -161,6 +167,7 @@ impl Runtime {
             Value::String(name) => self.resolve_name(name, line),
             Value::Closure(closure) => Ok(CallTarget {
                 this: closure.this.clone(),
+                context: closure.context.clone(),
                 name: closure.name.clone(),
                 function: closure.function.clone(),
                 builtin: if closure.function.is_none() {
@@ -182,6 +189,15 @@ impl Runtime {
     }
 
     fn resolve_name(&self, name: Vec<u8>, line: usize) -> Result<CallTarget, Error> {
+        if let Some(separator) = name.windows(2).position(|part| part == b"::") {
+            return self.resolve_class_method(
+                &name[..separator],
+                &name[separator + 2..],
+                false,
+                false,
+                line,
+            );
+        }
         let normalized_name = name
             .strip_prefix(b"\\")
             .unwrap_or(&name)
@@ -200,6 +216,7 @@ impl Runtime {
         }
         Ok(CallTarget {
             this: None,
+            context: None,
             name: normalized_name,
             function,
             builtin,
@@ -220,6 +237,7 @@ impl Runtime {
             builtin,
             closure,
             this,
+            context,
         } = target;
         let parameters = if let Some(function) = &function {
             function.parameters.clone()
@@ -312,6 +330,7 @@ impl Runtime {
             extra,
         };
         self.callers.push(std::mem::take(&mut self.scope));
+        let caller_context = std::mem::replace(&mut self.class_context, context);
         let caller_arguments = self.current_arguments.take();
         let caller_closure = std::mem::replace(&mut self.current_closure, closure.clone());
         let caller_function = self
@@ -348,7 +367,7 @@ impl Runtime {
                 } else if last_required.is_none_or(|last| index > last)
                     && let Some(default) = &param.default
                 {
-                    self.eval(default)?
+                    self.eval_default(default)?
                 } else {
                     return Err(Error::new(
                         ErrorKind::ArgumentCountError,
@@ -390,6 +409,7 @@ impl Runtime {
             self.check_return(flow, &function)
         })();
         self.scope = self.callers.pop().unwrap();
+        self.class_context = caller_context;
         self.current_function = caller_function;
         self.current_arguments = caller_arguments;
         self.current_closure = caller_closure;
@@ -571,4 +591,5 @@ pub(super) struct CallTarget {
     pub(super) builtin: Option<Builtin>,
     pub(super) closure: Option<Rc<crate::Closure>>,
     pub(super) this: Option<Rc<crate::PhpObject>>,
+    pub(super) context: Option<crate::object::ClassContext>,
 }
