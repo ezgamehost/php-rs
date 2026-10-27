@@ -136,6 +136,7 @@ impl Expr {
 #[derive(Debug, Clone)]
 pub(crate) struct ClassDecl {
     pub parent: Option<Vec<u8>>,
+    pub is_abstract: bool,
     pub is_final: bool,
     pub is_readonly: bool,
     pub final_methods: Vec<Vec<u8>>,
@@ -179,6 +180,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub is_abstract: bool,
     pub is_static: bool,
     pub name: Vec<u8>,
     pub parameters: Vec<Parameter>,

@@ -200,6 +200,7 @@ impl Runtime {
                 initialized: std::cell::Cell::new(false),
                 initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
+                    is_abstract: false,
                     name: b"stdClass".to_vec(),
                     parent: None,
                     is_final: false,
@@ -280,6 +281,16 @@ impl Runtime {
                 line,
             )
         })?;
+        if class.declaration.is_abstract {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot instantiate abstract class {}",
+                    String::from_utf8_lossy(&class.name)
+                ),
+                line,
+            ));
+        }
         self.initialize_class(&class)?;
         let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;

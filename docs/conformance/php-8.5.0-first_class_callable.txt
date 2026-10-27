@@ -1,8 +1,8 @@
-PHP 8.5.0 Zend/tests/first_class_callable baseline, 2026-10-26
-Runner: php-rs-phpt --reference /path/to/php-8.5.0/sapi/cli/php --cwd /path/to/php-8.5.0 /path/to/php-8.5.0/Zend/tests/first_class_callable
-Unsupported cases were not executed. Exit status: 1.
+PHP 8.5.0 Zend/tests/first_class_callable baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/first_class_callable
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
-Reference: PHP 8.5 (sapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/first_class_callable/constexpr/attributes.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
 Zend/tests/first_class_callable/constexpr/attributes_ast_printing.phpt FAIL: ParseError: Expected ';' on line 5
 Zend/tests/first_class_callable/constexpr/attributes_ast_printing_runtime.phpt FAIL: ParseError: Expected ';' on line 3
@@ -45,27 +45,27 @@ Zend/tests/first_class_callable/constexpr/static_property_initializer.phpt UNSUP
 Zend/tests/first_class_callable/constexpr/userland.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_001.phpt FAIL: Error: Call to undefined function sprintf() on line 2
 Zend/tests/first_class_callable/first_class_callable_002.phpt PASS
-Zend/tests/first_class_callable/first_class_callable_003.phpt FAIL: ParseError: Expected ';' on line 2
-Zend/tests/first_class_callable/first_class_callable_004.phpt FAIL: ParseError: Expected ';' on line 2
-Zend/tests/first_class_callable/first_class_callable_005.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/first_class_callable/first_class_callable_003.phpt PASS
+Zend/tests/first_class_callable/first_class_callable_004.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/first_class_callable/first_class_callable_005.phpt FAIL: Error: Call to undefined method Foo::anythingInstance() on line 15
 Zend/tests/first_class_callable/first_class_callable_006.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_007.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_008.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/first_class_callable_009.phpt FAIL: ParseError: Expected expression on line 6
-Zend/tests/first_class_callable/first_class_callable_010.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/first_class_callable/first_class_callable_009.phpt FAIL: Error: Call to a member function __invoke() on Closure on line 6
+Zend/tests/first_class_callable/first_class_callable_010.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_011.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_012.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_013.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_014.phpt FAIL: ParseError: Expected expression on line 4
 Zend/tests/first_class_callable/first_class_callable_015.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/first_class_callable_016.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/first_class_callable/first_class_callable_016.phpt FAIL: ParseError: Expected function name on line 3
 Zend/tests/first_class_callable/first_class_callable_assert.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/first_class_callable/first_class_callable_assert2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_assert3.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/first_class_callable_dynamic.phpt FAIL: ParseError: Expected ';' on line 3
-Zend/tests/first_class_callable/first_class_callable_errors.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/first_class_callable/first_class_callable_dynamic.phpt FAIL: Unexpected diagnostics: Undefined variable $nam on line 41
+Zend/tests/first_class_callable/first_class_callable_errors.phpt FAIL: ParseError: Expected public property or method on line 4
 Zend/tests/first_class_callable/first_class_callable_optimization.phpt FAIL: Expected "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n", got "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#2 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n"
 Zend/tests/first_class_callable/first_class_callable_refs.phpt FAIL: ParseError: Expected '(' on line 3
 Zend/tests/first_class_callable/first_class_callable_signature.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/gh18062.phpt FAIL: ParseError: Expected ';' on line 3
-3 passed, 18 failed, 44 unsupported
+Zend/tests/first_class_callable/gh18062.phpt FAIL: Error: Call to undefined function is_callable() on line 17
+5 passed, 16 failed, 44 unsupported

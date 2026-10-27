@@ -147,6 +147,16 @@ impl Runtime {
         this: Option<Rc<crate::PhpObject>>,
         line: usize,
     ) -> Result<CallTarget, Error> {
+        if function.is_abstract {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot call abstract method {}()",
+                    String::from_utf8_lossy(&function.name)
+                ),
+                line,
+            ));
+        }
         if !function.is_static && this.is_none() {
             return Err(Error::new(
                 ErrorKind::Error,

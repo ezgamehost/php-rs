@@ -63,6 +63,10 @@ new request. The CLI returns the low eight bits of the requested status.
   return covariance for implemented types. Class types accept descendants.
   `instanceof` supports named/dynamic class operands and skips dynamic operands
   for non-object values. Class linking preserves forward-declaration timing.
+- Abstract classes and public abstract methods, including static methods and
+  constructor contracts that remain binding through intermediate implementations.
+  Concrete subclasses must implement all inherited abstract methods with compatible
+  signatures; abstract classes cannot be instantiated or their abstract methods called.
 - Public static methods, parent implementation calls, scoped method callables,
   static-method string/array callbacks, and late static binding. `self`, `parent`,
   and `static` resolve in calls, construction, and contextual types; closures

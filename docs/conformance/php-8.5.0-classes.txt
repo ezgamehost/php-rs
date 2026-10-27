@@ -78,7 +78,7 @@ tests/classes/class_stdclass.phpt PASS
 tests/classes/clone_001.phpt PASS
 tests/classes/clone_002.phpt PASS
 tests/classes/clone_003.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/classes/clone_004.phpt FAIL: ParseError: Expected ';' on line 2
+tests/classes/clone_004.phpt FAIL: ParseError: Expected public property or method on line 6
 tests/classes/clone_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/clone_006.phpt UNSUPPORTED: EXPECTF, INI
 tests/classes/constants_basic_001.phpt UNSUPPORTED: EXPECTF

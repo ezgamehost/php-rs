@@ -138,25 +138,28 @@ impl Parser {
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
         if self.eat("class") {
-            return self.class_declaration(false, false);
+            return self.class_declaration(false, false, false);
         }
         let readonly_class = self.is("readonly")
             && self.tokens.get(self.pos + 1).is_some_and(|token| {
                 let Kind::Word(word) = &token.kind else {
                     return false;
                 };
-                [b"class".as_slice(), b"final", b"readonly"]
+                [b"class".as_slice(), b"final", b"readonly", b"abstract"]
                     .iter()
                     .any(|keyword| word.eq_ignore_ascii_case(keyword))
             });
-        if self.is("final") || readonly_class {
+        if self.is("final") || self.is("abstract") || readonly_class {
             let mut is_final = false;
             let mut is_readonly = false;
+            let mut is_abstract = false;
             loop {
                 let flag = if self.eat("final") {
                     &mut is_final
                 } else if self.eat("readonly") {
                     &mut is_readonly
+                } else if self.eat("abstract") {
+                    &mut is_abstract
                 } else {
                     break;
                 };
@@ -166,7 +169,7 @@ impl Parser {
                 *flag = true;
             }
             self.expect("class")?;
-            return self.class_declaration(is_final, is_readonly);
+            return self.class_declaration(is_final, is_readonly, is_abstract);
         }
         let line = self.token().line;
         if self.eat("goto") {
@@ -200,7 +203,7 @@ impl Parser {
             )
         {
             self.pos += 1;
-            return self.function(false);
+            return self.function(false, false);
         }
         if let Kind::Text(bytes) = self.token().kind.clone() {
             self.pos += 1;
@@ -447,7 +450,7 @@ impl Parser {
         self.control_depth -= 1;
         Ok(body)
     }
-    fn function(&mut self, method: bool) -> Result<Stmt, Error> {
+    fn function(&mut self, method: bool, is_abstract: bool) -> Result<Stmt, Error> {
         let outer_parent = if method {
             self.class_parent.clone()
         } else {
@@ -478,12 +481,12 @@ impl Parser {
             None
         };
         self.validate_defaults(&name, &mut parameters, line)?;
-        self.expect("{")?;
+        self.expect(if is_abstract { ";" } else { "{" })?;
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
         let outer_static_names = std::mem::take(&mut self.static_names);
         let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
         let mut body = Vec::new();
-        while !self.eat("}") {
+        while !is_abstract && !self.eat("}") {
             if self.token().kind == Kind::End {
                 return Err(Error::parse("Unclosed function body", line));
             }
@@ -496,6 +499,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            is_abstract,
             is_static: false,
             name,
             parameters,

@@ -6,8 +6,15 @@ impl Parser {
         &mut self,
         is_final: bool,
         is_readonly: bool,
+        is_abstract: bool,
     ) -> Result<Stmt, Error> {
         let line = self.token().line;
+        if is_abstract && is_final {
+            return Err(Error::parse(
+                "A class cannot be both abstract and final",
+                line,
+            ));
+        }
         let Kind::Word(name) = self.token().kind.clone() else {
             return Err(Error::parse("Expected class name", line));
         };
@@ -49,6 +56,7 @@ impl Parser {
         let mut final_methods = Vec::new();
         while !self.eat("}") {
             let mut final_method = false;
+            let mut abstract_method = false;
             let mut public = false;
             let mut var = false;
             let mut static_method = false;
@@ -56,6 +64,8 @@ impl Parser {
             loop {
                 let flag = if self.eat("final") {
                     &mut final_method
+                } else if self.eat("abstract") {
+                    &mut abstract_method
                 } else if self.eat("public") {
                     &mut public
                 } else if self.eat("var") {
@@ -76,6 +86,12 @@ impl Parser {
                 }
                 *flag = true;
             }
+            if abstract_method && (final_method || var || !self.is("function")) {
+                return Err(Error::parse(
+                    "Invalid abstract method declaration",
+                    self.token().line,
+                ));
+            }
             if var
                 && (static_method
                     || final_method
@@ -95,9 +111,21 @@ impl Parser {
                 ));
             }
             if self.eat("function") {
-                let Stmt::Function(mut method) = self.function(true)? else {
+                if abstract_method && !is_abstract {
+                    return Err(Error::parse(
+                        "A class with abstract methods must be abstract",
+                        self.token().line,
+                    ));
+                }
+                let Stmt::Function(mut method) = self.function(true, abstract_method)? else {
                     unreachable!()
                 };
+                if abstract_method && method.parameters.iter().any(|p| p.promotion.is_some()) {
+                    return Err(Error::parse(
+                        "Cannot declare promoted property in an abstract constructor",
+                        method.line,
+                    ));
+                }
                 if methods.iter().any(|m| {
                     m.name
                         .rsplit(|b| *b == b':')
@@ -314,6 +342,7 @@ impl Parser {
         self.class_parent = outer_parent;
         Ok(Stmt::Class(Rc::new(ClassDecl {
             parent,
+            is_abstract,
             is_final,
             is_readonly,
             final_methods,

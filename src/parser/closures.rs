@@ -99,6 +99,7 @@ impl Parser {
         self.static_names = outer_statics;
         self.control_depth = outer_depth;
         let function = Rc::new(FunctionDecl {
+            is_abstract: false,
             is_static: false,
             name,
             parameters,

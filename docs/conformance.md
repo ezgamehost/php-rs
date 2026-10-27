@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 45 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 46 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -19,12 +19,12 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
-| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 3 | 18 | 44 |
+| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 5 | 16 | 44 |
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
 | PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 21 | 104 | 158 |
-| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 4 | 30 | 36 |
+| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 8 | 26 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 3 | 12 | 14 |
@@ -196,7 +196,7 @@ type checks, `instanceof`, and early versus runtime class registration.
 A separate matrix of 1,056 snippets matched PHP 8.5.0 for stdout, exit status,
 and diagnostic presence. It includes parameter/return variance, arity/variadics,
 class declaration permutations, and dynamic `instanceof` operands. Diagnostic
-wording, interfaces, abstract methods, autoloading, and deferred variance
+wording, interfaces, abstract property hooks, autoloading, and deferred variance
 dependencies remain unfinished.
 
 The [late-static-binding report](conformance/php-8.5.0-lsb.txt) records six
@@ -305,3 +305,21 @@ gains eleven passes without losing any prior passing fixtures. Readonly suite
 counts remain unchanged. Non-public clone methods, asymmetric visibility,
 property hooks, general references, exceptions, destructors, and exact object-ID
 reuse remain incomplete; unsupported PHPT sections are not counted as passes.
+
+
+The abstract-class slice adds four passes to the
+[inheritance report](conformance/php-8.5.0-inheritance.txt) and two to the
+[first-class callable report](conformance/php-8.5.0-first_class_callable.txt),
+without losing previous passing fixtures. Eleven project regressions and a
+reference-checked PHPT cover abstract public methods, concrete implementation
+requirements, static dispatch, conditional declarations, readonly abstract
+classes, and abstract constructor prototypes. The original abstract constructor
+contract persists through intermediate implementations and redeclarations.
+Direct calls and acquisition of abstract method callables fail before evaluating
+arguments; abstract construction fails before resolving defaults or evaluating
+constructor arguments. A 321-case differential matrix matches stdout, exit
+status, and diagnostic presence against PHP 8.5.0. The
+[PHP abstraction manual](https://www.php.net/manual/en/language.oop5.abstract.php)
+and local PHP 8.5.0 source/probes establish the rules. Protected/private method
+visibility, interfaces, traits, abstract property hooks, reflection, and deferred
+signature checks involving unresolved class dependencies remain incomplete.

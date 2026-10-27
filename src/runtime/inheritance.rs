@@ -87,6 +87,19 @@ impl Runtime {
     }
 
     pub(super) fn validate_overrides(&self, class: &Class) -> Result<(), Error> {
+        if !class.declaration.is_abstract
+            && let Some(method) = class.methods.iter().find(|method| method.is_abstract)
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Class {} must implement abstract method {}()",
+                    String::from_utf8_lossy(&class.name),
+                    String::from_utf8_lossy(&method.name)
+                ),
+                class.declaration.line,
+            ));
+        }
         let Some(parent) = &class.parent else {
             return Ok(());
         };
@@ -170,6 +183,16 @@ impl Runtime {
             let Some(inherited) = objects::method(parent, name) else {
                 continue;
             };
+            if function.is_abstract && !inherited.is_abstract {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    format!(
+                        "Cannot make non abstract method {}() abstract",
+                        String::from_utf8_lossy(&inherited.name)
+                    ),
+                    function.line,
+                ));
+            }
             if function.is_static != inherited.is_static {
                 return Err(Error::new(
                     ErrorKind::Error,
@@ -187,11 +210,16 @@ impl Runtime {
                     function.line,
                 ));
             }
-            // Constructors need not have compatible signatures unless an
-            // interface or abstract declaration requires one (not yet parsed).
-            if name.eq_ignore_ascii_case(b"__construct") {
-                continue;
-            }
+            // Constructors retain their original abstract prototype, including
+            // after an intermediate subclass supplies a concrete implementation.
+            let inherited = if name.eq_ignore_ascii_case(b"__construct") {
+                let Some(prototype) = abstract_constructor(parent) else {
+                    continue;
+                };
+                prototype
+            } else {
+                inherited
+            };
             if !self.compatible_method(function, &inherited, class) {
                 return Err(Error::new(
                     ErrorKind::Error,
@@ -360,6 +388,14 @@ impl Runtime {
 
 fn method_name(function: &FunctionDecl) -> &[u8] {
     function.name.rsplit(|b| *b == b':').next().unwrap()
+}
+
+fn abstract_constructor(class: &Class) -> Option<Rc<FunctionDecl>> {
+    class
+        .parent
+        .as_ref()
+        .and_then(|parent| abstract_constructor(parent))
+        .or_else(|| objects::method(class, b"__construct").filter(|method| method.is_abstract))
 }
 
 pub(super) fn class_type(ty: &TypeDecl, scope: &Class) -> TypeDecl {
