@@ -1,9 +1,9 @@
 use crate::{
-    Error, ErrorKind, Value,
+    ArrayKey, Error, ErrorKind, PhpArray, Value,
     ast::{Expr, ExprKind, Stmt},
     lexer, parser,
 };
-use std::{cmp::Ordering, collections::HashMap};
+use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 /// One request's variable scope, output, and diagnostics. Output survives errors.
 #[derive(Default)]
@@ -11,6 +11,10 @@ pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
     pub variables: HashMap<Vec<u8>, Value>,
+}
+struct Location {
+    name: Vec<u8>,
+    keys: Vec<Option<ArrayKey>>,
 }
 enum Flow {
     Next,
@@ -42,7 +46,8 @@ impl Runtime {
             Stmt::Echo(values) => {
                 for value in values {
                     let v = self.eval(value)?;
-                    self.output.extend(v.to_bytes());
+                    self.output
+                        .extend(string_bytes(&v, value.line, &mut self.warnings));
                 }
             }
             Stmt::Expr(expr) => {
@@ -63,6 +68,39 @@ impl Runtime {
                         Flow::Next | Flow::Continue => {}
                         Flow::Break => break,
                         flow => return Ok(flow),
+                    }
+                }
+            }
+            Stmt::Foreach(iter, key_target, value_target, body) => {
+                let value = self.eval(iter)?;
+                if let Value::Array(array) = value {
+                    for (key, value) in array.entries() {
+                        let location = self.location(value_target, false)?;
+                        self.write_location(&location, value.clone(), value_target.line)?;
+                        if let Some(target) = key_target {
+                            let location = self.location(target, false)?;
+                            self.write_location(&location, key.to_value(), target.line)?;
+                        }
+                        match self.statement(body)? {
+                            Flow::Next | Flow::Continue => {}
+                            Flow::Break => break,
+                            flow => return Ok(flow),
+                        }
+                    }
+                } else {
+                    self.warnings.push(format!(
+                        "foreach() argument must be of type array|object on line {}",
+                        iter.line
+                    ));
+                }
+            }
+            Stmt::Unset(targets) => {
+                for target in targets {
+                    let location = self.location(target, true)?;
+                    if location.keys.is_empty() {
+                        self.variables.remove(&location.name);
+                    } else if let Some(value) = self.variables.get_mut(&location.name) {
+                        unset_path(value, &location.keys, target.line)?;
                     }
                 }
             }
@@ -88,12 +126,80 @@ impl Runtime {
             Value::Null
         }
     }
+    fn location(&mut self, expr: &Expr, unsetting: bool) -> Result<Location, Error> {
+        match &expr.kind {
+            ExprKind::Variable(name) => Ok(Location {
+                name: name.clone(),
+                keys: Vec::new(),
+            }),
+            ExprKind::Index(base, key) => {
+                let mut location = self.location(base, unsetting)?;
+                let key = match key {
+                    Some(key) => {
+                        let value = self.eval(key)?;
+                        Some(if unsetting && value == Value::Null {
+                            ArrayKey::String(Vec::new())
+                        } else {
+                            ArrayKey::from_value(&value, key.line, &mut self.warnings)?
+                        })
+                    }
+                    None => None,
+                };
+                location.keys.push(key);
+                Ok(location)
+            }
+            _ => Err(Error::new(
+                ErrorKind::Error,
+                "Invalid assignment target",
+                expr.line,
+            )),
+        }
+    }
+    fn read_location(
+        &mut self,
+        location: &Location,
+        line: usize,
+        silent: bool,
+    ) -> Result<Value, Error> {
+        let mut value = if silent {
+            self.variables
+                .get(&location.name)
+                .cloned()
+                .unwrap_or(Value::Null)
+        } else {
+            self.read(&location.name, line)
+        };
+        for key in &location.keys {
+            let key = key
+                .as_ref()
+                .ok_or_else(|| Error::new(ErrorKind::Error, "Cannot use [] for reading", line))?;
+            value = read_offset(value, &key.to_value(), line, silent, &mut self.warnings)?;
+        }
+        Ok(value)
+    }
+    fn write_location(
+        &mut self,
+        location: &Location,
+        new_value: Value,
+        line: usize,
+    ) -> Result<(), Error> {
+        let value = self
+            .variables
+            .entry(location.name.clone())
+            .or_insert(Value::Null);
+        write_path(value, &location.keys, new_value, line, &mut self.warnings)
+    }
     fn coalesce_read(&mut self, expr: &Expr) -> Result<Value, Error> {
         match &expr.kind {
             ExprKind::Variable(name) => {
                 Ok(self.variables.get(name).cloned().unwrap_or(Value::Null))
             }
             ExprKind::Group(inner) => self.coalesce_read(inner),
+            ExprKind::Index(base, Some(key)) => {
+                let value = self.coalesce_read(base)?;
+                let key = self.eval(key)?;
+                read_offset(value, &key, expr.line, true, &mut self.warnings)
+            }
             _ => self.eval(expr),
         }
     }
@@ -103,6 +209,43 @@ impl Runtime {
             ExprKind::Literal(value) => Ok(value.clone()),
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(name) => Ok(self.read(name, line)),
+            ExprKind::Array(elements) => {
+                let mut array = PhpArray::default();
+                for (key, expr) in elements {
+                    let key = match key {
+                        Some(key) => Some(ArrayKey::from_value(
+                            &self.eval(key)?,
+                            key.line,
+                            &mut self.warnings,
+                        )?),
+                        None => None,
+                    };
+                    let value = self.eval(expr)?;
+                    if let Some(key) = key {
+                        array.insert(key, value);
+                    } else {
+                        array.append(value, line)?;
+                    }
+                }
+                Ok(Value::Array(Rc::new(array)))
+            }
+            ExprKind::Index(base, key) => {
+                let value = self.eval(base)?;
+                let key = key.as_ref().ok_or_else(|| {
+                    Error::new(ErrorKind::Error, "Cannot use [] for reading", line)
+                })?;
+                let key = self.eval(key)?;
+                read_offset(value, &key, line, false, &mut self.warnings)
+            }
+            ExprKind::Isset(args) => {
+                for arg in args {
+                    if self.coalesce_read(arg)? == Value::Null {
+                        return Ok(Value::Bool(false));
+                    }
+                }
+                Ok(Value::Bool(true))
+            }
+            ExprKind::Empty(arg) => Ok(Value::Bool(!self.coalesce_read(arg)?.is_truthy())),
             ExprKind::Constant(name) => Err(Error::new(
                 ErrorKind::Error,
                 format!("Undefined constant \"{}\"", String::from_utf8_lossy(name)),
@@ -135,26 +278,28 @@ impl Runtime {
                     _ => unreachable!(),
                 }
             }
-            ExprKind::Assign(name, op, expr) => {
+            ExprKind::Assign(target, op, expr) => {
+                let location = self.location(target, false)?;
                 let value = if op == "=" {
                     self.eval(expr)?
                 } else if op == "??=" {
-                    match self.variables.get(name).cloned().unwrap_or(Value::Null) {
+                    match self.read_location(&location, line, true)? {
                         Value::Null => self.eval(expr)?,
                         value => value,
                     }
                 } else {
-                    let lhs = self.read(name, line);
+                    let lhs = self.read_location(&location, line, false)?;
                     let rhs = self.eval(expr)?;
                     binary(&op[..op.len() - 1], lhs, rhs, line, &mut self.warnings)?
                 };
-                self.variables.insert(name.clone(), value.clone());
+                self.write_location(&location, value.clone(), line)?;
                 Ok(value)
             }
-            ExprKind::Increment(name, delta, prefix) => {
-                let old = self.read(name, line);
+            ExprKind::Increment(target, delta, prefix) => {
+                let location = self.location(target, false)?;
+                let old = self.read_location(&location, line, false)?;
                 let new = increment(&old, *delta, line, &mut self.warnings)?;
-                self.variables.insert(name.clone(), new.clone());
+                self.write_location(&location, new.clone(), line)?;
                 Ok(if *prefix { new } else { old })
             }
             ExprKind::Conditional(cond, yes, no) => {
@@ -200,8 +345,8 @@ fn binary(
     use Value::*;
     match op {
         "." => {
-            let mut bytes = left.to_bytes();
-            bytes.extend(right.to_bytes());
+            let mut bytes = string_bytes(&left, line, warnings);
+            bytes.extend(string_bytes(&right, line, warnings));
             return Ok(String(bytes));
         }
         "&&" | "and" => return Ok(Bool(left.is_truthy() && right.is_truthy())),
@@ -226,6 +371,17 @@ fn binary(
             });
         }
         _ => {}
+    }
+    if op == "+"
+        && let (Array(a), Array(b)) = (&left, &right)
+    {
+        let mut result = a.as_ref().clone();
+        for (key, value) in b.entries() {
+            if result.get(key).is_none() {
+                result.insert(key.clone(), value.clone());
+            }
+        }
+        return Ok(Array(Rc::new(result)));
     }
     if matches!(op, "&" | "|" | "^") {
         if let (String(a), String(b)) = (&left, &right) {
@@ -380,5 +536,119 @@ fn increment(
             Ok(String(bytes))
         }
         _ => binary("+", value.clone(), Int(delta), line, warnings),
+    }
+}
+
+fn string_bytes(value: &Value, line: usize, warnings: &mut Vec<String>) -> Vec<u8> {
+    if matches!(value, Value::Array(_)) {
+        warnings.push(format!("Array to string conversion on line {line}"));
+    }
+    value.to_bytes()
+}
+fn read_offset(
+    value: Value,
+    key: &Value,
+    line: usize,
+    silent: bool,
+    warnings: &mut Vec<String>,
+) -> Result<Value, Error> {
+    match value {
+        Value::Array(array) => {
+            let key = ArrayKey::from_value(key, line, warnings)?;
+            if let Some(value) = array.get(&key) {
+                return Ok(value.clone());
+            }
+            if !silent {
+                warnings.push(format!(
+                    "Undefined array key {} on line {line}",
+                    String::from_utf8_lossy(&key.to_value().to_bytes())
+                ));
+            }
+            Ok(Value::Null)
+        }
+        Value::String(_) => Err(Error::new(
+            ErrorKind::TypeError,
+            "String offsets are not implemented",
+            line,
+        )),
+        _ => {
+            if !silent {
+                warnings.push(format!(
+                    "Trying to access array offset on a scalar on line {line}"
+                ));
+            }
+            Ok(Value::Null)
+        }
+    }
+}
+fn write_path(
+    value: &mut Value,
+    keys: &[Option<ArrayKey>],
+    new_value: Value,
+    line: usize,
+    warnings: &mut Vec<String>,
+) -> Result<(), Error> {
+    let Some((key, rest)) = keys.split_first() else {
+        *value = new_value;
+        return Ok(());
+    };
+    if matches!(value, Value::Null | Value::Bool(false)) {
+        if matches!(value, Value::Bool(false)) {
+            warnings.push(format!(
+                "Deprecated: Automatic conversion of false to array on line {line}"
+            ));
+        }
+        *value = Value::Array(Rc::new(PhpArray::default()));
+    }
+    let Value::Array(array) = value else {
+        return Err(Error::new(
+            ErrorKind::Error,
+            "Cannot use a scalar value as an array",
+            line,
+        ));
+    };
+    let array = Rc::make_mut(array);
+    let key = match key {
+        Some(key) => key.clone(),
+        None => array.append_key(line)?,
+    };
+    if rest.is_empty() {
+        array.insert(key, new_value);
+        return Ok(());
+    }
+    if array.get(&key).is_none() {
+        array.insert(key.clone(), Value::Null);
+    }
+    write_path(
+        array.get_mut(&key).unwrap(),
+        rest,
+        new_value,
+        line,
+        warnings,
+    )
+}
+fn unset_path(value: &mut Value, keys: &[Option<ArrayKey>], line: usize) -> Result<(), Error> {
+    let Some((key, rest)) = keys.split_first() else {
+        return Ok(());
+    };
+    let key = key
+        .as_ref()
+        .ok_or_else(|| Error::new(ErrorKind::Error, "Cannot use [] for unsetting", line))?;
+    match value {
+        Value::Array(array) => {
+            let array = Rc::make_mut(array);
+            if rest.is_empty() {
+                array.remove(key);
+            } else if let Some(value) = array.get_mut(key) {
+                unset_path(value, rest, line)?;
+            }
+            Ok(())
+        }
+        Value::Null => Ok(()),
+        _ => Err(Error::new(
+            ErrorKind::Error,
+            "Cannot unset offset in a non-array variable",
+            line,
+        )),
     }
 }

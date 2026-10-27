@@ -23,16 +23,19 @@ output and warnings when execution fails. Parsing happens before execution.
 ## Current coverage
 
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
+- Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
+  writes, append, array union and comparison, `unset`, `isset`, and `empty`.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
-- `echo`, blocks, `if` / `elseif` / `else`, `while`, `break`, `continue`, and `return`.
+- `echo`, blocks, `if` / `elseif` / `else`, `while`, `foreach` by value, `break`,
+  `continue`, and `return`.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 
-Known gaps include arrays, functions and builtins, objects, references, exceptions,
+Known gaps include functions and builtins, objects, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions. String
-interpolation, some scalar edge cases, complete
+interpolation, string offsets, array unpacking and destructuring, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP
 conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation plan.

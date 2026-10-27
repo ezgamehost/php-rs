@@ -14,8 +14,12 @@ pub(crate) enum ExprKind {
     Constant(Vec<u8>),
     Unary(String, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
-    Assign(Vec<u8>, String, Box<Expr>),
-    Increment(Vec<u8>, i64, bool),
+    Array(Vec<(Option<Expr>, Expr)>),
+    Index(Box<Expr>, Option<Box<Expr>>),
+    Isset(Vec<Expr>),
+    Empty(Box<Expr>),
+    Assign(Box<Expr>, String, Box<Expr>),
+    Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
 }
 
@@ -27,7 +31,19 @@ pub(crate) enum Stmt {
     Block(Vec<Stmt>),
     If(Expr, Box<Stmt>, Option<Box<Stmt>>),
     While(Expr, Box<Stmt>),
+    Foreach(Expr, Option<Expr>, Expr, Box<Stmt>),
+    Unset(Vec<Expr>),
     Break,
     Continue,
     Return(Option<Expr>),
+}
+
+impl Expr {
+    pub fn is_writable(&self) -> bool {
+        match &self.kind {
+            ExprKind::Variable(_) => true,
+            ExprKind::Index(base, _) => base.is_writable(),
+            _ => false,
+        }
+    }
 }

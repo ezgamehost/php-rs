@@ -1,3 +1,4 @@
+mod array;
 mod ast;
 mod error;
 mod lexer;
@@ -6,6 +7,7 @@ pub mod phpt;
 mod runtime;
 mod value;
 
+pub use array::{ArrayKey, PhpArray};
 pub use error::{Error, ErrorKind};
 pub use runtime::Runtime;
 pub use value::Value;

@@ -5,7 +5,7 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 5 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 6 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 
 The upstream failures are:

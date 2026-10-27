@@ -1,5 +1,6 @@
-use crate::{Error, ErrorKind};
+use crate::{Error, ErrorKind, PhpArray};
 use std::cmp::Ordering;
+use std::rc::Rc;
 
 /// PHP strings are byte sequences, not necessarily UTF-8.
 #[derive(Debug, Clone, PartialEq)]
@@ -9,12 +10,14 @@ pub enum Value {
     Int(i64),
     Float(f64),
     String(Vec<u8>),
+    Array(Rc<PhpArray>),
 }
 
 impl Value {
     pub fn is_truthy(&self) -> bool {
         match self {
             Self::Null => false,
+            Self::Array(a) => !a.is_empty(),
             Self::Bool(b) => *b,
             Self::Int(n) => *n != 0,
             Self::Float(n) => *n != 0.0,
@@ -28,10 +31,16 @@ impl Value {
             Self::Int(n) => n.to_string().into_bytes(),
             Self::Float(n) => format_float(*n).into_bytes(),
             Self::String(s) => s.clone(),
+            Self::Array(_) => b"Array".to_vec(),
         }
     }
     pub(crate) fn number(&self, line: usize, warnings: &mut Vec<String>) -> Result<Self, Error> {
         match self {
+            Self::Array(_) => Err(Error::new(
+                ErrorKind::TypeError,
+                "Unsupported operand type: array",
+                line,
+            )),
             Self::Null => Ok(Self::Int(0)),
             Self::Bool(b) => Ok(Self::Int(i64::from(*b))),
             Self::Int(_) | Self::Float(_) => Ok(self.clone()),
@@ -82,6 +91,9 @@ impl Value {
             (Null, String(s)) => b"".as_slice().partial_cmp(s.as_slice()),
             (String(s), Null) => s.as_slice().partial_cmp(b"".as_slice()),
             (Null, _) | (_, Null) => self.is_truthy().partial_cmp(&other.is_truthy()),
+            (Array(a), Array(b)) => a.compare(b),
+            (Array(_), _) => Some(Ordering::Greater),
+            (_, Array(_)) => Some(Ordering::Less),
             (Int(a), Int(b)) => a.partial_cmp(b),
             (Int(_) | Float(_), Int(_) | Float(_)) => {
                 self.as_float().partial_cmp(&other.as_float())
