@@ -3,11 +3,11 @@ Runner: cargo run --bin php-rs-phpt -- --reference /path/to/php-8.5.0/sapi/cli/p
 Unsupported cases were not executed. Exit status: 1.
 
 Reference: PHP 8.5 (sapi/cli/php)
-Zend/tests/match/001.phpt FAIL: ParseError: Expected ';' on line 19
+Zend/tests/match/001.phpt PASS
 Zend/tests/match/002.phpt PASS
 Zend/tests/match/003.phpt PASS
 Zend/tests/match/004.phpt PASS
-Zend/tests/match/005.phpt FAIL: ParseError: Expected '}' on line 4
+Zend/tests/match/005.phpt PASS
 Zend/tests/match/006.phpt UNSUPPORTED: EXPECTF
 Zend/tests/match/007.phpt UNSUPPORTED: EXPECTF
 Zend/tests/match/008.phpt PASS
@@ -38,4 +38,4 @@ Zend/tests/match/gh11134.phpt PASS
 Zend/tests/match/match_of_phi_optimization.phpt UNSUPPORTED: EXPECTF
 Zend/tests/match/match_scdf_cleanup.phpt UNSUPPORTED: EXPECTF
 Zend/tests/match/unmatched_enum.phpt FAIL: ParseError: Expected ';' on line 3
-11 passed, 11 failed, 13 unsupported
+13 passed, 9 failed, 13 unsupported

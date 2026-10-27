@@ -29,7 +29,7 @@ tests/lang/024.phpt FAIL: ParseError: Expected variable name on line 14
 tests/lang/025.phpt PASS
 tests/lang/026.phpt PASS
 tests/lang/027.phpt PASS
-tests/lang/028.phpt FAIL: ParseError: Expected ';' on line 7
+tests/lang/028.phpt FAIL: ParseError: Expected ';' on line 18
 tests/lang/030.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/032.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/033.phpt UNSUPPORTED: EXPECTF
@@ -75,7 +75,7 @@ tests/lang/bug24436.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug24499.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug24573.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug24640.phpt UNSUPPORTED: EXPECTF, INI
-tests/lang/bug24652.phpt FAIL: ParseError: Expected ';' on line 8
+tests/lang/bug24652.phpt FAIL: Error: Call to undefined function array_flip() on line 10
 tests/lang/bug24658.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug24783.phpt FAIL: Error: Call to undefined function error_reporting() on line 2
 tests/lang/bug24908.phpt UNSUPPORTED: INI

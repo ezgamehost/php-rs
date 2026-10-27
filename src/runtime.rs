@@ -316,6 +316,12 @@ impl Runtime {
         let line = expr.line;
         match &expr.kind {
             ExprKind::Match(subject, arms) => self.match_expression(subject, arms, line),
+            ExprKind::Print(operand) => {
+                let value = self.eval(operand)?;
+                self.output
+                    .extend(string_bytes(&value, line, &mut self.warnings));
+                Ok(Value::Int(1))
+            }
             ExprKind::Call(callee, args) => self.call(callee, args, line),
             ExprKind::Literal(value) => Ok(value.clone()),
             ExprKind::Interpolated(parts) => {

@@ -544,6 +544,7 @@ impl Parser {
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
                 b"match" => self.match_expression()?,
+                b"print" => ExprKind::Print(Box::new(self.expr(4)?)),
                 b"array" => {
                     self.expect("(")?;
                     ExprKind::Array(self.array_elements(")")?)

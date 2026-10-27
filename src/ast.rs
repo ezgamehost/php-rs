@@ -21,6 +21,7 @@ pub(crate) enum ExprKind {
     Call(Box<Expr>, Vec<Argument>),
     Isset(Vec<Expr>),
     Empty(Box<Expr>),
+    Print(Box<Expr>),
     Assign(Box<Expr>, String, Box<Expr>),
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),

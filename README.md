@@ -41,6 +41,7 @@ output and warnings when execution fails. Parsing happens before execution.
   alternative syntax, and PHP 8.5 case-semicolon deprecation warnings.
 - `match` expressions with strict comparisons, grouped conditions, lazy arms,
   default selection, and `UnhandledMatchError` for unmatched values.
+- `print` expressions with PHP precedence, string conversion, and return values.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 - Variable/array interpolation, braced variable calls, Unicode escapes, binary
