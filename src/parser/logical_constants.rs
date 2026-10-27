@@ -12,12 +12,12 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
             | Stmt::Continue(_, _) => {}
             Stmt::Class(class) => {
                 let class = Rc::make_mut(class);
-                for (_, value) in class
+                for property in class
                     .properties
                     .iter_mut()
                     .chain(class.static_properties.iter_mut())
                 {
-                    if let Some(value) = value {
+                    if let Some(value) = &mut property.default {
                         initializer(value, warnings);
                     }
                 }

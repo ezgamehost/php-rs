@@ -230,7 +230,7 @@ impl Runtime {
                         c.properties
                             .iter()
                             .chain(c.static_properties.iter())
-                            .any(|(n, _)| *n == member)
+                            .any(|p| p.name == member)
                     }) || matches!(first, Value::Object(o) if o.properties.borrow().get(&ArrayKey::String(member)).is_some())
                 };
                 Ok(Value::Bool(exists))
@@ -524,13 +524,49 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
                 )
                 .as_bytes(),
             );
-            for (key, value) in properties.entries() {
+            let mut keys: Vec<ArrayKey> = object
+                .class
+                .properties
+                .iter()
+                .filter(|p| {
+                    p.ty.is_some() || properties.get(&ArrayKey::String(p.name.clone())).is_some()
+                })
+                .map(|p| ArrayKey::String(p.name.clone()))
+                .collect();
+            for (key, _) in properties.entries() {
+                if !keys.contains(key) {
+                    keys.push(key.clone());
+                }
+            }
+            for key in &keys {
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
                 out.extend_from_slice(b"[\"");
                 out.extend(key.to_value().to_bytes());
                 out.extend_from_slice(b"\"]=>\n");
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
-                dump_inner(value, depth + 2, out, seen);
+                if let Some(value) = properties.get(key) {
+                    dump_inner(value, depth + 2, out, seen);
+                } else {
+                    let name = key.to_value().to_bytes();
+                    let owner = object
+                        .class
+                        .property_owner(&name)
+                        .expect("typed property owner");
+                    let ty = owner
+                        .declaration
+                        .properties
+                        .iter()
+                        .find(|p| p.name == name)
+                        .and_then(|p| p.ty.as_ref())
+                        .expect("uninitialized typed property");
+                    out.extend(
+                        format!(
+                            "uninitialized({})\n",
+                            typed_properties::type_label(ty, &owner)
+                        )
+                        .as_bytes(),
+                    );
+                }
             }
             out.extend(std::iter::repeat_n(b' ', depth));
             out.extend_from_slice(b"}\n");

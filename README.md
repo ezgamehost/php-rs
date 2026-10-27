@@ -74,6 +74,11 @@ new request. The CLI returns the low eight bits of the requested status.
   support inheritance, `final`, dynamic names, lazy dependency resolution,
   cycle errors, and lookup through `constant`/`defined`. `self`, `parent`, and
   `static` select the appropriate class for both kinds of member access.
+- Typed public instance and static properties, including uninitialized state,
+  strict defaults, weak/strict assignment checks, invariant inherited types,
+  typed array writes, integer increment limits, and reinitialization after `unset`.
+  Object dumps show uninitialized slots; casts, iteration, and `get_object_vars`
+  omit them until initialized.
 - Object identity and property comparisons, recursive comparison errors,
   recursive-safe object dumps, object-to-array casts, and explicit-object
   `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and
@@ -128,7 +133,7 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: interfaces, traits,
-visibility modifiers other than public, typed/readonly properties, hooks,
+visibility modifiers other than public, readonly properties, hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility, cloning,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases

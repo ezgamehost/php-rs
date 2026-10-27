@@ -1,0 +1,126 @@
+PHP 8.5.0 Zend/tests/type_declarations/typed_properties*.phpt baseline (2026-10-26)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/type_declarations/typed_properties*.phpt
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/type_declarations/typed_properties_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_009.phpt FAIL: Error: Typed property Foo::$bar must not be accessed before initialization on line 16
+Zend/tests/type_declarations/typed_properties_010.phpt FAIL: ParseError: Expected parameter variable on line 6
+Zend/tests/type_declarations/typed_properties_011.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/type_declarations/typed_properties_012.phpt FAIL: ParseError: Expected expression on line 7
+Zend/tests/type_declarations/typed_properties_013.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_014.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_015.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_016.phpt PASS
+Zend/tests/type_declarations/typed_properties_017.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_018.phpt FAIL: Error: Class "ReflectionClass" not found on line 7
+Zend/tests/type_declarations/typed_properties_019.phpt FAIL: ParseError: Expected ';' on line 12
+Zend/tests/type_declarations/typed_properties_020.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/type_declarations/typed_properties_021.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/type_declarations/typed_properties_022.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_023.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/type_declarations/typed_properties_024.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/type_declarations/typed_properties_025.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_026.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_027.phpt PASS
+Zend/tests/type_declarations/typed_properties_028.phpt PASS
+Zend/tests/type_declarations/typed_properties_029.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_030.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_031.phpt PASS
+Zend/tests/type_declarations/typed_properties_032.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/type_declarations/typed_properties_033.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_034.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/type_declarations/typed_properties_035.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_036.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/type_declarations/typed_properties_037.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_038.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_039.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_040.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_041.phpt PASS
+Zend/tests/type_declarations/typed_properties_042.phpt PASS
+Zend/tests/type_declarations/typed_properties_043.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_044.phpt UNSUPPORTED: SKIPIF
+Zend/tests/type_declarations/typed_properties_045.phpt FAIL: ParseError: Expected public property or method on line 5
+Zend/tests/type_declarations/typed_properties_046.phpt FAIL: ParseError: Expected ';' on line 15
+Zend/tests/type_declarations/typed_properties_047.phpt FAIL: ParseError: Expected ';' on line 17
+Zend/tests/type_declarations/typed_properties_048.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/type_declarations/typed_properties_049.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_050.phpt PASS
+Zend/tests/type_declarations/typed_properties_051.phpt FAIL: ParseError: Expected ';' on line 16
+Zend/tests/type_declarations/typed_properties_052.phpt PASS
+Zend/tests/type_declarations/typed_properties_053.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_054.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_055.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_056.phpt FAIL: ParseError: Expected ';' on line 10
+Zend/tests/type_declarations/typed_properties_057.phpt FAIL: ParseError: Expected ';' on line 10
+Zend/tests/type_declarations/typed_properties_058.phpt FAIL: ParseError: Expected ';' on line 18
+Zend/tests/type_declarations/typed_properties_059.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/type_declarations/typed_properties_060.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_061.phpt UNSUPPORTED: SKIPIF
+Zend/tests/type_declarations/typed_properties_062.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_063.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_064.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_065.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_066.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/type_declarations/typed_properties_067.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_068.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/type_declarations/typed_properties_069.phpt FAIL: ParseError: Expected '(' on line 3
+Zend/tests/type_declarations/typed_properties_070.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/type_declarations/typed_properties_071.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/type_declarations/typed_properties_072.phpt FAIL: Error: Typed property Test::$val must not be accessed before initialization on line 14
+Zend/tests/type_declarations/typed_properties_073.phpt FAIL: ParseError: Expected function name on line 7
+Zend/tests/type_declarations/typed_properties_074.phpt FAIL: ParseError: Expected function name on line 7
+Zend/tests/type_declarations/typed_properties_075.phpt UNSUPPORTED: SKIPIF
+Zend/tests/type_declarations/typed_properties_076.phpt FAIL: ParseError: Expected ';' on line 20
+Zend/tests/type_declarations/typed_properties_077.phpt PASS
+Zend/tests/type_declarations/typed_properties_078.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_079.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/type_declarations/typed_properties_080.phpt FAIL: ParseError: Expected public property or method on line 5
+Zend/tests/type_declarations/typed_properties_081.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/type_declarations/typed_properties_082.phpt FAIL: ParseError: Expected expression on line 11
+Zend/tests/type_declarations/typed_properties_083.phpt FAIL: ParseError: Expected ';' on line 15
+Zend/tests/type_declarations/typed_properties_084.phpt FAIL: Error: Call to undefined function class_alias() on line 2
+Zend/tests/type_declarations/typed_properties_085.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_086.phpt FAIL: Unexpected diagnostics: Deprecated: Creation of dynamic property T::$1 is deprecated on line 13
+Zend/tests/type_declarations/typed_properties_087.phpt FAIL: ParseError: Expected expression on line 7
+Zend/tests/type_declarations/typed_properties_088.phpt FAIL: Expected "object(A)#1 (1) {\n  [\"prop\"]=>\n  int(42)\n}\nobject(B)#1 (1) {\n  [\"prop\"]=>\n  string(2) \"42\"\n}\n", got "object(A)#1 (1) {\n  [\"prop\"]=>\n  int(42)\n}\nobject(B)#2 (1) {\n  [\"prop\"]=>\n  string(2) \"42\"\n}\n"
+Zend/tests/type_declarations/typed_properties_089.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_090.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/type_declarations/typed_properties_092.phpt FAIL: ParseError: Expected '(' on line 3
+Zend/tests/type_declarations/typed_properties_093.phpt FAIL: ParseError: Expected ';' on line 7
+Zend/tests/type_declarations/typed_properties_094.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/type_declarations/typed_properties_095.phpt UNSUPPORTED: EXTENSIONS
+Zend/tests/type_declarations/typed_properties_096.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/type_declarations/typed_properties_097.phpt UNSUPPORTED: SKIPIF
+Zend/tests/type_declarations/typed_properties_098.phpt FAIL: ParseError: Expected expression on line 9
+Zend/tests/type_declarations/typed_properties_099.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/type_declarations/typed_properties_100.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/type_declarations/typed_properties_101.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_102.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/type_declarations/typed_properties_103.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_104.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_properties_105.phpt FAIL: Error: Class "ReflectionClass" not found on line 6
+Zend/tests/type_declarations/typed_properties_106.phpt FAIL: ParseError: Expected expression on line 6
+Zend/tests/type_declarations/typed_properties_107.phpt FAIL: ParseError: Expected expression on line 17
+Zend/tests/type_declarations/typed_properties_108.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_109.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_110.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/type_declarations/typed_properties_111.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/type_declarations/typed_properties_112.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/type_declarations/typed_properties_113.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_114.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_115.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_cache_slot_opt.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/type_declarations/typed_properties_class_loading.phpt FAIL: ParseError: Expected ';' on line 13
+Zend/tests/type_declarations/typed_properties_failed_assign_is_not_init.phpt FAIL: ParseError: Expected ';' on line 13
+Zend/tests/type_declarations/typed_properties_magic_set.phpt FAIL: ParseError: Expected ';' on line 22
+Zend/tests/type_declarations/typed_properties_protected_inheritance_mismatch.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_properties_reference_coercion_leak.phpt FAIL: ParseError: Expected expression on line 10
+9 passed, 67 failed, 44 unsupported

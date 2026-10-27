@@ -70,12 +70,12 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                 }
             }
             Stmt::Class(class) => {
-                for (_, value) in class
+                for property in class
                     .properties
                     .iter()
                     .chain(class.static_properties.iter())
                 {
-                    if let Some(value) = value {
+                    if let Some(value) = &property.default {
                         expression(value, false)?;
                     }
                 }

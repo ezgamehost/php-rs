@@ -2,10 +2,131 @@ use super::*;
 use crate::{ast::TypeDecl, object::Class};
 
 impl Runtime {
+    // A comparison involving unresolved class names cannot be early-bound.
+    // The candidate's own type is known in its declarations, but not yet in
+    // unresolved declarations inherited from its parent.
+    pub(super) fn property_variance_unresolved(&self, class: &Class) -> bool {
+        let Some(parent) = &class.parent else {
+            return false;
+        };
+        for (properties, inherited, is_static) in [
+            (&class.declaration.properties, &parent.properties, false),
+            (
+                &class.declaration.static_properties,
+                &parent.static_properties,
+                true,
+            ),
+        ] {
+            for property in properties {
+                let Some(parent_property) = inherited.iter().find(|p| p.name == property.name)
+                else {
+                    continue;
+                };
+                let (Some(child_ty), Some(parent_ty)) = (&property.ty, &parent_property.ty) else {
+                    continue;
+                };
+                let owner = if is_static {
+                    parent.static_owner(&property.name)
+                } else {
+                    parent.property_owner(&property.name)
+                }
+                .expect("property owner");
+                let child_ty = class_type(child_ty, class);
+                let parent_ty = class_type(parent_ty, &owner);
+                let is_class = |name: &str| {
+                    !matches!(
+                        name,
+                        "int"
+                            | "float"
+                            | "string"
+                            | "bool"
+                            | "true"
+                            | "false"
+                            | "null"
+                            | "array"
+                            | "iterable"
+                            | "object"
+                            | "mixed"
+                            | "callable"
+                    )
+                };
+                let builtin_members = |ty: &TypeDecl| -> HashSet<String> {
+                    ty.members
+                        .iter()
+                        .filter(|m| !is_class(m))
+                        .map(|m| {
+                            if m == "iterable" {
+                                "array".to_owned()
+                            } else {
+                                m.clone()
+                            }
+                        })
+                        .collect()
+                };
+                if builtin_members(&child_ty) != builtin_members(&parent_ty) {
+                    continue;
+                }
+                for child in child_ty.members.iter().filter(|n| is_class(n)) {
+                    for inherited in parent_ty.members.iter().filter(|n| is_class(n)) {
+                        if !child.eq_ignore_ascii_case(inherited)
+                            && ((self.find_class(inherited.as_bytes()).is_none()
+                                && !inherited.eq_ignore_ascii_case("Closure")
+                                && !inherited.eq_ignore_ascii_case("Traversable"))
+                                || (self.find_class(child.as_bytes()).is_none()
+                                    && !child.eq_ignore_ascii_case("Closure")
+                                    && !child.eq_ignore_ascii_case("Traversable")
+                                    && !class.name.eq_ignore_ascii_case(child.as_bytes())))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        false
+    }
+
     pub(super) fn validate_overrides(&self, class: &Class) -> Result<(), Error> {
         let Some(parent) = &class.parent else {
             return Ok(());
         };
+        for (properties, inherited, is_static) in [
+            (&class.declaration.properties, &parent.properties, false),
+            (
+                &class.declaration.static_properties,
+                &parent.static_properties,
+                true,
+            ),
+        ] {
+            for property in properties {
+                let Some(parent_property) = inherited.iter().find(|p| p.name == property.name)
+                else {
+                    continue;
+                };
+                let owner = if is_static {
+                    parent.static_owner(&property.name)
+                } else {
+                    parent.property_owner(&property.name)
+                }
+                .expect("property owner");
+                let child_type = property.ty.as_ref().map(|ty| class_type(ty, class));
+                let parent_type = parent_property.ty.as_ref().map(|ty| class_type(ty, &owner));
+                if child_type.is_some() != parent_type.is_some()
+                    || !self.type_subset(child_type.as_ref(), parent_type.as_ref(), class)
+                    || !self.type_subset(parent_type.as_ref(), child_type.as_ref(), class)
+                {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        format!(
+                            "Type of {}::${} must match its inherited property type",
+                            String::from_utf8_lossy(&class.name),
+                            String::from_utf8_lossy(&property.name)
+                        ),
+                        class.declaration.line,
+                    ));
+                }
+            }
+        }
         for constant in &class.declaration.constants {
             let Some(owner) = parent.constant_owner(&constant.name) else {
                 continue;
@@ -161,8 +282,21 @@ impl Runtime {
         let mixed = TypeDecl {
             members: vec!["mixed".to_owned()],
         };
-        let narrow = narrow.unwrap_or(&mixed);
-        let wide = wide.unwrap_or(&mixed);
+        let expand = |ty: &TypeDecl| TypeDecl {
+            members: ty
+                .members
+                .iter()
+                .flat_map(|m| {
+                    if m == "iterable" {
+                        vec!["array".to_owned(), "Traversable".to_owned()]
+                    } else {
+                        vec![m.clone()]
+                    }
+                })
+                .collect(),
+        };
+        let narrow = expand(narrow.unwrap_or(&mixed));
+        let wide = expand(wide.unwrap_or(&mixed));
         narrow.members.iter().all(|n| {
             wide.members.iter().any(|w| {
                 let n = n.trim_start_matches('\\');
@@ -221,7 +355,7 @@ fn method_name(function: &FunctionDecl) -> &[u8] {
     function.name.rsplit(|b| *b == b':').next().unwrap()
 }
 
-fn class_type(ty: &TypeDecl, scope: &Class) -> TypeDecl {
+pub(super) fn class_type(ty: &TypeDecl, scope: &Class) -> TypeDecl {
     let mut ty = ty.clone();
     for member in &mut ty.members {
         let class = match member.as_str() {

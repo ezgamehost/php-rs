@@ -28,6 +28,7 @@ mod offsets;
 mod scope_slots;
 mod static_members;
 mod termination;
+mod typed_properties;
 mod types;
 mod variables;
 use offsets::{Access, Offset, read_offset, unset_path, write_path};
@@ -429,6 +430,12 @@ impl Runtime {
             Some(value) => value.borrow().clone(),
             None => {
                 if !silent {
+                    if let Some(class) = &location.static_class {
+                        let owner = class
+                            .static_owner(&location.name)
+                            .expect("declared static property");
+                        return Err(Self::uninitialized_property(&owner, &location.name, line));
+                    }
                     self.warnings.push(format!(
                         "Undefined {}variable ${} on line {line}",
                         if location.global { "global " } else { "" },
@@ -483,16 +490,19 @@ impl Runtime {
                 line,
                 &mut self.warnings,
             )?;
-            self.write_property_value(object, &location.name, value, line)?;
-            return Ok(result);
+            let value = self.write_property_value(object, &location.name, value, line)?;
+            return Ok(if location.keys.is_empty() {
+                value
+            } else {
+                result
+            });
         }
-        let value = if let Some(class) = &location.static_class {
-            self.static_cell(class, &location.name, line, false)?
-                .expect("declared static property")
-        } else {
-            self.location_scope(location)
-                .get_or_insert(&location.name, Value::Null)
-        };
+        if location.static_class.is_some() {
+            return self.write_static_location(location, new_value, line);
+        }
+        let value = self
+            .location_scope(location)
+            .get_or_insert(&location.name, Value::Null);
         write_path(
             &mut value.borrow_mut(),
             &mut location.keys,
@@ -746,8 +756,9 @@ impl Runtime {
                     false,
                     Some("Cannot increment/decrement string offsets"),
                 )?;
+                self.validate_property_increment(&location, &old, *delta, line)?;
                 let new = increment(&old, *delta, line, &mut self.warnings)?;
-                self.write_location(&mut location, new.clone(), line)?;
+                let new = self.write_location(&mut location, new, line)?;
                 Ok(if *prefix { new } else { old })
             }
             ExprKind::Conditional(cond, yes, no) => {

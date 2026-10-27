@@ -271,6 +271,30 @@ impl Parser {
     }
 }
 
+impl Parser {
+    pub(super) fn validate_property_default(
+        &self,
+        name: &[u8],
+        ty: &TypeDecl,
+        value: &Expr,
+    ) -> Result<(), Error> {
+        let Some(value) = compile_time_value(value) else {
+            return Ok(());
+        };
+        if ty.accepts(&value) || ty.contains("float") && matches!(value, Value::Int(_)) {
+            return Ok(());
+        }
+        Err(Error::parse(
+            format!(
+                "Cannot use default value for property {}::${} of type {ty}",
+                String::from_utf8_lossy(&self.class_name),
+                String::from_utf8_lossy(name)
+            ),
+            self.token().line,
+        ))
+    }
+}
+
 // Callable and class-constant values remain lazy, even when their types appear
 // obvious. Only expressions the compiler can fully resolve are checked here.
 fn compile_time_value(expr: &Expr) -> Option<Value> {

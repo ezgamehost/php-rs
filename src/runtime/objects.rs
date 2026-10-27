@@ -31,6 +31,9 @@ impl Runtime {
                         .is_none_or(|name| self.find_class(name).is_some()) =>
                 {
                     let class = self.link_class(decl.clone())?;
+                    if self.property_variance_unresolved(&class) {
+                        continue;
+                    }
                     self.classes
                         .insert(class.name.to_ascii_lowercase(), class.clone());
                     linked.push(class);
@@ -101,11 +104,13 @@ impl Runtime {
             if decl
                 .properties
                 .iter()
-                .any(|(n, _)| parent.static_owner(n).is_some())
-                || decl
-                    .static_properties
-                    .iter()
-                    .any(|(n, _)| parent.properties.iter().any(|(p, _)| p == n))
+                .any(|p| parent.static_owner(&p.name).is_some())
+                || decl.static_properties.iter().any(|p| {
+                    parent
+                        .properties
+                        .iter()
+                        .any(|inherited| inherited.name == p.name)
+                })
             {
                 return Err(Error::new(
                     ErrorKind::Error,
@@ -120,7 +125,7 @@ impl Runtime {
         for property in &decl.static_properties {
             if let Some(slot) = static_properties
                 .iter_mut()
-                .find(|(name, _)| name == &property.0)
+                .find(|p| p.name == property.name)
             {
                 *slot = property.clone();
             } else {
@@ -131,7 +136,7 @@ impl Runtime {
             .as_ref()
             .map_or_else(Vec::new, |p| p.properties.clone());
         for property in &decl.properties {
-            if let Some(slot) = properties.iter_mut().find(|(name, _)| name == &property.0) {
+            if let Some(slot) = properties.iter_mut().find(|p| p.name == property.name) {
                 *slot = property.clone();
             } else {
                 properties.push(property.clone());
@@ -378,6 +383,15 @@ impl Runtime {
             return Ok(value.clone());
         }
         if !silent {
+            if let Some(owner) = object.class.property_owner(name)
+                && owner
+                    .declaration
+                    .properties
+                    .iter()
+                    .any(|p| p.name == name && p.ty.is_some())
+            {
+                return Err(Self::uninitialized_property(&owner, name, line));
+            }
             self.warnings.push(format!(
                 "Undefined property: {}::${} on line {line}",
                 object.class_name,
@@ -392,7 +406,7 @@ impl Runtime {
         name: &[u8],
         value: Value,
         line: usize,
-    ) -> Result<(), Error> {
+    ) -> Result<Value, Error> {
         if name.first() == Some(&0) {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -404,7 +418,7 @@ impl Runtime {
         let key = ArrayKey::String(name.to_vec());
         if object.properties.borrow().get(&key).is_none()
             && !object.class.allow_dynamic
-            && !object.class.properties.iter().any(|(n, _)| n == name)
+            && !object.class.properties.iter().any(|p| p.name == name)
         {
             self.warnings.push(format!(
                 "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
@@ -412,8 +426,19 @@ impl Runtime {
                 String::from_utf8_lossy(name)
             ));
         }
-        object.properties.borrow_mut().insert(key, value);
-        Ok(())
+        let value = if let Some(owner) = object.class.property_owner(name) {
+            let property = owner
+                .declaration
+                .properties
+                .iter()
+                .find(|p| p.name == name)
+                .expect("property owner");
+            self.check_property_value(&owner, property, value, self.strict_types, line)?
+        } else {
+            value
+        };
+        object.properties.borrow_mut().insert(key, value.clone());
+        Ok(value)
     }
 }
 

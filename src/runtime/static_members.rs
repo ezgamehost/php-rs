@@ -186,31 +186,19 @@ impl Runtime {
             self.initialize_property_values(parent)?;
         }
         self.property_defaults(class)?;
-        for (name, _) in &class.static_properties {
-            let owner = class.static_owner(name).expect("static property owner");
-            if owner.static_values.borrow().contains_key(name) {
+        for property in &class.static_properties {
+            let owner = class
+                .static_owner(&property.name)
+                .expect("static property owner");
+            if owner.static_values.borrow().contains_key(&property.name) {
                 continue;
             }
-            let expr = &owner
-                .declaration
-                .static_properties
-                .iter()
-                .find(|(n, _)| n == name)
-                .expect("static property declaration")
-                .1;
-            let outer = self.class_context.replace(ClassContext {
-                scope: owner.clone(),
-                called: owner.clone(),
-            });
-            let result = match expr {
-                Some(expr) => self.eval_default(expr),
-                None => Ok(Value::Null),
-            };
-            self.class_context = outer;
-            owner
-                .static_values
-                .borrow_mut()
-                .insert(name.clone(), cell(result?));
+            if let Some(value) = self.property_default(&owner, property)? {
+                owner
+                    .static_values
+                    .borrow_mut()
+                    .insert(property.name.clone(), cell(value));
+            }
         }
         Ok(())
     }

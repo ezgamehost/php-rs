@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 41 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 42 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -24,10 +24,11 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
 | PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 19 | 106 | 158 |
-| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 3 | 31 | 36 |
+| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 4 | 30 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 3 | 12 | 14 |
+| PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 9 | 67 | 44 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -179,12 +180,12 @@ fixture matches PHP 8.5.0. Separately, 251 focused examples matched stdout, exit
 status, and diagnostic presence; they do not establish exact diagnostic wording.
 These examples include scalar/object comparisons, property-name validation,
 object callbacks, type checking, recursive dumps/comparison errors, and mutation
-during property iteration. Visibility, typed properties,
+during property iteration. Visibility, readonly properties,
 most magic methods, reflection, handle reuse, and complete object
 iteration semantics remain targets, not supported features.
 
-The [inheritance report](conformance/php-8.5.0-inheritance.txt) now has three passing
-upstream cases, with 31 failures and 36 unsupported fixtures. Three additional
+The [inheritance report](conformance/php-8.5.0-inheritance.txt) now has four passing
+upstream cases, with 30 failures and 36 unsupported fixtures. Three additional
 class-suite cases now pass. A new project PHPT covers inherited constructors,
 virtual dispatch, compatible overrides, inherited static locals, descendants in
 type checks, `instanceof`, and early versus runtime class registration.
@@ -202,7 +203,7 @@ A 300-case differential check matched stdout, exit status, and diagnostic
 presence across static/instance calls, forwarding, saved callbacks, contextual
 type variance, and class-name inspection. Project regressions additionally
 cover caller-context restoration, eval, default closure scope, and per-class
-property-default identity. Magic method dispatch, typed members, non-public
+property-default identity. Magic method dispatch, readonly properties, non-public
 visibility, and complete closure reflection/debugging remain incomplete.
 
 The static-member slice adds nine class-suite passes, two late-static-binding
@@ -231,3 +232,19 @@ remain an existing gap. The 300-case class-scope matrix also remains green.
 The class and inheritance suite counts are unchanged. Intersection/DNF types,
 non-public constants, interfaces, traits, enums, exception handling, and exact
 fatal diagnostic formatting remain incomplete.
+
+
+The [typed-property report](conformance/php-8.5.0-typed_properties.txt) records
+nine passing fixtures, 67 failures, and 44 unsupported fixtures. The property
+slice also adds one inheritance-suite pass without losing any previous passes.
+Fifteen project regressions and a reference-checked PHPT exercise typed public
+instance/static properties, uninitialized slots, coercion and assignment
+results, strict defaults, array mutations, `unset`, object dumps, and invariant
+inherited declarations. The [PHP property manual](https://www.php.net/manual/en/language.oop5.properties.php)
+and local PHP 8.5.0 probes establish the initialization behavior.
+A 716-case matrix matches stdout, exit status, and diagnostic presence, including
+integer-limit failures and deferred class binding for unresolved inherited types.
+The existing 300-case class-scope and 712-case constant-type matrices also pass.
+General references, property hooks, readonly and non-public properties, magic
+accessors, full reflection, and exceptions remain unfinished; the passing
+counts do not establish compatibility with those features.

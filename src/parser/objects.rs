@@ -1,5 +1,5 @@
 use super::*;
-use crate::ast::{ClassConstant, ClassDecl};
+use crate::ast::{ClassConstant, ClassDecl, PropertyDecl};
 
 impl Parser {
     pub(super) fn class_declaration(&mut self, is_final: bool) -> Result<Stmt, Error> {
@@ -38,8 +38,8 @@ impl Parser {
         self.expect("{")?;
         let outer_parent = std::mem::replace(&mut self.class_parent, parent.clone());
         let outer_class = std::mem::replace(&mut self.class_name, name.clone());
-        let mut properties = Vec::new();
-        let mut static_properties = Vec::new();
+        let mut properties: Vec<PropertyDecl> = Vec::new();
+        let mut static_properties: Vec<PropertyDecl> = Vec::new();
         let mut constants: Vec<ClassConstant> = Vec::new();
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
@@ -69,11 +69,7 @@ impl Parser {
                 }
                 *flag = true;
             }
-            if var
-                && (static_method
-                    || final_method
-                    || !matches!(self.token().kind, Kind::Variable(_)))
-            {
+            if var && (static_method || final_method || self.is("function") || self.is("const")) {
                 return Err(Error::parse(
                     "Expected property after var",
                     self.token().line,
@@ -202,6 +198,18 @@ impl Parser {
                 }
                 self.expect(";")?;
             } else if (public || static_method) && !final_method {
+                let ty = if matches!(self.token().kind, Kind::Variable(_)) {
+                    None
+                } else {
+                    let ty = self.type_declaration(false)?;
+                    if ty.contains("callable") {
+                        return Err(Error::parse(
+                            "Property cannot have type callable",
+                            self.token().line,
+                        ));
+                    }
+                    Some(ty)
+                };
                 loop {
                     let Kind::Variable(property) = self.token().kind.clone() else {
                         return Err(Error::parse(
@@ -213,11 +221,11 @@ impl Parser {
                     if properties
                         .iter()
                         .chain(static_properties.iter())
-                        .any(|(n, _)| n == &property)
+                        .any(|p| p.name == property)
                     {
                         return Err(Error::parse("Cannot redeclare property", self.token().line));
                     }
-                    let default = if self.eat("=") {
+                    let mut default = if self.eat("=") {
                         Some(self.expr(0)?)
                     } else {
                         None
@@ -231,10 +239,19 @@ impl Parser {
                             self.token().line,
                         ));
                     }
+                    if let (Some(ty), Some(default)) = (&ty, &mut default) {
+                        logical_constants::initializer(default, &mut self.warnings);
+                        self.validate_property_default(&property, ty, default)?;
+                    }
+                    let property = PropertyDecl {
+                        name: property,
+                        default,
+                        ty: ty.clone(),
+                    };
                     if static_method {
-                        static_properties.push((property, default));
+                        static_properties.push(property);
                     } else {
-                        properties.push((property, default));
+                        properties.push(property);
                     }
                     if !self.eat(",") {
                         break;

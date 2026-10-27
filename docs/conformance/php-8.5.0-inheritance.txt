@@ -22,7 +22,7 @@ Zend/tests/inheritance/bug37632.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug38772.phpt FAIL: ParseError: Expected public property or method on line 8
 Zend/tests/inheritance/bug39721.phpt FAIL: ParseError: Expected public property or method on line 3
 Zend/tests/inheritance/bug41961.phpt FAIL: ParseError: Expected public property or method on line 10
-Zend/tests/inheritance/bug42211.phpt FAIL: ParseError: Expected public property or method on line 12
+Zend/tests/inheritance/bug42211.phpt FAIL: ParseError: Cannot use default value for property B::$protectedBar of type protected on line 12
 Zend/tests/inheritance/bug43200.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug43200_2.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/bug43703.phpt FAIL: ParseError: Expected ';' on line 6
@@ -60,7 +60,7 @@ Zend/tests/inheritance/bug78344.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug79862.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug80126.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/inheritance/bug80126_2.phpt FAIL: ParseError: Expected ';' on line 3
-Zend/tests/inheritance/bug80391.phpt FAIL: Error: Declaration of B::method2() must be compatible with A::method2() on line 12
+Zend/tests/inheritance/bug80391.phpt PASS
 Zend/tests/inheritance/constructor_abstract_grantparent.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/deprecation_to_exception_during_inheritance.phpt UNSUPPORTED: EXPECTF, SKIPIF
 Zend/tests/inheritance/deprecation_to_exception_during_inheritance_can_be_caught.phpt UNSUPPORTED: EXPECTF, SKIPIF
@@ -73,4 +73,4 @@ Zend/tests/inheritance/interface_constructor_prototype_001.phpt UNSUPPORTED: EXP
 Zend/tests/inheritance/interface_constructor_prototype_002.phpt UNSUPPORTED: EXPECTF, XFAIL
 Zend/tests/inheritance/unused_shared_static_variables.phpt PASS
 Zend/tests/inheritance/update_consts_shadowed_private_prop.phpt FAIL: ParseError: Expected public property or method on line 3
-3 passed, 31 failed, 36 unsupported
+4 passed, 30 failed, 36 unsupported

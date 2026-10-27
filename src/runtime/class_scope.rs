@@ -296,29 +296,13 @@ impl Runtime {
             return Ok(defaults.clone());
         }
         let mut defaults = PhpArray::default();
-        for (name, expr) in &class.properties {
-            let mut declaring = class.clone();
-            while !declaring
-                .declaration
-                .properties
-                .iter()
-                .any(|(property, _)| property == name)
-            {
-                let Some(parent) = declaring.parent.clone() else {
-                    break;
-                };
-                declaring = parent;
+        for property in &class.properties {
+            let declaring = class
+                .property_owner(&property.name)
+                .expect("property owner");
+            if let Some(value) = self.property_default(&declaring, property)? {
+                defaults.insert(ArrayKey::String(property.name.clone()), value);
             }
-            let outer = self.class_context.replace(ClassContext {
-                scope: declaring.clone(),
-                called: declaring,
-            });
-            let result = match expr {
-                Some(expr) => self.eval_default(expr),
-                None => Ok(Value::Null),
-            };
-            self.class_context = outer;
-            defaults.insert(ArrayKey::String(name.clone()), result?);
         }
         *class.defaults.borrow_mut() = Some(defaults.clone());
         Ok(defaults)

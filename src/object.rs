@@ -1,6 +1,6 @@
 use crate::{
     PhpArray,
-    ast::{ClassDecl, Expr, FunctionDecl},
+    ast::{ClassDecl, FunctionDecl, PropertyDecl},
 };
 use std::{cell::RefCell, rc::Rc};
 
@@ -15,8 +15,8 @@ impl PhpObject {
     pub(crate) fn snapshot(&self) -> PhpArray {
         let properties = self.properties.borrow();
         let mut result = PhpArray::default();
-        for (name, _) in &self.class.properties {
-            let key = crate::ArrayKey::String(name.clone());
+        for property in &self.class.properties {
+            let key = crate::ArrayKey::String(property.name.clone());
             if let Some(value) = properties.get(&key) {
                 result.insert(key, value.clone());
             }
@@ -49,11 +49,11 @@ pub(crate) struct Class {
     pub declaration: Rc<ClassDecl>,
     pub name: Vec<u8>,
     pub parent: Option<Rc<Class>>,
-    pub properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub properties: Vec<PropertyDecl>,
     pub methods: Vec<Rc<FunctionDecl>>,
     pub allow_dynamic: bool,
     pub defaults: RefCell<Option<PhpArray>>,
-    pub static_properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub static_properties: Vec<PropertyDecl>,
     pub static_values: RefCell<std::collections::HashMap<Vec<u8>, Rc<RefCell<crate::Value>>>>,
     pub constant_values: RefCell<std::collections::HashMap<Vec<u8>, crate::Value>>,
     pub evaluating_constants: RefCell<std::collections::HashSet<Vec<u8>>>,
@@ -77,11 +77,18 @@ impl Class {
             .declaration
             .static_properties
             .iter()
-            .any(|(n, _)| n == name)
+            .any(|p| p.name == name)
         {
             Some(self.clone())
         } else {
             self.parent.as_ref().and_then(|p| p.static_owner(name))
+        }
+    }
+    pub fn property_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
+        if self.declaration.properties.iter().any(|p| p.name == name) {
+            Some(self.clone())
+        } else {
+            self.parent.as_ref().and_then(|p| p.property_owner(name))
         }
     }
     pub fn method_is_final(&self, name: &[u8]) -> bool {
