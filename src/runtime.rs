@@ -14,6 +14,7 @@ mod array_callbacks;
 mod builtins;
 mod casting;
 mod class_scope;
+mod cloning;
 mod closures;
 mod constants;
 mod destructuring;

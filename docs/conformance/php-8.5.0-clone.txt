@@ -1,0 +1,32 @@
+PHP 8.5.0 Zend/tests/clone baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/clone
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/clone/ast.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/clone/bug24884.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/bug27268.phpt FAIL: ParseError: Expected function name on line 5
+Zend/tests/clone/bug36071.phpt UNSUPPORTED: INI
+Zend/tests/clone/bug42817.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/clone/bug42818.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/clone/bug68262.phpt FAIL: ParseError: Expected expression on line 11
+Zend/tests/clone/bug69996.phpt PASS
+Zend/tests/clone/clone_001.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/clone/clone_002.phpt PASS
+Zend/tests/clone/clone_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_005.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/clone/clone_with_006.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/clone/clone_with_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_009.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_010.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/clone/clone_with_011.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/clone/clone_with_012.phpt UNSUPPORTED: EXPECTF
+Zend/tests/clone/clone_with_013.phpt UNSUPPORTED: EXPECTF
+2 passed, 10 failed, 14 unsupported

@@ -15,7 +15,7 @@ impl Runtime {
                 None => Value::Int(index as i64),
             };
             let fetched = match &value {
-                Value::Array(_) => read_offset(
+                Value::Array(_) | Value::Object(_) | Value::Closure(_) => read_offset(
                     value.clone(),
                     &mut Offset::new(Some(key)),
                     destination.line,

@@ -75,9 +75,11 @@ definition of completion.
    properties/classes enforce initialization scope and mutation restrictions.
    Public and readonly constructor promotion initializes properties before the
    constructor body, with separate parameter defaults and property storage.
+   Shallow object/closure cloning, inherited `__clone()`, readonly reinitialization,
+   and PHP 8.5 clone-with property updates are implemented.
    Remaining: interfaces, traits, abstract members, intersection/DNF constant types,
    complete constant/default resolution,
-   visibility, cloning (including readonly reinitialization), property hooks, magic methods, reflection, attributes, enums,
+   visibility, property hooks, remaining magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function
@@ -88,7 +90,8 @@ definition of completion.
    filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.
 6. **PHP 8.5 specifics:** pipe operator implemented for available callable kinds;
-   remaining: other callable kinds, clone-with, URI extension, new APIs and
+   clone-with implemented for available object kinds;
+   remaining: other callable kinds, URI extension, new APIs and
    attributes, and migration-guide compatibility changes.
 7. **Deployment and completion audit:** configuration, environment and SAPI
    behavior, resource limits, supported-platform validation, upstream unit and

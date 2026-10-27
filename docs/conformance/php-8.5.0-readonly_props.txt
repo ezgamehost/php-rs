@@ -1,4 +1,4 @@
-PHP 8.5.0 Zend/tests/readonly_props baseline (2026-10-26)
+PHP 8.5.0 Zend/tests/readonly_props baseline (2026-10-27)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/readonly_props
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
@@ -16,8 +16,8 @@ Zend/tests/readonly_props/promotion_error1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/public_set_non_readonly.phpt FAIL: ParseError: Multiple access type modifiers are not allowed on line 4
 Zend/tests/readonly_props/readonly_assign_no_sideeffect.phpt FAIL: ParseError: Expected ';' on line 22
 Zend/tests/readonly_props/readonly_clone_error1.phpt FAIL: ParseError: Expected ';' on line 18
-Zend/tests/readonly_props/readonly_clone_error2.phpt FAIL: ParseError: Expected ';' on line 11
-Zend/tests/readonly_props/readonly_clone_error3.phpt FAIL: ParseError: Expected ';' on line 13
+Zend/tests/readonly_props/readonly_clone_error2.phpt FAIL: ParseError: Expected ';' on line 24
+Zend/tests/readonly_props/readonly_clone_error3.phpt FAIL: ParseError: Expected ';' on line 26
 Zend/tests/readonly_props/readonly_clone_error4.phpt FAIL: ParseError: Expected ';' on line 18
 Zend/tests/readonly_props/readonly_clone_error5.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/readonly_props/readonly_clone_error6.phpt UNSUPPORTED: EXPECTF

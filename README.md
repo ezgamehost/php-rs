@@ -86,6 +86,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - Public and readonly constructor property promotion, including typed parameters,
   argument coercion, inherited constructors, and assignment before the body runs.
   Parameter defaults remain separate from uninitialized property storage.
+- Shallow object and closure cloning, inherited `__clone()` methods, and readonly
+  reinitialization during cloning. PHP 8.5 `clone($object, $withProperties)` updates
+  copied properties after `__clone()`, using the caller's access scope and internal
+  weak type coercion. Named arguments, unpacking, and clone callables are supported.
 - Object identity and property comparisons, recursive comparison errors,
   recursive-safe object dumps, object-to-array casts, and explicit-object
   `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and
@@ -141,7 +145,7 @@ Known gaps include intersection/DNF types, most builtins, references, exceptions
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: interfaces, traits,
 visibility modifiers other than public, property hooks,
-intersection/DNF constant types, complete constant/default-expression compatibility, cloning,
+intersection/DNF constant types, complete constant/default-expression compatibility,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.

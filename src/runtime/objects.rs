@@ -287,6 +287,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            reinitializable: RefCell::default(),
             object_id: self.next_object_id,
         });
         if method(&object.class, b"__construct").is_some() {
@@ -460,6 +461,7 @@ impl Runtime {
             value
         };
         object.properties.borrow_mut().insert(key, value.clone());
+        object.reinitializable.borrow_mut().remove(name);
         Ok(value)
     }
 }

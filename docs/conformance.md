@@ -1,15 +1,15 @@
 # Conformance baseline
 
-Measured on 2026-10-26 with the PHP **8.5.0** release source and a locally built
+Measurements through 2026-10-27 with the PHP **8.5.0** release source and a locally built
 CLI reference. Upstream fixtures run as real files with the source checkout as
 their working directory. These are narrow measurements, not full PHP
 compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 44 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 45 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
-| PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
+| PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
@@ -23,7 +23,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
-| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 19 | 106 | 158 |
+| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 21 | 104 | 158 |
 | PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 4 | 30 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
@@ -32,6 +32,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/readonly_props`, Rust | 0 | 22 | 18 |
 | PHP 8.5.0 `Zend/tests/readonly_classes`, Rust and reference PHP for passing cases | 1 | 6 | 16 |
 | PHP 8.5.0 `Zend/tests/ctor_promotion`, Rust and reference PHP for passing cases | 1 | 6 | 11 |
+| PHP 8.5.0 `Zend/tests/clone`, Rust and reference PHP for passing cases | 2 | 10 | 14 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -206,7 +207,7 @@ A 300-case differential check matched stdout, exit status, and diagnostic
 presence across static/instance calls, forwarding, saved callbacks, contextual
 type variance, and class-name inspection. Project regressions additionally
 cover caller-context restoration, eval, default closure scope, and per-class
-property-default identity. Magic method dispatch, readonly cloning, non-public
+property-default identity. Most magic method dispatch, non-public
 visibility, and complete closure reflection/debugging remain incomplete.
 
 The static-member slice adds nine class-suite passes, two late-static-binding
@@ -256,7 +257,7 @@ counts do not establish compatibility with those features.
 The readonly slice adds [class](conformance/php-8.5.0-readonly_classes.txt) and
 [property](conformance/php-8.5.0-readonly_props.txt) baselines. One class fixture
 passes. None of the property fixtures pass yet: they need combinations of
-exceptions, references, cloning, magic accessors, and
+exceptions, references, magic accessors, and
 reflection that remain unimplemented. Unsupported PHPT sections are not run.
 Fifteen project regressions and a reference-checked PHPT cover permitted
 initialization scopes, initialized-null storage, readonly arrays, interior
@@ -265,7 +266,7 @@ The [PHP property manual](https://www.php.net/manual/en/language.oop5.properties
 and PHP 8.5.0 probes establish the protected-set initialization behavior.
 A 447-case matrix matches stdout, exit status, and diagnostic presence; the
 existing 716-case typed-property matrix also passes. Class and inheritance
-suite counts are unchanged. Cloning, explicit asymmetric visibility, property
+suite counts were unchanged in that slice. Explicit asymmetric visibility, property
 hooks, and the other previously noted gaps remain.
 
 The [constructor-promotion report](conformance/php-8.5.0-ctor_promotion.txt)
@@ -282,3 +283,25 @@ traits, exception handling, and object-ID reuse. Private/protected visibility,
 advanced promotion modifiers, and object construction in parameter defaults
 remain unsupported.
 The readonly suite counts are unchanged.
+
+
+The [cloning report](conformance/php-8.5.0-clone.txt) records two passing
+fixtures, ten failures, and fourteen unsupported fixtures. Eighteen new project
+regressions and a reference-checked PHPT cover shallow object/closure copies,
+inherited `__clone()`, readonly reinitialization, clone-with updates, argument
+validation, and property-write failure ordering. The
+[PHP cloning manual](https://www.php.net/manual/en/language.oop5.cloning.php),
+PHP 8.5.0 source, and local probes establish the behavior. Clone-with updates
+use internal weak property coercion while preserving caller access scope.
+The implementation also matches PHP 8.5.0's retained reinitialization flags
+on untouched readonly slots after nonempty clone-with updates. Normal
+`__clone()` invocation clears those flags even if the method fails.
+A 619-case differential matrix matches stdout, exit status, and diagnostic
+presence; closure results use type inspection because complete closure debug
+output is still missing. Assignment operands such as `clone $copy = $original`
+now parse correctly, and destructuring objects raises a PHP error instead of
+panicking. The class suite gains two passes; the refreshed language baseline
+gains eleven passes without losing any prior passing fixtures. Readonly suite
+counts remain unchanged. Non-public clone methods, asymmetric visibility,
+property hooks, general references, exceptions, destructors, and exact object-ID
+reuse remain incomplete; unsupported PHPT sections are not counted as passes.

@@ -113,6 +113,18 @@ impl Parser {
                         method.line,
                     ));
                 }
+                if method.name.eq_ignore_ascii_case(b"__clone")
+                    && (method.parameters.iter().any(|param| !param.variadic)
+                        || method
+                            .return_type
+                            .as_ref()
+                            .is_some_and(|ty| !ty.contains("void") && !ty.contains("never")))
+                {
+                    return Err(Error::parse(
+                        "Method __clone() has an invalid signature",
+                        method.line,
+                    ));
+                }
                 if static_method
                     && [
                         b"__construct".as_slice(),

@@ -4,6 +4,7 @@ use crate::ast::Parameter;
 #[derive(Debug, Clone, Copy)]
 pub(super) enum Builtin {
     Exit,
+    Clone,
     Strlen,
     Count,
     VarDump,
@@ -36,6 +37,7 @@ impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
         Some(match name {
             b"exit" | b"die" => Self::Exit,
+            b"clone" => Self::Clone,
             b"strlen" => Self::Strlen,
             b"count" | b"sizeof" => Self::Count,
             b"var_dump" => Self::VarDump,
@@ -75,6 +77,7 @@ impl Builtin {
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
             Self::GetClass => &[("object", true, false)],
+            Self::Clone => &[("object", false, false), ("withProperties", true, false)],
             Self::GetParentClass => &[("object_or_class", true, false)],
             Self::GetCalledClass => &[],
             Self::GetObjectVars => &[("object", false, false)],
@@ -180,6 +183,7 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
             Builtin::GetObjectVars => match first {
                 Value::Object(_) => casting::cast(

@@ -1,4 +1,4 @@
-PHP 8.5.0 tests/classes baseline (2026-10-26)
+PHP 8.5.0 tests/classes baseline (2026-10-27)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/tests/classes
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
@@ -75,8 +75,8 @@ tests/classes/class_abstract.phpt UNSUPPORTED: EXPECTF
 tests/classes/class_example.phpt PASS
 tests/classes/class_final.phpt UNSUPPORTED: EXPECTF
 tests/classes/class_stdclass.phpt PASS
-tests/classes/clone_001.phpt FAIL: ParseError: Expected ';' on line 11
-tests/classes/clone_002.phpt FAIL: ParseError: Expected ';' on line 13
+tests/classes/clone_001.phpt PASS
+tests/classes/clone_002.phpt PASS
 tests/classes/clone_003.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/classes/clone_004.phpt FAIL: ParseError: Expected ';' on line 2
 tests/classes/clone_005.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt FAIL: ParseError: Expected public property or
 tests/classes/visibility_004b.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_004c.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_005.phpt FAIL: ParseError: Expected public property or method on line 7
-19 passed, 106 failed, 158 unsupported
+21 passed, 104 failed, 158 unsupported

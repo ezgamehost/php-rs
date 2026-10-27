@@ -1,7 +1,8 @@
-PHP 8.5.0 tests/lang baseline, 2026-10-26
-Runner: cargo run --bin php-rs-phpt -- /path/to/php-8.5.0/tests/lang
-Unsupported cases were not executed. Exit status: 1.
+PHP 8.5.0 tests/lang baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/tests/lang
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 tests/lang/001.phpt PASS
 tests/lang/002.phpt PASS
 tests/lang/003.phpt PASS
@@ -29,15 +30,15 @@ tests/lang/024.phpt PASS
 tests/lang/025.phpt PASS
 tests/lang/026.phpt PASS
 tests/lang/027.phpt PASS
-tests/lang/028.phpt FAIL: ParseError: Expected ';' on line 27
-tests/lang/030.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/032.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/028.phpt FAIL: ParseError: Expected expression on line 49
+tests/lang/030.phpt FAIL: ParseError: Expected expression on line 5
+tests/lang/032.phpt PASS
 tests/lang/033.phpt UNSUPPORTED: EXPECTF
 tests/lang/034.phpt UNSUPPORTED: INI, SKIPIF
-tests/lang/035.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/036.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/037.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/038.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/035.phpt FAIL: ParseError: Expected ';' on line 13
+tests/lang/036.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/lang/037.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/lang/038.phpt FAIL: ParseError: Expected ';' on line 15
 tests/lang/039.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/040.phpt PASS
 tests/lang/041.phpt UNSUPPORTED: EXPECTF
@@ -50,29 +51,29 @@ tests/lang/array_shortcut_002.phpt FAIL: Error: Call to undefined function print
 tests/lang/array_shortcut_003.phpt FAIL: Error: Call to undefined function print_r() on line 3
 tests/lang/array_shortcut_005.phpt FAIL: Error: Call to undefined function print_r() on line 2
 tests/lang/bison1.phpt UNSUPPORTED: EXPECTF
-tests/lang/bug18872.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug18872.phpt PASS
 tests/lang/bug19566.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug19943.phpt FAIL: ParseError: Unexpected byte 0x40 on line 5
 tests/lang/bug20175.phpt UNSUPPORTED: EXPECTF, INI
 tests/lang/bug21094.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug21600.phpt UNSUPPORTED: EXPECTF, INI
-tests/lang/bug21669.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug21669.phpt PASS
 tests/lang/bug21820.phpt UNSUPPORTED: EXPECTF
-tests/lang/bug21849.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/bug21961.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/bug21849.phpt PASS
+tests/lang/bug21961.phpt PASS
 tests/lang/bug22231.phpt UNSUPPORTED: EXPECTF, INI
 tests/lang/bug22510.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug22592.phpt FAIL: Error: Call to undefined function set_error_handler() on line 6
 tests/lang/bug23279.phpt FAIL: ParseError: Expected ';' on line 5
-tests/lang/bug23384.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/bug23489.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug23384.phpt FAIL: Error: Call to undefined function print_r() on line 9
+tests/lang/bug23489.phpt FAIL: Error: Call to undefined function ob_start() on line 4
 tests/lang/bug23524.phpt FAIL: Error: Call to undefined function print_r() on line 5
 tests/lang/bug23584.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug23624.phpt FAIL: Error: Call to undefined function current() on line 3
 tests/lang/bug24054.phpt FAIL: Error: Call to undefined function printf() on line 5
 tests/lang/bug24396.phpt PASS
-tests/lang/bug24436.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/bug24499.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug24436.phpt PASS
+tests/lang/bug24499.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/lang/bug24573.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug24640.phpt UNSUPPORTED: EXPECTF, INI
 tests/lang/bug24652.phpt FAIL: Error: Call to undefined function array_flip() on line 10
@@ -82,25 +83,25 @@ tests/lang/bug24908.phpt UNSUPPORTED: INI
 tests/lang/bug24951.phpt FAIL: Error: Call to undefined function ob_start() on line 8
 tests/lang/bug25145.phpt UNSUPPORTED: GET
 tests/lang/bug25547.phpt FAIL: Error: Call to undefined function set_error_handler() on line 8
-tests/lang/bug25652.phpt FAIL: ParseError: Expected ';' on line 7
+tests/lang/bug25652.phpt PASS
 tests/lang/bug25922.phpt UNSUPPORTED: INI
 tests/lang/bug26182.phpt UNSUPPORTED: INI
 tests/lang/bug26696.phpt PASS
-tests/lang/bug26866.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug26866.phpt FAIL: ParseError: Expected ';' on line 9
 tests/lang/bug26869.phpt PASS
 tests/lang/bug27354.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug27439.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug27443.phpt PASS
-tests/lang/bug27535.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/bug27535.phpt PASS
 tests/lang/bug28213.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug28800.phpt FAIL: ParseError: Expected ';' on line 4
 tests/lang/bug29566.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug29893.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/bug29944.phpt FAIL: Error: Call to undefined function preg_match() on line 7
-tests/lang/bug30578.phpt FAIL: ParseError: Expected ';' on line 5
+tests/lang/bug30578.phpt FAIL: Error: Call to undefined function error_reporting() on line 3
 tests/lang/bug30638.phpt UNSUPPORTED: SKIPIF
 tests/lang/bug30726.phpt PASS
-tests/lang/bug30862.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug30862.phpt FAIL: Error: Call to undefined function print_r() on line 5
 tests/lang/bug32828.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug32924.phpt UNSUPPORTED: INI
 tests/lang/bug35176.phpt UNSUPPORTED: EXPECTF, INI
@@ -114,13 +115,13 @@ tests/lang/bug55754.phpt FAIL: Error: Call to undefined function current() on li
 tests/lang/bug71897.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug73172.phpt FAIL: Error: Call to undefined function setlocale() on line 3
 tests/lang/bug73329.phpt PASS
-tests/lang/bug7515.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug7515.phpt FAIL: Error: Call to undefined function ob_start() on line 9
 tests/lang/catchable_error_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/catchable_error_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/comments.phpt PASS
 tests/lang/comments2.phpt UNSUPPORTED: FILEEOF
-tests/lang/compare_objects_basic1.phpt FAIL: ParseError: Expected ';' on line 5
-tests/lang/compare_objects_basic2.phpt FAIL: ParseError: Expected ';' on line 8
+tests/lang/compare_objects_basic1.phpt FAIL: ParseError: Expected public property or method on line 11
+tests/lang/compare_objects_basic2.phpt FAIL: Error: Call to undefined function date_default_timezone_set() on line 4
 tests/lang/constants/PHP_INT_32bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/constants/PHP_INT_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/empty_variation.phpt PASS
@@ -130,11 +131,11 @@ tests/lang/engine_assignExecutionOrder_003.phpt PASS
 tests/lang/engine_assignExecutionOrder_004.phpt PASS
 tests/lang/engine_assignExecutionOrder_005.phpt PASS
 tests/lang/engine_assignExecutionOrder_006.phpt PASS
-tests/lang/engine_assignExecutionOrder_007.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/engine_assignExecutionOrder_008.phpt FAIL: ParseError: Expected ';' on line 29
+tests/lang/engine_assignExecutionOrder_007.phpt FAIL: Error: Call to undefined function print_r() on line 4
+tests/lang/engine_assignExecutionOrder_008.phpt PASS
 tests/lang/engine_assignExecutionOrder_009.phpt PASS
-tests/lang/error_2_exception_001.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/execution_order.phpt FAIL: ParseError: Expected ';' on line 5
+tests/lang/error_2_exception_001.phpt FAIL: ParseError: Expected ';' on line 16
+tests/lang/execution_order.phpt FAIL: Expected "1)goodgood\n2)goodgood\n3)badgood\n4)goodgood\n5)badgood\n6)goodgood\n7)goodgood\n8)goodgood\n9)1\n10)-1\n11)0\n12)0\n13)0\n14)0\n15)400\n16)400\n17)300\n18)300\n19)500\n20)800\n21)220\n22)600\n23)210\n24)600\n", got "1)badgood\r\n2)goodgood\r\n3)badgood\r\n4)goodgood\r\n5)badgood\r\n6)goodgood\r\n7)goodgood\r\n8)badgood\r\n9)0\r\n10)-1\r\n11)-1\r\n12)0\r\n13)-2\r\n14)0\r\n15)300\r\n16)400\r\n17)300\r\n18)300\r\n19)500\r\n20)800\r\n21)220\r\n22)600\r\n23)210\r\n24)600\r\n"
 tests/lang/foreachLoop.001.phpt FAIL: ParseError: Expected expression on line 31
 tests/lang/foreachLoop.002.phpt FAIL: ParseError: Expected expression on line 21
 tests/lang/foreachLoop.003.phpt UNSUPPORTED: EXPECTF
@@ -153,16 +154,16 @@ tests/lang/foreachLoop.017.phpt PASS
 tests/lang/foreachLoopIterator.001.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopIterator.002.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopIteratorAggregate.001.phpt UNSUPPORTED: EXPECTF
-tests/lang/foreachLoopIteratorAggregate.002.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/foreachLoopIteratorAggregate.003.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/foreachLoopIteratorAggregate.004.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/foreachLoopObjects.001.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/foreachLoopIteratorAggregate.002.phpt FAIL: ParseError: Expected '{' on line 3
+tests/lang/foreachLoopIteratorAggregate.003.phpt FAIL: ParseError: Expected '{' on line 2
+tests/lang/foreachLoopIteratorAggregate.004.phpt FAIL: ParseError: Expected '{' on line 2
+tests/lang/foreachLoopObjects.001.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/lang/foreachLoopObjects.002.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.003.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.004.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.005.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.006.phpt UNSUPPORTED: EXPECTF
-tests/lang/foreach_with_object_001.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/foreach_with_object_001.phpt PASS
 tests/lang/foreach_with_references_001.phpt FAIL: ParseError: Expected expression on line 11
 tests/lang/func_get_arg.001.phpt PASS
 tests/lang/func_get_arg.002.phpt PASS
@@ -241,7 +242,7 @@ tests/lang/operators/operator_notidentical_basic.phpt FAIL: Error: Call to undef
 tests/lang/operators/operator_notidentical_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_notidentical_variation_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_spaceship_basic.phpt PASS
-tests/lang/operators/overloaded_property_ref.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/operators/overloaded_property_ref.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/lang/operators/postdec_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/postdec_variationStr.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/postinc_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
@@ -278,7 +279,7 @@ tests/lang/short_tags.004.phpt UNSUPPORTED: EXPECTF, INI
 tests/lang/static_basic_001.phpt PASS
 tests/lang/static_basic_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/static_variation_001.phpt PASS
-tests/lang/static_variation_002.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/static_variation_002.phpt PASS
 tests/lang/string/unicode_escape.phpt PASS
 tests/lang/string/unicode_escape_empty.phpt UNSUPPORTED: EXPECTF
 tests/lang/string/unicode_escape_incomplete.phpt UNSUPPORTED: EXPECTF
@@ -290,10 +291,10 @@ tests/lang/string/unicode_escape_surrogates.phpt FAIL: Error: Call to undefined 
 tests/lang/string/unicode_escape_whitespace.phpt UNSUPPORTED: EXPECTF
 tests/lang/string_decimals_001.phpt PASS
 tests/lang/syntax_errors.phpt FAIL: ParseError: Expected ';' on line 26
-tests/lang/this_assignment.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/this_assignment.phpt FAIL: ParseError: Expected expression on line 30
 tests/lang/throw_variation_001.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/type_hints_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_003.phpt UNSUPPORTED: EXPECTF
 tests/lang/zend_throw_exception_001.phpt FAIL: ParseError: Expected ';' on line 2
-60 passed, 107 failed, 127 unsupported
+71 passed, 96 failed, 127 unsupported

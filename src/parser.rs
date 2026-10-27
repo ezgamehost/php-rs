@@ -8,6 +8,7 @@ use crate::{
 };
 
 use std::{collections::HashSet, rc::Rc};
+mod cloning;
 mod closures;
 mod jumps;
 mod logical_constants;
@@ -736,6 +737,8 @@ impl Parser {
         let token = self.token().clone();
         let line = token.line;
         self.pos += 1;
+        let clone_call = matches!(&token.kind, Kind::Word(name) if name.eq_ignore_ascii_case(b"clone"))
+            && self.clone_call_arguments();
         let kind = match token.kind {
             Kind::Cast(name) => {
                 let (kind, canonical) = match name.as_str() {
@@ -806,6 +809,13 @@ impl Parser {
             Kind::Symbol(op) if op == "$" => self.dynamic_variable()?,
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
                 b"new" => self.new_expression()?,
+                b"clone" if !clone_call => ExprKind::Call(
+                    Box::new(Expr {
+                        kind: ExprKind::Constant(name),
+                        line,
+                    }),
+                    vec![Argument::Positional(self.expr(22)?)],
+                ),
                 b"function" => self.lambda(false, false, line)?,
                 b"fn" => self.lambda(true, false, line)?,
                 b"static" if self.is("function") || self.is("fn") => {
@@ -915,6 +925,15 @@ impl Parser {
         };
         let mut lhs = Expr { kind, line };
         loop {
+            if clone_call
+                && matches!(lhs.kind, ExprKind::Call(_, _) | ExprKind::Callable(_))
+                && ["->", "::", "[", "("].iter().any(|op| self.is(op))
+            {
+                return Err(Error::parse(
+                    "Parenthesize clone() before dereferencing it",
+                    self.token().line,
+                ));
+            }
             if matches!(lhs.kind, ExprKind::Match(_, _) | ExprKind::Lambda(_))
                 && (self.is("[") || self.is("("))
             {
@@ -1014,7 +1033,13 @@ impl Parser {
             let Some((power, right)) = binding_power(&op) else {
                 break;
             };
-            if power < min {
+            // PHP's variable-assignment grammar can start an operand even
+            // below a higher-precedence operator: clone $copy = $original,
+            // -$x = 2, and 1 + $x = 2 all consume the assignment on the right.
+            let operand_assignment = power == 4
+                && (lhs.is_writable()
+                    || (op == "=" && matches!(lhs.kind, ExprKind::Array(_) | ExprKind::List(_))));
+            if power < min && !operand_assignment {
                 break;
             }
             if (power == 12 || power == 13)

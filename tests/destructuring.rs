@@ -143,3 +143,13 @@ fn invalid_patterns_are_rejected_even_when_unreachable() {
         );
     }
 }
+
+#[test]
+fn destructuring_objects_reports_php_errors_without_panicking() {
+    for value in ["new stdClass", "fn()=>1"] {
+        let code = format!("<?php [$x]={value};");
+        let error = php_rs::run(code.as_bytes()).unwrap_err();
+        assert_eq!(error.kind, php_rs::ErrorKind::Error);
+        assert!(error.message.contains("Cannot use object of type"));
+    }
+}

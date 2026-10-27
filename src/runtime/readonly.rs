@@ -55,7 +55,7 @@ impl Runtime {
             ));
         }
         let operation = if unset { "unset" } else { "modify" };
-        if initialized {
+        if initialized && !object.reinitializable.borrow().contains(&location.name) {
             return Err(Error::new(
                 ErrorKind::Error,
                 format!("Cannot {operation} readonly property {qualified}"),
