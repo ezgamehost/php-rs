@@ -31,6 +31,8 @@ new request. The CLI returns the low eight bits of the requested status.
 ## Current coverage
 
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
+- PHP 8.5 NaN conversion warnings for boolean, string, and array conversions;
+  NaN comparisons remain silent and unordered against numbers and strings.
 - Explicit scalar and array casts, cast-alias deprecations, and PHP 8.5 `(void)`
   result discarding in statements and permitted `for` clauses.
 - Global `const` declarations, `define`/`defined`/`constant`, qualified lookup,
@@ -130,6 +132,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [PHP 8.5 release](https://www.php.net/releases/8.5/en.php)
 - [Operator precedence](https://www.php.net/manual/en/language.operators.precedence.php)
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
+- [PHP 8.5 incompatibilities](https://www.php.net/manual/en/migration85.incompatible.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Function argument inspection](https://www.php.net/manual/en/function.func-get-args.php)
 - [Exit](https://www.php.net/manual/en/function.exit.php)

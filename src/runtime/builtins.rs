@@ -277,6 +277,7 @@ impl Runtime {
             return Err(type_error(function, position, "string", line));
         }
         self.warn_null(value, function, position, "string", line);
+        value.warn_nan("string", line, &mut self.warnings);
         Ok(value.to_bytes())
     }
     pub(super) fn native_int(
@@ -317,7 +318,7 @@ impl Runtime {
             return Err(type_error(function, position, "bool", line));
         }
         self.warn_null(value, function, position, "bool", line);
-        Ok(value.is_truthy())
+        Ok(value.to_bool(line, &mut self.warnings))
     }
     fn warn_null(
         &mut self,

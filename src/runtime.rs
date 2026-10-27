@@ -115,7 +115,7 @@ impl Runtime {
             }
             Stmt::Block(stmts) => return self.block(stmts),
             Stmt::If(cond, yes, no) => {
-                if self.eval(cond)?.is_truthy() {
+                if self.eval(cond)?.to_bool(cond.line, &mut self.warnings) {
                     return self.statement(yes);
                 }
                 if let Some(no) = no {
@@ -123,7 +123,7 @@ impl Runtime {
                 }
             }
             Stmt::While(cond, body) => {
-                while self.eval(cond)?.is_truthy() {
+                while self.eval(cond)?.to_bool(cond.line, &mut self.warnings) {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -137,13 +137,16 @@ impl Runtime {
                     Flow::Break(1) => break,
                     flow => return Ok(flow.leave_level()),
                 }
-                if !self.eval(cond)?.is_truthy() {
+                if !self.eval(cond)?.to_bool(cond.line, &mut self.warnings) {
                     break;
                 }
             },
             Stmt::For(init, cond, step, body) => {
                 self.eval_sequence(init)?;
-                while self.eval_sequence(cond)?.is_truthy() {
+                while self
+                    .eval_sequence(cond)?
+                    .to_bool(cond.last().map_or(0, |expr| expr.line), &mut self.warnings)
+                {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -491,12 +494,16 @@ impl Runtime {
                 }
                 Ok(Value::Bool(true))
             }
-            ExprKind::Empty(arg) => Ok(Value::Bool(!self.coalesce_read(arg, true)?.is_truthy())),
+            ExprKind::Empty(arg) => Ok(Value::Bool(
+                !self
+                    .coalesce_read(arg, true)?
+                    .to_bool(line, &mut self.warnings),
+            )),
             ExprKind::Constant(name) => self.read_constant(name, line),
             ExprKind::Unary(op, expr) => {
                 let value = self.eval(expr)?;
                 match op.as_str() {
-                    "!" => Ok(Value::Bool(!value.is_truthy())),
+                    "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.warnings))),
                     "~" => match value {
                         Value::String(s) => Ok(Value::String(s.into_iter().map(|b| !b).collect())),
                         Value::Int(_) | Value::Float(_) => {
@@ -559,7 +566,7 @@ impl Runtime {
             }
             ExprKind::Conditional(cond, yes, no) => {
                 let value = self.eval(cond)?;
-                if value.is_truthy() {
+                if value.to_bool(cond.line, &mut self.warnings) {
                     match yes {
                         Some(yes) => self.eval(yes),
                         None => Ok(value),
@@ -578,11 +585,13 @@ impl Runtime {
                     };
                 }
                 let lhs = self.eval(left)?;
-                if (op == "&&" || op == "and") && !lhs.is_truthy() {
-                    return Ok(Value::Bool(false));
-                }
-                if (op == "||" || op == "or") && lhs.is_truthy() {
-                    return Ok(Value::Bool(true));
+                if matches!(op.as_str(), "&&" | "and" | "||" | "or") {
+                    let truth = lhs.to_bool(line, &mut self.warnings);
+                    if truth == matches!(op.as_str(), "||" | "or") {
+                        return Ok(Value::Bool(truth));
+                    }
+                    let rhs = self.eval(right)?;
+                    return Ok(Value::Bool(rhs.to_bool(line, &mut self.warnings)));
                 }
                 let rhs = self.eval(right)?;
                 binary(op, lhs, rhs, line, &mut self.warnings)
@@ -606,7 +615,11 @@ fn binary(
         }
         "&&" | "and" => return Ok(Bool(left.is_truthy() && right.is_truthy())),
         "||" | "or" => return Ok(Bool(left.is_truthy() || right.is_truthy())),
-        "xor" => return Ok(Bool(left.is_truthy() ^ right.is_truthy())),
+        "xor" => {
+            return Ok(Bool(
+                left.to_bool(line, warnings) ^ right.to_bool(line, warnings),
+            ));
+        }
         "===" => return Ok(Bool(left == right)),
         "!==" => return Ok(Bool(left != right)),
         "==" | "!=" | "<>" | "<" | "<=" | ">" | ">=" | "<=>" => {
@@ -795,6 +808,7 @@ fn increment(
 }
 
 fn string_bytes(value: &Value, line: usize, warnings: &mut Vec<String>) -> Vec<u8> {
+    value.warn_nan("string", line, warnings);
     if matches!(value, Value::Array(_)) {
         warnings.push(format!("Array to string conversion on line {line}"));
     }

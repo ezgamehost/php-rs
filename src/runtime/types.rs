@@ -6,6 +6,12 @@ impl Runtime {
         Self::default().eval(expr).ok()
     }
 
+    pub(crate) fn constant_without_diagnostics(expr: &Expr) -> Option<Value> {
+        let mut runtime = Self::default();
+        let value = runtime.eval(expr).ok()?;
+        runtime.warnings.is_empty().then_some(value)
+    }
+
     pub(super) fn coerce_type(
         &mut self,
         value: Value,
@@ -53,15 +59,11 @@ impl Runtime {
             return Some(Value::Float(number.as_float()));
         }
         if ty.contains("string") {
-            if matches!(value, Value::Float(n) if n.is_nan()) {
-                self.warnings.push(format!(
-                    "unexpected NAN value was coerced to string on line {line}"
-                ));
-            }
+            value.warn_nan("string", line, &mut self.warnings);
             return Some(Value::String(value.to_bytes()));
         }
         if ty.contains("bool") {
-            return Some(Value::Bool(value.is_truthy()));
+            return Some(Value::Bool(value.to_bool(line, &mut self.warnings)));
         }
         None
     }

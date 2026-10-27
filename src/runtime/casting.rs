@@ -12,11 +12,12 @@ pub(super) fn cast(
 ) -> Result<Value, Error> {
     Ok(match kind {
         CastKind::Void => Value::Null,
-        CastKind::Bool => Value::Bool(value.is_truthy()),
+        CastKind::Bool => Value::Bool(value.to_bool(line, warnings)),
         CastKind::String => Value::String(string_bytes(&value, line, warnings)),
         CastKind::Array => match value {
             Value::Array(_) => value,
             value => {
+                value.warn_nan("array", line, warnings);
                 let mut array = PhpArray::default();
                 if value != Value::Null {
                     array.append(value, line)?;

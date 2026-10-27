@@ -9,6 +9,7 @@ use crate::{
 
 use std::{collections::HashSet, rc::Rc};
 mod jumps;
+mod logical_constants;
 mod targets;
 mod types;
 mod variables;
@@ -32,9 +33,10 @@ pub(crate) fn parse_source(
         source,
         function_name: Vec::new(),
     };
-    let statements = parser.program()?;
+    let mut statements = parser.program()?;
     targets::validate(&statements)?;
     jumps::validate(&statements)?;
+    logical_constants::fold(&mut statements, &mut parser.warnings);
     Ok((statements, parser.warnings, parser.strict_types))
 }
 struct Parser {

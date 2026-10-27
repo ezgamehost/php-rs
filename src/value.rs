@@ -14,6 +14,19 @@ pub enum Value {
 }
 
 impl Value {
+    pub(crate) fn warn_nan(&self, kind: &str, line: usize, warnings: &mut Vec<String>) {
+        if matches!(self, Self::Float(n) if n.is_nan()) {
+            warnings.push(format!(
+                "unexpected NAN value was coerced to {kind} on line {line}"
+            ));
+        }
+    }
+
+    pub(crate) fn to_bool(&self, line: usize, warnings: &mut Vec<String>) -> bool {
+        self.warn_nan("bool", line, warnings);
+        self.is_truthy()
+    }
+
     pub fn is_truthy(&self) -> bool {
         match self {
             Self::Null => false,
@@ -69,7 +82,12 @@ impl Value {
                         "The float {} is not representable as an int, cast occurred on line {line}",
                         format_float(n)
                     ));
-                } else if n != converted as f64 {
+                }
+                // PHP's range predicate admits NaN, so it also receives the
+                // precision diagnostic. Infinity and finite overflow do not.
+                if n != converted as f64
+                    && (n.is_nan() || (-9223372036854775808.0..9223372036854775808.0).contains(&n))
+                {
                     warnings.push(format!("Deprecated: Implicit conversion from float {} to int loses precision on line {line}", format_float(n)));
                 }
                 Ok(converted)
@@ -98,6 +116,7 @@ impl Value {
             (Int(_) | Float(_), Int(_) | Float(_)) => {
                 self.as_float().partial_cmp(&other.as_float())
             }
+            (Float(n), String(_)) | (String(_), Float(n)) if n.is_nan() => None,
             (String(a), String(b)) => match (numeric_string(a), numeric_string(b)) {
                 (Some(a), Some(b)) => a.compare(&b),
                 _ => a.partial_cmp(b),

@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 30 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 31 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -77,6 +77,15 @@ objects/closures, output handling, or additional PHPT sections. Separately,
 for output, process status, and diagnostic presence. This does not compare
 exact diagnostic text or establish shutdown/destructor compatibility. Project
 PHPT checks now compare intentional nonzero exit codes with the reference.
+
+NaN compatibility was checked with 265 differential snippets covering conversion
+warnings, ordinary and constant logical expressions, array and selection
+contexts, casts of finite and non-finite floats, and comparisons. All matched
+PHP 8.5.0 for output, process status, and diagnostics after removing source
+location formatting and the CLI's extra warning prefix. Project regressions
+also cover typed arguments/returns, string offsets, variable names, strict
+rejection, and warning timing. This is targeted coverage; exact diagnostic
+formatting and full constant/default-expression compatibility remain unfinished.
 
 The upstream basic-suite failures are:
 
