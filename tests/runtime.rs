@@ -152,3 +152,46 @@ fn invalid_programs_produce_errors_instead_of_panics() {
         );
     }
 }
+
+#[test]
+fn unary_minus_preserves_negative_zero() {
+    check(
+        "<?php echo -0.0, ',', -(-0.0), ',', -9223372036854775807 - 1;",
+        "-0,0,-9223372036854775808",
+    );
+}
+
+#[test]
+fn non_associative_operators_require_parentheses() {
+    for code in [
+        "echo 1 < 2 < 3;",
+        "echo 1 == 2 == 3;",
+        "echo 1 === 2 != 3;",
+        "echo true ? 1 : false ? 2 : 3;",
+    ] {
+        assert!(run(format!("<?php {code}").as_bytes()).is_err(), "{code}");
+    }
+    check(
+        "<?php echo (1 < 2) < 3, ',', (true ? 1 : false) ? 2 : 3, ',', 0 ?: 0 ?: 5;",
+        ",2,5",
+    );
+}
+
+#[test]
+fn arithmetic_accepts_numeric_prefix_with_warning() {
+    let mut runtime = php_rs::Runtime::default();
+    runtime
+        .execute(b"<?php echo '12tail' + 1, ',', '  -2.5e1x' * 2;")
+        .unwrap();
+    assert_eq!(runtime.output, b"13,-50");
+    assert_eq!(runtime.warnings.len(), 2);
+    assert!(runtime.warnings.iter().all(|w| w.contains("non-numeric")));
+}
+
+#[test]
+fn increment_uses_php_type_rules() {
+    let mut runtime = php_rs::Runtime::default();
+    runtime.execute(b"<?php $a = true; $b = null; $c = 'Az'; $d = '9'; $e = null; echo ++$a, ',', ++$b, ',', ++$c, ',', ++$d, ',', --$e;").unwrap();
+    assert_eq!(runtime.output, b"1,1,Ba,10,");
+    assert_eq!(runtime.warnings.len(), 3);
+}

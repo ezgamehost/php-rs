@@ -9,6 +9,7 @@ pub(crate) struct Expr {
 #[derive(Debug, Clone)]
 pub(crate) enum ExprKind {
     Literal(Value),
+    Group(Box<Expr>),
     Variable(Vec<u8>),
     Constant(Vec<u8>),
     Unary(String, Box<Expr>),

@@ -30,7 +30,7 @@ output and warnings when execution fails. Parsing happens before execution.
 
 Known gaps include arrays, functions and builtins, objects, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions. String
-interpolation, leading-numeric-string warnings, some scalar edge cases, complete
+interpolation, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP
 conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation plan.

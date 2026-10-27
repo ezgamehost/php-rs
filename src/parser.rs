@@ -149,7 +149,7 @@ impl Parser {
             Kind::Symbol(op) if op == "(" => {
                 let expr = self.expr(0)?;
                 self.expect(")")?;
-                expr.kind
+                ExprKind::Group(Box::new(expr))
             }
             Kind::Symbol(op) if ["+", "-", "!"].contains(&op.as_str()) => {
                 ExprKind::Unary(op, Box::new(self.expr(15)?))
@@ -187,6 +187,14 @@ impl Parser {
                 } else {
                     Some(Box::new(self.expr(0)?))
                 };
+                if let ExprKind::Conditional(_, previous_yes, _) = &lhs.kind
+                    && (previous_yes.is_some() || yes.is_some())
+                {
+                    return Err(Error::parse(
+                        "Unparenthesized ternary chain is not supported",
+                        line,
+                    ));
+                }
                 self.expect(":")?;
                 let no = self.expr(6)?;
                 lhs = Expr {
@@ -205,6 +213,15 @@ impl Parser {
             };
             if power < min {
                 break;
+            }
+            if (power == 9 || power == 10)
+                && let ExprKind::Binary(previous, _, _) = &lhs.kind
+                && binding_power(previous).is_some_and(|(p, _)| p == power)
+            {
+                return Err(Error::parse(
+                    "Comparison operators are not associative",
+                    line,
+                ));
             }
             self.pos += 1;
             let rhs = self.expr(if right { power } else { power + 1 })?;

@@ -30,18 +30,24 @@ impl Value {
             Self::String(s) => s.clone(),
         }
     }
-    pub(crate) fn number(&self, line: usize) -> Result<Self, Error> {
+    pub(crate) fn number(&self, line: usize, warnings: &mut Vec<String>) -> Result<Self, Error> {
         match self {
             Self::Null => Ok(Self::Int(0)),
             Self::Bool(b) => Ok(Self::Int(i64::from(*b))),
             Self::Int(_) | Self::Float(_) => Ok(self.clone()),
-            Self::String(s) => numeric_string(s).ok_or_else(|| {
-                Error::new(
-                    ErrorKind::TypeError,
-                    "Unsupported operand type: string",
-                    line,
-                )
-            }),
+            Self::String(s) => {
+                let (value, complete) = numeric_prefix(s).ok_or_else(|| {
+                    Error::new(
+                        ErrorKind::TypeError,
+                        "Unsupported operand type: string",
+                        line,
+                    )
+                })?;
+                if !complete {
+                    warnings.push(format!("A non-numeric value encountered on line {line}"));
+                }
+                Ok(value)
+            }
         }
     }
     pub(crate) fn as_float(&self) -> f64 {
@@ -79,23 +85,55 @@ impl Value {
 }
 
 pub(crate) fn numeric_string(bytes: &[u8]) -> Option<Value> {
-    let s = std::str::from_utf8(bytes)
-        .ok()?
-        .trim_matches(|c: char| c.is_ascii_whitespace());
-    if s.is_empty() {
+    let (value, complete) = numeric_prefix(bytes)?;
+    complete.then_some(value)
+}
+
+fn numeric_prefix(bytes: &[u8]) -> Option<(Value, bool)> {
+    let mut pos = 0;
+    while bytes.get(pos).is_some_and(u8::is_ascii_whitespace) {
+        pos += 1;
+    }
+    let start = pos;
+    if matches!(bytes.get(pos), Some(b'+' | b'-')) {
+        pos += 1;
+    }
+    let mut digits = 0;
+    while bytes.get(pos).is_some_and(u8::is_ascii_digit) {
+        pos += 1;
+        digits += 1;
+    }
+    if bytes.get(pos) == Some(&b'.') {
+        pos += 1;
+        while bytes.get(pos).is_some_and(u8::is_ascii_digit) {
+            pos += 1;
+            digits += 1;
+        }
+    }
+    if digits == 0 {
         return None;
     }
-    // Rust accepts inf/NaN; PHP does not classify them as numeric strings.
-    if !s.bytes().any(|c| c.is_ascii_digit())
-        || s.bytes()
-            .any(|c| !c.is_ascii_digit() && !b"+-.eE".contains(&c))
-    {
-        return None;
+    if matches!(bytes.get(pos), Some(b'e' | b'E')) {
+        let exponent_start = pos;
+        pos += 1;
+        if matches!(bytes.get(pos), Some(b'+' | b'-')) {
+            pos += 1;
+        }
+        let digits_start = pos;
+        while bytes.get(pos).is_some_and(u8::is_ascii_digit) {
+            pos += 1;
+        }
+        if pos == digits_start {
+            pos = exponent_start;
+        }
     }
-    s.parse::<i64>()
+    let text = std::str::from_utf8(&bytes[start..pos]).ok()?;
+    let value = text
+        .parse::<i64>()
         .map(Value::Int)
         .ok()
-        .or_else(|| s.parse::<f64>().map(Value::Float).ok())
+        .or_else(|| text.parse::<f64>().map(Value::Float).ok())?;
+    Some((value, bytes[pos..].iter().all(u8::is_ascii_whitespace)))
 }
 
 fn format_float(n: f64) -> String {

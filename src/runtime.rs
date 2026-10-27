@@ -93,6 +93,7 @@ impl Runtime {
             ExprKind::Variable(name) => {
                 Ok(self.variables.get(name).cloned().unwrap_or(Value::Null))
             }
+            ExprKind::Group(inner) => self.coalesce_read(inner),
             _ => self.eval(expr),
         }
     }
@@ -100,6 +101,7 @@ impl Runtime {
         let line = expr.line;
         match &expr.kind {
             ExprKind::Literal(value) => Ok(value.clone()),
+            ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(name) => Ok(self.read(name, line)),
             ExprKind::Constant(name) => Err(Error::new(
                 ErrorKind::Error,
@@ -110,8 +112,15 @@ impl Runtime {
                 let value = self.eval(expr)?;
                 match op.as_str() {
                     "!" => Ok(Value::Bool(!value.is_truthy())),
-                    "+" => value.number(line),
-                    "-" => binary("-", Value::Int(0), value, line),
+                    "+" => value.number(line, &mut self.warnings),
+                    "-" => match value.number(line, &mut self.warnings)? {
+                        Value::Int(n) => Ok(n
+                            .checked_neg()
+                            .map(Value::Int)
+                            .unwrap_or(Value::Float(-(n as f64)))),
+                        Value::Float(n) => Ok(Value::Float(-n)),
+                        _ => unreachable!(),
+                    },
                     _ => unreachable!(),
                 }
             }
@@ -126,14 +135,14 @@ impl Runtime {
                 } else {
                     let lhs = self.read(name, line);
                     let rhs = self.eval(expr)?;
-                    binary(&op[..op.len() - 1], lhs, rhs, line)?
+                    binary(&op[..op.len() - 1], lhs, rhs, line, &mut self.warnings)?
                 };
                 self.variables.insert(name.clone(), value.clone());
                 Ok(value)
             }
             ExprKind::Increment(name, delta, prefix) => {
                 let old = self.read(name, line);
-                let new = binary("+", old.clone(), Value::Int(*delta), line)?;
+                let new = increment(&old, *delta, line, &mut self.warnings)?;
                 self.variables.insert(name.clone(), new.clone());
                 Ok(if *prefix { new } else { old })
             }
@@ -165,12 +174,18 @@ impl Runtime {
                     return Ok(Value::Bool(true));
                 }
                 let rhs = self.eval(right)?;
-                binary(op, lhs, rhs, line)
+                binary(op, lhs, rhs, line, &mut self.warnings)
             }
         }
     }
 }
-fn binary(op: &str, left: Value, right: Value, line: usize) -> Result<Value, Error> {
+fn binary(
+    op: &str,
+    left: Value,
+    right: Value,
+    line: usize,
+    warnings: &mut Vec<String>,
+) -> Result<Value, Error> {
     use Value::*;
     match op {
         "." => {
@@ -201,8 +216,8 @@ fn binary(op: &str, left: Value, right: Value, line: usize) -> Result<Value, Err
         }
         _ => {}
     }
-    let left = left.number(line)?;
-    let right = right.number(line)?;
+    let left = left.number(line, warnings)?;
+    let right = right.number(line, warnings)?;
     let a = left.as_float();
     let b = right.as_float();
     if (op == "/" || op == "%") && b == 0.0 {
@@ -251,4 +266,67 @@ fn binary(op: &str, left: Value, right: Value, line: usize) -> Result<Value, Err
         "**" => a.powf(b),
         _ => unreachable!("Unknown operator: {op}"),
     }))
+}
+
+fn increment(
+    value: &Value,
+    delta: i64,
+    line: usize,
+    warnings: &mut Vec<String>,
+) -> Result<Value, Error> {
+    use Value::*;
+    match value {
+        Bool(_) | Null if matches!(value, Bool(_)) || delta < 0 => {
+            warnings.push(format!(
+                "{} on type {} has no effect on line {line}",
+                if delta > 0 { "Increment" } else { "Decrement" },
+                if matches!(value, Bool(_)) {
+                    "bool"
+                } else {
+                    "null"
+                }
+            ));
+            Ok(value.clone())
+        }
+        String(s) if crate::value::numeric_string(s).is_none() => {
+            warnings.push(format!(
+                "Deprecated: {} on non-numeric string on line {line}",
+                if delta > 0 { "Increment" } else { "Decrement" }
+            ));
+            if delta < 0 {
+                return Ok(value.clone());
+            }
+            if s.is_empty() {
+                return Ok(String(b"1".to_vec()));
+            }
+            let mut bytes = s.clone();
+            let mut carry = None;
+            for byte in bytes.iter_mut().rev() {
+                carry = match *byte {
+                    b'0'..=b'8' | b'a'..=b'y' | b'A'..=b'Y' => {
+                        *byte += 1;
+                        return Ok(String(bytes));
+                    }
+                    b'9' => {
+                        *byte = b'0';
+                        Some(b'1')
+                    }
+                    b'z' => {
+                        *byte = b'a';
+                        Some(b'a')
+                    }
+                    b'Z' => {
+                        *byte = b'A';
+                        Some(b'A')
+                    }
+                    _ => return Ok(String(bytes)),
+                };
+            }
+            if let Some(carry) = carry {
+                bytes.insert(0, carry);
+            }
+            Ok(String(bytes))
+        }
+        _ => binary("+", value.clone(), Int(delta), line, warnings),
+    }
 }
