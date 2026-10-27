@@ -66,6 +66,8 @@ impl Builtin {
             .iter()
             .map(|(name, optional, variadic)| Parameter {
                 name: name.as_bytes().to_vec(),
+                ty: None,
+                implicit_nullable: false,
                 default: optional.then_some(Expr {
                     kind: ExprKind::Literal(Value::Null),
                     line: 0,
@@ -226,7 +228,9 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<Vec<u8>, Error> {
-        if matches!(value, Value::Array(_)) {
+        if matches!(value, Value::Array(_))
+            || (self.strict_types && !matches!(value, Value::String(_)))
+        {
             return Err(type_error(function, position, "string", line));
         }
         self.warn_null(value, function, position, "string", line);
@@ -239,7 +243,8 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<i64, Error> {
-        if matches!(value, Value::Array(_))
+        if (self.strict_types && !matches!(value, Value::Int(_)))
+            || matches!(value, Value::Array(_))
             || matches!(value, Value::String(s) if crate::value::numeric_string(s).is_none())
         {
             return Err(type_error(function, position, "int", line));
@@ -263,7 +268,9 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<bool, Error> {
-        if matches!(value, Value::Array(_)) {
+        if matches!(value, Value::Array(_))
+            || (self.strict_types && !matches!(value, Value::Bool(_)))
+        {
             return Err(type_error(function, position, "bool", line));
         }
         self.warn_null(value, function, position, "bool", line);
@@ -300,7 +307,7 @@ fn require_array<'a>(
         _ => Err(type_error(function, position, "array", line)),
     }
 }
-fn debug_type(value: &Value) -> &'static str {
+pub(super) fn debug_type(value: &Value) -> &'static str {
     match value {
         Value::Null => "null",
         Value::Bool(_) => "bool",

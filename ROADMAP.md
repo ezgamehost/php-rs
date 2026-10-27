@@ -10,13 +10,13 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, nineteen differential fixtures, explicit unsupported reports, and CI.
+   runner, twenty-one differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Remaining: full upstream sections, reproducible
    reference provisioning in CI, diagnostic comparison, isolation, and timeouts.
    Never count skipped tests as passing.
 3. **Core language (arrays started):** ordered arrays, key coercion, copy-on-write
    assignment, nested indexed writes, array union/comparison, `foreach` by value,
-   `isset`, `empty`, and `unset` implemented. Untyped named functions, local scopes,
+   `isset`, `empty`, and `unset` implemented. Named functions, local scopes,
    recursion, defaults, named arguments, variadics, and call unpacking implemented.
    Basic string interpolation, Unicode escapes, heredoc/nowdoc, and byte string
    offset reads/writes implemented.
@@ -29,9 +29,12 @@ definition of completion.
    Value destructuring with nested/keyed/skipped entries and foreach implemented.
    Explicit scalar/array casts and PHP 8.5 void result discarding implemented.
    Global constants, dynamic definition/lookup, and core predefined constants implemented.
+   Parameter/return types for available values, nullable/union types, typed variadics,
+   default validation, void/never returns, and strict_types implemented.
    Remaining: references,
    goto, advanced interpolation, object casts, complete
-   operators, magic constants, includes, typed/by-reference functions, closures, types,
+   operators, magic constants, includes, by-reference functions, closures,
+   intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
 4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,
    visibility, properties and hooks, magic methods, reflection, attributes, enums,

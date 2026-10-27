@@ -1,0 +1,96 @@
+PHP 8.5.0 return-type conformance baseline
+Reference: PHP 8.5.0
+Measured: 2026-10-26
+Command: php-rs-phpt --reference /path/to/php-8.5 Zend/tests/return_types
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/return_types/001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/008.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/009.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/010.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/011.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/012.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/013.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/014.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/015.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/016.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/017.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/018.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/019.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/020.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/021.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/022.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/024.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/025.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/026.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/027.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/028.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/029.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/030.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/031.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/032.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/033.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/034.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/035.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/036.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/037.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/038.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/039.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/040.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/041.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/042.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/043.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/044.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/bug70557.phpt FAIL: ParseError: Expected ';' on line 7
+Zend/tests/return_types/bug71092.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/bug71978.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/generators001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/generators002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/generators003.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/generators004.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/generators005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/generators006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/inheritance001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/inheritance002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/inheritance003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/inheritance004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/inheritance005.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/inheritance006.phpt UNSUPPORTED: INI
+Zend/tests/return_types/inheritance007.phpt UNSUPPORTED: INI
+Zend/tests/return_types/inheritance008.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/return_types/inheritance009.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/return_types/internal_functions001.phpt UNSUPPORTED: EXTENSIONS, INI, SKIPIF
+Zend/tests/return_types/internal_functions002.phpt UNSUPPORTED: EXTENSIONS
+Zend/tests/return_types/internal_functions003.phpt UNSUPPORTED: EXTENSIONS
+Zend/tests/return_types/never_allowed.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/return_types/never_covariance.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/never_disallowed1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_disallowed2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_disallowed3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_disallowed4.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_disallowed5.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/never_finally_return.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_generator.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_no_variance.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_parameter.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_reflected.phpt FAIL: ParseError: Expected ')' on line 5
+Zend/tests/return_types/never_return_throw.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/never_tostring.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/reflection001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/return_reference_separation.phpt FAIL: ParseError: Expected parameter variable on line 2
+Zend/tests/return_types/rfc001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/rfc002.phpt PASS
+Zend/tests/return_types/rfc003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/rfc004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/void_allowed.phpt PASS
+Zend/tests/return_types/void_disallowed1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/void_disallowed2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/void_disallowed3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/return_types/void_parameter.phpt UNSUPPORTED: EXPECTF
+2 passed, 16 failed, 71 unsupported

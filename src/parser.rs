@@ -2,30 +2,35 @@ use crate::{
     Error, Value,
     ast::{
         Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt,
-        SwitchCase,
+        SwitchCase, TypeDecl,
     },
     lexer::{Kind, StringPart, Token},
 };
 
 use std::rc::Rc;
 mod targets;
+mod types;
 
-pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>), Error> {
+pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>, bool), Error> {
     let mut parser = Parser {
         tokens,
         pos: 0,
         control_depth: 0,
         warnings: Vec::new(),
+        strict_types: false,
+        return_type: None,
     };
     let statements = parser.program()?;
     targets::validate(&statements)?;
-    Ok((statements, parser.warnings))
+    Ok((statements, parser.warnings, parser.strict_types))
 }
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
     control_depth: usize,
     warnings: Vec<String>,
+    strict_types: bool,
+    return_type: Option<TypeDecl>,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -55,7 +60,16 @@ impl Parser {
     }
     fn program(&mut self) -> Result<Vec<Stmt>, Error> {
         let mut result = Vec::new();
+        let mut first = true;
         while self.token().kind != Kind::End {
+            if self.eat("declare") {
+                self.strict_declaration(first)?;
+                continue;
+            }
+            if self.eat(";") {
+                continue;
+            }
+            first = false;
             result.push(if self.eat("const") {
                 self.constant_declaration()?
             } else {
@@ -245,6 +259,7 @@ impl Parser {
             } else {
                 Some(self.expr(0)?)
             };
+            self.validate_return(value.as_ref())?;
             self.expect(";")?;
             return Ok(Stmt::Return(value));
         }
@@ -358,6 +373,11 @@ impl Parser {
         self.expect("(")?;
         let mut parameters = Vec::new();
         while !self.eat(")") {
+            let ty = if self.is("?") || matches!(self.token().kind, Kind::Word(_)) {
+                Some(self.type_declaration(false)?)
+            } else {
+                None
+            };
             let variadic = self.eat("...");
             let Kind::Variable(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
@@ -390,6 +410,8 @@ impl Parser {
                 ));
             }
             parameters.push(Parameter {
+                ty,
+                implicit_nullable: false,
                 name,
                 default,
                 variadic,
@@ -405,7 +427,14 @@ impl Parser {
                 ));
             }
         }
+        let return_type = if self.eat(":") {
+            Some(self.type_declaration(true)?)
+        } else {
+            None
+        };
+        self.validate_defaults(&name, &mut parameters, line)?;
         self.expect("{")?;
+        let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
         let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
         let mut body = Vec::new();
         while !self.eat("}") {
@@ -415,11 +444,14 @@ impl Parser {
             body.push(self.statement()?);
         }
         self.control_depth = outer_control_depth;
+        self.return_type = outer_return_type;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
             name,
             parameters,
             body,
             line,
+            return_type,
+            strict_types: self.strict_types,
         })))
     }
     fn arguments(&mut self) -> Result<Vec<Argument>, Error> {
@@ -618,6 +650,8 @@ impl Parser {
                                 pos: 0,
                                 control_depth: 0,
                                 warnings: Vec::new(),
+                                strict_types: false,
+                                return_type: None,
                             };
                             let expr = parser.expr(0)?;
                             self.warnings.append(&mut parser.warnings);

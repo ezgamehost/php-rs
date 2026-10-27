@@ -12,6 +12,7 @@ mod destructuring;
 mod functions;
 mod matching;
 mod offsets;
+mod types;
 use offsets::{Access, Offset, read_offset, unset_path, write_path};
 
 /// One request's variable scope, output, and diagnostics. Output survives errors.
@@ -22,6 +23,7 @@ pub struct Runtime {
     pub variables: HashMap<Vec<u8>, Value>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
+    strict_types: bool,
 }
 struct Location {
     name: Vec<u8>,
@@ -45,10 +47,13 @@ impl Flow {
 impl Runtime {
     /// Parse the complete document before executing any of it.
     pub fn execute(&mut self, source: &[u8]) -> Result<Value, Error> {
-        let (mut stmts, warnings) = parser::parse(lexer::lex(source)?)?;
+        let (mut stmts, warnings, strict_types) = parser::parse(lexer::lex(source)?)?;
         self.warnings.extend(warnings);
         self.prepare_functions(&mut stmts)?;
-        match self.block(&stmts)? {
+        let previous = std::mem::replace(&mut self.strict_types, strict_types);
+        let result = self.block(&stmts);
+        self.strict_types = previous;
+        match result? {
             Flow::Return(value) => Ok(value),
             _ => Ok(Value::Null),
         }

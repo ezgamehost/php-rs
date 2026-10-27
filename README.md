@@ -35,8 +35,12 @@ output and warnings when execution fails. Parsing happens before execution.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
-- Untyped named functions, recursion, local scopes, constant default arguments,
+- Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
+- Parameter and return types for available values, nullable/union types, scalar
+  coercion, typed variadics, default validation, and `void`/`never` return rules.
+  `declare(strict_types=1)` preserves caller and declaration scope across calls;
+  strict calls also check scalar arguments to the supported internal functions.
 - Core builtins: `var_dump`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
   and `function_exists`.
@@ -56,8 +60,11 @@ output and warnings when execution fails. Parsing happens before execution.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
 
-Known gaps include typed functions, closures, most builtins, objects, references, exceptions,
+Known gaps include intersection/DNF types, closures, most builtins, objects, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
+Class-name and object type declarations can be parsed, but objects and class
+resolution are not implemented. Callable checks currently cover function names.
+Other `declare` directives are not implemented.
 Deprecated `${...}` and object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
@@ -84,6 +91,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [PHP 8.5 release](https://www.php.net/releases/8.5/en.php)
 - [Operator precedence](https://www.php.net/manual/en/language.operators.precedence.php)
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
+- [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Upstream PHP tests](https://github.com/php/php-src/tree/PHP-8.5/tests)
 
 The implementation uses a byte-oriented lexer, a precedence parser, and an AST

@@ -123,6 +123,7 @@ impl Runtime {
         }
         let function = function.unwrap();
         let caller = std::mem::take(&mut self.variables);
+        let caller_strict = self.strict_types;
         let result = (|| {
             let last_required = function
                 .parameters
@@ -130,7 +131,19 @@ impl Runtime {
                 .rposition(|p| p.default.is_none() && !p.variadic);
             for (index, param) in function.parameters.iter().enumerate() {
                 let value = if param.variadic {
-                    Value::Array(Rc::new(std::mem::take(&mut bound.extra)))
+                    let mut values = PhpArray::default();
+                    for (offset, (key, value)) in bound.extra.entries().iter().enumerate() {
+                        let value = self.check_argument(
+                            value.clone(),
+                            param,
+                            &function,
+                            index + offset + 1,
+                            caller_strict,
+                            line,
+                        )?;
+                        values.insert(key.clone(), value);
+                    }
+                    Value::Array(Rc::new(values))
                 } else if let Some(value) = bound.fixed[index].take() {
                     value
                 } else if last_required.is_none_or(|last| index > last)
@@ -149,14 +162,19 @@ impl Runtime {
                         line,
                     ));
                 };
+                let value = if param.variadic {
+                    value
+                } else {
+                    self.check_argument(value, param, &function, index + 1, caller_strict, line)?
+                };
                 self.variables.insert(param.name.clone(), value);
             }
-            match self.block(&function.body)? {
-                Flow::Return(value) => Ok(value),
-                _ => Ok(Value::Null),
-            }
+            self.strict_types = function.strict_types;
+            let flow = self.block(&function.body)?;
+            self.check_return(flow, &function)
         })();
         self.variables = caller;
+        self.strict_types = caller_strict;
         result
     }
 }
@@ -276,7 +294,7 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mu
                     .rposition(|p| p.default.is_none() && !p.variadic)
                 {
                     for param in &decl.parameters[..last] {
-                        if param.default.is_some() {
+                        if param.default.is_some() && !param.implicit_nullable {
                             warnings.push(format!("Deprecated: Optional parameter ${} declared before required parameter is implicitly treated as required on line {}", String::from_utf8_lossy(&param.name), decl.line));
                         }
                     }

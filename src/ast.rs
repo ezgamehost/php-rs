@@ -96,6 +96,8 @@ impl Expr {
 #[derive(Debug, Clone)]
 pub(crate) struct Parameter {
     pub name: Vec<u8>,
+    pub ty: Option<TypeDecl>,
+    pub implicit_nullable: bool,
     pub default: Option<Expr>,
     pub variadic: bool,
 }
@@ -105,6 +107,50 @@ pub(crate) struct FunctionDecl {
     pub parameters: Vec<Parameter>,
     pub body: Vec<Stmt>,
     pub line: usize,
+    pub return_type: Option<TypeDecl>,
+    pub strict_types: bool,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct TypeDecl {
+    pub members: Vec<String>,
+}
+
+impl TypeDecl {
+    pub fn contains(&self, name: &str) -> bool {
+        self.members.iter().any(|member| member == name)
+    }
+
+    pub fn accepts(&self, value: &Value) -> bool {
+        self.contains("mixed")
+            || self.members.iter().any(|member| {
+                matches!(
+                    (member.as_str(), value),
+                    ("null", Value::Null)
+                        | ("bool", Value::Bool(_))
+                        | ("true", Value::Bool(true))
+                        | ("false", Value::Bool(false))
+                        | ("int", Value::Int(_))
+                        | ("float", Value::Float(_))
+                        | ("string", Value::String(_))
+                        | ("array" | "iterable", Value::Array(_))
+                )
+            })
+    }
+}
+
+impl std::fmt::Display for TypeDecl {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.members.len() == 2 && self.contains("null") {
+            write!(
+                f,
+                "?{}",
+                self.members.iter().find(|m| *m != "null").unwrap()
+            )
+        } else {
+            f.write_str(&self.members.join("|"))
+        }
+    }
 }
 #[derive(Debug, Clone)]
 pub(crate) enum Argument {
