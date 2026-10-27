@@ -36,6 +36,8 @@ output and warnings when execution fails. Parsing happens before execution.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
   by value, numbered `break`/`continue`, and `return`. Loops support alternative
   `: … endfor` / `endwhile` / `endforeach` syntax.
+- `switch` with loose case comparison, fall-through, numbered control flow,
+  alternative syntax, and PHP 8.5 case-semicolon deprecation warnings.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 - Variable/array interpolation, braced variable calls, Unicode escapes, binary

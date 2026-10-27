@@ -263,6 +263,10 @@ fn overwritten(name: &[u8], line: usize) -> Error {
 }
 
 fn diagnose_functions(stmts: &[Stmt], warnings: &mut Vec<String>) {
+    diagnose_statements(stmts, warnings, &mut Vec::new());
+}
+
+fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mut Vec<bool>) {
     for stmt in stmts {
         match stmt {
             Stmt::Function(decl) => {
@@ -279,18 +283,38 @@ fn diagnose_functions(stmts: &[Stmt], warnings: &mut Vec<String>) {
                 }
                 diagnose_functions(&decl.body, warnings);
             }
-            Stmt::Block(body) => diagnose_functions(body, warnings),
+            Stmt::Block(body) => diagnose_statements(body, warnings, switches),
             Stmt::If(_, yes, no) => {
-                diagnose_functions(std::slice::from_ref(yes), warnings);
+                diagnose_statements(std::slice::from_ref(yes), warnings, switches);
                 if let Some(no) = no {
-                    diagnose_functions(std::slice::from_ref(no), warnings);
+                    diagnose_statements(std::slice::from_ref(no), warnings, switches);
                 }
             }
             Stmt::While(_, body)
             | Stmt::DoWhile(body, _)
             | Stmt::For(_, _, _, body)
             | Stmt::Foreach(_, _, _, body) => {
-                diagnose_functions(std::slice::from_ref(body), warnings)
+                switches.push(false);
+                diagnose_statements(std::slice::from_ref(body), warnings, switches);
+                switches.pop();
+            }
+            Stmt::Switch(_, cases) => {
+                switches.push(true);
+                for case in cases {
+                    if let Some(line) = case.semicolon_line {
+                        warnings.push(format!("Deprecated: Case statements followed by a semicolon (;) are deprecated, use a colon (:) instead on line {line}"));
+                    }
+                    diagnose_statements(&case.body, warnings, switches);
+                }
+                switches.pop();
+            }
+            Stmt::Continue(level, line) if switches[switches.len() - level] => {
+                let suffix = if *level == 1 {
+                    String::new()
+                } else {
+                    format!(" {level}")
+                };
+                warnings.push(format!("\"continue{suffix}\" targeting switch is equivalent to \"break{suffix}\" on line {line}"));
             }
             _ => {}
         }

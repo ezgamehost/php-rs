@@ -5,9 +5,9 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 11 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 12 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
-| PHP 8.5.0 `tests/lang`, Rust | 28 | 139 | 127 |
+| PHP 8.5.0 `tests/lang`, Rust | 33 | 134 | 127 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language

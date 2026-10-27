@@ -37,11 +37,19 @@ pub(crate) enum Stmt {
     While(Expr, Box<Stmt>),
     DoWhile(Box<Stmt>, Expr),
     For(Vec<Expr>, Vec<Expr>, Vec<Expr>, Box<Stmt>),
+    Switch(Expr, Vec<SwitchCase>),
     Foreach(Expr, Option<Expr>, Expr, Box<Stmt>),
     Unset(Vec<Expr>),
     Break(usize),
-    Continue(usize),
+    Continue(usize, usize),
     Return(Option<Expr>),
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct SwitchCase {
+    pub condition: Option<Expr>,
+    pub body: Vec<Stmt>,
+    pub semicolon_line: Option<usize>,
 }
 
 impl Expr {

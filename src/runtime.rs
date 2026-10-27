@@ -29,7 +29,7 @@ enum Flow {
     Return(Value),
 }
 impl Flow {
-    fn leave_loop(self) -> Self {
+    fn leave_level(self) -> Self {
         match self {
             Self::Break(level) => Self::Break(level - 1),
             Self::Continue(level) => Self::Continue(level - 1),
@@ -86,7 +86,7 @@ impl Runtime {
                     match self.statement(body)? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
-                        flow => return Ok(flow.leave_loop()),
+                        flow => return Ok(flow.leave_level()),
                     }
                 }
             }
@@ -94,7 +94,7 @@ impl Runtime {
                 match self.statement(body)? {
                     Flow::Next | Flow::Continue(1) => {}
                     Flow::Break(1) => break,
-                    flow => return Ok(flow.leave_loop()),
+                    flow => return Ok(flow.leave_level()),
                 }
                 if !self.eval(cond)?.is_truthy() {
                     break;
@@ -106,9 +106,48 @@ impl Runtime {
                     match self.statement(body)? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
-                        flow => return Ok(flow.leave_loop()),
+                        flow => return Ok(flow.leave_level()),
                     }
                     self.eval_sequence(step)?;
+                }
+            }
+            Stmt::Switch(subject, cases) => {
+                // Simple variables remain live until each comparison. Other
+                // expressions are evaluated once before examining the cases.
+                let mut subject = subject;
+                while let ExprKind::Group(inner) = &subject.kind {
+                    subject = inner;
+                }
+                let value = if matches!(subject.kind, ExprKind::Variable(_)) {
+                    None
+                } else {
+                    Some(self.eval(subject)?)
+                };
+                let mut selected = None;
+                let mut default = None;
+                for (index, case) in cases.iter().enumerate() {
+                    if let Some(condition) = &case.condition {
+                        let candidate = self.eval(condition)?;
+                        let value = match &value {
+                            Some(value) => value.clone(),
+                            None => self.eval(subject)?,
+                        };
+                        if value.compare(&candidate) == Some(Ordering::Equal) {
+                            selected = Some(index);
+                            break;
+                        }
+                    } else {
+                        default = Some(index);
+                    }
+                }
+                if let Some(start) = selected.or(default) {
+                    for case in &cases[start..] {
+                        match self.block(&case.body)? {
+                            Flow::Next => {}
+                            Flow::Break(1) | Flow::Continue(1) => break,
+                            flow => return Ok(flow.leave_level()),
+                        }
+                    }
                 }
             }
             Stmt::Foreach(iter, key_target, value_target, body) => {
@@ -124,7 +163,7 @@ impl Runtime {
                         match self.statement(body)? {
                             Flow::Next | Flow::Continue(1) => {}
                             Flow::Break(1) => break,
-                            flow => return Ok(flow.leave_loop()),
+                            flow => return Ok(flow.leave_level()),
                         }
                     }
                 } else {
@@ -145,7 +184,7 @@ impl Runtime {
                 }
             }
             Stmt::Break(level) => return Ok(Flow::Break(*level)),
-            Stmt::Continue(level) => return Ok(Flow::Continue(*level)),
+            Stmt::Continue(level, _) => return Ok(Flow::Continue(*level)),
             Stmt::Return(value) => {
                 return Ok(Flow::Return(match value {
                     Some(expr) => self.eval(expr)?,

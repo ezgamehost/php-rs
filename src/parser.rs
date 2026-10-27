@@ -1,6 +1,6 @@
 use crate::{
     Error, Value,
-    ast::{Argument, Expr, ExprKind, FunctionDecl, Parameter, Stmt},
+    ast::{Argument, Expr, ExprKind, FunctionDecl, Parameter, Stmt, SwitchCase},
     lexer::{Kind, StringPart, Token},
 };
 
@@ -10,14 +10,14 @@ pub(crate) fn parse(tokens: Vec<Token>) -> Result<Vec<Stmt>, Error> {
     Parser {
         tokens,
         pos: 0,
-        loops: 0,
+        control_depth: 0,
     }
     .program()
 }
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
-    loops: usize,
+    control_depth: usize,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -84,6 +84,9 @@ impl Parser {
         if self.eat("if") {
             return self.if_statement();
         }
+        if self.eat("switch") {
+            return self.switch_statement();
+        }
         if self.eat("while") {
             self.expect("(")?;
             let cond = self.expr(0)?;
@@ -146,7 +149,8 @@ impl Parser {
             return Ok(Stmt::Unset(targets));
         }
         if self.is("break") || self.is("continue") {
-            if self.loops == 0 {
+            let line = self.token().line;
+            if self.control_depth == 0 {
                 return Err(Error::parse(
                     "Loop control outside a loop",
                     self.token().line,
@@ -170,7 +174,7 @@ impl Parser {
                         expr.line,
                     ));
                 };
-                if level <= 0 || level as u64 > self.loops as u64 {
+                if level <= 0 || level as u64 > self.control_depth as u64 {
                     return Err(Error::parse("Invalid loop control depth", expr.line));
                 }
                 level as usize
@@ -179,7 +183,7 @@ impl Parser {
             return Ok(if is_break {
                 Stmt::Break(level)
             } else {
-                Stmt::Continue(level)
+                Stmt::Continue(level, line)
             });
         }
         if self.eat("return") {
@@ -195,6 +199,57 @@ impl Parser {
         self.expect(";")?;
         Ok(Stmt::Expr(expr))
     }
+    fn switch_statement(&mut self) -> Result<Stmt, Error> {
+        self.expect("(")?;
+        let subject = self.expr(0)?;
+        self.expect(")")?;
+        let alternative = self.eat(":");
+        if !alternative {
+            self.expect("{")?;
+        }
+        let end = if alternative { "endswitch" } else { "}" };
+        self.eat(";");
+        self.control_depth += 1;
+        let mut cases = Vec::new();
+        let mut has_default = false;
+        while !self.eat(end) {
+            let condition = if self.eat("case") {
+                Some(self.expr(0)?)
+            } else {
+                self.expect("default")?;
+                if has_default {
+                    return Err(Error::parse(
+                        "Switch statements may only contain one default clause",
+                        self.token().line,
+                    ));
+                }
+                has_default = true;
+                None
+            };
+            let semicolon_line = if self.is(";") {
+                let line = self.token().line;
+                self.pos += 1;
+                Some(line)
+            } else {
+                self.expect(":")?;
+                None
+            };
+            let mut body = Vec::new();
+            while !self.is("case") && !self.is("default") && !self.is(end) {
+                body.push(self.statement()?);
+            }
+            cases.push(SwitchCase {
+                condition,
+                body,
+                semicolon_line,
+            });
+        }
+        self.control_depth -= 1;
+        if alternative {
+            self.expect(";")?;
+        }
+        Ok(Stmt::Switch(subject, cases))
+    }
     fn expression_list(&mut self, end: &str) -> Result<Vec<Expr>, Error> {
         let mut expressions = Vec::new();
         if self.eat(end) {
@@ -209,7 +264,7 @@ impl Parser {
         }
     }
     fn loop_body(&mut self, end: Option<&str>) -> Result<Stmt, Error> {
-        self.loops += 1;
+        self.control_depth += 1;
         let body = if let Some(end) = end.filter(|_| self.is(":")) {
             self.expect(":")?;
             let mut body = Vec::new();
@@ -221,7 +276,7 @@ impl Parser {
         } else {
             self.statement()?
         };
-        self.loops -= 1;
+        self.control_depth -= 1;
         Ok(body)
     }
     fn function(&mut self) -> Result<Stmt, Error> {
@@ -281,7 +336,7 @@ impl Parser {
             }
         }
         self.expect("{")?;
-        let outer_loops = std::mem::replace(&mut self.loops, 0);
+        let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
         let mut body = Vec::new();
         while !self.eat("}") {
             if self.token().kind == Kind::End {
@@ -289,7 +344,7 @@ impl Parser {
             }
             body.push(self.statement()?);
         }
-        self.loops = outer_loops;
+        self.control_depth = outer_control_depth;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
             name,
             parameters,
@@ -386,7 +441,7 @@ impl Parser {
                             let mut parser = Parser {
                                 tokens,
                                 pos: 0,
-                                loops: 0,
+                                control_depth: 0,
                             };
                             let expr = parser.expr(0)?;
                             if parser.token().kind != Kind::End
