@@ -19,7 +19,7 @@ Zend/tests/list/destruct_object_not_ArrayAccess.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/destruct_resource.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/destruct_string.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/gh11320_1.phpt PASS
-Zend/tests/list/gh11320_2.phpt FAIL: Error: Undefined constant "__FILE__" on line 2
+Zend/tests/list/gh11320_2.phpt PASS
 Zend/tests/list/gh11320_3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_001.phpt FAIL: ParseError: Expected ')' on line 3
 Zend/tests/list/list_002.phpt FAIL: ParseError: Expected ';' on line 5
@@ -39,10 +39,10 @@ Zend/tests/list/list_empty_error_keyed.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_keyed.phpt PASS
 Zend/tests/list/list_keyed_ArrayAccess.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/list/list_keyed_conversions.phpt UNSUPPORTED: EXPECTF
-Zend/tests/list/list_keyed_evaluation_order.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_keyed_evaluation_order.phpt FAIL: ParseError: Expected ';' on line 5
 Zend/tests/list/list_keyed_evaluation_order_2.phpt PASS
 Zend/tests/list/list_keyed_evaluation_order_3.phpt PASS
-Zend/tests/list/list_keyed_evaluation_order_nested.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/list/list_keyed_evaluation_order_nested.phpt FAIL: ParseError: Expected ';' on line 5
 Zend/tests/list/list_keyed_leading_comma.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_keyed_non_literals.phpt FAIL: Error: Call to undefined function file_get_contents() on line 11
 Zend/tests/list/list_keyed_trailing_comma.phpt PASS
@@ -61,4 +61,4 @@ Zend/tests/list/list_reference_009.phpt FAIL: ParseError: Expected expression on
 Zend/tests/list/list_reference_010.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_reference_011.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_self_assign.phpt PASS
-11 passed, 17 failed, 30 unsupported
+12 passed, 16 failed, 30 unsupported

@@ -126,6 +126,7 @@ impl Runtime {
         let caller_function = self
             .current_function
             .replace(function.name.to_ascii_lowercase());
+        let caller_source = self.source.clone();
         let caller_strict = self.strict_types;
         let result = (|| {
             let last_required = function
@@ -173,12 +174,14 @@ impl Runtime {
                 self.scope.insert(param.name.clone(), cell(value));
             }
             self.strict_types = function.strict_types;
+            self.source = function.source.clone();
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
         })();
         self.scope = self.callers.pop().unwrap();
         self.current_function = caller_function;
         self.strict_types = caller_strict;
+        self.source = caller_source;
         result
     }
 }

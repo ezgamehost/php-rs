@@ -3,13 +3,19 @@ use crate::{
     ast::{ArrayElement, Expr, ExprKind, FunctionDecl, Stmt},
     lexer, parser,
 };
-use std::{cell::RefCell, cmp::Ordering, collections::HashMap, rc::Rc};
+use std::{
+    cell::RefCell,
+    cmp::Ordering,
+    collections::{HashMap, HashSet},
+    rc::Rc,
+};
 
 mod builtins;
 mod casting;
 mod constants;
 mod destructuring;
 mod functions;
+mod loading;
 mod matching;
 mod offsets;
 mod types;
@@ -31,6 +37,9 @@ pub struct Runtime {
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
     strict_types: bool,
+    source: Rc<crate::source::Source>,
+    included_files: Vec<std::path::PathBuf>,
+    included_set: HashSet<std::path::PathBuf>,
 }
 struct Location {
     name: Vec<u8>,
@@ -52,29 +61,6 @@ impl Flow {
     }
 }
 impl Runtime {
-    /// Parse the complete document before executing any of it.
-    pub fn execute(&mut self, source: &[u8]) -> Result<Value, Error> {
-        let (mut stmts, warnings, strict_types) = parser::parse(lexer::lex(source)?)?;
-        self.warnings.extend(warnings);
-        self.prepare_functions(&mut stmts)?;
-        self.scope = std::mem::take(&mut self.variables)
-            .into_iter()
-            .map(|(name, value)| (name, cell(value)))
-            .collect();
-        self.static_variables.remove(&None);
-        let previous = std::mem::replace(&mut self.strict_types, strict_types);
-        let result = self.block(&stmts);
-        self.strict_types = previous;
-        self.variables = self
-            .scope
-            .iter()
-            .map(|(name, value)| (name.clone(), value.borrow().clone()))
-            .collect();
-        match result? {
-            Flow::Return(value) => Ok(value),
-            _ => Ok(Value::Null),
-        }
-    }
     fn block(&mut self, stmts: &[Stmt]) -> Result<Flow, Error> {
         for stmt in stmts {
             match self.statement(stmt)? {
@@ -367,6 +353,16 @@ impl Runtime {
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
         let line = expr.line;
         match &expr.kind {
+            ExprKind::Eval(code) => {
+                let value = self.eval(code)?;
+                let code = string_bytes(&value, line, &mut self.warnings);
+                self.eval_code(&code, line)
+            }
+            ExprKind::Include(kind, path) => {
+                let value = self.eval(path)?;
+                let path = string_bytes(&value, line, &mut self.warnings);
+                self.include_file(*kind, &path, line)
+            }
             ExprKind::Cast(kind, operand) => {
                 let value = self.eval(operand)?;
                 casting::cast(*kind, value, line, &mut self.warnings)

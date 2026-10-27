@@ -24,6 +24,8 @@ pub(crate) enum ExprKind {
     Destructure(Vec<ArrayElement>),
     Index(Box<Expr>, Option<Box<Expr>>),
     Call(Box<Expr>, Vec<Argument>),
+    Eval(Box<Expr>),
+    Include(IncludeKind, Box<Expr>),
     Isset(Vec<Expr>),
     Empty(Box<Expr>),
     Print(Box<Expr>),
@@ -41,6 +43,14 @@ pub(crate) enum CastKind {
     String,
     Array,
     Void,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum IncludeKind {
+    Include,
+    IncludeOnce,
+    Require,
+    RequireOnce,
 }
 
 #[derive(Debug, Clone)]
@@ -112,6 +122,7 @@ pub(crate) struct FunctionDecl {
     pub line: usize,
     pub return_type: Option<TypeDecl>,
     pub strict_types: bool,
+    pub source: Rc<crate::source::Source>,
 }
 
 #[derive(Debug, Clone)]

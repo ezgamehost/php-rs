@@ -5,6 +5,7 @@ mod lexer;
 mod parser;
 pub mod phpt;
 mod runtime;
+mod source;
 mod value;
 
 pub use array::{ArrayKey, PhpArray};

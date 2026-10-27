@@ -10,9 +10,10 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, twenty-three differential fixtures, explicit unsupported reports, and CI.
+   runner, twenty-five differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Remaining: full upstream sections, reproducible
-   reference provisioning in CI, diagnostic comparison, isolation, and timeouts.
+   reference provisioning in CI, per-fixture file identity/working directory,
+   diagnostic comparison, isolation, and timeouts.
    Never count skipped tests as passing.
 3. **Core language (arrays started):** ordered arrays, key coercion, copy-on-write
    assignment, nested indexed writes, array union/comparison, `foreach` by value,
@@ -33,9 +34,11 @@ definition of completion.
    default validation, void/never returns, and strict_types implemented.
    Live global bindings, persistent static locals with dynamic initializers,
    and variable variables implemented.
+   Eval, local-file include/require and once-only variants, source/line/function
+   magic constants, and included-file tracking implemented.
    Remaining: references,
    goto, advanced interpolation, object casts, complete
-   operators, magic constants, includes/eval, superglobals, by-reference functions, closures,
+   operators, class-context magic constants, superglobals, by-reference functions, closures,
    intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
 4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,
@@ -43,7 +46,8 @@ definition of completion.
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function
-   existence implemented. Remaining: the other core and standard builtins, streams and
+   existence implemented. Remaining: configurable include paths, stream wrappers,
+   the other core and standard builtins, streams and
    filesystem, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.
 6. **PHP 8.5 specifics:** pipe operator, clone-with, URI extension, new APIs and

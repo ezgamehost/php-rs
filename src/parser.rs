@@ -1,8 +1,8 @@
 use crate::{
     Error, Value,
     ast::{
-        Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt,
-        SwitchCase, TypeDecl,
+        Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, IncludeKind, MatchArm,
+        Parameter, Stmt, SwitchCase, TypeDecl,
     },
     lexer::{Kind, StringPart, Token},
 };
@@ -13,6 +13,13 @@ mod types;
 mod variables;
 
 pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>, bool), Error> {
+    parse_source(tokens, Rc::new(crate::source::Source::default()))
+}
+
+pub(crate) fn parse_source(
+    tokens: Vec<Token>,
+    source: Rc<crate::source::Source>,
+) -> Result<(Vec<Stmt>, Vec<String>, bool), Error> {
     let mut parser = Parser {
         tokens,
         pos: 0,
@@ -21,6 +28,8 @@ pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>, bool)
         strict_types: false,
         return_type: None,
         static_names: HashSet::new(),
+        source,
+        function_name: Vec::new(),
     };
     let statements = parser.program()?;
     targets::validate(&statements)?;
@@ -34,6 +43,8 @@ struct Parser {
     strict_types: bool,
     return_type: Option<TypeDecl>,
     static_names: HashSet<Vec<u8>>,
+    source: Rc<crate::source::Source>,
+    function_name: Vec<u8>,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -89,6 +100,7 @@ impl Parser {
                 return Err(Error::parse("Expected constant name", line));
             };
             if name.contains(&b'\\')
+                || is_magic_constant(&name)
                 || [b"true".as_slice(), b"false", b"null"]
                     .iter()
                     .any(|literal| name.eq_ignore_ascii_case(literal))
@@ -372,13 +384,14 @@ impl Parser {
         let Kind::Word(name) = self.token().kind.clone() else {
             return Err(Error::parse("Expected function name", line));
         };
-        if name.contains(&b'\\') {
+        if name.contains(&b'\\') || is_magic_constant(&name) {
             return Err(Error::parse(
                 "Function declarations require an unqualified name",
                 line,
             ));
         }
         self.pos += 1;
+        let outer_function_name = std::mem::replace(&mut self.function_name, name.clone());
         self.expect("(")?;
         let mut parameters = Vec::new();
         while !self.eat(")") {
@@ -456,6 +469,7 @@ impl Parser {
         self.control_depth = outer_control_depth;
         self.return_type = outer_return_type;
         self.static_names = outer_static_names;
+        self.function_name = outer_function_name;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
             name,
             parameters,
@@ -463,6 +477,7 @@ impl Parser {
             line,
             return_type,
             strict_types: self.strict_types,
+            source: self.source.clone(),
         })))
     }
     fn arguments(&mut self) -> Result<Vec<Argument>, Error> {
@@ -664,6 +679,8 @@ impl Parser {
                                 strict_types: false,
                                 return_type: None,
                                 static_names: HashSet::new(),
+                                source: self.source.clone(),
+                                function_name: self.function_name.clone(),
                             };
                             let expr = parser.expr(0)?;
                             self.warnings.append(&mut parser.warnings);
@@ -690,6 +707,36 @@ impl Parser {
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Symbol(op) if op == "$" => self.dynamic_variable()?,
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
+                b"__line__" => ExprKind::Literal(Value::Int(line as i64)),
+                b"__file__" => ExprKind::Literal(Value::String(self.source.name.clone())),
+                b"__dir__" => ExprKind::Literal(Value::String(
+                    self.source
+                        .directory
+                        .as_os_str()
+                        .as_encoded_bytes()
+                        .to_vec(),
+                )),
+                b"__function__" | b"__method__" => {
+                    ExprKind::Literal(Value::String(self.function_name.clone()))
+                }
+                b"__class__" | b"__namespace__" | b"__trait__" => {
+                    ExprKind::Literal(Value::String(Vec::new()))
+                }
+                b"eval" => {
+                    self.expect("(")?;
+                    let code = self.expr(0)?;
+                    self.expect(")")?;
+                    ExprKind::Eval(Box::new(code))
+                }
+                b"include" | b"include_once" | b"require" | b"require_once" => {
+                    let kind = match name.to_ascii_lowercase().as_slice() {
+                        b"include" => IncludeKind::Include,
+                        b"include_once" => IncludeKind::IncludeOnce,
+                        b"require" => IncludeKind::Require,
+                        _ => IncludeKind::RequireOnce,
+                    };
+                    ExprKind::Include(kind, Box::new(self.expr(0)?))
+                }
                 b"match" => self.match_expression()?,
                 b"print" => ExprKind::Print(Box::new(self.expr(4)?)),
                 b"array" => {
@@ -867,4 +914,18 @@ fn binding_power(op: &str) -> Option<(u8, bool)> {
         "**" => (20, true),
         _ => return None,
     })
+}
+
+fn is_magic_constant(name: &[u8]) -> bool {
+    matches!(
+        name.to_ascii_lowercase().as_slice(),
+        b"__line__"
+            | b"__file__"
+            | b"__dir__"
+            | b"__function__"
+            | b"__method__"
+            | b"__class__"
+            | b"__namespace__"
+            | b"__trait__"
+    )
 }

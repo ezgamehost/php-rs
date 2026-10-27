@@ -16,6 +16,7 @@ pub(super) enum Builtin {
     Define,
     Defined,
     Constant,
+    GetIncludedFiles,
 }
 impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
@@ -38,11 +39,13 @@ impl Builtin {
             b"define" => Self::Define,
             b"defined" => Self::Defined,
             b"constant" => Self::Constant,
+            b"get_included_files" | b"get_required_files" => Self::GetIncludedFiles,
             _ => return None,
         })
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
+            Self::GetIncludedFiles => &[],
             Self::Strlen => &[("string", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
@@ -86,9 +89,20 @@ impl Runtime {
         extra: PhpArray,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(builtin, Builtin::GetIncludedFiles) {
+            let mut paths = PhpArray::default();
+            for path in &self.included_files {
+                paths.append(
+                    Value::String(path.as_os_str().as_encoded_bytes().to_vec()),
+                    line,
+                )?;
+            }
+            return Ok(Value::Array(Rc::new(paths)));
+        }
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::GetIncludedFiles => unreachable!(),
             Builtin::Define => {
                 let constant = self.native_string(first, &name, 1, line)?;
                 if constant.windows(2).any(|part| part == b"::") {

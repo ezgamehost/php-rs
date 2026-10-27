@@ -19,6 +19,8 @@ without an opening tag. Fatal errors return exit status 255; warnings go to stde
 
 The library exposes `run`, `lint`, and a request-local `Runtime`. `Runtime` retains
 output and warnings when execution fails. Parsing happens before execution.
+Use `Runtime::execute_file` for file source identity and relative includes, or
+`Runtime::execute_code` for code without an opening PHP tag.
 
 ## Current coverage
 
@@ -40,13 +42,18 @@ output and warnings when execution fails. Parsing happens before execution.
 - Live `global` bindings and function-local `static` storage, including dynamic
   initializers, recursive calls, and local `unset` behavior. Variable variables
   (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
+- `eval`, local-file `include`/`require` and their `_once` variants, preserving
+  caller variables, per-unit strictness, return values, and canonical file identity.
+  Loaded functions retain their defining source directory for later includes.
+- Lexical `__LINE__`, `__FILE__`, `__DIR__`, `__FUNCTION__`, and `__METHOD__`,
+  plus empty class/trait/namespace constants outside those declarations.
 - Parameter and return types for available values, nullable/union types, scalar
   coercion, typed variadics, default validation, and `void`/`never` return rules.
   `declare(strict_types=1)` preserves caller and declaration scope across calls;
   strict calls also check scalar arguments to the supported internal functions.
 - Core builtins: `var_dump`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
-  and `function_exists`.
+  `function_exists`, and `get_included_files`/`get_required_files`.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
   by value, numbered `break`/`continue`, and `return`. Loops support alternative
   `: … endfor` / `endwhile` / `endforeach` syntax.
@@ -68,7 +75,9 @@ generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 Class-name and object type declarations can be parsed, but objects and class
 resolution are not implemented. Callable checks currently cover function names.
 Other `declare` directives are not implemented.
-`$GLOBALS`, the other superglobals, and `eval` are not implemented.
+`$GLOBALS` and the other superglobals are not implemented. File loading currently
+uses the working directory and the executing source directory; configurable
+`include_path`, stream wrappers, and PHP configuration are not implemented.
 Deprecated `${...}` and object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
@@ -80,6 +89,8 @@ plus descriptive `DESCRIPTION` and `CREDITS` sections. Other sections are report
 as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
 fail a test. `--reference` checks the PHP major/minor version and validates passing
 fixtures against both interpreters. It does not compare exact diagnostic text.
+PHPT `FILE` sections currently execute as stdin in the runner's working directory,
+so fixture-specific file identities and working directories remain unfinished.
 See [docs/conformance.md](docs/conformance.md) for measured upstream results.
 
 ## Disk usage
@@ -97,6 +108,8 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)
+- [File inclusion](https://www.php.net/manual/en/function.include.php)
+- [Eval](https://www.php.net/manual/en/function.eval.php)
 - [Upstream PHP tests](https://github.com/php/php-src/tree/PHP-8.5/tests)
 
 The implementation uses a byte-oriented lexer, a precedence parser, and an AST

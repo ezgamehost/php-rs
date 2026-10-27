@@ -5,14 +5,14 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 23 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 25 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
-| PHP 8.5.0 `tests/lang`, Rust | 47 | 120 | 127 |
+| PHP 8.5.0 `tests/lang`, Rust | 48 | 119 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
-| PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 11 | 17 | 30 |
+| PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
 | PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 2 | 16 | 71 |
-| PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 5 | 7 | 1 |
+| PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -26,7 +26,7 @@ and standard-library functions; unsupported sections remain unexecuted.
 The [list/destructuring report](conformance/php-8.5.0-list.txt) and
 [array-unpacking report](conformance/php-8.5.0-array_unpack.txt) add targeted
 coverage. Their remaining failures include references, objects/iterators, closures,
-magic constants, and unsupported PHPT sections.
+and unsupported PHPT sections.
 
 The [return-type report](conformance/php-8.5.0-return_types.txt) records the initial
 typed-function baseline. Most cases require diagnostic matching, objects,
@@ -38,9 +38,9 @@ variadics and defaults, return validation, and strictness across compilation uni
 
 The [static-variable report](conformance/php-8.5.0-static_variables.txt) covers
 storage persistence, dynamic and recursive initializers, and global/static
-rebinding. Remaining failures need `eval`, objects, traits, and exceptions.
-This slice also raised language-suite passes from 41 to 47; all six newly passing
-cases were individually checked against PHP 8.5.0.
+rebinding. Remaining failures need objects, traits, and exceptions.
+Code loading adds four passing upstream cases across the language, list, and
+static-variable suites. All four were individually checked against PHP 8.5.0.
 
 The upstream basic-suite failures are:
 
@@ -64,6 +64,10 @@ cargo run --bin php-rs-phpt -- /path/to/php-8.5.0/tests/basic
 The upstream basic suite currently returns status 1. The runner also returns
 status 1 for malformed tests, empty test selections, missing paths, and unsupported
 sections. The project regression suite is separate and runs with `cargo test`.
+The runner still evaluates `FILE` sections as stdin from its working directory.
+Per-fixture filenames and working directories are not yet reproduced, which
+limits upstream tests using includes or source-path constants. File-mode runtime
+behavior is separately covered by CLI and temporary-file integration tests.
 
 Local reference build used:
 

@@ -174,6 +174,8 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         }
         ExprKind::Group(value)
         | ExprKind::DynamicVariable(value)
+        | ExprKind::Eval(value)
+        | ExprKind::Include(_, value)
         | ExprKind::Cast(_, value)
         | ExprKind::Unary(_, value)
         | ExprKind::Empty(value)

@@ -19,9 +19,11 @@ fn execute() -> Result<u8, Box<dyn std::error::Error>> {
     let args: Vec<_> = env::args_os().skip(1).collect();
     let mut source = Vec::new();
     let mut lint_only = false;
+    let mut code_mode = false;
+    let mut file = None;
     match args.first().and_then(|a| a.to_str()) {
         Some("-r") if args.len() == 2 => {
-            source.extend_from_slice(b"<?php ");
+            code_mode = true;
             source.extend_from_slice(args[1].as_encoded_bytes());
         }
         Some("-l") if args.len() == 2 => {
@@ -44,11 +46,11 @@ fn execute() -> Result<u8, Box<dyn std::error::Error>> {
         Some(arg) if arg.starts_with('-') => {
             return Err(format!("Unknown option or missing argument: {arg}").into());
         }
-        Some(_) if args.len() == 1 => source = fs::read(&args[0])?,
+        Some(_) if args.len() == 1 => file = Some(&args[0]),
         None if args.is_empty() => {
             io::stdin().read_to_end(&mut source)?;
         }
-        None if args.len() == 1 => source = fs::read(&args[0])?,
+        None if args.len() == 1 => file = Some(&args[0]),
         _ => return Err("Unexpected command-line arguments".into()),
     }
     if lint_only {
@@ -64,7 +66,13 @@ fn execute() -> Result<u8, Box<dyn std::error::Error>> {
         };
     }
     let mut runtime = Runtime::default();
-    let result = runtime.execute(&source);
+    let result = if let Some(file) = file {
+        runtime.execute_file(file)
+    } else if code_mode {
+        runtime.execute_code(&source)
+    } else {
+        runtime.execute(&source)
+    };
     io::stdout().write_all(&runtime.output)?;
     for warning in &runtime.warnings {
         eprintln!("Warning: {warning}");
