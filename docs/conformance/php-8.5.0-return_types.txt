@@ -1,8 +1,8 @@
-PHP 8.5.0 Zend/tests/return_types baseline (2026-10-26)
+PHP 8.5.0 Zend/tests/return_types baseline (2026-10-27)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/return_types
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
-Reference: PHP 8.5 (/privatesapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/return_types/001.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/002.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/003.phpt UNSUPPORTED: EXPECTF
@@ -10,7 +10,7 @@ Zend/tests/return_types/004.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/005.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/006.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/007.phpt UNSUPPORTED: EXPECTF
-Zend/tests/return_types/008.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/008.phpt PASS
 Zend/tests/return_types/009.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/010.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/011.phpt UNSUPPORTED: EXPECTF
@@ -51,7 +51,7 @@ Zend/tests/return_types/bug71092.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/bug71978.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators001.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators002.phpt UNSUPPORTED: EXPECTF
-Zend/tests/return_types/generators003.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/return_types/generators003.phpt FAIL: ParseError: Expected ';' on line 9
 Zend/tests/return_types/generators004.phpt FAIL: ParseError: Expected ';' on line 4
 Zend/tests/return_types/generators005.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators006.phpt UNSUPPORTED: EXPECTF
@@ -80,7 +80,7 @@ Zend/tests/return_types/never_no_variance.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/never_parameter.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/never_reflected.phpt FAIL: Error: Class "ReflectionFunction" not found on line 5
 Zend/tests/return_types/never_return_throw.phpt UNSUPPORTED: EXPECTF
-Zend/tests/return_types/never_tostring.phpt FAIL: ParseError: Expected '{' on line 3
+Zend/tests/return_types/never_tostring.phpt FAIL: ParseError: Expected ';' on line 11
 Zend/tests/return_types/reflection001.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/return_reference_separation.phpt FAIL: ParseError: Expected parameter variable on line 2
 Zend/tests/return_types/rfc001.phpt UNSUPPORTED: EXPECTF
@@ -92,4 +92,4 @@ Zend/tests/return_types/void_disallowed1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_disallowed2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_disallowed3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_parameter.phpt UNSUPPORTED: EXPECTF
-7 passed, 11 failed, 71 unsupported
+8 passed, 10 failed, 71 unsupported

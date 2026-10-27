@@ -7,13 +7,13 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 46 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 47 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
-| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 7 | 11 | 71 |
+| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 8 | 10 | 71 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
@@ -23,10 +23,10 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
-| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 21 | 104 | 158 |
-| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 8 | 26 | 36 |
+| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 29 | 96 | 158 |
+| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 13 | 21 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
-| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
+| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 28 | 28 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 3 | 12 | 14 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 9 | 67 | 44 |
 | PHP 8.5.0 `Zend/tests/readonly_props`, Rust | 0 | 22 | 18 |
@@ -196,7 +196,7 @@ type checks, `instanceof`, and early versus runtime class registration.
 A separate matrix of 1,056 snippets matched PHP 8.5.0 for stdout, exit status,
 and diagnostic presence. It includes parameter/return variance, arity/variadics,
 class declaration permutations, and dynamic `instanceof` operands. Diagnostic
-wording, interfaces, abstract property hooks, autoloading, and deferred variance
+wording, built-in interfaces, abstract property hooks, autoloading, and deferred variance
 dependencies remain unfinished.
 
 The [late-static-binding report](conformance/php-8.5.0-lsb.txt) records six
@@ -234,7 +234,7 @@ A 712-case matrix matches stdout, exit status, and diagnostic presence. Closure
 values in this matrix are compared by their debug type; complete Closure dumps
 remain an existing gap. The 300-case class-scope matrix also remains green.
 The class and inheritance suite counts are unchanged. Intersection/DNF types,
-non-public constants, interfaces, traits, enums, exception handling, and exact
+non-public constants, built-in interfaces, traits, enums, exception handling, and exact
 fatal diagnostic formatting remain incomplete.
 
 
@@ -321,5 +321,22 @@ constructor arguments. A 321-case differential matrix matches stdout, exit
 status, and diagnostic presence against PHP 8.5.0. The
 [PHP abstraction manual](https://www.php.net/manual/en/language.oop5.abstract.php)
 and local PHP 8.5.0 source/probes establish the rules. Protected/private method
-visibility, interfaces, traits, abstract property hooks, reflection, and deferred
+visibility, built-in interfaces, traits, abstract property hooks, reflection, and deferred
 signature checks involving unresolved class dependencies remain incomplete.
+
+
+The interface slice adds eight class-suite passes, five inheritance-suite passes,
+nine constant-suite passes, and one return-type pass, without losing previous
+passing fixtures. Thirteen project regressions and a reference-checked PHPT cover
+user-defined interfaces, multiple inheritance, signature compatibility,
+implementation requirements, interface type checks, typed/final constants,
+constant ambiguity and diamond inheritance, constructor contracts, and declaration
+timing. Root interfaces can be bound early; interfaces with parents and classes
+with an `implements` clause are registered when execution reaches their declaration.
+The [PHP interface manual](https://www.php.net/manual/en/language.oop5.interfaces.php)
+and PHP 8.5.0 probes establish the rules. A 379-case differential matrix matches
+stdout, exit status, and diagnostic presence. Interfaces participate in class
+constant initialization without eagerly evaluating overridden constants. Built-in
+interfaces and their runtime protocols, interface property hooks, autoloading,
+reflection, non-public members, and deferred signature checks involving unresolved
+class dependencies remain incomplete.

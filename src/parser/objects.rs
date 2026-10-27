@@ -7,6 +7,7 @@ impl Parser {
         is_final: bool,
         is_readonly: bool,
         is_abstract: bool,
+        is_interface: bool,
     ) -> Result<Stmt, Error> {
         let line = self.token().line;
         if is_abstract && is_final {
@@ -34,7 +35,7 @@ impl Parser {
                 r#"Deprecated: Using "_" as a class name is deprecated on line {line}"#
             ));
         }
-        let parent = if self.eat("extends") {
+        let parent = if !is_interface && self.eat("extends") {
             let Kind::Word(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
                     "Expected parent class name",
@@ -46,6 +47,23 @@ impl Parser {
         } else {
             None
         };
+        let mut interfaces = Vec::new();
+        if self.eat(if is_interface {
+            "extends"
+        } else {
+            "implements"
+        }) {
+            loop {
+                let Kind::Word(name) = self.token().kind.clone() else {
+                    return Err(Error::parse("Expected interface name", self.token().line));
+                };
+                interfaces.push(name);
+                self.pos += 1;
+                if !self.eat(",") {
+                    break;
+                }
+            }
+        }
         self.expect("{")?;
         let outer_parent = std::mem::replace(&mut self.class_parent, parent.clone());
         let outer_class = std::mem::replace(&mut self.class_name, name.clone());
@@ -86,6 +104,16 @@ impl Parser {
                 }
                 *flag = true;
             }
+            if is_interface
+                && (abstract_method
+                    || (final_method && self.is("function"))
+                    || (!self.is("function") && !self.is("const")))
+            {
+                return Err(Error::parse(
+                    "Invalid interface member declaration",
+                    self.token().line,
+                ));
+            }
             if abstract_method && (final_method || var || !self.is("function")) {
                 return Err(Error::parse(
                     "Invalid abstract method declaration",
@@ -111,6 +139,7 @@ impl Parser {
                 ));
             }
             if self.eat("function") {
+                let abstract_method = abstract_method || is_interface;
                 if abstract_method && !is_abstract {
                     return Err(Error::parse(
                         "A class with abstract methods must be abstract",
@@ -341,6 +370,8 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Class(Rc::new(ClassDecl {
+            is_interface,
+            interfaces,
             parent,
             is_abstract,
             is_final,

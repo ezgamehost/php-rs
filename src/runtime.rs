@@ -21,6 +21,7 @@ mod destructuring;
 mod function_arguments;
 mod functions;
 mod inheritance;
+mod interfaces;
 mod jumps;
 mod loading;
 mod matching;

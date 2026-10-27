@@ -14,6 +14,7 @@ pub(super) enum Builtin {
     GetParentClass,
     GetCalledClass,
     ClassExists,
+    InterfaceExists,
     MethodExists,
     PropertyExists,
     GetObjectVars,
@@ -47,6 +48,7 @@ impl Builtin {
             b"get_parent_class" => Self::GetParentClass,
             b"get_called_class" => Self::GetCalledClass,
             b"class_exists" => Self::ClassExists,
+            b"interface_exists" => Self::InterfaceExists,
             b"method_exists" => Self::MethodExists,
             b"property_exists" => Self::PropertyExists,
             b"get_object_vars" => Self::GetObjectVars,
@@ -82,6 +84,7 @@ impl Builtin {
             Self::GetCalledClass => &[],
             Self::GetObjectVars => &[("object", false, false)],
             Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
+            Self::InterfaceExists => &[("interface", false, false), ("autoload", true, false)],
             Self::MethodExists => &[("object_or_class", false, false), ("method", false, false)],
             Self::PropertyExists => &[
                 ("object_or_class", false, false),
@@ -199,14 +202,16 @@ impl Runtime {
                     line,
                 )),
             },
-            Builtin::ClassExists => {
+            Builtin::ClassExists | Builtin::InterfaceExists => {
                 let class = self.native_string(first, &name, 1, line)?;
                 if let Some(autoload) = &args[1] {
                     self.native_bool(autoload, &name, 2, line)?;
                 }
                 Ok(Value::Bool(
-                    self.find_class(&class).is_some()
-                        || class
+                    self.find_class(&class).is_some_and(|c| {
+                        c.declaration.is_interface == matches!(builtin, Builtin::InterfaceExists)
+                    }) || matches!(builtin, Builtin::ClassExists)
+                        && class
                             .strip_prefix(b"\\")
                             .unwrap_or(&class)
                             .eq_ignore_ascii_case(b"Closure"),

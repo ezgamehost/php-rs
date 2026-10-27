@@ -67,6 +67,9 @@ new request. The CLI returns the low eight bits of the requested status.
   constructor contracts that remain binding through intermediate implementations.
   Concrete subclasses must implement all inherited abstract methods with compatible
   signatures; abstract classes cannot be instantiated or their abstract methods called.
+- User-defined interfaces with multiple inheritance, method contracts, typed/final
+  constants, and implementation checks. Interface types work with arguments, returns,
+  properties, and `instanceof`; `interface_exists` distinguishes them from classes.
 - Public static methods, parent implementation calls, scoped method callables,
   static-method string/array callbacks, and late static binding. `self`, `parent`,
   and `static` resolve in calls, construction, and contextual types; closures
@@ -147,7 +150,7 @@ new request. The CLI returns the low eight bits of the requested status.
 
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
-The object implementation is a foundation: interfaces, traits,
+The object implementation is a foundation: built-in interfaces, interface properties, traits,
 visibility modifiers other than public, property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,

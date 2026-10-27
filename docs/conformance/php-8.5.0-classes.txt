@@ -31,14 +31,14 @@ tests/classes/array_access_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_003.phpt UNSUPPORTED: EXPECTF, INI
 tests/classes/array_access_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_005.phpt UNSUPPORTED: EXPECTF
-tests/classes/array_access_006.phpt FAIL: ParseError: Expected '{' on line 3
-tests/classes/array_access_007.phpt FAIL: ParseError: Expected '{' on line 3
+tests/classes/array_access_006.phpt FAIL: Error: Interface "ArrayAccess" not found on line 3
+tests/classes/array_access_007.phpt FAIL: Error: Interface "ArrayAccess" not found on line 3
 tests/classes/array_access_008.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_009.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_010.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_011.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_012.phpt UNSUPPORTED: EXPECTF
-tests/classes/array_access_013.phpt FAIL: ParseError: Expected '{' on line 3
+tests/classes/array_access_013.phpt FAIL: ParseError: Expected ';' on line 5
 tests/classes/array_conversion_keys.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/assign_op_property_001.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/autoload_001.phpt UNSUPPORTED: SKIPIF
@@ -153,33 +153,33 @@ tests/classes/inheritance_008.phpt FAIL: ParseError: Expected public property or
 tests/classes/inheritance_009.phpt FAIL: ParseError: Expected public property or method on line 3
 tests/classes/interface_and_extends.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_class.phpt UNSUPPORTED: EXPECTF
-tests/classes/interface_constant_inheritance_001.phpt FAIL: ParseError: Expected ';' on line 2
-tests/classes/interface_constant_inheritance_004.phpt FAIL: ParseError: Expected ';' on line 2
-tests/classes/interface_constant_inheritance_005.phpt FAIL: ParseError: Expected ';' on line 2
+tests/classes/interface_constant_inheritance_001.phpt PASS
+tests/classes/interface_constant_inheritance_004.phpt PASS
+tests/classes/interface_constant_inheritance_005.phpt PASS
 tests/classes/interface_constant_inheritance_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_constant_inheritance_007.phpt UNSUPPORTED: EXPECTF
-tests/classes/interface_doubled.phpt FAIL: ParseError: Expected ';' on line 3
-tests/classes/interface_implemented.phpt FAIL: ParseError: Expected ';' on line 3
+tests/classes/interface_doubled.phpt PASS
+tests/classes/interface_implemented.phpt PASS
 tests/classes/interface_instantiate.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_member.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_method.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_method_final.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_method_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/interface_must_be_implemented.phpt UNSUPPORTED: EXPECTF
-tests/classes/interface_optional_arg.phpt FAIL: ParseError: Expected ';' on line 5
-tests/classes/interface_optional_arg_002.phpt FAIL: ParseError: Expected ';' on line 3
-tests/classes/interface_optional_arg_003.phpt FAIL: ParseError: Expected '{' on line 4
-tests/classes/interfaces_001.phpt FAIL: ParseError: Expected ';' on line 3
+tests/classes/interface_optional_arg.phpt FAIL: Error: Call to undefined function error_reporting() on line 3
+tests/classes/interface_optional_arg_002.phpt PASS
+tests/classes/interface_optional_arg_003.phpt PASS
+tests/classes/interfaces_001.phpt PASS
 tests/classes/interfaces_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/interfaces_003.phpt UNSUPPORTED: EXPECTF
-tests/classes/iterators_001.phpt FAIL: ParseError: Expected '{' on line 2
-tests/classes/iterators_002.phpt FAIL: ParseError: Expected '{' on line 2
-tests/classes/iterators_003.phpt FAIL: ParseError: Expected '{' on line 2
+tests/classes/iterators_001.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/iterators_002.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/classes/iterators_003.phpt FAIL: ParseError: Expected public property or method on line 4
 tests/classes/iterators_004.phpt PASS
 tests/classes/iterators_005.phpt UNSUPPORTED: EXPECTF
-tests/classes/iterators_006.phpt FAIL: ParseError: Expected '{' on line 3
-tests/classes/iterators_007.phpt FAIL: ParseError: Expected '{' on line 2
-tests/classes/iterators_008.phpt FAIL: ParseError: Expected '{' on line 4
+tests/classes/iterators_006.phpt FAIL: ParseError: Expected public property or method on line 5
+tests/classes/iterators_007.phpt FAIL: ParseError: Expected ';' on line 7
+tests/classes/iterators_008.phpt FAIL: ParseError: Expected public property or method on line 6
 tests/classes/method_call_variation_001.phpt PASS
 tests/classes/method_override_optional_arg_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/method_override_optional_arg_002.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt FAIL: ParseError: Expected public property or
 tests/classes/visibility_004b.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_004c.phpt FAIL: ParseError: Expected public property or method on line 7
 tests/classes/visibility_005.phpt FAIL: ParseError: Expected public property or method on line 7
-21 passed, 104 failed, 158 unsupported
+29 passed, 96 failed, 158 unsupported

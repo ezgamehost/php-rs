@@ -1,4 +1,4 @@
-PHP 8.5.0 Zend/tests/type_declarations/typed_class_constants*.phpt baseline (2026-10-26)
+PHP 8.5.0 Zend/tests/type_declarations/typed_class_constants*.phpt baseline (2026-10-27)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/type_declarations/typed_class_constants*.phpt
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 

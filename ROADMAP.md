@@ -79,7 +79,9 @@ definition of completion.
    and PHP 8.5 clone-with property updates are implemented.
    Abstract classes and public abstract methods enforce implementation requirements,
    signature compatibility, and inherited abstract constructor contracts.
-   Remaining: interfaces, traits, abstract properties, intersection/DNF constant types,
+   User-defined interfaces support multiple inheritance, method contracts,
+   constants, type checks, and interface_exists.
+   Remaining: built-in interfaces, interface properties, traits, abstract properties, intersection/DNF constant types,
    complete constant/default resolution,
    visibility, property hooks, remaining magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.

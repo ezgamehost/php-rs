@@ -47,6 +47,7 @@ impl std::fmt::Debug for PhpObject {
 /// Linked class layout. Inherited methods retain their declaring function identity.
 #[derive(Debug)]
 pub(crate) struct Class {
+    pub interfaces: Vec<Rc<Class>>,
     pub declaration: Rc<ClassDecl>,
     pub name: Vec<u8>,
     pub parent: Option<Rc<Class>>,
@@ -64,14 +65,35 @@ pub(crate) struct Class {
 impl Class {
     pub fn is_a(&self, name: &[u8]) -> bool {
         let name = name.strip_prefix(b"\\").unwrap_or(name);
-        self.name.eq_ignore_ascii_case(name) || self.parent.as_ref().is_some_and(|p| p.is_a(name))
+        self.name.eq_ignore_ascii_case(name)
+            || self.parent.as_ref().is_some_and(|p| p.is_a(name))
+            || self.interfaces.iter().any(|i| i.is_a(name))
     }
     pub fn constant_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
         if self.declaration.constants.iter().any(|c| c.name == name) {
             Some(self.clone())
         } else {
-            self.parent.as_ref().and_then(|p| p.constant_owner(name))
+            self.parent
+                .as_ref()
+                .and_then(|p| p.constant_owner(name))
+                .or_else(|| self.interfaces.iter().find_map(|i| i.constant_owner(name)))
         }
+    }
+    pub fn constant_names(&self) -> Vec<Vec<u8>> {
+        let mut names: Vec<_> = self
+            .declaration
+            .constants
+            .iter()
+            .map(|c| c.name.clone())
+            .collect();
+        for ancestor in self.parent.iter().chain(&self.interfaces) {
+            for name in ancestor.constant_names() {
+                if !names.contains(&name) {
+                    names.push(name);
+                }
+            }
+        }
+        names
     }
     pub fn static_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
         if self

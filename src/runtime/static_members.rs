@@ -168,15 +168,8 @@ impl Runtime {
     }
 
     fn initialize_class_values(&mut self, class: &Rc<Class>) -> Result<(), Error> {
-        let mut constants = HashSet::new();
-        let mut current = Some(class.clone());
-        while let Some(owner) = current {
-            for constant in &owner.declaration.constants {
-                if constants.insert(constant.name.clone()) {
-                    self.read_class_constant(class, &constant.name, class.declaration.line)?;
-                }
-            }
-            current = owner.parent.clone();
+        for name in class.constant_names() {
+            self.read_class_constant(class, &name, class.declaration.line)?;
         }
         self.initialize_property_values(class)
     }

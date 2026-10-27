@@ -11,6 +11,7 @@ impl Runtime {
         let mut linked = Vec::new();
         // Early binding follows declaration order. An inherited class whose
         // parent is not linked yet stays as a runtime declaration.
+        // Interface inheritance and implementation always resolve at execution.
         self.link_available_classes(statements, &mut linked)?;
         for class in linked {
             self.validate_overrides(&class)?;
@@ -25,10 +26,11 @@ impl Runtime {
         for statement in statements {
             match statement {
                 Stmt::Class(decl)
-                    if decl
-                        .parent
-                        .as_ref()
-                        .is_none_or(|name| self.find_class(name).is_some()) =>
+                    if decl.interfaces.is_empty()
+                        && decl
+                            .parent
+                            .as_ref()
+                            .is_none_or(|name| self.find_class(name).is_some()) =>
                 {
                     let class = self.link_class(decl.clone())?;
                     if self.property_variance_unresolved(&class) {
@@ -74,6 +76,14 @@ impl Runtime {
         } else {
             None
         };
+        if parent.as_ref().is_some_and(|p| p.declaration.is_interface) {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "A class cannot extend an interface",
+                decl.line,
+            ));
+        }
+        let interfaces = self.link_interfaces(&decl)?;
         if parent
             .as_ref()
             .is_some_and(|p| p.declaration.is_readonly != decl.is_readonly)
@@ -164,7 +174,18 @@ impl Runtime {
             }
         }
         let allow_dynamic = parent.as_ref().is_some_and(|p| p.allow_dynamic);
+        for interface in &interfaces {
+            for function in &interface.methods {
+                if !methods
+                    .iter()
+                    .any(|f| method_name(f).eq_ignore_ascii_case(method_name(function)))
+                {
+                    methods.push(function.clone());
+                }
+            }
+        }
         Ok(Rc::new(Class {
+            interfaces,
             name: decl.name.clone(),
             declaration: decl,
             parent,
@@ -187,6 +208,7 @@ impl Runtime {
             .to_ascii_lowercase();
         if name == b"stdclass" {
             return Some(Rc::new(Class {
+                interfaces: Vec::new(),
                 name: b"stdClass".to_vec(),
                 parent: None,
                 properties: Vec::new(),
@@ -200,6 +222,8 @@ impl Runtime {
                 initialized: std::cell::Cell::new(false),
                 initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
+                    is_interface: false,
+                    interfaces: Vec::new(),
                     is_abstract: false,
                     name: b"stdClass".to_vec(),
                     parent: None,
@@ -281,6 +305,16 @@ impl Runtime {
                 line,
             )
         })?;
+        if class.declaration.is_interface {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot instantiate interface {}",
+                    String::from_utf8_lossy(&class.name)
+                ),
+                line,
+            ));
+        }
         if class.declaration.is_abstract {
             return Err(Error::new(
                 ErrorKind::Error,

@@ -138,7 +138,10 @@ impl Parser {
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
         if self.eat("class") {
-            return self.class_declaration(false, false, false);
+            return self.class_declaration(false, false, false, false);
+        }
+        if self.eat("interface") {
+            return self.class_declaration(false, false, true, true);
         }
         let readonly_class = self.is("readonly")
             && self.tokens.get(self.pos + 1).is_some_and(|token| {
@@ -169,7 +172,7 @@ impl Parser {
                 *flag = true;
             }
             self.expect("class")?;
-            return self.class_declaration(is_final, is_readonly, is_abstract);
+            return self.class_declaration(is_final, is_readonly, is_abstract, false);
         }
         let line = self.token().line;
         if self.eat("goto") {

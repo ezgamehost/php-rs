@@ -87,6 +87,7 @@ impl Runtime {
     }
 
     pub(super) fn validate_overrides(&self, class: &Class) -> Result<(), Error> {
+        self.validate_interfaces(class)?;
         if !class.declaration.is_abstract
             && let Some(method) = class.methods.iter().find(|method| method.is_abstract)
         {
@@ -235,7 +236,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn compatible_method(
+    pub(super) fn compatible_method(
         &self,
         child: &FunctionDecl,
         parent: &FunctionDecl,
@@ -308,7 +309,7 @@ impl Runtime {
         Some(ty)
     }
 
-    fn type_subset(
+    pub(super) fn type_subset(
         &self,
         narrow: Option<&TypeDecl>,
         wide: Option<&TypeDecl>,
@@ -395,6 +396,12 @@ fn abstract_constructor(class: &Class) -> Option<Rc<FunctionDecl>> {
         .parent
         .as_ref()
         .and_then(|parent| abstract_constructor(parent))
+        .or_else(|| {
+            class
+                .interfaces
+                .iter()
+                .find_map(|i| objects::method(i, b"__construct"))
+        })
         .or_else(|| objects::method(class, b"__construct").filter(|method| method.is_abstract))
 }
 
