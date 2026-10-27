@@ -119,7 +119,7 @@ pub(crate) fn numeric_string(bytes: &[u8]) -> Option<Value> {
     complete.then_some(value)
 }
 
-fn numeric_prefix(bytes: &[u8]) -> Option<(Value, bool)> {
+pub(crate) fn numeric_prefix(bytes: &[u8]) -> Option<(Value, bool)> {
     let mut pos = 0;
     while bytes.get(pos).is_some_and(u8::is_ascii_whitespace) {
         pos += 1;
