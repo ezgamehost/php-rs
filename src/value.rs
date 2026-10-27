@@ -50,6 +50,24 @@ impl Value {
             }
         }
     }
+    pub(crate) fn integer(&self, line: usize, warnings: &mut Vec<String>) -> Result<i64, Error> {
+        match self.number(line, warnings)? {
+            Self::Int(n) => Ok(n),
+            Self::Float(n) => {
+                let converted = float_to_int(n);
+                if !n.is_finite() || !(-9223372036854775808.0..9223372036854775808.0).contains(&n) {
+                    warnings.push(format!(
+                        "The float {} is not representable as an int, cast occurred on line {line}",
+                        format_float(n)
+                    ));
+                } else if n != converted as f64 {
+                    warnings.push(format!("Deprecated: Implicit conversion from float {} to int loses precision on line {line}", format_float(n)));
+                }
+                Ok(converted)
+            }
+            _ => unreachable!(),
+        }
+    }
     pub(crate) fn as_float(&self) -> f64 {
         match self {
             Self::Int(n) => *n as f64,
@@ -167,5 +185,20 @@ fn format_float(n: f64) -> String {
         } else {
             s
         }
+    }
+}
+
+/// Zend converts finite doubles modulo 2^64; Rust's numeric casts saturate.
+pub(crate) fn float_to_int(n: f64) -> i64 {
+    if !n.is_finite() {
+        return 0;
+    }
+    let n = n.trunc() % 18446744073709551616.0;
+    if n >= 9223372036854775808.0 {
+        (n - 18446744073709551616.0) as i64
+    } else if n < -9223372036854775808.0 {
+        (n + 18446744073709551616.0) as i64
+    } else {
+        n as i64
     }
 }

@@ -24,7 +24,7 @@ output and warnings when execution fails. Parsing happens before execution.
 
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
-  boolean operations, null coalescing, ternary expressions, and numeric increments.
+  boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `break`, `continue`, and `return`.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;

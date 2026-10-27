@@ -151,11 +151,11 @@ impl Parser {
                 self.expect(")")?;
                 ExprKind::Group(Box::new(expr))
             }
-            Kind::Symbol(op) if ["+", "-", "!"].contains(&op.as_str()) => {
-                ExprKind::Unary(op, Box::new(self.expr(15)?))
+            Kind::Symbol(op) if ["+", "-", "!", "~"].contains(&op.as_str()) => {
+                ExprKind::Unary(op, Box::new(self.expr(19)?))
             }
             Kind::Symbol(op) if op == "++" || op == "--" => {
-                let expr = self.expr(17)?;
+                let expr = self.expr(21)?;
                 let ExprKind::Variable(name) = expr.kind else {
                     return Err(Error::parse("Expected variable", line));
                 };
@@ -165,7 +165,7 @@ impl Parser {
         };
         let mut lhs = Expr { kind, line };
         loop {
-            if min <= 17 && (self.is("++") || self.is("--")) {
+            if min <= 21 && (self.is("++") || self.is("--")) {
                 let delta = if self.eat("++") {
                     1
                 } else {
@@ -214,7 +214,7 @@ impl Parser {
             if power < min {
                 break;
             }
-            if (power == 9 || power == 10)
+            if (power == 12 || power == 13)
                 && let ExprKind::Binary(previous, _, _) = &lhs.kind
                 && binding_power(previous).is_some_and(|(p, _)| p == power)
             {
@@ -243,16 +243,21 @@ fn binding_power(op: &str) -> Option<(u8, bool)> {
         "or" => (1, false),
         "xor" => (2, false),
         "and" => (3, false),
-        "=" | "+=" | "-=" | "*=" | "/=" | "%=" | ".=" | "**=" | "??=" => (4, true),
+        "=" | "+=" | "-=" | "*=" | "/=" | "%=" | ".=" | "**=" | "??=" | "&=" | "|=" | "^="
+        | "<<=" | ">>=" => (4, true),
         "??" => (6, true),
         "||" => (7, false),
         "&&" => (8, false),
-        "==" | "!=" | "<>" | "===" | "!==" | "<=>" => (9, false),
-        "<" | "<=" | ">" | ">=" => (10, false),
-        "." => (11, false),
-        "+" | "-" => (12, false),
-        "*" | "/" | "%" => (13, false),
-        "**" => (16, true),
+        "==" | "!=" | "<>" | "===" | "!==" | "<=>" => (12, false),
+        "<" | "<=" | ">" | ">=" => (13, false),
+        "|" => (9, false),
+        "^" => (10, false),
+        "&" => (11, false),
+        "." => (14, false),
+        "<<" | ">>" => (15, false),
+        "+" | "-" => (16, false),
+        "*" | "/" | "%" => (17, false),
+        "**" => (20, true),
         _ => return None,
     })
 }

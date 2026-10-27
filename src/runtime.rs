@@ -112,6 +112,17 @@ impl Runtime {
                 let value = self.eval(expr)?;
                 match op.as_str() {
                     "!" => Ok(Value::Bool(!value.is_truthy())),
+                    "~" => match value {
+                        Value::String(s) => Ok(Value::String(s.into_iter().map(|b| !b).collect())),
+                        Value::Int(_) | Value::Float(_) => {
+                            Ok(Value::Int(!value.integer(line, &mut self.warnings)?))
+                        }
+                        _ => Err(Error::new(
+                            ErrorKind::TypeError,
+                            "Cannot perform bitwise not on operand",
+                            line,
+                        )),
+                    },
                     "+" => value.number(line, &mut self.warnings),
                     "-" => match value.number(line, &mut self.warnings)? {
                         Value::Int(n) => Ok(n
@@ -216,6 +227,53 @@ fn binary(
         }
         _ => {}
     }
+    if matches!(op, "&" | "|" | "^") {
+        if let (String(a), String(b)) = (&left, &right) {
+            let len = if op == "|" {
+                a.len().max(b.len())
+            } else {
+                a.len().min(b.len())
+            };
+            return Ok(String(
+                (0..len)
+                    .map(|i| {
+                        let a = a.get(i).copied().unwrap_or(0);
+                        let b = b.get(i).copied().unwrap_or(0);
+                        match op {
+                            "&" => a & b,
+                            "|" => a | b,
+                            _ => a ^ b,
+                        }
+                    })
+                    .collect(),
+            ));
+        }
+        let a = left.integer(line, warnings)?;
+        let b = right.integer(line, warnings)?;
+        return Ok(Int(match op {
+            "&" => a & b,
+            "|" => a | b,
+            _ => a ^ b,
+        }));
+    }
+    if matches!(op, "<<" | ">>") {
+        let a = left.integer(line, warnings)?;
+        let b = right.integer(line, warnings)?;
+        if b < 0 {
+            return Err(Error::new(
+                ErrorKind::ArithmeticError,
+                "Bit shift by negative number",
+                line,
+            ));
+        }
+        return Ok(Int(if b >= 64 {
+            if op == ">>" && a < 0 { -1 } else { 0 }
+        } else if op == "<<" {
+            a.wrapping_shl(b as u32)
+        } else {
+            a >> b
+        }));
+    }
     let left = left.number(line, warnings)?;
     let right = right.number(line, warnings)?;
     let a = left.as_float();
@@ -228,14 +286,8 @@ fn binary(
         ));
     }
     if op == "%" {
-        let a = match left {
-            Int(n) => n,
-            _ => a as i64,
-        };
-        let b = match right {
-            Int(n) => n,
-            _ => b as i64,
-        };
+        let a = left.integer(line, warnings)?;
+        let b = right.integer(line, warnings)?;
         if b == 0 {
             return Err(Error::new(
                 ErrorKind::DivisionByZeroError,

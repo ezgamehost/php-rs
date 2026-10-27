@@ -5,6 +5,7 @@ pub enum ErrorKind {
     ParseError,
     TypeError,
     DivisionByZeroError,
+    ArithmeticError,
     Error,
 }
 
