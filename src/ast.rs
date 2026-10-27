@@ -1,4 +1,5 @@
 use crate::Value;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Expr {
@@ -16,6 +17,7 @@ pub(crate) enum ExprKind {
     Binary(String, Box<Expr>, Box<Expr>),
     Array(Vec<(Option<Expr>, Expr)>),
     Index(Box<Expr>, Option<Box<Expr>>),
+    Call(Box<Expr>, Vec<Argument>),
     Isset(Vec<Expr>),
     Empty(Box<Expr>),
     Assign(Box<Expr>, String, Box<Expr>),
@@ -23,8 +25,9 @@ pub(crate) enum ExprKind {
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum Stmt {
+    Function(Rc<FunctionDecl>),
     Text(Vec<u8>),
     Echo(Vec<Expr>),
     Expr(Expr),
@@ -43,6 +46,46 @@ impl Expr {
         match &self.kind {
             ExprKind::Variable(_) => true,
             ExprKind::Index(base, _) => base.is_writable(),
+            _ => false,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct Parameter {
+    pub name: Vec<u8>,
+    pub default: Option<Expr>,
+    pub variadic: bool,
+}
+#[derive(Debug, Clone)]
+pub(crate) struct FunctionDecl {
+    pub name: Vec<u8>,
+    pub parameters: Vec<Parameter>,
+    pub body: Vec<Stmt>,
+    pub line: usize,
+}
+#[derive(Debug, Clone)]
+pub(crate) enum Argument {
+    Positional(Expr),
+    Named(Vec<u8>, Expr),
+    Unpack(Expr),
+}
+impl Expr {
+    pub fn is_constant_expression(&self) -> bool {
+        match &self.kind {
+            ExprKind::Literal(_) | ExprKind::Constant(_) => true,
+            ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
+            ExprKind::Index(a, Some(b)) | ExprKind::Binary(_, a, b) => {
+                a.is_constant_expression() && b.is_constant_expression()
+            }
+            ExprKind::Conditional(a, b, c) => {
+                a.is_constant_expression()
+                    && b.as_ref().is_none_or(|b| b.is_constant_expression())
+                    && c.is_constant_expression()
+            }
+            ExprKind::Array(elements) => elements.iter().all(|(k, v)| {
+                k.as_ref().is_none_or(Expr::is_constant_expression) && v.is_constant_expression()
+            }),
             _ => false,
         }
     }

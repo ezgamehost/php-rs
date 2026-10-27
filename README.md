@@ -28,12 +28,14 @@ output and warnings when execution fails. Parsing happens before execution.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
+- Untyped named functions, recursion, local scopes, constant default arguments,
+  named arguments, variadics, argument unpacking, and string-based function calls.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `foreach` by value, `break`,
   `continue`, and `return`.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 
-Known gaps include functions and builtins, objects, references, exceptions,
+Known gaps include typed functions, closures, builtins, objects, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions. String
 interpolation, string offsets, array unpacking and destructuring, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also

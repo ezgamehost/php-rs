@@ -1,9 +1,11 @@
 use crate::{
     ArrayKey, Error, ErrorKind, PhpArray, Value,
-    ast::{Expr, ExprKind, Stmt},
+    ast::{Expr, ExprKind, FunctionDecl, Stmt},
     lexer, parser,
 };
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
+
+mod functions;
 
 /// One request's variable scope, output, and diagnostics. Output survives errors.
 #[derive(Default)]
@@ -11,6 +13,7 @@ pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
     pub variables: HashMap<Vec<u8>, Value>,
+    functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
 }
 struct Location {
     name: Vec<u8>,
@@ -25,7 +28,8 @@ enum Flow {
 impl Runtime {
     /// Parse the complete document before executing any of it.
     pub fn execute(&mut self, source: &[u8]) -> Result<Value, Error> {
-        let stmts = parser::parse(lexer::lex(source)?)?;
+        let mut stmts = parser::parse(lexer::lex(source)?)?;
+        self.prepare_functions(&mut stmts)?;
         match self.block(&stmts)? {
             Flow::Return(value) => Ok(value),
             _ => Ok(Value::Null),
@@ -42,6 +46,9 @@ impl Runtime {
     }
     fn statement(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
         match stmt {
+            Stmt::Function(function) => {
+                self.register_function(function.clone())?;
+            }
             Stmt::Text(text) => self.output.extend(text),
             Stmt::Echo(values) => {
                 for value in values {
@@ -206,6 +213,7 @@ impl Runtime {
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
         let line = expr.line;
         match &expr.kind {
+            ExprKind::Call(callee, args) => self.call(callee, args, line),
             ExprKind::Literal(value) => Ok(value.clone()),
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(name) => Ok(self.read(name, line)),

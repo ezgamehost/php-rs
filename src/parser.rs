@@ -1,8 +1,10 @@
 use crate::{
     Error, Value,
-    ast::{Expr, ExprKind, Stmt},
+    ast::{Argument, Expr, ExprKind, FunctionDecl, Parameter, Stmt},
     lexer::{Kind, Token},
 };
+
+use std::rc::Rc;
 
 pub(crate) fn parse(tokens: Vec<Token>) -> Result<Vec<Stmt>, Error> {
     Parser {
@@ -51,6 +53,9 @@ impl Parser {
         Ok(result)
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
+        if self.eat("function") {
+            return self.function();
+        }
         if let Kind::Text(bytes) = self.token().kind.clone() {
             self.pos += 1;
             return Ok(Stmt::Text(bytes));
@@ -158,6 +163,119 @@ impl Parser {
         self.expect(";")?;
         Ok(Stmt::Expr(expr))
     }
+    fn function(&mut self) -> Result<Stmt, Error> {
+        let line = self.token().line;
+        let Kind::Word(name) = self.token().kind.clone() else {
+            return Err(Error::parse("Expected function name", line));
+        };
+        self.pos += 1;
+        self.expect("(")?;
+        let mut parameters = Vec::new();
+        while !self.eat(")") {
+            let variadic = self.eat("...");
+            let Kind::Variable(name) = self.token().kind.clone() else {
+                return Err(Error::parse(
+                    "Expected parameter variable",
+                    self.token().line,
+                ));
+            };
+            self.pos += 1;
+            if parameters.iter().any(|p: &Parameter| p.name == name) {
+                return Err(Error::parse("Redefinition of parameter", line));
+            }
+            let default = if self.eat("=") {
+                Some(self.expr(0)?)
+            } else {
+                None
+            };
+            if variadic && default.is_some() {
+                return Err(Error::parse(
+                    "Variadic parameter cannot have a default value",
+                    line,
+                ));
+            }
+            if default
+                .as_ref()
+                .is_some_and(|e| !e.is_constant_expression())
+            {
+                return Err(Error::parse(
+                    "Constant expression contains invalid operations",
+                    line,
+                ));
+            }
+            parameters.push(Parameter {
+                name,
+                default,
+                variadic,
+            });
+            if !self.eat(",") {
+                self.expect(")")?;
+                break;
+            }
+            if variadic && !self.is(")") {
+                return Err(Error::parse(
+                    "Only the last parameter can be variadic",
+                    line,
+                ));
+            }
+        }
+        self.expect("{")?;
+        let outer_loops = std::mem::replace(&mut self.loops, 0);
+        let mut body = Vec::new();
+        while !self.eat("}") {
+            if self.token().kind == Kind::End {
+                return Err(Error::parse("Unclosed function body", line));
+            }
+            body.push(self.statement()?);
+        }
+        self.loops = outer_loops;
+        Ok(Stmt::Function(Rc::new(FunctionDecl {
+            name,
+            parameters,
+            body,
+            line,
+        })))
+    }
+    fn arguments(&mut self) -> Result<Vec<Argument>, Error> {
+        let mut args = Vec::new();
+        let mut named = false;
+        let mut unpacked = false;
+        while !self.eat(")") {
+            let line = self.token().line;
+            if self.eat("...") {
+                if named {
+                    return Err(Error::parse(
+                        "Cannot use argument unpacking after named arguments",
+                        line,
+                    ));
+                }
+                unpacked = true;
+                args.push(Argument::Unpack(self.expr(0)?));
+            } else if let Kind::Word(name) = self.token().kind.clone()
+                && self
+                    .tokens
+                    .get(self.pos + 1)
+                    .is_some_and(|t| t.kind == Kind::Symbol(":".into()))
+            {
+                named = true;
+                self.pos += 2;
+                args.push(Argument::Named(name, self.expr(0)?));
+            } else {
+                if named || unpacked {
+                    return Err(Error::parse(
+                        "Cannot use positional argument after named argument or unpacking",
+                        line,
+                    ));
+                }
+                args.push(Argument::Positional(self.expr(0)?));
+            }
+            if !self.eat(",") {
+                self.expect(")")?;
+                break;
+            }
+        }
+        Ok(args)
+    }
     fn if_statement(&mut self) -> Result<Stmt, Error> {
         self.expect("(")?;
         let cond = self.expr(0)?;
@@ -244,6 +362,14 @@ impl Parser {
         };
         let mut lhs = Expr { kind, line };
         loop {
+            if min <= 22 && self.eat("(") {
+                let args = self.arguments()?;
+                lhs = Expr {
+                    kind: ExprKind::Call(Box::new(lhs), args),
+                    line,
+                };
+                continue;
+            }
             if min <= 22 && self.eat("[") {
                 let key = if self.is("]") {
                     None

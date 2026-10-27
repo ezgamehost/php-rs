@@ -6,6 +6,7 @@ pub enum ErrorKind {
     TypeError,
     DivisionByZeroError,
     ArithmeticError,
+    ArgumentCountError,
     Error,
 }
 
