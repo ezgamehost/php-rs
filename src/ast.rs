@@ -24,6 +24,7 @@ pub(crate) enum ExprKind {
     Destructure(Vec<ArrayElement>),
     Index(Box<Expr>, Option<Box<Expr>>),
     Call(Box<Expr>, Vec<Argument>),
+    Callable(Box<Expr>),
     Eval(Box<Expr>),
     Include(IncludeKind, Box<Expr>),
     Isset(Vec<Expr>),
@@ -154,6 +155,13 @@ impl TypeDecl {
     pub fn accepts(&self, value: &Value) -> bool {
         self.contains("mixed")
             || self.members.iter().any(|member| {
+                if matches!(value, Value::Closure(_))
+                    && member
+                        .trim_start_matches('\\')
+                        .eq_ignore_ascii_case("Closure")
+                {
+                    return true;
+                }
                 matches!(
                     (member.as_str(), value),
                     ("null", Value::Null)
@@ -164,6 +172,7 @@ impl TypeDecl {
                         | ("float", Value::Float(_))
                         | ("string", Value::String(_))
                         | ("array" | "iterable", Value::Array(_))
+                        | ("object" | "callable", Value::Closure(_))
                 )
             })
     }
@@ -191,9 +200,11 @@ pub(crate) enum Argument {
 impl Expr {
     pub fn is_constant_expression(&self) -> bool {
         match &self.kind {
+            ExprKind::Callable(callee) => matches!(callee.kind, ExprKind::Constant(_)),
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
             ExprKind::Cast(kind, e) => *kind != CastKind::Void && e.is_constant_expression(),
+            ExprKind::Binary(op, _, _) if op == "|>" => false,
             ExprKind::Index(a, Some(b)) | ExprKind::Binary(_, a, b) => {
                 a.is_constant_expression() && b.is_constant_expression()
             }

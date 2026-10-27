@@ -52,6 +52,11 @@ pub(super) fn read_offset(
     warnings: &mut Vec<String>,
 ) -> Result<Value, Error> {
     match value {
+        Value::Closure(_) => Err(Error::new(
+            ErrorKind::Error,
+            "Cannot use object of type Closure as array",
+            line,
+        )),
         Value::Array(array) => {
             let key = offset.array_key(line, false, warnings)?;
             if let Some(value) = array.get(&key) {
@@ -256,7 +261,7 @@ fn write_string(
         warnings.push(format!("Illegal string offset {index} on line {line}"));
         return Ok(Value::Null);
     };
-    let replacement = string_bytes(&new_value, line, warnings);
+    let replacement = string_bytes(&new_value, line, warnings)?;
     let Some(byte) = replacement.first().copied() else {
         return Err(Error::new(
             ErrorKind::Error,

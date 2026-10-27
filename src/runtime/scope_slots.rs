@@ -96,6 +96,7 @@ impl Scope {
             ExprKind::Variable(name) if !expr.is_globals() => self.reserve(name),
             ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
             ExprKind::Group(inner)
+            | ExprKind::Callable(inner)
             | ExprKind::DynamicVariable(inner)
             | ExprKind::Unary(_, inner)
             | ExprKind::Cast(_, inner)

@@ -10,7 +10,7 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, thirty-one differential fixtures, explicit unsupported reports, and CI.
+   runner, thirty-three differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Supported fixtures execute as real files with
    a selectable suite working directory and generated-file cleanup. Reference
    comparisons include process exit status, including intentional nonzero exits.
@@ -23,6 +23,9 @@ definition of completion.
    recursion, defaults, named arguments, variadics, and call unpacking implemented.
    Function argument inspection supports live parameters, omitted defaults,
    named arguments, and extra positional arguments.
+   First-class function callables support identity, normal argument binding,
+   callable/Closure/object types, and PHP 8.5 constant initializers. Pipe chains
+   accept these objects and function-name strings with normal caller strictness.
    Basic string interpolation, Unicode escapes, heredoc/nowdoc, and byte string
    offset reads/writes implemented.
    All loop forms, alternative loop syntax, and numbered break/continue implemented.
@@ -50,7 +53,8 @@ definition of completion.
    magic constants, and included-file tracking implemented.
    Remaining: references,
    advanced interpolation, object casts, complete
-   operators, class-context magic constants, other superglobals, by-reference functions, closures,
+   operators, class-context magic constants, other superglobals, by-reference functions,
+   anonymous/arrow functions, Closure methods,
    intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
 4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,
@@ -62,7 +66,8 @@ definition of completion.
    the other core and standard builtins, streams and
    filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.
-6. **PHP 8.5 specifics:** pipe operator, clone-with, URI extension, new APIs and
+6. **PHP 8.5 specifics:** pipe operator implemented for available callable kinds;
+   remaining: invokable objects/methods, clone-with, URI extension, new APIs and
    attributes, and migration-guide compatibility changes.
 7. **Deployment and completion audit:** configuration, environment and SAPI
    behavior, resource limits, supported-platform validation, upstream unit and

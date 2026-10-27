@@ -128,6 +128,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         }
         ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
         ExprKind::Group(value)
+        | ExprKind::Callable(value)
         | ExprKind::DynamicVariable(value)
         | ExprKind::Unary(_, value)
         | ExprKind::Cast(_, value)
@@ -214,7 +215,9 @@ fn constant(expr: &Expr) -> Option<Value> {
             ExprKind::Unary(op, value) => {
                 eligible(value) && !(op == "!" && matches!(constant(value), Some(Value::Float(_))))
             }
-            ExprKind::Binary(op, left, right) => op != "??" && eligible(left) && eligible(right),
+            ExprKind::Binary(op, left, right) => {
+                !matches!(op.as_str(), "??" | "|>") && eligible(left) && eligible(right)
+            }
             ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 elements.iter().all(|element| match element {
                     ArrayElement::Entry(key, value) => {

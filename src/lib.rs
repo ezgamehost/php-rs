@@ -1,5 +1,6 @@
 mod array;
 mod ast;
+mod closure;
 mod error;
 mod lexer;
 mod parser;
@@ -9,6 +10,7 @@ mod source;
 mod value;
 
 pub use array::{ArrayKey, PhpArray};
+pub use closure::Closure;
 pub use error::{Error, ErrorKind};
 pub use runtime::Runtime;
 pub use value::Value;

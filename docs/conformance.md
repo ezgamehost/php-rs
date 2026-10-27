@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 31 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 33 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -17,7 +17,9 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
-| PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 0 | 5 | 22 |
+| PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
+| PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 8 | 11 | 12 |
+| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 2 | 19 | 44 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -70,8 +72,8 @@ cases require unsupported `EXPECTF`. Project regressions cover invalid targets,
 case-sensitive labels, branch entry, loop exits, and switch resumption. Eighteen
 normal-output examples also match the reference.
 
-The [exit-suite report](conformance/php-8.5.0-exit.txt) records zero passing cases,
-five failures, and 22 unsupported cases. These require process execution APIs,
+The [exit-suite report](conformance/php-8.5.0-exit.txt) records one passing case,
+four failures, and 22 unsupported cases. The remaining cases require process execution APIs,
 objects/closures, output handling, or additional PHPT sections. Separately,
 108 exit cases (18 values × weak/strict typing × three call forms) match PHP 8.5.0
 for output, process status, and diagnostic presence. This does not compare
@@ -86,6 +88,17 @@ location formatting and the CLI's extra warning prefix. Project regressions
 also cover typed arguments/returns, string offsets, variable names, strict
 rejection, and warning timing. This is targeted coverage; exact diagnostic
 formatting and full constant/default-expression compatibility remain unfinished.
+
+The [pipe report](conformance/php-8.5.0-pipe_operator.txt) and
+[first-class callable report](conformance/php-8.5.0-first_class_callable.txt)
+record ten passing upstream cases. First-class `exit`/`die` support also adds
+one passing case to the exit suite. Remaining cases require anonymous/arrow
+functions, methods, references, namespaces, exceptions, reflection, missing
+builtins, or unsupported PHPT sections. Separately, 273 invocation examples
+matched PHP 8.5.0 for output, process status, and diagnostic presence, including
+weak/strict typing, nine parameter types, object identity, constants/defaults,
+pipe precedence, and argument binding. Exact diagnostic text and complete
+object-handle reuse are not covered by that matrix.
 
 The upstream basic-suite failures are:
 

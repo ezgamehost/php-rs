@@ -47,6 +47,7 @@ pub struct Runtime {
     included_set: HashSet<std::path::PathBuf>,
     working_directory: Option<std::path::PathBuf>,
     exit_status: Option<i32>,
+    next_object_id: usize,
 }
 struct Location {
     name: Vec<u8>,
@@ -107,7 +108,7 @@ impl Runtime {
                 for value in values {
                     let v = self.eval(value)?;
                     self.output
-                        .extend(string_bytes(&v, value.line, &mut self.warnings));
+                        .extend(string_bytes(&v, value.line, &mut self.warnings)?);
                 }
             }
             Stmt::Expr(expr) => {
@@ -177,7 +178,9 @@ impl Runtime {
                             Some(value) => value.clone(),
                             None => self.eval(subject)?,
                         };
-                        if value.compare(&candidate) == Some(Ordering::Equal) {
+                        if value.compare(&candidate, subject.line, &mut self.warnings)
+                            == Some(Ordering::Equal)
+                        {
                             selected = Some(index);
                             break;
                         }
@@ -204,7 +207,7 @@ impl Runtime {
                             flow => return Ok(flow.leave_level()),
                         }
                     }
-                } else {
+                } else if !matches!(value, Value::Closure(_)) {
                     self.warnings.push(format!(
                         "foreach() argument must be of type array|object on line {}",
                         iter.line
@@ -390,12 +393,12 @@ impl Runtime {
         match &expr.kind {
             ExprKind::Eval(code) => {
                 let value = self.eval(code)?;
-                let code = string_bytes(&value, line, &mut self.warnings);
+                let code = string_bytes(&value, line, &mut self.warnings)?;
                 self.eval_code(&code, line)
             }
             ExprKind::Include(kind, path) => {
                 let value = self.eval(path)?;
-                let path = string_bytes(&value, line, &mut self.warnings);
+                let path = string_bytes(&value, line, &mut self.warnings)?;
                 self.include_file(*kind, &path, line)
             }
             ExprKind::Cast(kind, operand) => {
@@ -406,16 +409,17 @@ impl Runtime {
             ExprKind::Print(operand) => {
                 let value = self.eval(operand)?;
                 self.output
-                    .extend(string_bytes(&value, line, &mut self.warnings));
+                    .extend(string_bytes(&value, line, &mut self.warnings)?);
                 Ok(Value::Int(1))
             }
             ExprKind::Call(callee, args) => self.call(callee, args, line),
+            ExprKind::Callable(callee) => self.acquire_callable(callee, line),
             ExprKind::Literal(value) => Ok(value.clone()),
             ExprKind::Interpolated(parts) => {
                 let mut result = Vec::new();
                 for part in parts {
                     let value = self.eval(part)?;
-                    result.extend(string_bytes(&value, part.line, &mut self.warnings));
+                    result.extend(string_bytes(&value, part.line, &mut self.warnings)?);
                 }
                 Ok(Value::String(result))
             }
@@ -576,6 +580,11 @@ impl Runtime {
                 }
             }
             ExprKind::Binary(op, left, right) => {
+                if op == "|>" {
+                    let value = self.eval(left)?;
+                    let callable = self.eval(right)?;
+                    return self.pipe_call(callable, value, line);
+                }
                 if op == "??" {
                     let lhs = self.coalesce_read(left, false)?;
                     return if lhs == Value::Null {
@@ -609,8 +618,8 @@ fn binary(
     use Value::*;
     match op {
         "." => {
-            let mut bytes = string_bytes(&left, line, warnings);
-            bytes.extend(string_bytes(&right, line, warnings));
+            let mut bytes = string_bytes(&left, line, warnings)?;
+            bytes.extend(string_bytes(&right, line, warnings)?);
             return Ok(String(bytes));
         }
         "&&" | "and" => return Ok(Bool(left.is_truthy() && right.is_truthy())),
@@ -623,7 +632,7 @@ fn binary(
         "===" => return Ok(Bool(left == right)),
         "!==" => return Ok(Bool(left != right)),
         "==" | "!=" | "<>" | "<" | "<=" | ">" | ">=" | "<=>" => {
-            let order = left.compare(&right);
+            let order = left.compare(&right, line, warnings);
             return Ok(match op {
                 "==" => Bool(order == Some(Ordering::Equal)),
                 "!=" | "<>" => Bool(order != Some(Ordering::Equal)),
@@ -807,10 +816,17 @@ fn increment(
     }
 }
 
-fn string_bytes(value: &Value, line: usize, warnings: &mut Vec<String>) -> Vec<u8> {
+fn string_bytes(value: &Value, line: usize, warnings: &mut Vec<String>) -> Result<Vec<u8>, Error> {
+    if matches!(value, Value::Closure(_)) {
+        return Err(Error::new(
+            ErrorKind::Error,
+            "Object of class Closure could not be converted to string",
+            line,
+        ));
+    }
     value.warn_nan("string", line, warnings);
     if matches!(value, Value::Array(_)) {
         warnings.push(format!("Array to string conversion on line {line}"));
     }
-    value.to_bytes()
+    Ok(value.to_bytes())
 }

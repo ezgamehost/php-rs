@@ -97,7 +97,7 @@ impl Runtime {
 
     pub(super) fn variable_name(&mut self, expression: &Expr) -> Result<Vec<u8>, Error> {
         let value = self.eval(expression)?;
-        Ok(string_bytes(&value, expression.line, &mut self.warnings))
+        string_bytes(&value, expression.line, &mut self.warnings)
     }
 
     pub(super) fn bind_global(&mut self, name: Vec<u8>) {

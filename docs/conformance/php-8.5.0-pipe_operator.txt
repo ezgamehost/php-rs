@@ -1,0 +1,37 @@
+PHP 8.5.0 Zend/tests/pipe_operator baseline, 2026-10-26
+Runner: php-rs-phpt --reference /path/to/php-8.5.0/sapi/cli/php --cwd /path/to/php-8.5.0 /path/to/php-8.5.0/Zend/tests/pipe_operator
+Unsupported cases were not executed. Exit status: 1.
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/pipe_operator/ast.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/pipe_operator/call_by_ref.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/call_prefer_by_ref.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/pipe_operator/complex_ordering.phpt PASS
+Zend/tests/pipe_operator/compound_userland_calls.phpt PASS
+Zend/tests/pipe_operator/exception_interruption.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/function_not_found.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/pipe_operator/generators.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/pipe_operator/gh18965.phpt UNSUPPORTED: INI
+Zend/tests/pipe_operator/mixed_callable_call.phpt FAIL: ParseError: Expected ';' on line 13
+Zend/tests/pipe_operator/namespaced_functions.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/pipe_operator/optional_parameters.phpt PASS
+Zend/tests/pipe_operator/oss_fuzz_427814452.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/pipe_operator/oss_fuzz_439125710.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/prec_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/prec_002.phpt FAIL: ParseError: Expected ')' on line 4
+Zend/tests/pipe_operator/prec_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/prec_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/prec_005.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/pipe_operator/prec_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/prec_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/precedence_addition.phpt PASS
+Zend/tests/pipe_operator/precedence_coalesce.phpt PASS
+Zend/tests/pipe_operator/precedence_comparison.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/precedence_ternary.phpt PASS
+Zend/tests/pipe_operator/simple_builtin_call.phpt PASS
+Zend/tests/pipe_operator/simple_userland_call.phpt PASS
+Zend/tests/pipe_operator/too_many_parameters.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/type_mismatch.phpt UNSUPPORTED: EXPECTF
+Zend/tests/pipe_operator/void_return.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/pipe_operator/wrapped_chains.phpt FAIL: ParseError: Expected ';' on line 11
+8 passed, 11 failed, 12 unsupported

@@ -676,7 +676,7 @@ impl Parser {
                 if name != canonical {
                     self.warnings.push(format!("Deprecated: Non-canonical cast ({name}) is deprecated, use the ({canonical}) cast instead on line {line}"));
                 }
-                ExprKind::Cast(kind, Box::new(self.expr(19)?))
+                ExprKind::Cast(kind, Box::new(self.expr(20)?))
             }
             Kind::Value(value) => ExprKind::Literal(value),
             Kind::Interpolated(parts) => {
@@ -801,10 +801,10 @@ impl Parser {
                 ExprKind::Group(Box::new(expr))
             }
             Kind::Symbol(op) if ["+", "-", "!", "~"].contains(&op.as_str()) => {
-                ExprKind::Unary(op, Box::new(self.expr(19)?))
+                ExprKind::Unary(op, Box::new(self.expr(20)?))
             }
             Kind::Symbol(op) if op == "++" || op == "--" => {
-                let expr = self.expr(21)?;
+                let expr = self.expr(22)?;
                 if !expr.is_writable() {
                     return Err(Error::parse("Expected variable", line));
                 }
@@ -820,15 +820,22 @@ impl Parser {
                     self.token().line,
                 ));
             }
-            if min <= 22 && self.eat("(") {
-                let args = self.arguments()?;
-                lhs = Expr {
-                    kind: ExprKind::Call(Box::new(lhs), args),
-                    line,
+            if min <= 23 && self.eat("(") {
+                let kind = if self.is("...")
+                    && self
+                        .tokens
+                        .get(self.pos + 1)
+                        .is_some_and(|t| t.kind == Kind::Symbol(")".into()))
+                {
+                    self.pos += 2;
+                    ExprKind::Callable(Box::new(lhs))
+                } else {
+                    ExprKind::Call(Box::new(lhs), self.arguments()?)
                 };
+                lhs = Expr { kind, line };
                 continue;
             }
-            if min <= 22 && self.eat("[") {
+            if min <= 23 && self.eat("[") {
                 let key = if self.is("]") {
                     None
                 } else {
@@ -841,7 +848,7 @@ impl Parser {
                 };
                 continue;
             }
-            if min <= 21 && (self.is("++") || self.is("--")) {
+            if min <= 22 && (self.is("++") || self.is("--")) {
                 let delta = if self.eat("++") {
                     1
                 } else {
@@ -931,11 +938,12 @@ fn binding_power(op: &str) -> Option<(u8, bool)> {
         "|" => (9, false),
         "^" => (10, false),
         "&" => (11, false),
-        "." => (14, false),
-        "<<" | ">>" => (15, false),
-        "+" | "-" => (16, false),
-        "*" | "/" | "%" => (17, false),
-        "**" => (20, true),
+        "|>" => (14, false),
+        "." => (15, false),
+        "<<" | ">>" => (16, false),
+        "+" | "-" => (17, false),
+        "*" | "/" | "%" => (18, false),
+        "**" => (21, true),
         _ => return None,
     })
 }

@@ -194,6 +194,7 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
             }
         }
         ExprKind::Group(value)
+        | ExprKind::Callable(value)
         | ExprKind::DynamicVariable(value)
         | ExprKind::Eval(value)
         | ExprKind::Include(_, value)

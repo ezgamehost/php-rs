@@ -38,24 +38,92 @@ impl Runtime {
         args: &[Argument],
         line: usize,
     ) -> Result<Value, Error> {
-        let name = match &callee.kind {
-            ExprKind::Constant(name) => name.clone(),
-            _ => match self.eval(callee)? {
-                Value::String(name) => name,
-                _ => return Err(Error::new(ErrorKind::Error, "Value is not callable", line)),
+        let target = self.resolve_callee(callee, line)?;
+        self.invoke(
+            target,
+            args,
+            line,
+            !matches!(callee.kind, ExprKind::Constant(_)),
+        )
+    }
+
+    pub(super) fn acquire_callable(&mut self, callee: &Expr, line: usize) -> Result<Value, Error> {
+        let target = self.resolve_callee(callee, line)?;
+        if let Some(closure) = target.closure {
+            return Ok(Value::Closure(closure));
+        }
+        self.next_object_id += 1;
+        Ok(Value::Closure(Rc::new(crate::Closure {
+            name: if matches!(target.builtin, Some(Builtin::Exit)) {
+                b"exit".to_vec()
+            } else {
+                target.name
             },
-        };
+            function: target.function,
+            object_id: self.next_object_id,
+        })))
+    }
+
+    pub(super) fn pipe_call(
+        &mut self,
+        callable: Value,
+        value: Value,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let target = self.resolve_callable(callable, line)?;
+        self.invoke(
+            target,
+            &[Argument::Positional(Expr {
+                kind: ExprKind::Literal(value),
+                line,
+            })],
+            line,
+            true,
+        )
+    }
+
+    fn resolve_callee(&mut self, callee: &Expr, line: usize) -> Result<CallTarget, Error> {
+        match &callee.kind {
+            ExprKind::Constant(name) => self.resolve_name(name.clone(), line),
+            _ => {
+                let value = self.eval(callee)?;
+                self.resolve_callable(value, line)
+            }
+        }
+    }
+
+    fn resolve_callable(&self, value: Value, line: usize) -> Result<CallTarget, Error> {
+        match value {
+            Value::String(name) => self.resolve_name(name, line),
+            Value::Closure(closure) => Ok(CallTarget {
+                name: closure.name.clone(),
+                function: closure.function.clone(),
+                builtin: if closure.function.is_none() {
+                    Builtin::lookup(&closure.name)
+                } else {
+                    None
+                },
+                closure: Some(closure),
+            }),
+            value => Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Value of type {} is not callable",
+                    builtins::debug_type(&value)
+                ),
+                line,
+            )),
+        }
+    }
+
+    fn resolve_name(&self, name: Vec<u8>, line: usize) -> Result<CallTarget, Error> {
         let normalized_name = name
             .strip_prefix(b"\\")
             .unwrap_or(&name)
             .to_ascii_lowercase();
         let function = self.functions.get(&normalized_name).cloned();
         let builtin = Builtin::lookup(&normalized_name);
-        let parameters = if let Some(function) = &function {
-            function.parameters.clone()
-        } else if let Some(builtin) = builtin {
-            builtin.parameters()
-        } else {
+        if function.is_none() && builtin.is_none() {
             return Err(Error::new(
                 ErrorKind::Error,
                 format!(
@@ -64,6 +132,32 @@ impl Runtime {
                 ),
                 line,
             ));
+        }
+        Ok(CallTarget {
+            name: normalized_name,
+            function,
+            builtin,
+            closure: None,
+        })
+    }
+
+    fn invoke(
+        &mut self,
+        target: CallTarget,
+        args: &[Argument],
+        line: usize,
+        dynamic: bool,
+    ) -> Result<Value, Error> {
+        let CallTarget {
+            name,
+            function,
+            builtin,
+            ..
+        } = target;
+        let parameters = if let Some(function) = &function {
+            function.parameters.clone()
+        } else {
+            builtin.unwrap().parameters()
         };
         let mut bound = BoundArguments::new(&parameters);
         for arg in args {
@@ -120,14 +214,7 @@ impl Runtime {
                     line,
                 ));
             }
-            return self.call_builtin(
-                builtin,
-                &name,
-                bound.fixed,
-                bound.extra,
-                line,
-                !matches!(callee.kind, ExprKind::Constant(_)),
-            );
+            return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
         }
         let function = function.unwrap();
         let extra: Vec<_> = bound
@@ -386,4 +473,11 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mu
             _ => {}
         }
     }
+}
+
+struct CallTarget {
+    name: Vec<u8>,
+    function: Option<Rc<FunctionDecl>>,
+    builtin: Option<Builtin>,
+    closure: Option<Rc<crate::Closure>>,
 }

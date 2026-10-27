@@ -10,10 +10,20 @@ pub(super) fn cast(
     line: usize,
     warnings: &mut Vec<String>,
 ) -> Result<Value, Error> {
+    if matches!(value, Value::Closure(_)) && matches!(kind, CastKind::Int | CastKind::Float) {
+        let name = if kind == CastKind::Int {
+            "int"
+        } else {
+            "float"
+        };
+        warnings.push(format!(
+            "Object of class Closure could not be converted to {name} on line {line}"
+        ));
+    }
     Ok(match kind {
         CastKind::Void => Value::Null,
         CastKind::Bool => Value::Bool(value.to_bool(line, warnings)),
-        CastKind::String => Value::String(string_bytes(&value, line, warnings)),
+        CastKind::String => Value::String(string_bytes(&value, line, warnings)?),
         CastKind::Array => match value {
             Value::Array(_) => value,
             value => {

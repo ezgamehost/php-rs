@@ -49,6 +49,10 @@ new request. The CLI returns the low eight bits of the requested status.
   named arguments, variadics, argument unpacking, and string-based function calls.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
   with live parameter values, default gaps, and separate variadic argument copies.
+- First-class function callables (`name(...)`, `$name(...)`) with identity,
+  normal argument binding, callable/Closure/object types, and PHP 8.5 constant
+  initializers. The pipe operator (`|>`) chains callable strings and these
+  function objects, preserving left-to-right evaluation and caller strictness.
 - Live `global` bindings and function-local `static` storage, including dynamic
   initializers, recursive calls, and local `unset` behavior. Variable variables
   (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
@@ -88,10 +92,13 @@ new request. The CLI returns the low eight bits of the requested status.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
 
-Known gaps include intersection/DNF types, closures, most builtins, objects, references, exceptions,
+Known gaps include intersection/DNF types, anonymous/arrow functions, most builtins,
+general objects and methods, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
-Class-name and object type declarations can be parsed, but objects and class
-resolution are not implemented. Callable checks currently cover function names.
+Class-name and object type declarations can be parsed; only first-class function
+objects are implemented so far. General class resolution, Closure methods,
+reflection, and complete object diagnostics/handle allocation remain unfinished.
+Callable checks currently cover function names and first-class function objects.
 Other `declare` directives are not implemented. Shutdown callbacks, output
 handlers, and object destructor execution remain unimplemented.
 Automatic initialization and scope handling for the other superglobals are not
@@ -135,6 +142,8 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [PHP 8.5 incompatibilities](https://www.php.net/manual/en/migration85.incompatible.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Function argument inspection](https://www.php.net/manual/en/function.func-get-args.php)
+- [First-class callables](https://www.php.net/manual/en/functions.first_class_callable_syntax.php)
+- [Pipe operator](https://www.php.net/manual/en/language.operators.functional.php)
 - [Exit](https://www.php.net/manual/en/function.exit.php)
 - [Goto](https://www.php.net/manual/en/control-structures.goto.php)
 - [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)

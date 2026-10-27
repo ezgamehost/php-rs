@@ -27,7 +27,7 @@ impl Runtime {
         {
             return Some(Value::Float(n as f64));
         }
-        if strict || matches!(value, Value::Null | Value::Array(_)) {
+        if strict || matches!(value, Value::Null | Value::Array(_) | Value::Closure(_)) {
             return None;
         }
         // A numeric string chooses int or float by its representation when both

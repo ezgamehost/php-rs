@@ -30,7 +30,7 @@ impl ArrayKey {
                     Self::String(bytes.clone())
                 }
             }
-            Value::Array(_) => {
+            Value::Array(_) | Value::Closure(_) => {
                 return Err(Error::new(
                     ErrorKind::TypeError,
                     "Illegal offset type",
@@ -113,7 +113,12 @@ impl PhpArray {
             }
         }
     }
-    pub(crate) fn compare(&self, other: &Self) -> Option<Ordering> {
+    pub(crate) fn compare(
+        &self,
+        other: &Self,
+        line: usize,
+        warnings: &mut Vec<String>,
+    ) -> Option<Ordering> {
         if self.len() != other.len() {
             return self.len().partial_cmp(&other.len());
         }
@@ -121,7 +126,7 @@ impl PhpArray {
             let Some(right) = other.get(key) else {
                 return Some(Ordering::Greater);
             };
-            let order = left.compare(right);
+            let order = left.compare(right, line, warnings);
             if order != Some(Ordering::Equal) {
                 return order;
             }

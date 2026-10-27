@@ -36,6 +36,7 @@ impl Builtin {
             b"is_bool" => Self::Is("bool"),
             b"is_null" => Self::Is("null"),
             b"is_string" => Self::Is("string"),
+            b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
             b"array_keys" => Self::ArrayKeys,
             b"array_values" => Self::ArrayValues,
@@ -171,12 +172,16 @@ impl Runtime {
                     Value::Float(_) => "double",
                     Value::String(_) => "string",
                     Value::Array(_) => "array",
+                    Value::Closure(_) => "object",
                 }
                 .as_bytes()
                 .to_vec(),
             )),
             Builtin::GetDebugType => Ok(Value::String(debug_type(first).as_bytes().to_vec())),
-            Builtin::Is(kind) => Ok(Value::Bool(debug_type(first) == kind)),
+            Builtin::Is(kind) => Ok(Value::Bool(
+                debug_type(first) == kind
+                    || (kind == "object" && matches!(first, Value::Closure(_))),
+            )),
             Builtin::VarDump => {
                 if extra
                     .entries()
@@ -239,7 +244,7 @@ impl Runtime {
                         if strict {
                             value == filter
                         } else {
-                            value.compare(filter) == Some(Ordering::Equal)
+                            value.compare(filter, line, &mut self.warnings) == Some(Ordering::Equal)
                         }
                     }) {
                         result.append(key.to_value(), line)?;
@@ -271,7 +276,7 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<Vec<u8>, Error> {
-        if matches!(value, Value::Array(_))
+        if matches!(value, Value::Array(_) | Value::Closure(_))
             || (self.strict_types && !matches!(value, Value::String(_)))
         {
             return Err(type_error(function, position, "string", line));
@@ -288,7 +293,7 @@ impl Runtime {
         line: usize,
     ) -> Result<i64, Error> {
         if (self.strict_types && !matches!(value, Value::Int(_)))
-            || matches!(value, Value::Array(_))
+            || matches!(value, Value::Array(_) | Value::Closure(_))
             || matches!(value, Value::String(s) if crate::value::numeric_string(s).is_none())
         {
             return Err(type_error(function, position, "int", line));
@@ -312,7 +317,7 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<bool, Error> {
-        if matches!(value, Value::Array(_))
+        if matches!(value, Value::Array(_) | Value::Closure(_))
             || (self.strict_types && !matches!(value, Value::Bool(_)))
         {
             return Err(type_error(function, position, "bool", line));
@@ -359,6 +364,7 @@ pub(super) fn debug_type(value: &Value) -> &'static str {
         Value::Float(_) => "float",
         Value::String(_) => "string",
         Value::Array(_) => "array",
+        Value::Closure(_) => "Closure",
     }
 }
 fn count(array: &PhpArray, recursive: bool) -> i64 {
@@ -378,6 +384,43 @@ fn count(array: &PhpArray, recursive: bool) -> i64 {
 }
 fn dump(value: &Value, depth: usize, out: &mut Vec<u8>) {
     match value {
+        Value::Closure(closure) => {
+            let parameters = closure
+                .function
+                .as_ref()
+                .map(|f| f.parameters.clone())
+                .unwrap_or_else(|| Builtin::lookup(&closure.name).unwrap().parameters());
+            let mut properties = PhpArray::default();
+            let name = closure.function.as_ref().map_or(&closure.name, |f| &f.name);
+            properties.insert(
+                ArrayKey::String(b"function".to_vec()),
+                Value::String(name.clone()),
+            );
+            if !parameters.is_empty() {
+                let mut entries = PhpArray::default();
+                for param in parameters {
+                    let mut key = b"$".to_vec();
+                    key.extend(param.name);
+                    entries.insert(
+                        ArrayKey::String(key),
+                        Value::String(if param.default.is_some() || param.variadic {
+                            b"<optional>".to_vec()
+                        } else {
+                            b"<required>".to_vec()
+                        }),
+                    );
+                }
+                properties.insert(
+                    ArrayKey::String(b"parameter".to_vec()),
+                    Value::Array(Rc::new(entries)),
+                );
+            }
+            let mut rendered = Vec::new();
+            dump(&Value::Array(Rc::new(properties)), depth, &mut rendered);
+            let start = rendered.iter().position(|b| *b == b'(').unwrap();
+            out.extend_from_slice(format!("object(Closure)#{} ", closure.object_id).as_bytes());
+            out.extend_from_slice(&rendered[start..]);
+        }
         Value::Null => out.extend_from_slice(b"NULL\n"),
         Value::Bool(b) => out.extend_from_slice(if *b {
             b"bool(true)\n"

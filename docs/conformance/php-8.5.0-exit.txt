@@ -24,9 +24,9 @@ Zend/tests/exit/define_goto_label_exit_with_jump.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exit/die_string_cast_exception.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/exit/disabling_die.phpt UNSUPPORTED: INI
 Zend/tests/exit/disabling_exit.phpt UNSUPPORTED: INI
-Zend/tests/exit/exit_as_function.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/exit/exit_as_function.phpt PASS
 Zend/tests/exit/exit_named_arg.phpt UNSUPPORTED: CLEAN
 Zend/tests/exit/exit_statements.phpt UNSUPPORTED: CLEAN
 Zend/tests/exit/exit_string_with_buffer_output.phpt FAIL: ParseError: Expected ')' on line 3
 Zend/tests/exit/exit_values.phpt UNSUPPORTED: CLEAN, EXPECTF
-0 passed, 5 failed, 22 unsupported
+1 passed, 4 failed, 22 unsupported

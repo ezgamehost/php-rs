@@ -11,6 +11,7 @@ pub enum Value {
     Float(f64),
     String(Vec<u8>),
     Array(Rc<PhpArray>),
+    Closure(Rc<crate::Closure>),
 }
 
 impl Value {
@@ -29,6 +30,7 @@ impl Value {
 
     pub fn is_truthy(&self) -> bool {
         match self {
+            Self::Closure(_) => true,
             Self::Null => false,
             Self::Array(a) => !a.is_empty(),
             Self::Bool(b) => *b,
@@ -45,10 +47,16 @@ impl Value {
             Self::Float(n) => format_float(*n).into_bytes(),
             Self::String(s) => s.clone(),
             Self::Array(_) => b"Array".to_vec(),
+            Self::Closure(_) => b"Object".to_vec(),
         }
     }
     pub(crate) fn number(&self, line: usize, warnings: &mut Vec<String>) -> Result<Self, Error> {
         match self {
+            Self::Closure(_) => Err(Error::new(
+                ErrorKind::TypeError,
+                "Unsupported operand type: Closure",
+                line,
+            )),
             Self::Array(_) => Err(Error::new(
                 ErrorKind::TypeError,
                 "Unsupported operand type: array",
@@ -102,14 +110,40 @@ impl Value {
             _ => unreachable!("numeric value required"),
         }
     }
-    pub(crate) fn compare(&self, other: &Self) -> Option<Ordering> {
+    pub(crate) fn compare(
+        &self,
+        other: &Self,
+        line: usize,
+        warnings: &mut Vec<String>,
+    ) -> Option<Ordering> {
         use Value::*;
         match (self, other) {
             (Bool(_), _) | (_, Bool(_)) => self.is_truthy().partial_cmp(&other.is_truthy()),
             (Null, String(s)) => b"".as_slice().partial_cmp(s.as_slice()),
             (String(s), Null) => s.as_slice().partial_cmp(b"".as_slice()),
             (Null, _) | (_, Null) => self.is_truthy().partial_cmp(&other.is_truthy()),
-            (Array(a), Array(b)) => a.compare(b),
+            (Closure(a), Closure(b)) => a.same_function(b).then_some(Ordering::Equal),
+            (Closure(_), Int(_) | Float(_)) => {
+                let kind = if matches!(other, Int(_)) {
+                    "int"
+                } else {
+                    "float"
+                };
+                warnings.push(format!("Notice: Object of class Closure could not be converted to {kind} on line {line}"));
+                Int(1).compare(other, line, warnings)
+            }
+            (Int(_) | Float(_), Closure(_)) => {
+                let kind = if matches!(self, Int(_)) {
+                    "int"
+                } else {
+                    "float"
+                };
+                warnings.push(format!("Notice: Object of class Closure could not be converted to {kind} on line {line}"));
+                self.compare(&Int(1), line, warnings)
+            }
+            (Closure(_), _) => Some(Ordering::Greater),
+            (_, Closure(_)) => Some(Ordering::Less),
+            (Array(a), Array(b)) => a.compare(b, line, warnings),
             (Array(_), _) => Some(Ordering::Greater),
             (_, Array(_)) => Some(Ordering::Less),
             (Int(a), Int(b)) => a.partial_cmp(b),
@@ -118,15 +152,15 @@ impl Value {
             }
             (Float(n), String(_)) | (String(_), Float(n)) if n.is_nan() => None,
             (String(a), String(b)) => match (numeric_string(a), numeric_string(b)) {
-                (Some(a), Some(b)) => a.compare(&b),
+                (Some(a), Some(b)) => a.compare(&b, line, warnings),
                 _ => a.partial_cmp(b),
             },
             (String(a), _) => match numeric_string(a) {
-                Some(a) => a.compare(other),
+                Some(a) => a.compare(other, line, warnings),
                 None => a.partial_cmp(&other.to_bytes()),
             },
             (_, String(b)) => match numeric_string(b) {
-                Some(b) => self.compare(&b),
+                Some(b) => self.compare(&b, line, warnings),
                 None => self.to_bytes().partial_cmp(b),
             },
         }
