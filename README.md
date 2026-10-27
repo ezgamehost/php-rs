@@ -38,6 +38,8 @@ output and warnings when execution fails. Parsing happens before execution.
   `: … endfor` / `endwhile` / `endforeach` syntax.
 - `switch` with loose case comparison, fall-through, numbered control flow,
   alternative syntax, and PHP 8.5 case-semicolon deprecation warnings.
+- `match` expressions with strict comparisons, grouped conditions, lazy arms,
+  default selection, and `UnhandledMatchError` for unmatched values.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 - Variable/array interpolation, braced variable calls, Unicode escapes, binary

@@ -5,14 +5,19 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 12 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 13 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 33 | 134 | 127 |
+| PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 11 | 11 | 13 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
 suite is not green; interpolation, references, typed declarations, missing
 control structures, and runtime APIs account for many of the remaining failures.
+
+The [match-suite report](conformance/php-8.5.0-match.txt) records a separate
+upstream check. Remaining failures include missing `print`, exceptions, objects,
+and standard-library functions; unsupported sections remain unexecuted.
 
 The upstream basic-suite failures are:
 

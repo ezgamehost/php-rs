@@ -8,6 +8,7 @@ pub enum ErrorKind {
     ArithmeticError,
     ArgumentCountError,
     ValueError,
+    UnhandledMatchError,
     Error,
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     Error, Value,
-    ast::{Argument, Expr, ExprKind, FunctionDecl, Parameter, Stmt, SwitchCase},
+    ast::{Argument, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt, SwitchCase},
     lexer::{Kind, StringPart, Token},
 };
 
@@ -423,6 +423,42 @@ impl Parser {
         }
         Ok(elements)
     }
+    fn match_expression(&mut self) -> Result<ExprKind, Error> {
+        self.expect("(")?;
+        let subject = self.expr(0)?;
+        self.expect(")")?;
+        self.expect("{")?;
+        let mut arms = Vec::new();
+        let mut has_default = false;
+        while !self.eat("}") {
+            let mut conditions = Vec::new();
+            if self.eat("default") {
+                if has_default {
+                    return Err(Error::parse(
+                        "Match expressions may only contain one default arm",
+                        self.token().line,
+                    ));
+                }
+                has_default = true;
+                self.eat(",");
+            } else {
+                loop {
+                    conditions.push(self.expr(0)?);
+                    if !self.eat(",") || self.is("=>") {
+                        break;
+                    }
+                }
+            }
+            self.expect("=>")?;
+            let result = self.expr(0)?;
+            arms.push(MatchArm { conditions, result });
+            if !self.eat(",") {
+                self.expect("}")?;
+                break;
+            }
+        }
+        Ok(ExprKind::Match(Box::new(subject), arms))
+    }
     fn expr(&mut self, min: u8) -> Result<Expr, Error> {
         let token = self.token().clone();
         let line = token.line;
@@ -465,6 +501,7 @@ impl Parser {
             }
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
+                b"match" => self.match_expression()?,
                 b"array" => {
                     self.expect("(")?;
                     ExprKind::Array(self.array_elements(")")?)
@@ -512,6 +549,12 @@ impl Parser {
         };
         let mut lhs = Expr { kind, line };
         loop {
+            if matches!(lhs.kind, ExprKind::Match(_, _)) && (self.is("[") || self.is("(")) {
+                return Err(Error::parse(
+                    "Parenthesize a match expression before dereferencing it",
+                    self.token().line,
+                ));
+            }
             if min <= 22 && self.eat("(") {
                 let args = self.arguments()?;
                 lhs = Expr {

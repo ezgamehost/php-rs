@@ -7,6 +7,7 @@ use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 mod builtins;
 mod functions;
+mod matching;
 mod offsets;
 use offsets::{Access, Offset, read_offset, unset_path, write_path};
 
@@ -314,6 +315,7 @@ impl Runtime {
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
         let line = expr.line;
         match &expr.kind {
+            ExprKind::Match(subject, arms) => self.match_expression(subject, arms, line),
             ExprKind::Call(callee, args) => self.call(callee, args, line),
             ExprKind::Literal(value) => Ok(value.clone()),
             ExprKind::Interpolated(parts) => {

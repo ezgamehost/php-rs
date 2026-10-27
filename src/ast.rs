@@ -24,6 +24,14 @@ pub(crate) enum ExprKind {
     Assign(Box<Expr>, String, Box<Expr>),
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
+    Match(Box<Expr>, Vec<MatchArm>),
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct MatchArm {
+    /// An empty condition list denotes the default arm.
+    pub conditions: Vec<Expr>,
+    pub result: Expr,
 }
 
 #[derive(Debug, Clone)]

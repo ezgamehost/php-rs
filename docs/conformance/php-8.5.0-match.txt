@@ -1,0 +1,41 @@
+PHP 8.5.0 Zend/tests/match baseline, 2026-10-26
+Runner: cargo run --bin php-rs-phpt -- --reference /path/to/php-8.5.0/sapi/cli/php /path/to/php-8.5.0/Zend/tests/match
+Unsupported cases were not executed. Exit status: 1.
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/match/001.phpt FAIL: ParseError: Expected ';' on line 19
+Zend/tests/match/002.phpt PASS
+Zend/tests/match/003.phpt PASS
+Zend/tests/match/004.phpt PASS
+Zend/tests/match/005.phpt FAIL: ParseError: Expected '}' on line 4
+Zend/tests/match/006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/008.phpt PASS
+Zend/tests/match/009_ast_export.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/match/011.phpt PASS
+Zend/tests/match/012.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/match/017.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/match/023.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/match/024.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/match/027.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/028.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/match/029.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/030.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/037.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/038.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/039.phpt PASS
+Zend/tests/match/040.phpt PASS
+Zend/tests/match/041.phpt PASS
+Zend/tests/match/042.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/043.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/match/044.phpt PASS
+Zend/tests/match/045.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/match/046.phpt FAIL: Error: Call to undefined function strpos() on line 8
+Zend/tests/match/047.phpt PASS
+Zend/tests/match/048.phpt UNSUPPORTED: INI
+Zend/tests/match/049.phpt UNSUPPORTED: INI
+Zend/tests/match/gh11134.phpt PASS
+Zend/tests/match/match_of_phi_optimization.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/match_scdf_cleanup.phpt UNSUPPORTED: EXPECTF
+Zend/tests/match/unmatched_enum.phpt FAIL: ParseError: Expected ';' on line 3
+11 passed, 11 failed, 13 unsupported
