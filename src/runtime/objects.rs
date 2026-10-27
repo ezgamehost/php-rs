@@ -74,6 +74,16 @@ impl Runtime {
         } else {
             None
         };
+        if parent
+            .as_ref()
+            .is_some_and(|p| p.declaration.is_readonly != decl.is_readonly)
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Readonly and non-readonly classes cannot extend each other",
+                decl.line,
+            ));
+        }
         if parent.as_ref().is_some_and(|p| p.declaration.is_final) {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -193,6 +203,7 @@ impl Runtime {
                     name: b"stdClass".to_vec(),
                     parent: None,
                     is_final: false,
+                    is_readonly: false,
                     final_methods: Vec::new(),
                     properties: Vec::new(),
                     static_properties: Vec::new(),
@@ -416,6 +427,17 @@ impl Runtime {
         }
         self.warn_static_as_instance(object, name, line);
         let key = ArrayKey::String(name.to_vec());
+        if object.class.declaration.is_readonly && object.class.property_owner(name).is_none() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot create dynamic property {}::${}",
+                    object.class_name,
+                    String::from_utf8_lossy(name)
+                ),
+                line,
+            ));
+        }
         if object.properties.borrow().get(&key).is_none()
             && !object.class.allow_dynamic
             && !object.class.properties.iter().any(|p| p.name == name)
@@ -460,7 +482,7 @@ impl Runtime {
         match &expr.kind {
             ExprKind::Group(inner) => self.unset_location(inner),
             ExprKind::Property(base, name) => {
-                let value = self.coalesce_read(base, true)?;
+                let value = self.property_write_base(base, true)?;
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
                     validate_property_name(&name, expr.line)?;

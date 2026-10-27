@@ -71,10 +71,11 @@ definition of completion.
    public class constants support inheritance, final restrictions, dynamic names,
    lazy dependency resolution, strict type validation, and covariant type overrides.
    Typed public instance/static properties support uninitialized state, strict
-   defaults, assignment coercion, and invariant inherited declarations.
+   defaults, assignment coercion, and invariant inherited declarations. Readonly
+   properties/classes enforce initialization scope and mutation restrictions.
    Remaining: interfaces, traits, abstract members, intersection/DNF constant types,
    complete constant/default resolution,
-   visibility, readonly properties and hooks, magic methods, reflection, attributes, enums,
+   visibility, cloning (including readonly reinitialization), property hooks, magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function

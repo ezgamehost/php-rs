@@ -136,11 +136,35 @@ impl Parser {
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
         if self.eat("class") {
-            return self.class_declaration(false);
+            return self.class_declaration(false, false);
         }
-        if self.eat("final") {
+        let readonly_class = self.is("readonly")
+            && self.tokens.get(self.pos + 1).is_some_and(|token| {
+                let Kind::Word(word) = &token.kind else {
+                    return false;
+                };
+                [b"class".as_slice(), b"final", b"readonly"]
+                    .iter()
+                    .any(|keyword| word.eq_ignore_ascii_case(keyword))
+            });
+        if self.is("final") || readonly_class {
+            let mut is_final = false;
+            let mut is_readonly = false;
+            loop {
+                let flag = if self.eat("final") {
+                    &mut is_final
+                } else if self.eat("readonly") {
+                    &mut is_readonly
+                } else {
+                    break;
+                };
+                if *flag {
+                    return Err(Error::parse("Duplicate class modifier", self.token().line));
+                }
+                *flag = true;
+            }
             self.expect("class")?;
-            return self.class_declaration(true);
+            return self.class_declaration(is_final, is_readonly);
         }
         let line = self.token().line;
         if self.eat("goto") {

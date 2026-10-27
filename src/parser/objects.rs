@@ -2,7 +2,11 @@ use super::*;
 use crate::ast::{ClassConstant, ClassDecl, PropertyDecl};
 
 impl Parser {
-    pub(super) fn class_declaration(&mut self, is_final: bool) -> Result<Stmt, Error> {
+    pub(super) fn class_declaration(
+        &mut self,
+        is_final: bool,
+        is_readonly: bool,
+    ) -> Result<Stmt, Error> {
         let line = self.token().line;
         let Kind::Word(name) = self.token().kind.clone() else {
             return Err(Error::parse("Expected class name", line));
@@ -48,6 +52,7 @@ impl Parser {
             let mut public = false;
             let mut var = false;
             let mut static_method = false;
+            let mut readonly_property = false;
             loop {
                 let flag = if self.eat("final") {
                     &mut final_method
@@ -58,6 +63,8 @@ impl Parser {
                     &mut public
                 } else if self.eat("static") {
                     &mut static_method
+                } else if self.eat("readonly") {
+                    &mut readonly_property
                 } else {
                     break;
                 };
@@ -69,9 +76,21 @@ impl Parser {
                 }
                 *flag = true;
             }
-            if var && (static_method || final_method || self.is("function") || self.is("const")) {
+            if var
+                && (static_method
+                    || final_method
+                    || readonly_property
+                    || self.is("function")
+                    || self.is("const"))
+            {
                 return Err(Error::parse(
                     "Expected property after var",
+                    self.token().line,
+                ));
+            }
+            if readonly_property && (self.is("function") || self.is("const")) {
+                return Err(Error::parse(
+                    "Readonly modifier is only allowed on properties",
                     self.token().line,
                 ));
             }
@@ -197,7 +216,7 @@ impl Parser {
                     }
                 }
                 self.expect(";")?;
-            } else if (public || static_method) && !final_method {
+            } else if (public || static_method || readonly_property) && !final_method {
                 let ty = if matches!(self.token().kind, Kind::Variable(_)) {
                     None
                 } else {
@@ -243,7 +262,15 @@ impl Parser {
                         logical_constants::initializer(default, &mut self.warnings);
                         self.validate_property_default(&property, ty, default)?;
                     }
+                    let readonly = is_readonly || readonly_property;
+                    if readonly && (ty.is_none() || default.is_some() || static_method) {
+                        return Err(Error::parse(
+                            "Readonly properties must be typed, non-static, and have no default",
+                            self.token().line,
+                        ));
+                    }
                     let property = PropertyDecl {
+                        is_readonly: readonly,
                         name: property,
                         default,
                         ty: ty.clone(),
@@ -270,6 +297,7 @@ impl Parser {
         Ok(Stmt::Class(Rc::new(ClassDecl {
             parent,
             is_final,
+            is_readonly,
             final_methods,
             name,
             properties,

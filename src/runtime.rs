@@ -25,6 +25,7 @@ mod loading;
 mod matching;
 mod objects;
 mod offsets;
+mod readonly;
 mod scope_slots;
 mod static_members;
 mod termination;
@@ -236,6 +237,7 @@ impl Runtime {
                     let Some(mut location) = self.unset_location(target)? else {
                         continue;
                     };
+                    self.check_readonly_write(&location, true, target.line)?;
                     if let Some(class) = &location.static_class {
                         if location.keys.is_empty() {
                             return Err(Error::new(
@@ -342,7 +344,7 @@ impl Runtime {
             }),
             ExprKind::StaticProperty(class, name) => self.static_location(class, name, expr.line),
             ExprKind::Property(base, name) => {
-                let value = self.eval(base)?;
+                let value = self.property_write_base(base, false)?;
                 let name = self.variable_name(name)?;
                 let Value::Object(object) = value else {
                     return Err(Error::new(
@@ -475,6 +477,7 @@ impl Runtime {
         {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }
+        self.check_readonly_write(location, false, line)?;
         if let Some(object) = &location.object {
             let key = ArrayKey::String(location.name.clone());
             let mut value = object
@@ -756,6 +759,7 @@ impl Runtime {
                     false,
                     Some("Cannot increment/decrement string offsets"),
                 )?;
+                self.check_readonly_write(&location, false, line)?;
                 self.validate_property_increment(&location, &old, *delta, line)?;
                 let new = increment(&old, *delta, line, &mut self.warnings)?;
                 let new = self.write_location(&mut location, new, line)?;

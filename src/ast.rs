@@ -137,6 +137,7 @@ impl Expr {
 pub(crate) struct ClassDecl {
     pub parent: Option<Vec<u8>>,
     pub is_final: bool,
+    pub is_readonly: bool,
     pub final_methods: Vec<Vec<u8>>,
     pub name: Vec<u8>,
     pub properties: Vec<PropertyDecl>,
@@ -148,6 +149,7 @@ pub(crate) struct ClassDecl {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PropertyDecl {
+    pub is_readonly: bool,
     pub name: Vec<u8>,
     pub default: Option<Expr>,
     pub ty: Option<TypeDecl>,

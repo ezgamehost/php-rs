@@ -109,6 +109,13 @@ impl Runtime {
                     parent.property_owner(&property.name)
                 }
                 .expect("property owner");
+                if property.is_readonly != parent_property.is_readonly {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot change readonly status of an inherited property",
+                        class.declaration.line,
+                    ));
+                }
                 let child_type = property.ty.as_ref().map(|ty| class_type(ty, class));
                 let parent_type = parent_property.ty.as_ref().map(|ty| class_type(ty, &owner));
                 if child_type.is_some() != parent_type.is_some()

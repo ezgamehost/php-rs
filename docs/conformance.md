@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 42 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 43 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -29,6 +29,8 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 3 | 12 | 14 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 9 | 67 | 44 |
+| PHP 8.5.0 `Zend/tests/readonly_props`, Rust | 0 | 22 | 18 |
+| PHP 8.5.0 `Zend/tests/readonly_classes`, Rust and reference PHP for passing cases | 1 | 6 | 16 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -180,7 +182,7 @@ fixture matches PHP 8.5.0. Separately, 251 focused examples matched stdout, exit
 status, and diagnostic presence; they do not establish exact diagnostic wording.
 These examples include scalar/object comparisons, property-name validation,
 object callbacks, type checking, recursive dumps/comparison errors, and mutation
-during property iteration. Visibility, readonly properties,
+during property iteration. Visibility, property hooks,
 most magic methods, reflection, handle reuse, and complete object
 iteration semantics remain targets, not supported features.
 
@@ -203,7 +205,7 @@ A 300-case differential check matched stdout, exit status, and diagnostic
 presence across static/instance calls, forwarding, saved callbacks, contextual
 type variance, and class-name inspection. Project regressions additionally
 cover caller-context restoration, eval, default closure scope, and per-class
-property-default identity. Magic method dispatch, readonly properties, non-public
+property-default identity. Magic method dispatch, readonly cloning, non-public
 visibility, and complete closure reflection/debugging remain incomplete.
 
 The static-member slice adds nine class-suite passes, two late-static-binding
@@ -245,6 +247,22 @@ and local PHP 8.5.0 probes establish the initialization behavior.
 A 716-case matrix matches stdout, exit status, and diagnostic presence, including
 integer-limit failures and deferred class binding for unresolved inherited types.
 The existing 300-case class-scope and 712-case constant-type matrices also pass.
-General references, property hooks, readonly and non-public properties, magic
+General references, property hooks, non-public properties, magic
 accessors, full reflection, and exceptions remain unfinished; the passing
 counts do not establish compatibility with those features.
+
+
+The readonly slice adds [class](conformance/php-8.5.0-readonly_classes.txt) and
+[property](conformance/php-8.5.0-readonly_props.txt) baselines. One class fixture
+passes. None of the property fixtures pass yet: they need combinations of
+constructor promotion, exceptions, references, cloning, magic accessors, and
+reflection that remain unimplemented. Unsupported PHPT sections are not run.
+Fifteen project regressions and a reference-checked PHPT cover permitted
+initialization scopes, initialized-null storage, readonly arrays, interior
+object mutation, class restrictions, and inherited readonly status.
+The [PHP property manual](https://www.php.net/manual/en/language.oop5.properties.php)
+and PHP 8.5.0 probes establish the protected-set initialization behavior.
+A 447-case matrix matches stdout, exit status, and diagnostic presence; the
+existing 716-case typed-property matrix also passes. Class and inheritance
+suite counts are unchanged. Cloning, explicit asymmetric visibility, property
+hooks, constructor promotion, and the other previously noted gaps remain.
