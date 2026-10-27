@@ -16,7 +16,7 @@ pub(crate) enum ExprKind {
     Constant(Vec<u8>),
     Unary(String, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
-    Array(Vec<(Option<Expr>, Expr)>),
+    Array(Vec<ArrayElement>),
     Index(Box<Expr>, Option<Box<Expr>>),
     Call(Box<Expr>, Vec<Argument>),
     Isset(Vec<Expr>),
@@ -26,6 +26,12 @@ pub(crate) enum ExprKind {
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
     Match(Box<Expr>, Vec<MatchArm>),
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum ArrayElement {
+    Entry(Option<Expr>, Expr),
+    Unpack(Expr),
 }
 
 #[derive(Debug, Clone)]
@@ -103,8 +109,12 @@ impl Expr {
                     && b.as_ref().is_none_or(|b| b.is_constant_expression())
                     && c.is_constant_expression()
             }
-            ExprKind::Array(elements) => elements.iter().all(|(k, v)| {
-                k.as_ref().is_none_or(Expr::is_constant_expression) && v.is_constant_expression()
+            ExprKind::Array(elements) => elements.iter().all(|element| match element {
+                ArrayElement::Entry(k, v) => {
+                    k.as_ref().is_none_or(Expr::is_constant_expression)
+                        && v.is_constant_expression()
+                }
+                ArrayElement::Unpack(v) => v.is_constant_expression(),
             }),
             _ => false,
         }

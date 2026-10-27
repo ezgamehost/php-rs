@@ -25,6 +25,7 @@ output and warnings when execution fails. Parsing happens before execution.
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
 - Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
   writes, append, array union and comparison, `unset`, `isset`, and `empty`.
+- Array unpacking with integer-key reindexing and string-key overwrites.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
@@ -51,7 +52,7 @@ output and warnings when execution fails. Parsing happens before execution.
 
 Known gaps include typed functions, closures, most builtins, objects, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
-Deprecated `${...}` and object interpolation, array unpacking and
+Deprecated `${...}` and object interpolation,
 destructuring, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP

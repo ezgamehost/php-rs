@@ -1,6 +1,8 @@
 use crate::{
     Error, Value,
-    ast::{Argument, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt, SwitchCase},
+    ast::{
+        Argument, ArrayElement, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt, SwitchCase,
+    },
     lexer::{Kind, StringPart, Token},
 };
 
@@ -448,16 +450,20 @@ impl Parser {
         }
         Ok(*alternative.unwrap())
     }
-    fn array_elements(&mut self, close: &str) -> Result<Vec<(Option<Expr>, Expr)>, Error> {
+    fn array_elements(&mut self, close: &str) -> Result<Vec<ArrayElement>, Error> {
         let mut elements = Vec::new();
         while !self.eat(close) {
-            let first = self.expr(0)?;
-            let (key, value) = if self.eat("=>") {
-                (Some(first), self.expr(0)?)
+            let element = if self.eat("...") {
+                ArrayElement::Unpack(self.expr(0)?)
             } else {
-                (None, first)
+                let first = self.expr(0)?;
+                if self.eat("=>") {
+                    ArrayElement::Entry(Some(first), self.expr(0)?)
+                } else {
+                    ArrayElement::Entry(None, first)
+                }
             };
-            elements.push((key, value));
+            elements.push(element);
             if !self.eat(",") {
                 self.expect(close)?;
                 break;

@@ -1,6 +1,6 @@
 use crate::{
     ArrayKey, Error, ErrorKind, PhpArray, Value,
-    ast::{Expr, ExprKind, FunctionDecl, Stmt},
+    ast::{ArrayElement, Expr, ExprKind, FunctionDecl, Stmt},
     lexer, parser,
 };
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
@@ -336,7 +336,26 @@ impl Runtime {
             ExprKind::Variable(name) => Ok(self.read(name, line)),
             ExprKind::Array(elements) => {
                 let mut array = PhpArray::default();
-                for (key, expr) in elements {
+                for element in elements {
+                    let ArrayElement::Entry(key, expr) = element else {
+                        let ArrayElement::Unpack(expr) = element else {
+                            unreachable!()
+                        };
+                        let Value::Array(source) = self.eval(expr)? else {
+                            return Err(Error::new(
+                                ErrorKind::Error,
+                                "Only arrays and Traversables can be unpacked",
+                                expr.line,
+                            ));
+                        };
+                        for (key, value) in source.entries() {
+                            match key {
+                                ArrayKey::Int(_) => array.append(value.clone(), expr.line)?,
+                                ArrayKey::String(_) => array.insert(key.clone(), value.clone()),
+                            }
+                        }
+                        continue;
+                    };
                     let key = match key {
                         Some(key) => Some(ArrayKey::from_value(
                             &self.eval(key)?,
