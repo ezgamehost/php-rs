@@ -83,7 +83,11 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                 }
                 validate(&function.body)?;
             }
-            Stmt::Text(_) | Stmt::Break(_) | Stmt::Continue(_, _) => {}
+            Stmt::Label(_, _)
+            | Stmt::Goto(_, _)
+            | Stmt::Text(_)
+            | Stmt::Break(_)
+            | Stmt::Continue(_, _) => {}
             Stmt::Unset(expressions) => {
                 for expr in expressions {
                     expression(expr, true)?;

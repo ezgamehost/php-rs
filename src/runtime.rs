@@ -16,6 +16,7 @@ mod constants;
 mod destructuring;
 mod function_arguments;
 mod functions;
+mod jumps;
 mod loading;
 mod matching;
 mod offsets;
@@ -52,6 +53,7 @@ struct Location {
 }
 enum Flow {
     Next,
+    Goto(Vec<u8>),
     Break(usize),
     Continue(usize),
     Return(Value),
@@ -67,16 +69,12 @@ impl Flow {
 }
 impl Runtime {
     fn block(&mut self, stmts: &[Stmt]) -> Result<Flow, Error> {
-        for stmt in stmts {
-            match self.statement(stmt)? {
-                Flow::Next => {}
-                flow => return Ok(flow),
-            }
-        }
-        Ok(Flow::Next)
+        self.block_from(stmts, 0, None)
     }
     fn statement(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
         match stmt {
+            Stmt::Label(_, _) => {}
+            Stmt::Goto(name, _) => return Ok(Flow::Goto(name.clone())),
             Stmt::Global(variables) => {
                 for variable in variables {
                     let location = self.location(variable)?;
@@ -119,7 +117,7 @@ impl Runtime {
             }
             Stmt::While(cond, body) => {
                 while self.eval(cond)?.is_truthy() {
-                    match self.statement(body)? {
+                    match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
                         flow => return Ok(flow.leave_level()),
@@ -127,7 +125,7 @@ impl Runtime {
                 }
             }
             Stmt::DoWhile(body, cond) => loop {
-                match self.statement(body)? {
+                match self.block(std::slice::from_ref(body))? {
                     Flow::Next | Flow::Continue(1) => {}
                     Flow::Break(1) => break,
                     flow => return Ok(flow.leave_level()),
@@ -139,7 +137,7 @@ impl Runtime {
             Stmt::For(init, cond, step, body) => {
                 self.eval_sequence(init)?;
                 while self.eval_sequence(cond)?.is_truthy() {
-                    match self.statement(body)? {
+                    match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
                         flow => return Ok(flow.leave_level()),
@@ -178,13 +176,7 @@ impl Runtime {
                     }
                 }
                 if let Some(start) = selected.or(default) {
-                    for case in &cases[start..] {
-                        match self.block(&case.body)? {
-                            Flow::Next => {}
-                            Flow::Break(1) | Flow::Continue(1) => break,
-                            flow => return Ok(flow.leave_level()),
-                        }
-                    }
+                    return self.switch_cases(cases, start);
                 }
             }
             Stmt::Foreach(iter, key_target, value_target, body) => {
@@ -196,7 +188,7 @@ impl Runtime {
                             let mut location = self.location(target)?;
                             self.write_location(&mut location, key.to_value(), target.line)?;
                         }
-                        match self.statement(body)? {
+                        match self.block(std::slice::from_ref(body))? {
                             Flow::Next | Flow::Continue(1) => {}
                             Flow::Break(1) => break,
                             flow => return Ok(flow.leave_level()),

@@ -8,6 +8,7 @@ use crate::{
 };
 
 use std::{collections::HashSet, rc::Rc};
+mod jumps;
 mod targets;
 mod types;
 mod variables;
@@ -33,6 +34,7 @@ pub(crate) fn parse_source(
     };
     let statements = parser.program()?;
     targets::validate(&statements)?;
+    jumps::validate(&statements)?;
     Ok((statements, parser.warnings, parser.strict_types))
 }
 struct Parser {
@@ -125,6 +127,19 @@ impl Parser {
         Ok(Stmt::Const(constants))
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
+        let line = self.token().line;
+        if self.eat("goto") {
+            let name = self.label_name()?;
+            self.expect(";")?;
+            return Ok(Stmt::Goto(name, line));
+        }
+        if matches!(self.token().kind, Kind::Word(_))
+            && matches!(self.tokens.get(self.pos + 1).map(|t| &t.kind), Some(Kind::Symbol(s)) if s == ":")
+        {
+            let name = self.label_name()?;
+            self.expect(":")?;
+            return Ok(Stmt::Label(name, line));
+        }
         if self.eat("global") {
             return self.global_declaration();
         }

@@ -1,0 +1,22 @@
+PHP 8.5.0 jump baseline
+Command: php-rs-phpt --cwd PHP_SRC --reference PHP_SRC/sapi/cli/php PHP_SRC/Zend/tests/jump
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/jump/jump01.phpt PASS
+Zend/tests/jump/jump02.phpt PASS
+Zend/tests/jump/jump03.phpt PASS
+Zend/tests/jump/jump04.phpt PASS
+Zend/tests/jump/jump05.phpt PASS
+Zend/tests/jump/jump06.phpt UNSUPPORTED: EXPECTF
+Zend/tests/jump/jump07.phpt UNSUPPORTED: EXPECTF
+Zend/tests/jump/jump08.phpt UNSUPPORTED: EXPECTF
+Zend/tests/jump/jump09.phpt UNSUPPORTED: EXPECTF
+Zend/tests/jump/jump10.phpt UNSUPPORTED: EXPECTF
+Zend/tests/jump/jump11.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/jump/jump12.phpt FAIL: ParseError: strict_types declaration must be the very first statement in the script on line 4
+Zend/tests/jump/jump13.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/jump/jump14.phpt PASS
+Zend/tests/jump/jump15.phpt FAIL: ParseError: Expected ';' on line 18
+Zend/tests/jump/jump16.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/jump/jump17.phpt FAIL: ParseError: Expected ';' on line 3
+6 passed, 6 failed, 5 unsupported

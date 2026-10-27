@@ -69,6 +69,8 @@ pub(crate) struct MatchArm {
 
 #[derive(Debug, Clone)]
 pub(crate) enum Stmt {
+    Label(Vec<u8>, usize),
+    Goto(Vec<u8>, usize),
     Global(Vec<Expr>),
     Static(Vec<(Vec<u8>, Option<Expr>)>),
     Const(Vec<(Vec<u8>, Expr)>),

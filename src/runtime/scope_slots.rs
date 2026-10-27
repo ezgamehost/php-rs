@@ -8,7 +8,12 @@ impl Scope {
     pub(super) fn reserve_variables(&mut self, statements: &[Stmt]) {
         for statement in statements {
             match statement {
-                Stmt::Function(_) | Stmt::Text(_) | Stmt::Break(_) | Stmt::Continue(_, _) => {}
+                Stmt::Label(_, _)
+                | Stmt::Goto(_, _)
+                | Stmt::Function(_)
+                | Stmt::Text(_)
+                | Stmt::Break(_)
+                | Stmt::Continue(_, _) => {}
                 Stmt::Global(values) => {
                     for value in values {
                         if let ExprKind::Variable(name) = &value.kind {

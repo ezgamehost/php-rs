@@ -16,7 +16,7 @@ fn runs_fixture_directory() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    assert!(String::from_utf8_lossy(&output.stdout).contains("27 passed, 0 failed, 0 unsupported"));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("28 passed, 0 failed, 0 unsupported"));
 }
 
 #[test]

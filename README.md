@@ -64,6 +64,9 @@ request without changing the host process's working directory.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
   by value, numbered `break`/`continue`, and `return`. Loops support alternative
   `: … endfor` / `endwhile` / `endforeach` syntax.
+- `goto` and case-sensitive labels, with jumps across ordinary blocks/branches,
+  loop exits, and jumps within active loops/switches. Invalid label targets and
+  jumps into loop/switch regions are rejected before execution.
 - Alternative `if` / `elseif` / `else` syntax with `endif`, including templates.
 - `switch` with loose case comparison, fall-through, numbered control flow,
   alternative syntax, and PHP 8.5 case-semicolon deprecation warnings.
@@ -120,6 +123,7 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Boolean conversion](https://www.php.net/manual/en/language.types.boolean.php)
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Function argument inspection](https://www.php.net/manual/en/function.func-get-args.php)
+- [Goto](https://www.php.net/manual/en/control-structures.goto.php)
 - [Variable scope](https://www.php.net/manual/en/language.variables.scope.php)
 - [$GLOBALS](https://www.php.net/manual/en/reserved.variables.globals.php)
 - [File inclusion](https://www.php.net/manual/en/function.include.php)
