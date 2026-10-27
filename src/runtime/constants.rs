@@ -81,8 +81,8 @@ fn predefined(name: &[u8]) -> Option<Value> {
         } else {
             b":".to_vec()
         }),
-        b"COUNT_RECURSIVE" | b"E_ERROR" => Value::Int(1),
-        b"E_WARNING" => Value::Int(2),
+        b"COUNT_RECURSIVE" | b"E_ERROR" | b"ARRAY_FILTER_USE_BOTH" => Value::Int(1),
+        b"E_WARNING" | b"ARRAY_FILTER_USE_KEY" => Value::Int(2),
         b"E_PARSE" => Value::Int(4),
         b"E_NOTICE" => Value::Int(8),
         b"E_CORE_ERROR" => Value::Int(16),

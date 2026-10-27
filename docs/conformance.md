@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 35 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 36 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -20,8 +20,9 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
 | PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 3 | 18 | 44 |
-| PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 12 | 64 | 59 |
+| PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
+| PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -110,6 +111,16 @@ implemented. A separate matrix of 169 snippets matched PHP 8.5.0 for output,
 process status, and diagnostic presence. Remaining gaps include by-reference
 parameters/returns, `$this` and method binding, reflection, generators, cycle
 collection, and complete closure debugging output.
+
+The [array callback report](conformance/php-8.5.0-array_callbacks.txt) selects
+upstream `array_map*.phpt`, `array_filter*.phpt`, and `array_reduce*.phpt` cases.
+Twelve pass against both interpreters. Remaining cases require references,
+objects/methods, exceptions, error suppression, or unsupported PHPT sections.
+A matrix of 328 snippets matched PHP 8.5.0 for output, process status, and
+diagnostic presence. It covers key preservation, array zipping and null padding,
+empty inputs, null callbacks, filter modes, initial reduction values, callback
+coercion, input mutation, and termination. By-reference callback parameters
+and exact diagnostic formatting remain unfinished.
 
 The upstream basic-suite failures are:
 

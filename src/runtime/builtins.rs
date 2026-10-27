@@ -13,6 +13,9 @@ pub(super) enum Builtin {
     ArrayKeys,
     ArrayValues,
     ArrayKeyExists,
+    ArrayMap,
+    ArrayFilter,
+    ArrayReduce,
     FunctionExists,
     Define,
     Defined,
@@ -40,6 +43,9 @@ impl Builtin {
             b"is_array" => Self::Is("array"),
             b"array_keys" => Self::ArrayKeys,
             b"array_values" => Self::ArrayValues,
+            b"array_map" => Self::ArrayMap,
+            b"array_filter" => Self::ArrayFilter,
+            b"array_reduce" => Self::ArrayReduce,
             b"array_key_exists" | b"key_exists" => Self::ArrayKeyExists,
             b"function_exists" => Self::FunctionExists,
             b"define" => Self::Define,
@@ -67,6 +73,21 @@ impl Builtin {
                 ("strict", true, false),
             ],
             Self::ArrayValues => &[("array", false, false)],
+            Self::ArrayMap => &[
+                ("callback", false, false),
+                ("array", false, false),
+                ("arrays", false, true),
+            ],
+            Self::ArrayFilter => &[
+                ("array", false, false),
+                ("callback", true, false),
+                ("mode", true, false),
+            ],
+            Self::ArrayReduce => &[
+                ("array", false, false),
+                ("callback", false, false),
+                ("initial", true, false),
+            ],
             Self::ArrayKeyExists => &[("key", false, false), ("array", false, false)],
             Self::FunctionExists => &[("function", false, false)],
             Self::Define => &[
@@ -128,6 +149,9 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::ArrayMap => self.array_map(&args, &extra, line),
+            Builtin::ArrayFilter => self.array_filter(&args, line),
+            Builtin::ArrayReduce => self.array_reduce(&args, line),
             Builtin::Exit
             | Builtin::GetIncludedFiles
             | Builtin::FuncNumArgs
@@ -345,7 +369,7 @@ fn type_error(function: &str, position: usize, kind: &str, line: usize) -> Error
         line,
     )
 }
-fn require_array<'a>(
+pub(super) fn require_array<'a>(
     value: &'a Value,
     function: &str,
     position: usize,

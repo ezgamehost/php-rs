@@ -10,7 +10,7 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, thirty-five differential fixtures, explicit unsupported reports, and CI.
+   runner, thirty-six differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Supported fixtures execute as real files with
    a selectable suite working directory and generated-file cleanup. Reference
    comparisons include process exit status, including intentional nonzero exits.
@@ -65,7 +65,9 @@ definition of completion.
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function
-   existence implemented. Remaining: configurable include paths, stream wrappers,
+   existence implemented. Array map/filter/reduce support available callables,
+   key preservation, zipped arrays, filter modes, initial carry values, and
+   internal callback argument coercion. Remaining: configurable include paths, stream wrappers,
    the other core and standard builtins, streams and
    filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.

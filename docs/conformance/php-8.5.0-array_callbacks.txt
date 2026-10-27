@@ -1,0 +1,46 @@
+PHP 8.5.0 array callback baseline, 2026-10-26
+Selection: array_map*.phpt, array_filter*.phpt, and array_reduce*.phpt in ext/standard/tests/array
+Runner: php-rs-phpt --reference PHP_SRC/sapi/cli/php --cwd PHP_SRC SELECTED_FILES
+Unsupported cases were not executed. Exit status: 1.
+
+Reference: PHP 8.5 (sapi/cli/php)
+ext/standard/tests/array/array_filter.phpt PASS
+ext/standard/tests/array/array_filter_basic.phpt PASS
+ext/standard/tests/array/array_filter_object.phpt UNSUPPORTED: EXPECTF
+ext/standard/tests/array/array_filter_variation10.phpt FAIL: ParseError: Expected ';' on line 29
+ext/standard/tests/array/array_filter_variation3.phpt PASS
+ext/standard/tests/array/array_filter_variation4.phpt PASS
+ext/standard/tests/array/array_filter_variation5.phpt FAIL: ParseError: Unexpected byte 0x40 on line 44
+ext/standard/tests/array/array_filter_variation6.phpt FAIL: ParseError: Expected expression on line 21
+ext/standard/tests/array/array_filter_variation7.phpt PASS
+ext/standard/tests/array/array_filter_variation8.phpt PASS
+ext/standard/tests/array/array_filter_variation9.phpt FAIL: ParseError: Expected ';' on line 17
+ext/standard/tests/array/array_map_001.phpt FAIL: ParseError: Expected ';' on line 6
+ext/standard/tests/array/array_map_basic.phpt PASS
+ext/standard/tests/array/array_map_error.phpt FAIL: ParseError: Expected ';' on line 9
+ext/standard/tests/array/array_map_object1.phpt FAIL: ParseError: Expected ';' on line 14
+ext/standard/tests/array/array_map_object2.phpt FAIL: ParseError: Expected ';' on line 9
+ext/standard/tests/array/array_map_object3.phpt FAIL: ParseError: Expected ';' on line 13
+ext/standard/tests/array/array_map_variation1.phpt PASS
+ext/standard/tests/array/array_map_variation10.phpt UNSUPPORTED: EXPECTF
+ext/standard/tests/array/array_map_variation11.phpt PASS
+ext/standard/tests/array/array_map_variation12.phpt FAIL: ParseError: Expected ';' on line 15
+ext/standard/tests/array/array_map_variation13.phpt PASS
+ext/standard/tests/array/array_map_variation14.phpt FAIL: ParseError: Unexpected byte 0x40 on line 25
+ext/standard/tests/array/array_map_variation15.phpt FAIL: ParseError: Expected ';' on line 13
+ext/standard/tests/array/array_map_variation16.phpt FAIL: ParseError: Expected ';' on line 18
+ext/standard/tests/array/array_map_variation17.phpt FAIL: ParseError: Expected ';' on line 11
+ext/standard/tests/array/array_map_variation19.phpt FAIL: ParseError: Expected expression on line 16
+ext/standard/tests/array/array_map_variation2.phpt FAIL: ParseError: Expected expression on line 5
+ext/standard/tests/array/array_map_variation3.phpt PASS
+ext/standard/tests/array/array_map_variation4.phpt UNSUPPORTED: EXPECTF
+ext/standard/tests/array/array_map_variation5.phpt UNSUPPORTED: EXPECTF
+ext/standard/tests/array/array_map_variation6.phpt PASS
+ext/standard/tests/array/array_map_variation7.phpt UNSUPPORTED: EXPECTF
+ext/standard/tests/array/array_map_variation8.phpt FAIL: ParseError: Expected expression on line 22
+ext/standard/tests/array/array_map_variation9.phpt FAIL: ParseError: Expected ';' on line 24
+ext/standard/tests/array/array_reduce.phpt UNSUPPORTED: INI
+ext/standard/tests/array/array_reduce_return_by_ref.phpt FAIL: ParseError: Expected '(' on line 3
+ext/standard/tests/array/array_reduce_variation1.phpt FAIL: ParseError: Expected ';' on line 19
+ext/standard/tests/array/array_reduce_variation3.phpt FAIL: ParseError: Expected ';' on line 4
+12 passed, 21 failed, 6 unsupported

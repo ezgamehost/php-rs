@@ -93,6 +93,48 @@ impl Runtime {
         }
     }
 
+    pub(super) fn native_callback(
+        &self,
+        value: &Value,
+        function: &str,
+        position: usize,
+        nullable: bool,
+        line: usize,
+    ) -> Result<Option<CallTarget>, Error> {
+        if nullable && matches!(value, Value::Null) {
+            return Ok(None);
+        }
+        self.resolve_callable(value.clone(), line).map(Some).map_err(|error| {
+            Error::new(ErrorKind::TypeError, format!(
+                "{function}(): Argument #{position} ($callback) must be a valid callback{}, {}",
+                if nullable { " or null" } else { "" }, error.message,
+            ), line)
+        })
+    }
+
+    pub(super) fn call_callback(
+        &mut self,
+        target: &CallTarget,
+        values: &[Value],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let arguments: Vec<_> = values
+            .iter()
+            .map(|value| {
+                Argument::Positional(Expr {
+                    kind: ExprKind::Literal(value.clone()),
+                    line,
+                })
+            })
+            .collect();
+        // Internal callbacks use weak argument coercion. The common invocation
+        // path still installs the function's own strictness for its body/return.
+        let caller_strict = std::mem::replace(&mut self.strict_types, false);
+        let result = self.invoke(target.clone(), &arguments, line, true);
+        self.strict_types = caller_strict;
+        result
+    }
+
     fn resolve_callable(&self, value: Value, line: usize) -> Result<CallTarget, Error> {
         match value {
             Value::String(name) => self.resolve_name(name, line),
@@ -489,7 +531,8 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mu
     }
 }
 
-struct CallTarget {
+#[derive(Clone)]
+pub(super) struct CallTarget {
     name: Vec<u8>,
     function: Option<Rc<FunctionDecl>>,
     builtin: Option<Builtin>,

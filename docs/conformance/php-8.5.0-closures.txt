@@ -133,9 +133,9 @@ Zend/tests/closures/closure_use_parameter_name.phpt UNSUPPORTED: EXPECTF
 Zend/tests/closures/closure_use_trailing_comma.phpt PASS
 Zend/tests/closures/closure_use_variable_twice.phpt UNSUPPORTED: EXPECTF
 Zend/tests/closures/closure_write_prop.phpt FAIL: ParseError: Expected ';' on line 3
-Zend/tests/closures/fake_closure_in_internal_func_leaks.phpt FAIL: Error: Call to undefined function array_filter() on line 4
+Zend/tests/closures/fake_closure_in_internal_func_leaks.phpt PASS
 Zend/tests/closures/gh12073.phpt UNSUPPORTED: EXPECTF, SKIPIF
 Zend/tests/closures/gh19653_1.phpt PASS
 Zend/tests/closures/gh19653_2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/closures/gh8083.phpt FAIL: Expected "object(Closure)#1 (2) {\n  [\"function\"]=>\n  string(4) \"func\"\n  [\"static\"]=>\n  array(1) {\n    [\"i\"]=>\n    NULL\n  }\n}\n", got "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(4) \"func\"\n}\n"
-12 passed, 64 failed, 59 unsupported
+13 passed, 63 failed, 59 unsupported

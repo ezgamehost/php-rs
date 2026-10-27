@@ -10,6 +10,7 @@ use std::{
     rc::Rc,
 };
 
+mod array_callbacks;
 mod builtins;
 mod casting;
 mod closures;

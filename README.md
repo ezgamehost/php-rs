@@ -40,6 +40,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
   writes, append, array union and comparison, `unset`, `isset`, and `empty`.
 - Array unpacking with integer-key reindexing and string-key overwrites.
+- `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
+  behavior, null callbacks where allowed, filter key modes, initial reduction
+  values, and PHP's weak scalar coercion for internally invoked callbacks.
 - Value destructuring with `[]` and `list()`, including nested patterns, explicit
   keys, skipped entries, indexed targets, and `foreach`.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
