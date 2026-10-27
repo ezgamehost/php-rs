@@ -12,6 +12,7 @@ pub enum Value {
     String(Vec<u8>),
     Array(Rc<PhpArray>),
     Closure(Rc<crate::Closure>),
+    Object(Rc<crate::PhpObject>),
 }
 
 impl Value {
@@ -30,7 +31,7 @@ impl Value {
 
     pub fn is_truthy(&self) -> bool {
         match self {
-            Self::Closure(_) => true,
+            Self::Closure(_) | Self::Object(_) => true,
             Self::Null => false,
             Self::Array(a) => !a.is_empty(),
             Self::Bool(b) => *b,
@@ -47,11 +48,16 @@ impl Value {
             Self::Float(n) => format_float(*n).into_bytes(),
             Self::String(s) => s.clone(),
             Self::Array(_) => b"Array".to_vec(),
-            Self::Closure(_) => b"Object".to_vec(),
+            Self::Closure(_) | Self::Object(_) => b"Object".to_vec(),
         }
     }
     pub(crate) fn number(&self, line: usize, warnings: &mut Vec<String>) -> Result<Self, Error> {
         match self {
+            Self::Object(object) => Err(Error::new(
+                ErrorKind::TypeError,
+                format!("Unsupported operand type: {}", object.class_name),
+                line,
+            )),
             Self::Closure(_) => Err(Error::new(
                 ErrorKind::TypeError,
                 "Unsupported operand type: Closure",
@@ -115,13 +121,70 @@ impl Value {
         other: &Self,
         line: usize,
         warnings: &mut Vec<String>,
-    ) -> Option<Ordering> {
+    ) -> Result<Option<Ordering>, Error> {
+        self.compare_inner(other, line, warnings, &mut std::collections::HashSet::new())
+    }
+    pub(crate) fn compare_inner(
+        &self,
+        other: &Self,
+        line: usize,
+        warnings: &mut Vec<String>,
+        seen: &mut std::collections::HashSet<(usize, usize)>,
+    ) -> Result<Option<Ordering>, Error> {
         use Value::*;
-        match (self, other) {
+        Ok(match (self, other) {
             (Bool(_), _) | (_, Bool(_)) => self.is_truthy().partial_cmp(&other.is_truthy()),
             (Null, String(s)) => b"".as_slice().partial_cmp(s.as_slice()),
             (String(s), Null) => s.as_slice().partial_cmp(b"".as_slice()),
             (Null, _) | (_, Null) => self.is_truthy().partial_cmp(&other.is_truthy()),
+            (Object(a), Object(b)) => {
+                if Rc::ptr_eq(a, b) {
+                    return Ok(Some(Ordering::Equal));
+                }
+                if !a.class.name.eq_ignore_ascii_case(&b.class.name) {
+                    return Ok(None);
+                }
+                let pair = (Rc::as_ptr(a) as usize, Rc::as_ptr(b) as usize);
+                if !seen.insert(pair) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Nesting level too deep - recursive dependency?",
+                        line,
+                    ));
+                }
+                let result = a
+                    .snapshot()
+                    .compare_inner(&b.snapshot(), line, warnings, seen);
+                seen.remove(&pair);
+                result?
+            }
+            (Object(a), Int(_) | Float(_)) => {
+                let kind = if matches!(other, Int(_)) {
+                    "int"
+                } else {
+                    "float"
+                };
+                warnings.push(format!(
+                    "Notice: Object of class {} could not be converted to {kind} on line {line}",
+                    a.class_name
+                ));
+                Int(1).compare_inner(other, line, warnings, seen)?
+            }
+            (Int(_) | Float(_), Object(b)) => {
+                let kind = if matches!(self, Int(_)) {
+                    "int"
+                } else {
+                    "float"
+                };
+                warnings.push(format!(
+                    "Notice: Object of class {} could not be converted to {kind} on line {line}",
+                    b.class_name
+                ));
+                self.compare_inner(&Int(1), line, warnings, seen)?
+            }
+            (Object(_), Closure(_)) | (Closure(_), Object(_)) => None,
+            (Object(_), _) => Some(Ordering::Greater),
+            (_, Object(_)) => Some(Ordering::Less),
             (Closure(a), Closure(b)) => a.same_function(b).then_some(Ordering::Equal),
             (Closure(_), Int(_) | Float(_)) => {
                 let kind = if matches!(other, Int(_)) {
@@ -130,7 +193,7 @@ impl Value {
                     "float"
                 };
                 warnings.push(format!("Notice: Object of class Closure could not be converted to {kind} on line {line}"));
-                Int(1).compare(other, line, warnings)
+                Int(1).compare_inner(other, line, warnings, seen)?
             }
             (Int(_) | Float(_), Closure(_)) => {
                 let kind = if matches!(self, Int(_)) {
@@ -139,11 +202,11 @@ impl Value {
                     "float"
                 };
                 warnings.push(format!("Notice: Object of class Closure could not be converted to {kind} on line {line}"));
-                self.compare(&Int(1), line, warnings)
+                self.compare_inner(&Int(1), line, warnings, seen)?
             }
             (Closure(_), _) => Some(Ordering::Greater),
             (_, Closure(_)) => Some(Ordering::Less),
-            (Array(a), Array(b)) => a.compare(b, line, warnings),
+            (Array(a), Array(b)) => a.compare_inner(b, line, warnings, seen)?,
             (Array(_), _) => Some(Ordering::Greater),
             (_, Array(_)) => Some(Ordering::Less),
             (Int(a), Int(b)) => a.partial_cmp(b),
@@ -152,18 +215,18 @@ impl Value {
             }
             (Float(n), String(_)) | (String(_), Float(n)) if n.is_nan() => None,
             (String(a), String(b)) => match (numeric_string(a), numeric_string(b)) {
-                (Some(a), Some(b)) => a.compare(&b, line, warnings),
+                (Some(a), Some(b)) => a.compare_inner(&b, line, warnings, seen)?,
                 _ => a.partial_cmp(b),
             },
             (String(a), _) => match numeric_string(a) {
-                Some(a) => a.compare(other, line, warnings),
+                Some(a) => a.compare_inner(other, line, warnings, seen)?,
                 None => a.partial_cmp(&other.to_bytes()),
             },
             (_, String(b)) => match numeric_string(b) {
-                Some(b) => self.compare(&b, line, warnings),
+                Some(b) => self.compare_inner(&b, line, warnings, seen)?,
                 None => self.to_bytes().partial_cmp(b),
             },
-        }
+        })
     }
 }
 

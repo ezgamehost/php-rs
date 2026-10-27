@@ -7,6 +7,7 @@ use std::collections::HashSet;
 impl Runtime {
     pub(super) fn prepare_functions(&mut self, stmts: &mut [Stmt]) -> Result<(), Error> {
         diagnose_functions(stmts, &mut self.warnings);
+        self.prepare_classes(stmts)?;
         let mut declarations = Vec::new();
         take_hoisted(stmts, &mut declarations);
         let mut names = HashSet::new();
@@ -59,6 +60,7 @@ impl Runtime {
             } else {
                 target.name
             },
+            this: target.this,
             function: target.function,
             object_id: self.next_object_id,
             environment: None,
@@ -85,6 +87,11 @@ impl Runtime {
 
     fn resolve_callee(&mut self, callee: &Expr, line: usize) -> Result<CallTarget, Error> {
         match &callee.kind {
+            ExprKind::Property(base, name) => {
+                let value = self.eval(base)?;
+                let name = self.variable_name(name)?;
+                self.resolve_method(value, &name, line)
+            }
             ExprKind::Constant(name) => self.resolve_name(name.clone(), line),
             _ => {
                 let value = self.eval(callee)?;
@@ -135,10 +142,25 @@ impl Runtime {
         result
     }
 
-    fn resolve_callable(&self, value: Value, line: usize) -> Result<CallTarget, Error> {
+    pub(super) fn resolve_callable(&self, value: Value, line: usize) -> Result<CallTarget, Error> {
         match value {
+            Value::Object(object) => self.resolve_method(Value::Object(object), b"__invoke", line),
+            Value::Array(array) if array.len() == 2 => {
+                let base = array.get(&ArrayKey::Int(0));
+                let method = array.get(&ArrayKey::Int(1));
+                if let (Some(Value::Object(object)), Some(Value::String(name))) = (base, method) {
+                    self.resolve_method(Value::Object(object.clone()), name, line)
+                } else {
+                    Err(Error::new(
+                        ErrorKind::Error,
+                        "Invalid method callback",
+                        line,
+                    ))
+                }
+            }
             Value::String(name) => self.resolve_name(name, line),
             Value::Closure(closure) => Ok(CallTarget {
+                this: closure.this.clone(),
                 name: closure.name.clone(),
                 function: closure.function.clone(),
                 builtin: if closure.function.is_none() {
@@ -177,6 +199,7 @@ impl Runtime {
             ));
         }
         Ok(CallTarget {
+            this: None,
             name: normalized_name,
             function,
             builtin,
@@ -184,7 +207,7 @@ impl Runtime {
         })
     }
 
-    fn invoke(
+    pub(super) fn invoke(
         &mut self,
         target: CallTarget,
         args: &[Argument],
@@ -196,6 +219,7 @@ impl Runtime {
             function,
             builtin,
             closure,
+            this,
         } = target;
         let parameters = if let Some(function) = &function {
             function.parameters.clone()
@@ -357,6 +381,10 @@ impl Runtime {
                     self.scope.insert(name.clone(), value);
                 }
             }
+            if let Some(object) = this {
+                self.scope
+                    .insert(b"this".to_vec(), cell(Value::Object(object)));
+            }
             self.current_arguments = Some(arguments);
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
@@ -479,6 +507,11 @@ fn diagnose_functions(stmts: &[Stmt], warnings: &mut Vec<String>) {
 fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mut Vec<bool>) {
     for stmt in stmts {
         match stmt {
+            Stmt::Class(class) => {
+                for method in &class.methods {
+                    diagnose_functions(&[Stmt::Function(method.clone())], warnings);
+                }
+            }
             Stmt::Function(decl) => {
                 if let Some(last) = decl
                     .parameters
@@ -533,8 +566,9 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mu
 
 #[derive(Clone)]
 pub(super) struct CallTarget {
-    name: Vec<u8>,
-    function: Option<Rc<FunctionDecl>>,
-    builtin: Option<Builtin>,
-    closure: Option<Rc<crate::Closure>>,
+    pub(super) name: Vec<u8>,
+    pub(super) function: Option<Rc<FunctionDecl>>,
+    pub(super) builtin: Option<Builtin>,
+    pub(super) closure: Option<Rc<crate::Closure>>,
+    pub(super) this: Option<Rc<crate::PhpObject>>,
 }

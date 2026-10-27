@@ -27,7 +27,12 @@ impl Runtime {
         {
             return Some(Value::Float(n as f64));
         }
-        if strict || matches!(value, Value::Null | Value::Array(_) | Value::Closure(_)) {
+        if strict
+            || matches!(
+                value,
+                Value::Null | Value::Array(_) | Value::Closure(_) | Value::Object(_)
+            )
+        {
             return None;
         }
         // A numeric string chooses int or float by its representation when both
@@ -69,14 +74,7 @@ impl Runtime {
     }
 
     fn is_callable(&self, value: &Value) -> bool {
-        let Value::String(name) = value else {
-            return false;
-        };
-        let name = name
-            .strip_prefix(b"\\")
-            .unwrap_or(name)
-            .to_ascii_lowercase();
-        self.functions.contains_key(&name) || builtins::Builtin::lookup(&name).is_some()
+        self.resolve_callable(value.clone(), 0).is_ok()
     }
 
     pub(super) fn check_argument(
@@ -91,7 +89,7 @@ impl Runtime {
         let Some(ty) = &param.ty else {
             return Ok(value);
         };
-        let given = builtins::debug_type(&value);
+        let given = builtins::debug_type(&value).to_owned();
         self.coerce_type(value, ty, strict, line).ok_or_else(|| {
             Error::new(
                 ErrorKind::TypeError,
@@ -129,10 +127,10 @@ impl Runtime {
         }
         let (value, given) = match flow {
             Flow::Return(value) => {
-                let given = builtins::debug_type(&value);
+                let given = builtins::debug_type(&value).to_owned();
                 (Some(value), given)
             }
-            _ => (None, "none"),
+            _ => (None, "none".to_owned()),
         };
         value
             .and_then(|v| self.coerce_type(v, ty, function.strict_types, function.line))

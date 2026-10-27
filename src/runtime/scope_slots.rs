@@ -10,6 +10,7 @@ impl Scope {
             match statement {
                 Stmt::Label(_, _)
                 | Stmt::Goto(_, _)
+                | Stmt::Class(_)
                 | Stmt::Function(_)
                 | Stmt::Text(_)
                 | Stmt::Break(_)
@@ -114,7 +115,9 @@ impl Scope {
                 self.reserve_expression(right);
                 self.reserve_expression(left);
             }
-            ExprKind::Binary(_, left, right) | ExprKind::Assign(left, _, right) => {
+            ExprKind::Property(left, right)
+            | ExprKind::Binary(_, left, right)
+            | ExprKind::Assign(left, _, right) => {
                 self.reserve_expression(left);
                 self.reserve_expression(right);
             }
@@ -146,7 +149,7 @@ impl Scope {
                     self.reserve_expression(value);
                 }
             }
-            ExprKind::Call(callee, args) => {
+            ExprKind::New(callee, args) | ExprKind::Call(callee, args) => {
                 self.reserve_expression(callee);
                 for arg in args {
                     let (Argument::Positional(value)

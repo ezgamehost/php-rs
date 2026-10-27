@@ -11,6 +11,7 @@ use std::{collections::HashSet, rc::Rc};
 mod closures;
 mod jumps;
 mod logical_constants;
+mod objects;
 mod targets;
 mod types;
 mod variables;
@@ -33,6 +34,7 @@ pub(crate) fn parse_source(
         static_names: HashSet::new(),
         source,
         function_name: Vec::new(),
+        class_name: Vec::new(),
     };
     let mut statements = parser.program()?;
     targets::validate(&statements)?;
@@ -50,6 +52,7 @@ struct Parser {
     static_names: HashSet<Vec<u8>>,
     source: Rc<crate::source::Source>,
     function_name: Vec<u8>,
+    class_name: Vec<u8>,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -130,6 +133,9 @@ impl Parser {
         Ok(Stmt::Const(constants))
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
+        if self.eat("class") {
+            return self.class_declaration();
+        }
         let line = self.token().line;
         if self.eat("goto") {
             let name = self.label_name()?;
@@ -162,7 +168,7 @@ impl Parser {
             )
         {
             self.pos += 1;
-            return self.function();
+            return self.function(false);
         }
         if let Kind::Text(bytes) = self.token().kind.clone() {
             self.pos += 1;
@@ -409,7 +415,12 @@ impl Parser {
         self.control_depth -= 1;
         Ok(body)
     }
-    fn function(&mut self) -> Result<Stmt, Error> {
+    fn function(&mut self, method: bool) -> Result<Stmt, Error> {
+        let outer_class = if method {
+            self.class_name.clone()
+        } else {
+            std::mem::take(&mut self.class_name)
+        };
         let line = self.token().line;
         let Kind::Word(name) = self.token().kind.clone() else {
             return Err(Error::parse("Expected function name", line));
@@ -444,6 +455,7 @@ impl Parser {
         self.return_type = outer_return_type;
         self.static_names = outer_static_names;
         self.function_name = outer_function_name;
+        self.class_name = outer_class;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
             name,
             parameters,
@@ -716,6 +728,7 @@ impl Parser {
                                 static_names: HashSet::new(),
                                 source: self.source.clone(),
                                 function_name: self.function_name.clone(),
+                                class_name: self.class_name.clone(),
                             };
                             let expr = parser.expr(0)?;
                             self.warnings.append(&mut parser.warnings);
@@ -726,6 +739,7 @@ impl Parser {
                                         | ExprKind::DynamicVariable(_)
                                         | ExprKind::Index(_, _)
                                         | ExprKind::Call(_, _)
+                                        | ExprKind::Property(_, _)
                                 )
                             {
                                 return Err(Error::parse(
@@ -742,6 +756,7 @@ impl Parser {
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Symbol(op) if op == "$" => self.dynamic_variable()?,
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
+                b"new" => self.new_expression()?,
                 b"function" => self.lambda(false, false, line)?,
                 b"fn" => self.lambda(true, false, line)?,
                 b"static" if self.is("function") || self.is("fn") => {
@@ -767,12 +782,21 @@ impl Parser {
                         .as_encoded_bytes()
                         .to_vec(),
                 )),
+                b"__method__"
+                    if !self.class_name.is_empty()
+                        && !self.function_name.is_empty()
+                        && !self.function_name.starts_with(b"{closure:") =>
+                {
+                    let mut name = self.class_name.clone();
+                    name.extend(b"::");
+                    name.extend(&self.function_name);
+                    ExprKind::Literal(Value::String(name))
+                }
+                b"__class__" => ExprKind::Literal(Value::String(self.class_name.clone())),
                 b"__function__" | b"__method__" => {
                     ExprKind::Literal(Value::String(self.function_name.clone()))
                 }
-                b"__class__" | b"__namespace__" | b"__trait__" => {
-                    ExprKind::Literal(Value::String(Vec::new()))
-                }
+                b"__namespace__" | b"__trait__" => ExprKind::Literal(Value::String(Vec::new())),
                 b"eval" => {
                     self.expect("(")?;
                     let code = self.expr(0)?;
@@ -848,6 +872,14 @@ impl Parser {
                     "Parenthesize this expression before dereferencing it",
                     self.token().line,
                 ));
+            }
+            if min <= 23 && self.eat("->") {
+                let name = self.property_name()?;
+                lhs = Expr {
+                    kind: ExprKind::Property(Box::new(lhs), Box::new(name)),
+                    line,
+                };
+                continue;
             }
             if min <= 23 && self.eat("(") {
                 let kind = if self.is("...")

@@ -30,7 +30,7 @@ impl ArrayKey {
                     Self::String(bytes.clone())
                 }
             }
-            Value::Array(_) | Value::Closure(_) => {
+            Value::Array(_) | Value::Closure(_) | Value::Object(_) => {
                 return Err(Error::new(
                     ErrorKind::TypeError,
                     "Illegal offset type",
@@ -113,24 +113,25 @@ impl PhpArray {
             }
         }
     }
-    pub(crate) fn compare(
+    pub(crate) fn compare_inner(
         &self,
         other: &Self,
         line: usize,
         warnings: &mut Vec<String>,
-    ) -> Option<Ordering> {
+        seen: &mut std::collections::HashSet<(usize, usize)>,
+    ) -> Result<Option<Ordering>, Error> {
         if self.len() != other.len() {
-            return self.len().partial_cmp(&other.len());
+            return Ok(self.len().partial_cmp(&other.len()));
         }
         for (key, left) in &self.entries {
             let Some(right) = other.get(key) else {
-                return Some(Ordering::Greater);
+                return Ok(Some(Ordering::Greater));
             };
-            let order = left.compare(right, line, warnings);
+            let order = left.compare_inner(right, line, warnings, seen)?;
             if order != Some(Ordering::Equal) {
-                return order;
+                return Ok(order);
             }
         }
-        Some(Ordering::Equal)
+        Ok(Some(Ordering::Equal))
     }
 }

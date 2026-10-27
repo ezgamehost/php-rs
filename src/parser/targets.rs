@@ -69,8 +69,21 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                     expression(value, false)?;
                 }
             }
+            Stmt::Class(class) => {
+                for (_, value) in &class.properties {
+                    if let Some(value) = value {
+                        expression(value, false)?;
+                    }
+                }
+                for method in &class.methods {
+                    validate(&[Stmt::Function(method.clone())])?;
+                }
+            }
             Stmt::Function(function) => {
                 for parameter in &function.parameters {
+                    if parameter.name == b"this" {
+                        return Err(Error::parse("Cannot use $this as parameter", function.line));
+                    }
                     if parameter.name == b"GLOBALS" {
                         return Err(Error::parse(
                             "Cannot re-assign auto-global variable GLOBALS",
@@ -148,6 +161,9 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
     if let ExprKind::Lambda(lambda) = &expr.kind {
         return validate(&[Stmt::Function(lambda.function.clone())]);
     }
+    if target && matches!(&expr.kind, ExprKind::Variable(name) if name == b"this") {
+        return Err(Error::parse("Cannot re-assign $this", expr.line));
+    }
     if target && expr.is_globals() {
         return Err(Error::parse(
             "$GLOBALS can only be modified using the $GLOBALS[$name] = $value syntax",
@@ -209,7 +225,7 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         | ExprKind::Empty(value)
         | ExprKind::Print(value) => expression(value, false)?,
         ExprKind::Increment(value, _, _) => expression(value, true)?,
-        ExprKind::Binary(_, left, right) => {
+        ExprKind::Property(left, right) | ExprKind::Binary(_, left, right) => {
             expression(left, false)?;
             expression(right, false)?;
         }
@@ -242,7 +258,7 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
                 expression(&arm.result, false)?;
             }
         }
-        ExprKind::Call(callee, args) => {
+        ExprKind::New(callee, args) | ExprKind::Call(callee, args) => {
             expression(callee, false)?;
             for arg in args {
                 let (Argument::Positional(value)

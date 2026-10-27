@@ -21,6 +21,7 @@ mod functions;
 mod jumps;
 mod loading;
 mod matching;
+mod objects;
 mod offsets;
 mod scope_slots;
 mod termination;
@@ -42,6 +43,7 @@ pub struct Runtime {
     current_function: Option<Vec<u8>>,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
+    classes: HashMap<Vec<u8>, Rc<crate::ast::ClassDecl>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
     strict_types: bool,
@@ -53,6 +55,7 @@ pub struct Runtime {
     next_object_id: usize,
 }
 struct Location {
+    object: Option<Rc<crate::PhpObject>>,
     name: Vec<u8>,
     global: bool,
     keys: Vec<Offset>,
@@ -103,6 +106,7 @@ impl Runtime {
                     self.define_constant(name.clone(), value, expr.line);
                 }
             }
+            Stmt::Class(class) => self.register_class(class.clone())?,
             Stmt::Function(function) => {
                 self.register_function(function.clone())?;
             }
@@ -181,7 +185,7 @@ impl Runtime {
                             Some(value) => value.clone(),
                             None => self.eval(subject)?,
                         };
-                        if value.compare(&candidate, subject.line, &mut self.warnings)
+                        if value.compare(&candidate, subject.line, &mut self.warnings)?
                             == Some(Ordering::Equal)
                         {
                             selected = Some(index);
@@ -197,6 +201,9 @@ impl Runtime {
             }
             Stmt::Foreach(iter, key_target, value_target, body) => {
                 let value = self.eval(iter)?;
+                if let Value::Object(object) = &value {
+                    return self.foreach_object(object, key_target.as_ref(), value_target, body);
+                }
                 if let Value::Array(array) = value {
                     for (key, value) in array.entries() {
                         self.assign_target(value_target, value.clone())?;
@@ -219,8 +226,26 @@ impl Runtime {
             }
             Stmt::Unset(targets) => {
                 for target in targets {
-                    let mut location = self.location(target)?;
-                    if location.keys.is_empty() {
+                    let Some(mut location) = self.unset_location(target)? else {
+                        continue;
+                    };
+                    if let Some(object) = &location.object {
+                        let key = ArrayKey::String(location.name.clone());
+                        if location.keys.is_empty() {
+                            object.properties.borrow_mut().remove(&key);
+                        } else {
+                            let stored = object.properties.borrow().get(&key).cloned();
+                            if let Some(mut value) = stored {
+                                unset_path(
+                                    &mut value,
+                                    &mut location.keys,
+                                    target.line,
+                                    &mut self.warnings,
+                                )?;
+                                object.properties.borrow_mut().insert(key, value);
+                            }
+                        }
+                    } else if location.keys.is_empty() {
                         self.location_scope(&location).remove(&location.name);
                     } else if let Some(value) =
                         self.location_scope(&location).get(&location.name).cloned()
@@ -252,8 +277,15 @@ impl Runtime {
         }
         Ok(value)
     }
-    fn read(&mut self, name: &[u8], line: usize) -> Value {
-        if let Some(value) = self.lookup(name) {
+    fn read(&mut self, name: &[u8], line: usize) -> Result<Value, Error> {
+        if name == b"this" && self.lookup(name).is_none() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Using $this when not in object context",
+                line,
+            ));
+        }
+        Ok(if let Some(value) = self.lookup(name) {
             value
         } else {
             self.warnings.push(format!(
@@ -261,26 +293,50 @@ impl Runtime {
                 String::from_utf8_lossy(name)
             ));
             Value::Null
-        }
+        })
     }
     fn location(&mut self, expr: &Expr) -> Result<Location, Error> {
         match &expr.kind {
             ExprKind::Variable(name) => Ok(Location {
+                object: None,
                 name: name.clone(),
                 global: false,
                 keys: Vec::new(),
             }),
             ExprKind::DynamicVariable(name) => Ok(Location {
+                object: None,
                 name: self.variable_name(name)?,
                 global: false,
                 keys: Vec::new(),
             }),
+            ExprKind::Property(base, name) => {
+                let value = self.eval(base)?;
+                let name = self.variable_name(name)?;
+                let Value::Object(object) = value else {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        format!(
+                            "Attempt to modify property \"{}\" on {}",
+                            String::from_utf8_lossy(&name),
+                            builtins::debug_type(&value)
+                        ),
+                        expr.line,
+                    ));
+                };
+                Ok(Location {
+                    object: Some(object),
+                    name,
+                    global: false,
+                    keys: Vec::new(),
+                })
+            }
             ExprKind::Group(inner) => self.location(inner),
             ExprKind::Index(base, key) if base.is_globals() => {
                 let key = key.as_ref().ok_or_else(|| {
                     Error::new(ErrorKind::Error, "Cannot append to $GLOBALS", expr.line)
                 })?;
                 Ok(Location {
+                    object: None,
                     name: self.variable_name(key)?,
                     global: true,
                     keys: Vec::new(),
@@ -309,6 +365,28 @@ impl Runtime {
         silent: bool,
         string_error: Option<&str>,
     ) -> Result<Value, Error> {
+        if let Some(object) = &location.object {
+            let mut value = self.read_property_value(object, &location.name, line, silent)?;
+            for key in &mut location.keys {
+                if matches!(value, Value::String(_))
+                    && let Some(message) = string_error
+                {
+                    return Err(Error::new(ErrorKind::Error, message, line));
+                }
+                value = read_offset(
+                    value,
+                    key,
+                    line,
+                    if silent {
+                        Access::Coalesce
+                    } else {
+                        Access::Read
+                    },
+                    &mut self.warnings,
+                )?;
+            }
+            return Ok(value);
+        }
         let stored = self.location_scope(location).get(&location.name).cloned();
         let mut value = match stored {
             Some(value) => value.borrow().clone(),
@@ -349,6 +427,27 @@ impl Runtime {
         new_value: Value,
         line: usize,
     ) -> Result<Value, Error> {
+        if location.object.is_none() && location.name == b"this" {
+            return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
+        }
+        if let Some(object) = &location.object {
+            let key = ArrayKey::String(location.name.clone());
+            let mut value = object
+                .properties
+                .borrow()
+                .get(&key)
+                .cloned()
+                .unwrap_or(Value::Null);
+            let result = write_path(
+                &mut value,
+                &mut location.keys,
+                new_value,
+                line,
+                &mut self.warnings,
+            )?;
+            self.write_property_value(object, &location.name, value, line)?;
+            return Ok(result);
+        }
         let value = self
             .location_scope(location)
             .get_or_insert(&location.name, Value::Null);
@@ -367,6 +466,15 @@ impl Runtime {
             ExprKind::DynamicVariable(name) => {
                 let name = self.variable_name(name)?;
                 Ok(self.lookup(&name).unwrap_or(Value::Null))
+            }
+            ExprKind::Property(base, name) => {
+                let value = self.coalesce_read(base, probe)?;
+                let name = self.variable_name(name)?;
+                Ok(if let Value::Object(object) = value {
+                    self.read_property_value(&object, &name, expr.line, true)?
+                } else {
+                    Value::Null
+                })
             }
             ExprKind::Group(inner) => self.coalesce_read(inner, probe),
             ExprKind::Index(base, Some(_)) if base.is_globals() => {
@@ -415,6 +523,21 @@ impl Runtime {
                     .extend(string_bytes(&value, line, &mut self.warnings)?);
                 Ok(Value::Int(1))
             }
+            ExprKind::New(class, args) => self.new_object(class, args, line),
+            ExprKind::Property(base, name) => {
+                let value = self.eval(base)?;
+                let name = self.variable_name(name)?;
+                if let Value::Object(object) = value {
+                    self.read_property_value(&object, &name, line, false)
+                } else {
+                    self.warnings.push(format!(
+                        "Attempt to read property \"{}\" on {} on line {line}",
+                        String::from_utf8_lossy(&name),
+                        builtins::debug_type(&value)
+                    ));
+                    Ok(Value::Null)
+                }
+            }
             ExprKind::Call(callee, args) => self.call(callee, args, line),
             ExprKind::Callable(callee) => self.acquire_callable(callee, line),
             ExprKind::Lambda(lambda) => self.acquire_lambda(lambda),
@@ -429,10 +552,10 @@ impl Runtime {
             }
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(_) if expr.is_globals() => Ok(self.globals_snapshot()),
-            ExprKind::Variable(name) => Ok(self.read(name, line)),
+            ExprKind::Variable(name) => self.read(name, line),
             ExprKind::DynamicVariable(name) => {
                 let name = self.variable_name(name)?;
-                Ok(self.read(&name, line))
+                self.read(&name, line)
             }
             ExprKind::List(_) | ExprKind::Destructure(_) => {
                 Err(Error::parse("Cannot read a destructuring pattern", line))
@@ -636,7 +759,7 @@ fn binary(
         "===" => return Ok(Bool(left == right)),
         "!==" => return Ok(Bool(left != right)),
         "==" | "!=" | "<>" | "<" | "<=" | ">" | ">=" | "<=>" => {
-            let order = left.compare(&right, line, warnings);
+            let order = left.compare(&right, line, warnings)?;
             return Ok(match op {
                 "==" => Bool(order == Some(Ordering::Equal)),
                 "!=" | "<>" => Bool(order != Some(Ordering::Equal)),
@@ -821,10 +944,13 @@ fn increment(
 }
 
 fn string_bytes(value: &Value, line: usize, warnings: &mut Vec<String>) -> Result<Vec<u8>, Error> {
-    if matches!(value, Value::Closure(_)) {
+    if matches!(value, Value::Closure(_) | Value::Object(_)) {
         return Err(Error::new(
             ErrorKind::Error,
-            "Object of class Closure could not be converted to string",
+            format!(
+                "Object of class {} could not be converted to string",
+                builtins::debug_type(value)
+            ),
             line,
         ));
     }

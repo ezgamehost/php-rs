@@ -10,6 +10,17 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
             | Stmt::Text(_)
             | Stmt::Break(_)
             | Stmt::Continue(_, _) => {}
+            Stmt::Class(class) => {
+                let class = Rc::make_mut(class);
+                for (_, value) in &mut class.properties {
+                    if let Some(value) = value {
+                        initializer(value, warnings);
+                    }
+                }
+                for method in &mut class.methods {
+                    fold(&mut Rc::make_mut(method).body, warnings);
+                }
+            }
             Stmt::Function(function) => {
                 let function = Rc::make_mut(function);
                 // Parameter defaults keep named constants unresolved until a call.
@@ -141,7 +152,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         | ExprKind::Empty(value)
         | ExprKind::Print(value)
         | ExprKind::Increment(value, _, _) => expression(value, warnings),
-        ExprKind::Assign(left, _, right) => {
+        ExprKind::Property(left, right) | ExprKind::Assign(left, _, right) => {
             expression(left, warnings);
             expression(right, warnings);
         }
@@ -168,7 +179,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
                 expression(key, warnings);
             }
         }
-        ExprKind::Call(callee, args) => {
+        ExprKind::New(callee, args) | ExprKind::Call(callee, args) => {
             expression(callee, warnings);
             for arg in args {
                 let (Argument::Positional(value)

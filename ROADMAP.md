@@ -55,12 +55,15 @@ definition of completion.
    Eval, local-file include/require and once-only variants, source/line/function
    magic constants, and included-file tracking implemented.
    Remaining: references,
-   advanced interpolation, object casts, complete
+   advanced interpolation, object casts beyond implemented array casts, complete
    operators, class-context magic constants, other superglobals, by-reference functions,
-   Closure methods and object binding,
+   Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
-4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,
+4. **Objects and execution semantics (instance foundation started):** public
+   classes, constructors, instance properties and methods, bound `$this` and
+   method callables, invokable objects, basic property iteration, comparisons,
+   array casts, and object inspection implemented. Remaining: inheritance, interfaces, traits,
    visibility, properties and hooks, magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
@@ -72,7 +75,7 @@ definition of completion.
    filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.
 6. **PHP 8.5 specifics:** pipe operator implemented for available callable kinds;
-   remaining: invokable objects/methods, clone-with, URI extension, new APIs and
+   remaining: other callable kinds, clone-with, URI extension, new APIs and
    attributes, and migration-guide compatibility changes.
 7. **Deployment and completion audit:** configuration, environment and SAPI
    behavior, resource limits, supported-platform validation, upstream unit and

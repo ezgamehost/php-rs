@@ -10,14 +10,17 @@ pub(super) fn cast(
     line: usize,
     warnings: &mut Vec<String>,
 ) -> Result<Value, Error> {
-    if matches!(value, Value::Closure(_)) && matches!(kind, CastKind::Int | CastKind::Float) {
+    if matches!(value, Value::Closure(_) | Value::Object(_))
+        && matches!(kind, CastKind::Int | CastKind::Float)
+    {
         let name = if kind == CastKind::Int {
             "int"
         } else {
             "float"
         };
         warnings.push(format!(
-            "Object of class Closure could not be converted to {name} on line {line}"
+            "Object of class {} could not be converted to {name} on line {line}",
+            builtins::debug_type(&value)
         ));
     }
     Ok(match kind {
@@ -26,6 +29,16 @@ pub(super) fn cast(
         CastKind::String => Value::String(string_bytes(&value, line, warnings)?),
         CastKind::Array => match value {
             Value::Array(_) => value,
+            Value::Object(object) => {
+                let mut array = PhpArray::default();
+                for (key, value) in object.snapshot().entries() {
+                    array.insert(
+                        ArrayKey::from_value(&key.to_value(), line, warnings)?,
+                        value.clone(),
+                    );
+                }
+                Value::Array(Rc::new(array))
+            }
             value => {
                 value.warn_nan("array", line, warnings);
                 let mut array = PhpArray::default();

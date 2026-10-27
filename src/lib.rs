@@ -3,6 +3,7 @@ mod ast;
 mod closure;
 mod error;
 mod lexer;
+mod object;
 mod parser;
 pub mod phpt;
 mod runtime;
@@ -12,6 +13,7 @@ mod value;
 pub use array::{ArrayKey, PhpArray};
 pub use closure::Closure;
 pub use error::{Error, ErrorKind};
+pub use object::PhpObject;
 pub use runtime::Runtime;
 pub use value::Value;
 

@@ -26,6 +26,8 @@ pub(crate) enum ExprKind {
     Call(Box<Expr>, Vec<Argument>),
     Callable(Box<Expr>),
     Lambda(Rc<LambdaDecl>),
+    New(Box<Expr>, Vec<Argument>),
+    Property(Box<Expr>, Box<Expr>),
     Eval(Box<Expr>),
     Include(IncludeKind, Box<Expr>),
     Isset(Vec<Expr>),
@@ -77,6 +79,7 @@ pub(crate) enum Stmt {
     Static(Vec<(Vec<u8>, Option<Expr>)>),
     Const(Vec<(Vec<u8>, Expr)>),
     Function(Rc<FunctionDecl>),
+    Class(Rc<ClassDecl>),
     Text(Vec<u8>),
     Echo(Vec<Expr>),
     Expr(Expr),
@@ -111,7 +114,7 @@ impl Expr {
 
     pub fn is_writable(&self) -> bool {
         match &self.kind {
-            ExprKind::Variable(_) | ExprKind::DynamicVariable(_) => true,
+            ExprKind::Variable(_) | ExprKind::DynamicVariable(_) | ExprKind::Property(_, _) => true,
             ExprKind::Index(base, _) => {
                 let mut base = base.as_ref();
                 while let ExprKind::Group(inner) = &base.kind {
@@ -122,6 +125,14 @@ impl Expr {
             _ => false,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ClassDecl {
+    pub name: Vec<u8>,
+    pub properties: Vec<(Vec<u8>, Option<Expr>)>,
+    pub methods: Vec<Rc<FunctionDecl>>,
+    pub line: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -170,6 +181,15 @@ impl TypeDecl {
     pub fn accepts(&self, value: &Value) -> bool {
         self.contains("mixed")
             || self.members.iter().any(|member| {
+                if let Value::Object(object) = value
+                    && (member == "object"
+                        || member
+                            .trim_start_matches('\\')
+                            .as_bytes()
+                            .eq_ignore_ascii_case(&object.class.name))
+                {
+                    return true;
+                }
                 if matches!(value, Value::Closure(_))
                     && member
                         .trim_start_matches('\\')

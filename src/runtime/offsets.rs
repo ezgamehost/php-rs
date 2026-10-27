@@ -52,6 +52,11 @@ pub(super) fn read_offset(
     warnings: &mut Vec<String>,
 ) -> Result<Value, Error> {
     match value {
+        Value::Object(object) => Err(Error::new(
+            ErrorKind::Error,
+            format!("Cannot use object of type {} as array", object.class_name),
+            line,
+        )),
         Value::Closure(_) => Err(Error::new(
             ErrorKind::Error,
             "Cannot use object of type Closure as array",

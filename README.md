@@ -52,6 +52,15 @@ new request. The CLI returns the low eight bits of the requested status.
   named arguments, variadics, argument unpacking, and string-based function calls.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
   with live parameter values, default gaps, and separate variadic argument copies.
+- Public instance classes and `stdClass`, constructors, shared object handles,
+  dynamic property names, nested property/array writes, and basic live property
+  iteration. Instance methods bind `$this`, support named/typed arguments, and
+  expose bound first-class callables. Non-static closures retain `$this`.
+  Method-array callbacks and invokable objects work with pipes and array callbacks.
+- Object identity and property comparisons, recursive comparison errors,
+  recursive-safe object dumps, object-to-array casts, and explicit-object
+  `get_class`, `get_object_vars`, `class_exists`, `method_exists`, and
+  `property_exists` for implemented classes.
 - First-class function callables (`name(...)`, `$name(...)`) with identity,
   normal argument binding, callable/Closure/object types, and PHP 8.5 constant
   initializers. The pipe operator (`|>`) chains callable strings and these
@@ -99,13 +108,16 @@ new request. The CLI returns the low eight bits of the requested status.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
 
-Known gaps include intersection/DNF types, most builtins,
-general objects and methods, references, exceptions,
+Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
-Class-name and object type declarations can be parsed; only Closure objects are
-implemented so far. General class resolution, Closure methods, `$this` binding,
-reflection, and complete object diagnostics/handle allocation remain unfinished.
-Callable checks currently cover function names and Closure objects.
+The object implementation is a foundation: inheritance, interfaces, traits,
+visibility modifiers other than public, typed/static/readonly properties, hooks,
+class constants, static calls, `self`/`parent` resolution, `instanceof`, cloning,
+most magic methods, autoloading, and reflection remain unfinished. Closure methods,
+complete closure debugging, exact object handle reuse, and iteration edge cases
+involving deletion/reinsertion of visited properties also remain unfinished.
+Callable checks cover function names, Closure objects, instance-method arrays,
+and invokable instances of implemented classes.
 Closure reference captures work, but general references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
 Other `declare` directives are not implemented. Shutdown callbacks, output
@@ -115,7 +127,7 @@ implemented; `$GLOBALS` currently exposes the variables created by PHP code or
 provided through `Runtime::variables`. File loading currently
 uses the working directory and the executing source directory; configurable
 `include_path`, stream wrappers, and PHP configuration are not implemented.
-Deprecated `${...}` and object interpolation,
+Deprecated `${...}` and complete object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP

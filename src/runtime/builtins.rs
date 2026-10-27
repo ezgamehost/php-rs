@@ -9,6 +9,11 @@ pub(super) enum Builtin {
     VarDump,
     GetType,
     GetDebugType,
+    GetClass,
+    ClassExists,
+    MethodExists,
+    PropertyExists,
+    GetObjectVars,
     Is(&'static str),
     ArrayKeys,
     ArrayValues,
@@ -34,6 +39,11 @@ impl Builtin {
             b"var_dump" => Self::VarDump,
             b"gettype" => Self::GetType,
             b"get_debug_type" => Self::GetDebugType,
+            b"get_class" => Self::GetClass,
+            b"class_exists" => Self::ClassExists,
+            b"method_exists" => Self::MethodExists,
+            b"property_exists" => Self::PropertyExists,
+            b"get_object_vars" => Self::GetObjectVars,
             b"is_int" | b"is_integer" | b"is_long" => Self::Is("int"),
             b"is_float" | b"is_double" => Self::Is("float"),
             b"is_bool" => Self::Is("bool"),
@@ -60,6 +70,14 @@ impl Builtin {
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
+            Self::GetClass => &[("object", false, false)],
+            Self::GetObjectVars => &[("object", false, false)],
+            Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
+            Self::MethodExists => &[("object_or_class", false, false), ("method", false, false)],
+            Self::PropertyExists => &[
+                ("object_or_class", false, false),
+                ("property", false, false),
+            ],
             Self::Exit => &[("status", true, false)],
             Self::GetIncludedFiles | Self::FuncNumArgs | Self::FuncGetArgs => &[],
             Self::FuncGetArg => &[("position", false, false)],
@@ -149,6 +167,66 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::GetClass => match first {
+                Value::Object(object) => Ok(Value::String(object.class.name.clone())),
+                Value::Closure(_) => Ok(Value::String(b"Closure".to_vec())),
+                _ => Err(Error::new(
+                    ErrorKind::TypeError,
+                    "get_class(): Argument #1 ($object) must be of type object",
+                    line,
+                )),
+            },
+            Builtin::GetObjectVars => match first {
+                Value::Object(_) => casting::cast(
+                    crate::ast::CastKind::Array,
+                    first.clone(),
+                    line,
+                    &mut self.warnings,
+                ),
+                Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),
+                _ => Err(Error::new(
+                    ErrorKind::TypeError,
+                    "get_object_vars(): Argument #1 ($object) must be of type object",
+                    line,
+                )),
+            },
+            Builtin::ClassExists => {
+                let class = self.native_string(first, &name, 1, line)?;
+                if let Some(autoload) = &args[1] {
+                    self.native_bool(autoload, &name, 2, line)?;
+                }
+                Ok(Value::Bool(
+                    self.find_class(&class).is_some()
+                        || class
+                            .strip_prefix(b"\\")
+                            .unwrap_or(&class)
+                            .eq_ignore_ascii_case(b"Closure"),
+                ))
+            }
+            Builtin::MethodExists | Builtin::PropertyExists => {
+                let member = self.native_string(args[1].as_ref().unwrap(), &name, 2, line)?;
+                let class = match first {
+                    Value::Object(object) => Some(object.class.clone()),
+                    Value::String(name) => self.find_class(name),
+                    Value::Closure(_) => None,
+                    _ => {
+                        return Err(Error::new(
+                            ErrorKind::TypeError,
+                            format!(
+                                "{name}(): Argument #1 ($object_or_class) must be of type object|string"
+                            ),
+                            line,
+                        ));
+                    }
+                };
+                let exists = if matches!(builtin, Builtin::MethodExists) {
+                    class.is_some_and(|c| objects::method(&c, &member).is_some())
+                } else {
+                    class.is_some_and(|c| c.properties.iter().any(|(n, _)| *n == member))
+                        || matches!(first, Value::Object(o) if o.properties.borrow().get(&ArrayKey::String(member)).is_some())
+                };
+                Ok(Value::Bool(exists))
+            }
             Builtin::ArrayMap => self.array_map(&args, &extra, line),
             Builtin::ArrayFilter => self.array_filter(&args, line),
             Builtin::ArrayReduce => self.array_reduce(&args, line),
@@ -196,7 +274,7 @@ impl Runtime {
                     Value::Float(_) => "double",
                     Value::String(_) => "string",
                     Value::Array(_) => "array",
-                    Value::Closure(_) => "object",
+                    Value::Closure(_) | Value::Object(_) => "object",
                 }
                 .as_bytes()
                 .to_vec(),
@@ -204,7 +282,7 @@ impl Runtime {
             Builtin::GetDebugType => Ok(Value::String(debug_type(first).as_bytes().to_vec())),
             Builtin::Is(kind) => Ok(Value::Bool(
                 debug_type(first) == kind
-                    || (kind == "object" && matches!(first, Value::Closure(_))),
+                    || (kind == "object" && matches!(first, Value::Closure(_) | Value::Object(_))),
             )),
             Builtin::VarDump => {
                 if extra
@@ -264,13 +342,15 @@ impl Runtime {
                 };
                 let mut result = PhpArray::default();
                 for (key, value) in array.entries() {
-                    if args[1].as_ref().is_none_or(|filter| {
-                        if strict {
-                            value == filter
-                        } else {
-                            value.compare(filter, line, &mut self.warnings) == Some(Ordering::Equal)
+                    let selected = match &args[1] {
+                        None => true,
+                        Some(filter) if strict => value == filter,
+                        Some(filter) => {
+                            value.compare(filter, line, &mut self.warnings)?
+                                == Some(Ordering::Equal)
                         }
-                    }) {
+                    };
+                    if selected {
                         result.append(key.to_value(), line)?;
                     }
                 }
@@ -300,8 +380,10 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<Vec<u8>, Error> {
-        if matches!(value, Value::Array(_) | Value::Closure(_))
-            || (self.strict_types && !matches!(value, Value::String(_)))
+        if matches!(
+            value,
+            Value::Array(_) | Value::Closure(_) | Value::Object(_)
+        ) || (self.strict_types && !matches!(value, Value::String(_)))
         {
             return Err(type_error(function, position, "string", line));
         }
@@ -317,7 +399,10 @@ impl Runtime {
         line: usize,
     ) -> Result<i64, Error> {
         if (self.strict_types && !matches!(value, Value::Int(_)))
-            || matches!(value, Value::Array(_) | Value::Closure(_))
+            || matches!(
+                value,
+                Value::Array(_) | Value::Closure(_) | Value::Object(_)
+            )
             || matches!(value, Value::String(s) if crate::value::numeric_string(s).is_none())
         {
             return Err(type_error(function, position, "int", line));
@@ -341,8 +426,10 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<bool, Error> {
-        if matches!(value, Value::Array(_) | Value::Closure(_))
-            || (self.strict_types && !matches!(value, Value::Bool(_)))
+        if matches!(
+            value,
+            Value::Array(_) | Value::Closure(_) | Value::Object(_)
+        ) || (self.strict_types && !matches!(value, Value::Bool(_)))
         {
             return Err(type_error(function, position, "bool", line));
         }
@@ -380,7 +467,7 @@ pub(super) fn require_array<'a>(
         _ => Err(type_error(function, position, "array", line)),
     }
 }
-pub(super) fn debug_type(value: &Value) -> &'static str {
+pub(super) fn debug_type(value: &Value) -> &str {
     match value {
         Value::Null => "null",
         Value::Bool(_) => "bool",
@@ -389,6 +476,7 @@ pub(super) fn debug_type(value: &Value) -> &'static str {
         Value::String(_) => "string",
         Value::Array(_) => "array",
         Value::Closure(_) => "Closure",
+        Value::Object(object) => &object.class_name,
     }
 }
 fn count(array: &PhpArray, recursive: bool) -> i64 {
@@ -407,7 +495,37 @@ fn count(array: &PhpArray, recursive: bool) -> i64 {
         }
 }
 fn dump(value: &Value, depth: usize, out: &mut Vec<u8>) {
+    dump_inner(value, depth, out, &mut HashSet::new());
+}
+fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet<usize>) {
     match value {
+        Value::Object(object) => {
+            if !seen.insert(object.object_id) {
+                out.extend_from_slice(b"*RECURSION*\n");
+                return;
+            }
+            let properties = object.snapshot();
+            out.extend_from_slice(
+                format!(
+                    "object({})#{} ({}) {{\n",
+                    object.class_name,
+                    object.object_id,
+                    properties.len()
+                )
+                .as_bytes(),
+            );
+            for (key, value) in properties.entries() {
+                out.extend(std::iter::repeat_n(b' ', depth + 2));
+                out.extend_from_slice(b"[\"");
+                out.extend(key.to_value().to_bytes());
+                out.extend_from_slice(b"\"]=>\n");
+                out.extend(std::iter::repeat_n(b' ', depth + 2));
+                dump_inner(value, depth + 2, out, seen);
+            }
+            out.extend(std::iter::repeat_n(b' ', depth));
+            out.extend_from_slice(b"}\n");
+            seen.remove(&object.object_id);
+        }
         Value::Closure(closure) => {
             let parameters = closure
                 .function
@@ -440,7 +558,12 @@ fn dump(value: &Value, depth: usize, out: &mut Vec<u8>) {
                 );
             }
             let mut rendered = Vec::new();
-            dump(&Value::Array(Rc::new(properties)), depth, &mut rendered);
+            dump_inner(
+                &Value::Array(Rc::new(properties)),
+                depth,
+                &mut rendered,
+                seen,
+            );
             let start = rendered.iter().position(|b| *b == b'(').unwrap();
             out.extend_from_slice(format!("object(Closure)#{} ", closure.object_id).as_bytes());
             out.extend_from_slice(&rendered[start..]);
@@ -471,7 +594,7 @@ fn dump(value: &Value, depth: usize, out: &mut Vec<u8>) {
                     }
                 }
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
-                dump(value, depth + 2, out);
+                dump_inner(value, depth + 2, out, seen);
             }
             out.extend(std::iter::repeat_n(b' ', depth));
             out.extend_from_slice(b"}\n");

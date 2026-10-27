@@ -161,7 +161,7 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
         | ExprKind::Empty(e)
         | ExprKind::Print(e)
         | ExprKind::Increment(e, _, _) => collect_captures(e, captures),
-        ExprKind::Binary(_, a, b) | ExprKind::Assign(a, _, b) => {
+        ExprKind::Property(a, b) | ExprKind::Binary(_, a, b) | ExprKind::Assign(a, _, b) => {
             collect_captures(a, captures);
             collect_captures(b, captures);
         }
@@ -188,7 +188,7 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
                 collect_captures(key, captures);
             }
         }
-        ExprKind::Call(callee, args) => {
+        ExprKind::New(callee, args) | ExprKind::Call(callee, args) => {
             collect_captures(callee, captures);
             for arg in args {
                 let (Argument::Positional(e) | Argument::Named(_, e) | Argument::Unpack(e)) = arg;

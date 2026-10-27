@@ -96,6 +96,7 @@ fn unhandled(value: &Value, line: usize) -> Error {
         }
         Value::Array(_) => "of type array".into(),
         Value::Closure(_) => "of type Closure".into(),
+        Value::Object(object) => format!("of type {}", object.class_name),
         Value::String(value) => {
             let mut description = String::from("'");
             for byte in value.iter().take(15) {
