@@ -6,6 +6,7 @@ use crate::{
 use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 mod builtins;
+mod casting;
 mod destructuring;
 mod functions;
 mod matching;
@@ -42,7 +43,8 @@ impl Flow {
 impl Runtime {
     /// Parse the complete document before executing any of it.
     pub fn execute(&mut self, source: &[u8]) -> Result<Value, Error> {
-        let mut stmts = parser::parse(lexer::lex(source)?)?;
+        let (mut stmts, warnings) = parser::parse(lexer::lex(source)?)?;
+        self.warnings.extend(warnings);
         self.prepare_functions(&mut stmts)?;
         match self.block(&stmts)? {
             Flow::Return(value) => Ok(value),
@@ -315,6 +317,10 @@ impl Runtime {
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
         let line = expr.line;
         match &expr.kind {
+            ExprKind::Cast(kind, operand) => {
+                let value = self.eval(operand)?;
+                casting::cast(*kind, value, line, &mut self.warnings)
+            }
             ExprKind::Match(subject, arms) => self.match_expression(subject, arms, line),
             ExprKind::Print(operand) => {
                 let value = self.eval(operand)?;

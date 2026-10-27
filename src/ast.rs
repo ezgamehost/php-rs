@@ -15,6 +15,7 @@ pub(crate) enum ExprKind {
     Variable(Vec<u8>),
     Constant(Vec<u8>),
     Unary(String, Box<Expr>),
+    Cast(CastKind, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
     Array(Vec<ArrayElement>),
     LongArray(Vec<ArrayElement>),
@@ -29,6 +30,16 @@ pub(crate) enum ExprKind {
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
     Match(Box<Expr>, Vec<MatchArm>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum CastKind {
+    Int,
+    Float,
+    Bool,
+    String,
+    Array,
+    Void,
 }
 
 #[derive(Debug, Clone)]
@@ -105,6 +116,7 @@ impl Expr {
         match &self.kind {
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
+            ExprKind::Cast(kind, e) => *kind != CastKind::Void && e.is_constant_expression(),
             ExprKind::Index(a, Some(b)) | ExprKind::Binary(_, a, b) => {
                 a.is_constant_expression() && b.is_constant_expression()
             }

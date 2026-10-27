@@ -1,7 +1,8 @@
 use crate::{
     Error, Value,
     ast::{
-        Argument, ArrayElement, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt, SwitchCase,
+        Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, MatchArm, Parameter, Stmt,
+        SwitchCase,
     },
     lexer::{Kind, StringPart, Token},
 };
@@ -9,20 +10,22 @@ use crate::{
 use std::rc::Rc;
 mod targets;
 
-pub(crate) fn parse(tokens: Vec<Token>) -> Result<Vec<Stmt>, Error> {
-    let statements = Parser {
+pub(crate) fn parse(tokens: Vec<Token>) -> Result<(Vec<Stmt>, Vec<String>), Error> {
+    let mut parser = Parser {
         tokens,
         pos: 0,
         control_depth: 0,
-    }
-    .program()?;
+        warnings: Vec::new(),
+    };
+    let statements = parser.program()?;
     targets::validate(&statements)?;
-    Ok(statements)
+    Ok((statements, parser.warnings))
 }
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
     control_depth: usize,
+    warnings: Vec<String>,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -112,6 +115,15 @@ impl Parser {
             self.expect("(")?;
             let init = self.expression_list(";")?;
             let cond = self.expression_list(";")?;
+            if cond
+                .last()
+                .is_some_and(|expr| matches!(expr.kind, ExprKind::Cast(CastKind::Void, _)))
+            {
+                return Err(Error::parse(
+                    "The final for condition cannot discard its value",
+                    self.token().line,
+                ));
+            }
             let step = self.expression_list(")")?;
             let body = self.loop_body(Some("endfor"))?;
             return Ok(Stmt::For(init, cond, step, Box::new(body)));
@@ -201,9 +213,20 @@ impl Parser {
             self.expect(";")?;
             return Ok(Stmt::Return(value));
         }
-        let expr = self.expr(0)?;
+        let expr = self.discardable_expression()?;
         self.expect(";")?;
         Ok(Stmt::Expr(expr))
+    }
+    fn discardable_expression(&mut self) -> Result<Expr, Error> {
+        if matches!(&self.token().kind, Kind::Cast(name) if name == "void") {
+            let line = self.token().line;
+            self.pos += 1;
+            return Ok(Expr {
+                kind: ExprKind::Cast(CastKind::Void, Box::new(self.expr(0)?)),
+                line,
+            });
+        }
+        self.expr(0)
     }
     fn switch_statement(&mut self) -> Result<Stmt, Error> {
         self.expect("(")?;
@@ -262,7 +285,7 @@ impl Parser {
             return Ok(expressions);
         }
         loop {
-            expressions.push(self.expr(0)?);
+            expressions.push(self.discardable_expression()?);
             if !self.eat(",") {
                 self.expect(end)?;
                 return Ok(expressions);
@@ -520,6 +543,25 @@ impl Parser {
         let line = token.line;
         self.pos += 1;
         let kind = match token.kind {
+            Kind::Cast(name) => {
+                let (kind, canonical) = match name.as_str() {
+                    "int" | "integer" => (CastKind::Int, "int"),
+                    "float" | "double" => (CastKind::Float, "float"),
+                    "bool" | "boolean" => (CastKind::Bool, "bool"),
+                    "string" | "binary" => (CastKind::String, "string"),
+                    "array" => (CastKind::Array, "array"),
+                    _ => {
+                        return Err(Error::parse(
+                            format!("Unsupported cast ({name}) in this context"),
+                            line,
+                        ));
+                    }
+                };
+                if name != canonical {
+                    self.warnings.push(format!("Deprecated: Non-canonical cast ({name}) is deprecated, use the ({canonical}) cast instead on line {line}"));
+                }
+                ExprKind::Cast(kind, Box::new(self.expr(19)?))
+            }
             Kind::Value(value) => ExprKind::Literal(value),
             Kind::Interpolated(parts) => {
                 let mut expressions = Vec::new();
@@ -534,8 +576,10 @@ impl Parser {
                                 tokens,
                                 pos: 0,
                                 control_depth: 0,
+                                warnings: Vec::new(),
                             };
                             let expr = parser.expr(0)?;
+                            self.warnings.append(&mut parser.warnings);
                             if parser.token().kind != Kind::End
                                 || !matches!(
                                     expr.kind,

@@ -23,6 +23,8 @@ output and warnings when execution fails. Parsing happens before execution.
 ## Current coverage
 
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
+- Explicit scalar and array casts, cast-alias deprecations, and PHP 8.5 `(void)`
+  result discarding in statements and permitted `for` clauses.
 - Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
   writes, append, array union and comparison, `unset`, `isset`, and `empty`.
 - Array unpacking with integer-key reindexing and string-key overwrites.

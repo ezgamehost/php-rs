@@ -8,6 +8,7 @@ pub(crate) enum Kind {
     Value(Value),
     Variable(Vec<u8>),
     Word(Vec<u8>),
+    Cast(String),
     Symbol(String),
     End,
 }
@@ -43,6 +44,33 @@ struct Lexer<'a> {
     tokens: Vec<Token>,
 }
 impl Lexer<'_> {
+    fn cast(&mut self) -> Option<String> {
+        let mut end = self.pos + 1;
+        while matches!(self.source.get(end), Some(b' ' | b'\t')) {
+            end += 1;
+        }
+        let start = end;
+        while self.source.get(end).is_some_and(u8::is_ascii_alphabetic) {
+            end += 1;
+        }
+        let name = String::from_utf8(self.source[start..end].to_ascii_lowercase()).ok()?;
+        if ![
+            "int", "integer", "float", "double", "real", "bool", "boolean", "string", "binary",
+            "array", "object", "unset", "void",
+        ]
+        .contains(&name.as_str())
+        {
+            return None;
+        }
+        while matches!(self.source.get(end), Some(b' ' | b'\t')) {
+            end += 1;
+        }
+        if self.source.get(end) != Some(&b')') {
+            return None;
+        }
+        self.pos = end + 1;
+        Some(name)
+    }
     fn starts(&self, s: &[u8]) -> bool {
         self.source[self.pos..].starts_with(s)
     }
@@ -146,7 +174,11 @@ impl Lexer<'_> {
                 self.pos += 2;
                 continue;
             }
-            let kind = if self.starts(b"<<<") {
+            let kind = if c == b'('
+                && let Some(name) = self.cast()
+            {
+                Kind::Cast(name)
+            } else if self.starts(b"<<<") {
                 self.heredoc()?
             } else if (c == b'b' || c == b'B')
                 && matches!(self.source.get(self.pos + 1), Some(b'\'' | b'"'))

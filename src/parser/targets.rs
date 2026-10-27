@@ -156,6 +156,7 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
             }
         }
         ExprKind::Group(value)
+        | ExprKind::Cast(_, value)
         | ExprKind::Unary(_, value)
         | ExprKind::Empty(value)
         | ExprKind::Print(value)
