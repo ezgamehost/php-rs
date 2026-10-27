@@ -36,7 +36,7 @@ Zend/tests/list/list_assign_ref_string_offset_error.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_destructuring_to_special_variables.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/list/list_empty_error.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_empty_error_keyed.phpt UNSUPPORTED: EXPECTF
-Zend/tests/list/list_keyed.phpt FAIL: Error: Undefined constant "PHP_EOL" on line 11
+Zend/tests/list/list_keyed.phpt PASS
 Zend/tests/list/list_keyed_ArrayAccess.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/list/list_keyed_conversions.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_keyed_evaluation_order.phpt FAIL: ParseError: Expected ';' on line 3
@@ -44,11 +44,11 @@ Zend/tests/list/list_keyed_evaluation_order_2.phpt PASS
 Zend/tests/list/list_keyed_evaluation_order_3.phpt PASS
 Zend/tests/list/list_keyed_evaluation_order_nested.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/list/list_keyed_leading_comma.phpt UNSUPPORTED: EXPECTF
-Zend/tests/list/list_keyed_non_literals.phpt FAIL: ParseError: Expected ';' on line 9
-Zend/tests/list/list_keyed_trailing_comma.phpt FAIL: Error: Undefined constant "PHP_EOL" on line 15
+Zend/tests/list/list_keyed_non_literals.phpt FAIL: Error: Call to undefined function file_get_contents() on line 11
+Zend/tests/list/list_keyed_trailing_comma.phpt PASS
 Zend/tests/list/list_keyed_undefined.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_mixed_keyed_unkeyed.phpt UNSUPPORTED: EXPECTF
-Zend/tests/list/list_mixed_nested_keyed_unkeyed.phpt FAIL: Error: Undefined constant "PHP_EOL" on line 11
+Zend/tests/list/list_mixed_nested_keyed_unkeyed.phpt PASS
 Zend/tests/list/list_reference_001.phpt FAIL: ParseError: Expected expression on line 3
 Zend/tests/list/list_reference_002.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_reference_003.phpt UNSUPPORTED: EXPECTF
@@ -61,4 +61,4 @@ Zend/tests/list/list_reference_009.phpt FAIL: ParseError: Expected expression on
 Zend/tests/list/list_reference_010.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_reference_011.phpt UNSUPPORTED: EXPECTF
 Zend/tests/list/list_self_assign.phpt PASS
-8 passed, 20 failed, 30 unsupported
+11 passed, 17 failed, 30 unsupported

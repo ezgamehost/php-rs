@@ -13,6 +13,9 @@ pub(super) enum Builtin {
     ArrayValues,
     ArrayKeyExists,
     FunctionExists,
+    Define,
+    Defined,
+    Constant,
 }
 impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
@@ -32,6 +35,9 @@ impl Builtin {
             b"array_values" => Self::ArrayValues,
             b"array_key_exists" | b"key_exists" => Self::ArrayKeyExists,
             b"function_exists" => Self::FunctionExists,
+            b"define" => Self::Define,
+            b"defined" => Self::Defined,
+            b"constant" => Self::Constant,
             _ => return None,
         })
     }
@@ -49,6 +55,12 @@ impl Builtin {
             Self::ArrayValues => &[("array", false, false)],
             Self::ArrayKeyExists => &[("key", false, false), ("array", false, false)],
             Self::FunctionExists => &[("function", false, false)],
+            Self::Define => &[
+                ("constant_name", false, false),
+                ("value", false, false),
+                ("case_insensitive", true, false),
+            ],
+            Self::Defined | Self::Constant => &[("constant_name", false, false)],
         };
         definitions
             .iter()
@@ -75,6 +87,34 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::Define => {
+                let constant = self.native_string(first, &name, 1, line)?;
+                if constant.windows(2).any(|part| part == b"::") {
+                    return Err(Error::new(
+                        ErrorKind::ValueError,
+                        "define(): Argument #1 ($constant_name) cannot be a class constant",
+                        line,
+                    ));
+                }
+                if let Some(flag) = &args[2]
+                    && self.native_bool(flag, &name, 3, line)?
+                {
+                    self.warnings.push(format!("define(): Argument #3 ($case_insensitive) is ignored since declaration of case-insensitive constants is no longer supported on line {line}"));
+                }
+                Ok(Value::Bool(self.define_constant(
+                    constant,
+                    args[1].as_ref().unwrap().clone(),
+                    line,
+                )))
+            }
+            Builtin::Defined | Builtin::Constant => {
+                let constant = self.native_string(first, &name, 1, line)?;
+                if matches!(builtin, Builtin::Defined) {
+                    Ok(Value::Bool(self.lookup_constant(&constant).is_some()))
+                } else {
+                    self.read_constant(&constant, line)
+                }
+            }
             Builtin::Strlen => Ok(Value::Int(
                 self.native_string(first, &name, 1, line)?.len() as i64
             )),

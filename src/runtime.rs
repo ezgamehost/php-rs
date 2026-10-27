@@ -7,6 +7,7 @@ use std::{cmp::Ordering, collections::HashMap, rc::Rc};
 
 mod builtins;
 mod casting;
+mod constants;
 mod destructuring;
 mod functions;
 mod matching;
@@ -20,6 +21,7 @@ pub struct Runtime {
     pub warnings: Vec<String>,
     pub variables: HashMap<Vec<u8>, Value>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
+    constants: HashMap<Vec<u8>, Value>,
 }
 struct Location {
     name: Vec<u8>,
@@ -62,6 +64,12 @@ impl Runtime {
     }
     fn statement(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
         match stmt {
+            Stmt::Const(constants) => {
+                for (name, expr) in constants {
+                    let value = self.eval(expr)?;
+                    self.define_constant(name.clone(), value, expr.line);
+                }
+            }
             Stmt::Function(function) => {
                 self.register_function(function.clone())?;
             }
@@ -405,13 +413,7 @@ impl Runtime {
                 Ok(Value::Bool(true))
             }
             ExprKind::Empty(arg) => Ok(Value::Bool(!self.coalesce_read(arg, true)?.is_truthy())),
-            ExprKind::Constant(name) if name == b"COUNT_NORMAL" => Ok(Value::Int(0)),
-            ExprKind::Constant(name) if name == b"COUNT_RECURSIVE" => Ok(Value::Int(1)),
-            ExprKind::Constant(name) => Err(Error::new(
-                ErrorKind::Error,
-                format!("Undefined constant \"{}\"", String::from_utf8_lossy(name)),
-                line,
-            )),
+            ExprKind::Constant(name) => self.read_constant(name, line),
             ExprKind::Unary(op, expr) => {
                 let value = self.eval(expr)?;
                 match op.as_str() {

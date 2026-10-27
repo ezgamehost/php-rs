@@ -5,11 +5,11 @@ CLI reference. These are narrow measurements, not full PHP compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 18 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 19 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
-| PHP 8.5.0 `tests/lang`, Rust | 34 | 133 | 127 |
+| PHP 8.5.0 `tests/lang`, Rust | 41 | 126 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
-| PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 8 | 20 | 30 |
+| PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 11 | 17 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
 
 Every language-suite result, including failing test names and reasons, is in
@@ -24,7 +24,7 @@ and standard-library functions; unsupported sections remain unexecuted.
 The [list/destructuring report](conformance/php-8.5.0-list.txt) and
 [array-unpacking report](conformance/php-8.5.0-array_unpack.txt) add targeted
 coverage. Their remaining failures include references, objects/iterators, closures,
-constants, and unsupported PHPT sections.
+magic constants, and unsupported PHPT sections.
 
 The upstream basic-suite failures are:
 

@@ -58,6 +58,7 @@ pub(crate) struct MatchArm {
 
 #[derive(Debug, Clone)]
 pub(crate) enum Stmt {
+    Const(Vec<(Vec<u8>, Expr)>),
     Function(Rc<FunctionDecl>),
     Text(Vec<u8>),
     Echo(Vec<Expr>),

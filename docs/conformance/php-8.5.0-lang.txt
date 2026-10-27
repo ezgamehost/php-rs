@@ -66,10 +66,10 @@ tests/lang/bug22592.phpt FAIL: Error: Call to undefined function set_error_handl
 tests/lang/bug23279.phpt FAIL: ParseError: Expected ';' on line 5
 tests/lang/bug23384.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/bug23489.phpt FAIL: ParseError: Expected ';' on line 2
-tests/lang/bug23524.phpt FAIL: Error: Call to undefined function define() on line 3
+tests/lang/bug23524.phpt FAIL: Error: Call to undefined function print_r() on line 5
 tests/lang/bug23584.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug23624.phpt FAIL: Error: Call to undefined function current() on line 3
-tests/lang/bug24054.phpt FAIL: Error: Call to undefined function define() on line 3
+tests/lang/bug24054.phpt FAIL: Error: Call to undefined function printf() on line 5
 tests/lang/bug24396.phpt FAIL: ParseError: Expected variable name on line 6
 tests/lang/bug24436.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug24499.phpt FAIL: ParseError: Expected ';' on line 2
@@ -90,16 +90,16 @@ tests/lang/bug26866.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug26869.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/bug27354.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug27439.phpt UNSUPPORTED: EXPECTF
-tests/lang/bug27443.phpt FAIL: Error: Call to undefined function defined() on line 2
+tests/lang/bug27443.phpt PASS
 tests/lang/bug27535.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/bug28213.phpt UNSUPPORTED: EXPECTF
-tests/lang/bug28800.phpt FAIL: ParseError: Unexpected byte 0x5c on line 6
+tests/lang/bug28800.phpt FAIL: ParseError: Expected ';' on line 4
 tests/lang/bug29566.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug29893.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/bug29944.phpt FAIL: Error: Call to undefined function preg_match() on line 7
 tests/lang/bug30578.phpt FAIL: ParseError: Expected ';' on line 5
 tests/lang/bug30638.phpt UNSUPPORTED: SKIPIF
-tests/lang/bug30726.phpt FAIL: ParseError: Expected ';' on line 2
+tests/lang/bug30726.phpt PASS
 tests/lang/bug30862.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/bug32828.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug32924.phpt UNSUPPORTED: INI
@@ -113,7 +113,7 @@ tests/lang/bug45392.phpt UNSUPPORTED: EXPECTF, SKIPIF
 tests/lang/bug55754.phpt FAIL: Error: Call to undefined function current() on line 3
 tests/lang/bug71897.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug73172.phpt FAIL: ParseError: Expected ';' on line 5
-tests/lang/bug73329.phpt FAIL: ParseError: Expected ')' on line 3
+tests/lang/bug73329.phpt PASS
 tests/lang/bug7515.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/catchable_error_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/catchable_error_002.phpt UNSUPPORTED: EXPECTF
@@ -144,7 +144,7 @@ tests/lang/foreachLoop.006.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoop.009.phpt FAIL: ParseError: Expected expression on line 7
 tests/lang/foreachLoop.010.phpt FAIL: ParseError: Expected expression on line 4
 tests/lang/foreachLoop.011.phpt FAIL: ParseError: Expected expression on line 4
-tests/lang/foreachLoop.012.phpt FAIL: Error: Call to undefined function define() on line 3
+tests/lang/foreachLoop.012.phpt FAIL: Error: Call to undefined function eval() on line 19
 tests/lang/foreachLoop.013.phpt FAIL: ParseError: Expected expression on line 17
 tests/lang/foreachLoop.014.phpt FAIL: ParseError: Expected expression on line 13
 tests/lang/foreachLoop.015.phpt FAIL: ParseError: Expected expression on line 13
@@ -166,13 +166,13 @@ tests/lang/foreach_with_object_001.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/foreach_with_references_001.phpt FAIL: ParseError: Expected expression on line 11
 tests/lang/func_get_arg.001.phpt FAIL: Error: Call to undefined function func_get_arg() on line 6
 tests/lang/func_get_arg.002.phpt FAIL: Error: Call to undefined function func_get_arg() on line 5
-tests/lang/func_get_arg.003.phpt FAIL: ParseError: Unexpected byte 0x5c on line 5
-tests/lang/func_get_arg.004.phpt FAIL: ParseError: Unexpected byte 0x5c on line 7
+tests/lang/func_get_arg.003.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/func_get_arg.004.phpt FAIL: ParseError: Expected ';' on line 5
 tests/lang/func_get_arg.005.phpt FAIL: ParseError: Expected ';' on line 3
-tests/lang/func_get_arg_variation.phpt FAIL: ParseError: Unexpected byte 0x5c on line 8
+tests/lang/func_get_arg_variation.phpt FAIL: ParseError: Expected ';' on line 6
 tests/lang/func_get_args.001.phpt FAIL: Error: Call to undefined function func_get_args() on line 5
 tests/lang/func_get_args.002.phpt FAIL: Error: Call to undefined function func_get_args() on line 5
-tests/lang/func_get_args.003.phpt FAIL: ParseError: Unexpected byte 0x5c on line 5
+tests/lang/func_get_args.003.phpt FAIL: ParseError: Expected ';' on line 3
 tests/lang/func_get_args.004.phpt FAIL: ParseError: Expected parameter variable on line 2
 tests/lang/func_num_args.001.phpt FAIL: Error: Call to undefined function func_num_args() on line 5
 tests/lang/func_num_args.002.phpt FAIL: Error: Call to undefined function func_num_args() on line 5
@@ -189,7 +189,7 @@ tests/lang/integer_literals/octal_32bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/integer_literals/octal_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/invalid_octal.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/add_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/add_variationStr.phpt FAIL: ParseError: Unexpected byte 0x5c on line 15
+tests/lang/operators/add_variationStr.phpt FAIL: ParseError: Expected ';' on line 13
 tests/lang/operators/bitwiseAnd_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/bitwiseAnd_variationStr.phpt FAIL: Error: Call to undefined function error_reporting() on line 8
 tests/lang/operators/bitwiseNot_basiclong_64bit.phpt UNSUPPORTED: EXPECTF, SKIPIF
@@ -201,18 +201,18 @@ tests/lang/operators/bitwiseShiftLeft_variationStr.phpt FAIL: ParseError: Expect
 tests/lang/operators/bitwiseShiftLeft_variationStr2.phpt FAIL: Error: Call to undefined function error_reporting() on line 3
 tests/lang/operators/bitwiseShiftLeft_variationStr_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/bitwiseShiftRight_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/bitwiseShiftRight_variationStr.phpt FAIL: ParseError: Unexpected byte 0x5c on line 15
+tests/lang/operators/bitwiseShiftRight_variationStr.phpt FAIL: ParseError: Expected ';' on line 13
 tests/lang/operators/bitwiseShiftRight_variationStr2.phpt FAIL: Error: Call to undefined function error_reporting() on line 3
 tests/lang/operators/bitwiseXor_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/bitwiseXor_variationStr.phpt FAIL: Error: Call to undefined function error_reporting() on line 8
 tests/lang/operators/coalesce.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/divide_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/divide_variationStr.phpt FAIL: ParseError: Unexpected byte 0x5c on line 15
+tests/lang/operators/divide_variationStr.phpt FAIL: ParseError: Expected ';' on line 13
 tests/lang/operators/modulus_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/modulus_variationStr.phpt FAIL: ParseError: Unexpected byte 0x5c on line 15
+tests/lang/operators/modulus_variationStr.phpt FAIL: ParseError: Expected ';' on line 13
 tests/lang/operators/multiply_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/multiply_variationStr.phpt FAIL: ParseError: Unexpected byte 0x5c on line 15
-tests/lang/operators/nan-comparison-false.phpt FAIL: Error: Undefined constant "NAN" on line 4
+tests/lang/operators/multiply_variationStr.phpt FAIL: ParseError: Expected ';' on line 13
+tests/lang/operators/nan-comparison-false.phpt PASS
 tests/lang/operators/negate_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/negate_variationStr.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/operator_equals_basic.phpt PASS
@@ -222,7 +222,7 @@ tests/lang/operators/operator_gt_basic.phpt PASS
 tests/lang/operators/operator_gt_or_equal_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 21
 tests/lang/operators/operator_gt_or_equal_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_gt_or_equal_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_gt_variation.phpt FAIL: Error: Call to undefined function define() on line 3
+tests/lang/operators/operator_gt_variation.phpt PASS
 tests/lang/operators/operator_gt_variation_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_identical_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 22
 tests/lang/operators/operator_identical_recusion-01.phpt FAIL: ParseError: Expected expression on line 4
@@ -232,7 +232,7 @@ tests/lang/operators/operator_lt_basic.phpt PASS
 tests/lang/operators/operator_lt_or_equal_basic.phpt FAIL: Error: Call to undefined function array_merge() on line 21
 tests/lang/operators/operator_lt_or_equal_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_lt_or_equal_variation_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/operator_lt_variation.phpt FAIL: Error: Call to undefined function define() on line 3
+tests/lang/operators/operator_lt_variation.phpt PASS
 tests/lang/operators/operator_lt_variation_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_notequals_basic.phpt PASS
 tests/lang/operators/operator_notequals_variation.phpt UNSUPPORTED: SKIPIF
@@ -251,7 +251,7 @@ tests/lang/operators/predec_variationStr.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/preinc_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/preinc_variationStr.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/subtract_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
-tests/lang/operators/subtract_variationStr.phpt FAIL: ParseError: Unexpected byte 0x5c on line 15
+tests/lang/operators/subtract_variationStr.phpt FAIL: ParseError: Expected ';' on line 13
 tests/lang/passByReference_001.phpt FAIL: ParseError: Expected parameter variable on line 2
 tests/lang/passByReference_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/passByReference_003.phpt UNSUPPORTED: EXPECTF
@@ -288,7 +288,7 @@ tests/lang/string/unicode_escape_sign.phpt UNSUPPORTED: EXPECTF
 tests/lang/string/unicode_escape_sign2.phpt UNSUPPORTED: EXPECTF
 tests/lang/string/unicode_escape_surrogates.phpt FAIL: Error: Call to undefined function bin2hex() on line 6
 tests/lang/string/unicode_escape_whitespace.phpt UNSUPPORTED: EXPECTF
-tests/lang/string_decimals_001.phpt FAIL: ParseError: Expected ')' on line 4
+tests/lang/string_decimals_001.phpt PASS
 tests/lang/syntax_errors.phpt FAIL: ParseError: Expected ';' on line 26
 tests/lang/this_assignment.phpt FAIL: ParseError: Expected ';' on line 2
 tests/lang/throw_variation_001.phpt FAIL: ParseError: Expected ';' on line 3
@@ -296,4 +296,4 @@ tests/lang/type_hints_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/type_hints_003.phpt UNSUPPORTED: EXPECTF
 tests/lang/zend_throw_exception_001.phpt FAIL: ParseError: Expected ';' on line 2
-34 passed, 133 failed, 127 unsupported
+41 passed, 126 failed, 127 unsupported

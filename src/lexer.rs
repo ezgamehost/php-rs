@@ -201,8 +201,22 @@ impl Lexer<'_> {
                     return Err(Error::parse("Expected variable name", line));
                 }
                 Kind::Variable(self.identifier())
-            } else if ident_start(c) {
-                Kind::Word(self.identifier())
+            } else if ident_start(c) || c == b'\\' {
+                let start = self.pos;
+                if c == b'\\' {
+                    self.bump();
+                }
+                loop {
+                    if !self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
+                        return Err(Error::parse("Expected qualified name segment", line));
+                    }
+                    self.identifier();
+                    if self.source.get(self.pos) != Some(&b'\\') {
+                        break;
+                    }
+                    self.bump();
+                }
+                Kind::Word(self.source[start..self.pos].to_vec())
             } else {
                 let operators = [
                     "...", "=>", "[", "]", "<<=", ">>=", "<<", ">>", "&=", "|=", "^=", "===",

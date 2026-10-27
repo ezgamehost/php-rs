@@ -56,9 +56,44 @@ impl Parser {
     fn program(&mut self) -> Result<Vec<Stmt>, Error> {
         let mut result = Vec::new();
         while self.token().kind != Kind::End {
-            result.push(self.statement()?);
+            result.push(if self.eat("const") {
+                self.constant_declaration()?
+            } else {
+                self.statement()?
+            });
         }
         Ok(result)
+    }
+    fn constant_declaration(&mut self) -> Result<Stmt, Error> {
+        let mut constants = Vec::new();
+        loop {
+            let line = self.token().line;
+            let Kind::Word(name) = self.token().kind.clone() else {
+                return Err(Error::parse("Expected constant name", line));
+            };
+            if name.contains(&b'\\')
+                || [b"true".as_slice(), b"false", b"null"]
+                    .iter()
+                    .any(|literal| name.eq_ignore_ascii_case(literal))
+            {
+                return Err(Error::parse("Invalid constant name", line));
+            }
+            self.pos += 1;
+            self.expect("=")?;
+            let value = self.expr(0)?;
+            if !value.is_constant_expression() {
+                return Err(Error::parse(
+                    "Constant expression contains invalid operations",
+                    line,
+                ));
+            }
+            constants.push((name, value));
+            if !self.eat(",") {
+                break;
+            }
+        }
+        self.expect(";")?;
+        Ok(Stmt::Const(constants))
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
         if self.eat("function") {
@@ -313,6 +348,12 @@ impl Parser {
         let Kind::Word(name) = self.token().kind.clone() else {
             return Err(Error::parse("Expected function name", line));
         };
+        if name.contains(&b'\\') {
+            return Err(Error::parse(
+                "Function declarations require an unqualified name",
+                line,
+            ));
+        }
         self.pos += 1;
         self.expect("(")?;
         let mut parameters = Vec::new();

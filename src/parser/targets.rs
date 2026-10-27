@@ -52,6 +52,11 @@ fn pattern(mut expr: Expr, outer_list: Option<bool>) -> Result<Expr, Error> {
 pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
     for statement in statements {
         match statement {
+            Stmt::Const(constants) => {
+                for (_, value) in constants {
+                    expression(value, false)?;
+                }
+            }
             Stmt::Function(function) => {
                 for parameter in &function.parameters {
                     if let Some(default) = &parameter.default {
