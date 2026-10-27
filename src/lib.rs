@@ -2,6 +2,7 @@ mod ast;
 mod error;
 mod lexer;
 mod parser;
+pub mod phpt;
 mod runtime;
 mod value;
 

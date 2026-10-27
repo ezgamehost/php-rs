@@ -2,6 +2,7 @@
 name = "php-rs"
 version = "0.1.0"
 edition = "2024"
+default-run = "php-rs"
 description = "A PHP 8.5 runtime implemented in Rust"
 license = "MIT"
 

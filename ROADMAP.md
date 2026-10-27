@@ -9,9 +9,11 @@ definition of completion.
    values, source locations, parsing, variables, expression evaluation, basic
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
-2. **Conformance infrastructure:** version-pinned PHP oracle, differential fixtures,
-   PHPT runner supporting upstream sections, explicit unsupported/skipped reports,
-   CI and reproducible test commands. Never count skipped tests as passing.
+2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
+   runner, four differential fixtures, explicit unsupported reports, and CI.
+   Local reference is PHP 8.5.0. Remaining: full upstream sections, reproducible
+   reference provisioning in CI, diagnostic comparison, isolation, and timeouts.
+   Never count skipped tests as passing.
 3. **Core language:** arrays and key coercion, copy-on-write semantics, references,
    destructuring, all loops and control flow, interpolation/heredoc, casts, complete
    operators, constants, includes, functions, argument binding, closures, types,

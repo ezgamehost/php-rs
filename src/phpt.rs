@@ -1,0 +1,139 @@
+//! PHPT parsing and exact-output conformance checks. Unsupported sections are
+//! reported explicitly, never ignored or treated as successful tests.
+use crate::Runtime;
+use std::collections::BTreeMap;
+
+#[derive(Debug)]
+pub struct Case {
+    pub name: String,
+    pub source: Vec<u8>,
+    expected: Vec<u8>,
+    unsupported: Vec<String>,
+}
+#[derive(Debug, PartialEq)]
+pub enum Outcome {
+    Passed,
+    Failed(String),
+    Unsupported(Vec<String>),
+}
+impl Case {
+    pub fn parse(bytes: &[u8]) -> Result<Self, String> {
+        let mut sections: BTreeMap<String, Vec<u8>> = BTreeMap::new();
+        let mut current = None;
+        for line in bytes.split_inclusive(|c| *c == b'\n') {
+            let header = line.strip_suffix(b"\n").unwrap_or(line);
+            let header = header.strip_suffix(b"\r").unwrap_or(header);
+            if let Some(name) = header
+                .strip_prefix(b"--")
+                .and_then(|h| h.strip_suffix(b"--"))
+                && !name.is_empty()
+                && name.iter().all(|c| c.is_ascii_uppercase() || *c == b'_')
+            {
+                let name = String::from_utf8(name.to_vec()).unwrap();
+                if sections.insert(name.clone(), Vec::new()).is_some() {
+                    return Err(format!("Duplicate section: {name}"));
+                }
+                current = Some(name);
+            } else if let Some(name) = &current {
+                sections.get_mut(name).unwrap().extend_from_slice(line);
+            } else if !line.iter().all(u8::is_ascii_whitespace) {
+                return Err("Content before first PHPT section".into());
+            }
+        }
+        let name = sections.get("TEST").ok_or("Missing TEST section")?;
+        let name = String::from_utf8_lossy(name).trim().to_owned();
+        if name.is_empty() {
+            return Err("Empty TEST section".into());
+        }
+        let files: Vec<_> = ["FILE", "FILEEOF", "FILE_EXTERNAL"]
+            .into_iter()
+            .filter(|s| sections.contains_key(*s))
+            .collect();
+        if files.len() != 1 {
+            return Err("Expected exactly one FILE section variant".into());
+        }
+        let expected: Vec<_> = [
+            "EXPECT",
+            "EXPECTF",
+            "EXPECTREGEX",
+            "EXPECT_EXTERNAL",
+            "EXPECTF_EXTERNAL",
+            "EXPECTREGEX_EXTERNAL",
+        ]
+        .into_iter()
+        .filter(|s| sections.contains_key(*s))
+        .collect();
+        if expected.len() != 1 {
+            return Err("Expected exactly one EXPECT section variant".into());
+        }
+        let unsupported = sections
+            .keys()
+            .filter(|key| {
+                !["TEST", "FILE", "EXPECT", "DESCRIPTION", "CREDITS"].contains(&key.as_str())
+            })
+            .cloned()
+            .collect();
+        Ok(Self {
+            name,
+            source: sections[files[0]].clone(),
+            expected: sections[expected[0]].clone(),
+            unsupported,
+        })
+    }
+    pub fn unsupported_sections(&self) -> &[String] {
+        &self.unsupported
+    }
+    pub fn run(&self) -> Outcome {
+        if !self.unsupported.is_empty() {
+            return Outcome::Unsupported(self.unsupported.clone());
+        }
+        let mut runtime = Runtime::default();
+        if let Err(error) = runtime.execute(&self.source) {
+            return Outcome::Failed(error.to_string());
+        }
+        if !runtime.warnings.is_empty() {
+            return Outcome::Failed(format!(
+                "Unexpected diagnostics: {}",
+                runtime.warnings.join("; ")
+            ));
+        }
+        self.check_output(&runtime.output)
+    }
+    pub fn check_output(&self, actual: &[u8]) -> Outcome {
+        if !self.unsupported.is_empty() {
+            return Outcome::Unsupported(self.unsupported.clone());
+        }
+        if normalize(actual) == normalize(&self.expected) {
+            Outcome::Passed
+        } else {
+            Outcome::Failed(format!(
+                "Expected {:?}, got {:?}",
+                String::from_utf8_lossy(&self.expected),
+                String::from_utf8_lossy(actual)
+            ))
+        }
+    }
+}
+fn normalize(bytes: &[u8]) -> Vec<u8> {
+    let mut normalized = Vec::with_capacity(bytes.len());
+    let mut pos = 0;
+    while pos < bytes.len() {
+        if bytes[pos..].starts_with(b"\r\n") {
+            pos += 1;
+        }
+        normalized.push(bytes[pos]);
+        pos += 1;
+    }
+    // Match run-tests.php's trim() character set, including NUL but not form feed.
+    let trim = |b: &u8| b" \t\n\r\0\x0b".contains(b);
+    let start = normalized
+        .iter()
+        .position(|b| !trim(b))
+        .unwrap_or(normalized.len());
+    let end = normalized
+        .iter()
+        .rposition(|b| !trim(b))
+        .map(|p| p + 1)
+        .unwrap_or(start);
+    normalized[start..end].to_vec()
+}

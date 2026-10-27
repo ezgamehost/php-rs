@@ -9,6 +9,8 @@ cargo run -- -r 'echo 6 * 7;'
 cargo run -- -l tests/fixtures/hello.php
 cargo test
 cargo clippy --all-targets -- -D warnings
+cargo run --bin php-rs-phpt -- tests/phpt
+cargo run --bin php-rs-phpt -- --reference /path/to/php-8.5 tests/phpt
 ```
 
 With no arguments, the executable reads a PHP document from stdin. File and stdin
@@ -34,6 +36,13 @@ interpolation, some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP
 conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation plan.
+
+The PHPT runner currently supports `TEST`, `FILE`, and exact `EXPECT` output,
+plus descriptive `DESCRIPTION` and `CREDITS` sections. Other sections are reported
+as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
+fail a test. `--reference` checks the PHP major/minor version and validates passing
+fixtures against both interpreters. It does not compare exact diagnostic text.
+See [docs/conformance.md](docs/conformance.md) for measured upstream results.
 
 ## Disk usage
 
