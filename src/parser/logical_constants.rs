@@ -97,6 +97,10 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
     }
     let line = expr.line;
     match &mut expr.kind {
+        ExprKind::Lambda(lambda) => {
+            let lambda = Rc::make_mut(lambda);
+            fold(&mut Rc::make_mut(&mut lambda.function).body, warnings);
+        }
         ExprKind::Binary(op, left, right) if matches!(op.as_str(), "&&" | "and" | "||" | "or") => {
             expression(left, warnings);
             if let Some(value) = constant(left) {

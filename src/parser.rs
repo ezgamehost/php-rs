@@ -8,6 +8,7 @@ use crate::{
 };
 
 use std::{collections::HashSet, rc::Rc};
+mod closures;
 mod jumps;
 mod logical_constants;
 mod targets;
@@ -145,10 +146,22 @@ impl Parser {
         if self.eat("global") {
             return self.global_declaration();
         }
-        if self.eat("static") {
+        if self.is("static")
+            && matches!(
+                self.tokens.get(self.pos + 1).map(|t| &t.kind),
+                Some(Kind::Variable(_))
+            )
+        {
+            self.pos += 1;
             return self.static_declaration();
         }
-        if self.eat("function") {
+        if self.is("function")
+            && matches!(
+                self.tokens.get(self.pos + 1).map(|t| &t.kind),
+                Some(Kind::Word(_))
+            )
+        {
+            self.pos += 1;
             return self.function();
         }
         if let Kind::Text(bytes) = self.token().kind.clone() {
@@ -409,6 +422,40 @@ impl Parser {
         }
         self.pos += 1;
         let outer_function_name = std::mem::replace(&mut self.function_name, name.clone());
+        let mut parameters = self.function_parameters()?;
+        let return_type = if self.eat(":") {
+            Some(self.type_declaration(true)?)
+        } else {
+            None
+        };
+        self.validate_defaults(&name, &mut parameters, line)?;
+        self.expect("{")?;
+        let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
+        let outer_static_names = std::mem::take(&mut self.static_names);
+        let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
+        let mut body = Vec::new();
+        while !self.eat("}") {
+            if self.token().kind == Kind::End {
+                return Err(Error::parse("Unclosed function body", line));
+            }
+            body.push(self.statement()?);
+        }
+        self.control_depth = outer_control_depth;
+        self.return_type = outer_return_type;
+        self.static_names = outer_static_names;
+        self.function_name = outer_function_name;
+        Ok(Stmt::Function(Rc::new(FunctionDecl {
+            name,
+            parameters,
+            body,
+            line,
+            return_type,
+            strict_types: self.strict_types,
+            source: self.source.clone(),
+        })))
+    }
+    fn function_parameters(&mut self) -> Result<Vec<Parameter>, Error> {
+        let line = self.token().line;
         self.expect("(")?;
         let mut parameters = Vec::new();
         while !self.eat(")") {
@@ -466,36 +513,7 @@ impl Parser {
                 ));
             }
         }
-        let return_type = if self.eat(":") {
-            Some(self.type_declaration(true)?)
-        } else {
-            None
-        };
-        self.validate_defaults(&name, &mut parameters, line)?;
-        self.expect("{")?;
-        let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
-        let outer_static_names = std::mem::take(&mut self.static_names);
-        let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
-        let mut body = Vec::new();
-        while !self.eat("}") {
-            if self.token().kind == Kind::End {
-                return Err(Error::parse("Unclosed function body", line));
-            }
-            body.push(self.statement()?);
-        }
-        self.control_depth = outer_control_depth;
-        self.return_type = outer_return_type;
-        self.static_names = outer_static_names;
-        self.function_name = outer_function_name;
-        Ok(Stmt::Function(Rc::new(FunctionDecl {
-            name,
-            parameters,
-            body,
-            line,
-            return_type,
-            strict_types: self.strict_types,
-            source: self.source.clone(),
-        })))
+        Ok(parameters)
     }
     fn arguments(&mut self) -> Result<Vec<Argument>, Error> {
         let mut args = Vec::new();
@@ -724,6 +742,15 @@ impl Parser {
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Symbol(op) if op == "$" => self.dynamic_variable()?,
             Kind::Word(name) => match name.to_ascii_lowercase().as_slice() {
+                b"function" => self.lambda(false, false, line)?,
+                b"fn" => self.lambda(true, false, line)?,
+                b"static" if self.is("function") || self.is("fn") => {
+                    let arrow = self.eat("fn");
+                    if !arrow {
+                        self.expect("function")?;
+                    }
+                    self.lambda(arrow, true, line)?
+                }
                 b"exit" | b"die" if !self.is("(") => ExprKind::Call(
                     Box::new(Expr {
                         kind: ExprKind::Constant(name),
@@ -814,9 +841,11 @@ impl Parser {
         };
         let mut lhs = Expr { kind, line };
         loop {
-            if matches!(lhs.kind, ExprKind::Match(_, _)) && (self.is("[") || self.is("(")) {
+            if matches!(lhs.kind, ExprKind::Match(_, _) | ExprKind::Lambda(_))
+                && (self.is("[") || self.is("("))
+            {
                 return Err(Error::parse(
-                    "Parenthesize a match expression before dereferencing it",
+                    "Parenthesize this expression before dereferencing it",
                     self.token().line,
                 ));
             }
@@ -908,6 +937,12 @@ impl Parser {
             }
             self.pos += 1;
             let rhs = self.expr(if right { power } else { power + 1 })?;
+            if op == "|>" && matches!(&rhs.kind, ExprKind::Lambda(lambda) if lambda.arrow) {
+                return Err(Error::parse(
+                    "Arrow functions on the right hand side of |> must be parenthesized",
+                    rhs.line,
+                ));
+            }
             let kind = if power == 4 {
                 if op == "=" {
                     lhs = targets::assignment_target(lhs)?;

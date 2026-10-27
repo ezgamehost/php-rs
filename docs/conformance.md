@@ -7,19 +7,21 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 33 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 35 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
-| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 2 | 16 | 71 |
+| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 3 | 15 | 71 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
-| PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 8 | 11 | 12 |
-| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 2 | 19 | 44 |
+| PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
+| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 3 | 18 | 44 |
+| PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 12 | 64 | 59 |
+| PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -32,7 +34,7 @@ and standard-library functions; unsupported sections remain unexecuted.
 
 The [list/destructuring report](conformance/php-8.5.0-list.txt) and
 [array-unpacking report](conformance/php-8.5.0-array_unpack.txt) add targeted
-coverage. Their remaining failures include references, objects/iterators, closures,
+coverage. Their remaining failures include references, objects/iterators, Closure methods,
 and unsupported PHPT sections.
 
 The [return-type report](conformance/php-8.5.0-return_types.txt) records the initial
@@ -61,7 +63,7 @@ The [function argument inspection report](conformance/php-8.5.0-function_argumen
 records seven passing cases, ten failing cases, and three unsupported cases.
 All seven passing cases match PHP 8.5.0, including six newly passing language
 fixtures and a named-argument fixture. Remaining cases require references,
-exceptions, anonymous functions, or diagnostic matching. Project regressions
+exceptions, Closure methods, or diagnostic matching. Project regressions
 also cover live parameter changes, variadic copies, recursion, context boundaries,
 and validation order; fifteen normal-output examples match the reference.
 
@@ -74,7 +76,7 @@ normal-output examples also match the reference.
 
 The [exit-suite report](conformance/php-8.5.0-exit.txt) records one passing case,
 four failures, and 22 unsupported cases. The remaining cases require process execution APIs,
-objects/closures, output handling, or additional PHPT sections. Separately,
+objects, closure debugging, output handling, or additional PHPT sections. Separately,
 108 exit cases (18 values × weak/strict typing × three call forms) match PHP 8.5.0
 for output, process status, and diagnostic presence. This does not compare
 exact diagnostic text or establish shutdown/destructor compatibility. Project
@@ -91,14 +93,23 @@ formatting and full constant/default-expression compatibility remain unfinished.
 
 The [pipe report](conformance/php-8.5.0-pipe_operator.txt) and
 [first-class callable report](conformance/php-8.5.0-first_class_callable.txt)
-record ten passing upstream cases. First-class `exit`/`die` support also adds
-one passing case to the exit suite. Remaining cases require anonymous/arrow
-functions, methods, references, namespaces, exceptions, reflection, missing
+record thirteen passing upstream cases. First-class `exit`/`die` support also adds
+one passing case to the exit suite. Remaining cases require
+methods, references, namespaces, exceptions, reflection, missing
 builtins, or unsupported PHPT sections. Separately, 273 invocation examples
 matched PHP 8.5.0 for output, process status, and diagnostic presence, including
 weak/strict typing, nine parameter types, object identity, constants/defaults,
 pipe precedence, and argument binding. Exact diagnostic text and complete
 object-handle reuse are not covered by that matrix.
+
+The [anonymous-function report](conformance/php-8.5.0-closures.txt) and
+[arrow-function report](conformance/php-8.5.0-arrow_functions.txt) track closure
+coverage. Explicit value/reference captures, implicit arrow captures, nesting,
+recursion, per-instance statics, and PHP 8.5 static-closure initializers are
+implemented. A separate matrix of 169 snippets matched PHP 8.5.0 for output,
+process status, and diagnostic presence. Remaining gaps include by-reference
+parameters/returns, `$this` and method binding, reflection, generators, cycle
+collection, and complete closure debugging output.
 
 The upstream basic-suite failures are:
 

@@ -263,7 +263,7 @@ tests/lang/passByReference_008.phpt FAIL: ParseError: Expected parameter variabl
 tests/lang/passByReference_009.phpt FAIL: ParseError: Expected parameter variable on line 2
 tests/lang/passByReference_010.phpt FAIL: ParseError: Expected parameter variable on line 3
 tests/lang/passByReference_012.phpt UNSUPPORTED: EXPECTF
-tests/lang/returnByReference.001.phpt FAIL: ParseError: Expected function name on line 3
+tests/lang/returnByReference.001.phpt FAIL: ParseError: Expected '(' on line 3
 tests/lang/returnByReference.002.phpt UNSUPPORTED: EXPECTF
 tests/lang/returnByReference.003.phpt UNSUPPORTED: EXPECTF
 tests/lang/returnByReference.004.phpt UNSUPPORTED: EXPECTF

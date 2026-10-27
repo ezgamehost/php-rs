@@ -145,6 +145,9 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
 }
 
 fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
+    if let ExprKind::Lambda(lambda) = &expr.kind {
+        return validate(&[Stmt::Function(lambda.function.clone())]);
+    }
     if target && expr.is_globals() {
         return Err(Error::parse(
             "$GLOBALS can only be modified using the $GLOBALS[$name] = $value syntax",
@@ -152,7 +155,10 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         ));
     }
     match &expr.kind {
-        ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
+        ExprKind::Literal(_)
+        | ExprKind::Variable(_)
+        | ExprKind::Constant(_)
+        | ExprKind::Lambda(_) => {}
         ExprKind::List(_) => {
             return Err(Error::parse(
                 "Cannot use list() in a read context",

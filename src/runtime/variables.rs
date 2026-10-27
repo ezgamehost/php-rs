@@ -111,6 +111,27 @@ impl Runtime {
         name: &[u8],
         initializer: Option<&Expr>,
     ) -> Result<(), Error> {
+        if let Some(closure) = self.current_closure.clone()
+            && let Some(environment) = &closure.environment
+        {
+            let stored = environment.statics.borrow().get(name).cloned();
+            let value = if let Some(value) = stored {
+                value
+            } else {
+                let initial = match initializer {
+                    Some(expression) => self.eval(expression)?,
+                    None => Value::Null,
+                };
+                environment
+                    .statics
+                    .borrow_mut()
+                    .entry(name.to_vec())
+                    .or_insert_with(|| cell(initial))
+                    .clone()
+            };
+            self.scope.insert(name.to_vec(), value);
+            return Ok(());
+        }
         let stored = self
             .static_variables
             .get(&self.current_function)

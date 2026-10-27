@@ -25,6 +25,7 @@ pub(crate) enum ExprKind {
     Index(Box<Expr>, Option<Box<Expr>>),
     Call(Box<Expr>, Vec<Argument>),
     Callable(Box<Expr>),
+    Lambda(Rc<LambdaDecl>),
     Eval(Box<Expr>),
     Include(IncludeKind, Box<Expr>),
     Isset(Vec<Expr>),
@@ -143,6 +144,20 @@ pub(crate) struct FunctionDecl {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct LambdaDecl {
+    pub function: Rc<FunctionDecl>,
+    pub captures: Vec<Capture>,
+    pub arrow: bool,
+    pub is_static: bool,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct Capture {
+    pub name: Vec<u8>,
+    pub by_reference: bool,
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct TypeDecl {
     pub members: Vec<String>,
 }
@@ -200,6 +215,9 @@ pub(crate) enum Argument {
 impl Expr {
     pub fn is_constant_expression(&self) -> bool {
         match &self.kind {
+            ExprKind::Lambda(lambda) => {
+                lambda.is_static && !lambda.arrow && lambda.captures.is_empty()
+            }
             ExprKind::Callable(callee) => matches!(callee.kind, ExprKind::Constant(_)),
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),

@@ -25,9 +25,9 @@ Zend/tests/return_types/018.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/019.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/020.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/021.phpt UNSUPPORTED: EXPECTF
-Zend/tests/return_types/022.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/022.phpt PASS
 Zend/tests/return_types/024.phpt UNSUPPORTED: EXPECTF
-Zend/tests/return_types/025.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/025.phpt FAIL: ParseError: Cannot use self outside a class on line 3
 Zend/tests/return_types/026.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/027.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/028.phpt UNSUPPORTED: EXPECTF
@@ -53,7 +53,7 @@ Zend/tests/return_types/bug71978.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators001.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators002.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators003.phpt FAIL: ParseError: Expected ';' on line 2
-Zend/tests/return_types/generators004.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/return_types/generators004.phpt FAIL: ParseError: Expected ';' on line 4
 Zend/tests/return_types/generators005.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/generators006.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/inheritance001.phpt UNSUPPORTED: EXPECTF
@@ -93,4 +93,4 @@ Zend/tests/return_types/void_disallowed1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_disallowed2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_disallowed3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_parameter.phpt UNSUPPORTED: EXPECTF
-2 passed, 16 failed, 71 unsupported
+3 passed, 15 failed, 71 unsupported

@@ -10,7 +10,7 @@ definition of completion.
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, thirty-three differential fixtures, explicit unsupported reports, and CI.
+   runner, thirty-five differential fixtures, explicit unsupported reports, and CI.
    Local reference is PHP 8.5.0. Supported fixtures execute as real files with
    a selectable suite working directory and generated-file cleanup. Reference
    comparisons include process exit status, including intentional nonzero exits.
@@ -26,6 +26,9 @@ definition of completion.
    First-class function callables support identity, normal argument binding,
    callable/Closure/object types, and PHP 8.5 constant initializers. Pipe chains
    accept these objects and function-name strings with normal caller strictness.
+   Anonymous functions, explicit value/reference captures, automatic arrow
+   captures, and per-instance closure statics implemented. Static anonymous
+   functions support PHP 8.5 constant/default initializers.
    Basic string interpolation, Unicode escapes, heredoc/nowdoc, and byte string
    offset reads/writes implemented.
    All loop forms, alternative loop syntax, and numbered break/continue implemented.
@@ -54,7 +57,7 @@ definition of completion.
    Remaining: references,
    advanced interpolation, object casts, complete
    operators, class-context magic constants, other superglobals, by-reference functions,
-   anonymous/arrow functions, Closure methods,
+   Closure methods and object binding,
    intersection/DNF types and class resolution,
    namespaces, and error/exception behavior.
 4. **Objects and execution semantics:** classes, inheritance, interfaces, traits,

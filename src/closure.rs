@@ -1,12 +1,25 @@
 use crate::ast::FunctionDecl;
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-/// An opaque first-class function callable. Clones of its `Rc` share identity.
+/// An opaque PHP closure or first-class callable. Clones of its `Rc` share identity.
 #[derive(Debug)]
 pub struct Closure {
     pub(crate) name: Vec<u8>,
     pub(crate) function: Option<Rc<FunctionDecl>>,
     pub(crate) object_id: usize,
+    pub(crate) environment: Option<Environment>,
+}
+
+#[derive(Debug)]
+pub(crate) struct Environment {
+    pub captures: Vec<(Vec<u8>, CapturedValue)>,
+    pub statics: RefCell<HashMap<Vec<u8>, Rc<RefCell<crate::Value>>>>,
+}
+
+#[derive(Debug)]
+pub(crate) enum CapturedValue {
+    Value(crate::Value),
+    Reference(Rc<RefCell<crate::Value>>),
 }
 
 impl PartialEq for Closure {
@@ -17,6 +30,9 @@ impl PartialEq for Closure {
 
 impl Closure {
     pub(crate) fn same_function(&self, other: &Self) -> bool {
+        if self.environment.is_some() || other.environment.is_some() {
+            return std::ptr::eq(self, other);
+        }
         match (&self.function, &other.function) {
             (Some(a), Some(b)) => Rc::ptr_eq(a, b),
             (None, None) => self.name == other.name,

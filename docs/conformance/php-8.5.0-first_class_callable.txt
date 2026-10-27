@@ -26,7 +26,7 @@ Zend/tests/first_class_callable/constexpr/error_namespace_no_fallback_001.phpt U
 Zend/tests/first_class_callable/constexpr/error_namespace_no_fallback_002.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_static_call_instance_method.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_static_call_trait_method_001.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/constexpr/error_static_call_trait_method_002.phpt FAIL: ParseError: Expected ')' on line 3
+Zend/tests/first_class_callable/constexpr/error_static_call_trait_method_002.phpt FAIL: ParseError: Expected ';' on line 4
 Zend/tests/first_class_callable/constexpr/error_unknown_class.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_unknown_function.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_unknown_method.phpt UNSUPPORTED: EXPECTF
@@ -48,10 +48,10 @@ Zend/tests/first_class_callable/first_class_callable_002.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_003.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/first_class_callable/first_class_callable_004.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/first_class_callable/first_class_callable_005.phpt FAIL: ParseError: Expected ';' on line 2
-Zend/tests/first_class_callable/first_class_callable_006.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/first_class_callable/first_class_callable_006.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_007.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_008.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/first_class_callable_009.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/first_class_callable/first_class_callable_009.phpt FAIL: ParseError: Expected expression on line 6
 Zend/tests/first_class_callable/first_class_callable_010.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/first_class_callable/first_class_callable_011.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_012.phpt UNSUPPORTED: EXPECTF
@@ -65,7 +65,7 @@ Zend/tests/first_class_callable/first_class_callable_assert3.phpt UNSUPPORTED: E
 Zend/tests/first_class_callable/first_class_callable_dynamic.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/first_class_callable/first_class_callable_errors.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/first_class_callable/first_class_callable_optimization.phpt FAIL: Expected "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n", got "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#2 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n"
-Zend/tests/first_class_callable/first_class_callable_refs.phpt FAIL: ParseError: Expected function name on line 3
+Zend/tests/first_class_callable/first_class_callable_refs.phpt FAIL: ParseError: Expected '(' on line 3
 Zend/tests/first_class_callable/first_class_callable_signature.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/gh18062.phpt FAIL: ParseError: Expected ';' on line 3
-2 passed, 19 failed, 44 unsupported
+3 passed, 18 failed, 44 unsupported

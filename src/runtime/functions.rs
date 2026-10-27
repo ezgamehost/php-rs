@@ -61,6 +61,7 @@ impl Runtime {
             },
             function: target.function,
             object_id: self.next_object_id,
+            environment: None,
         })))
     }
 
@@ -152,7 +153,7 @@ impl Runtime {
             name,
             function,
             builtin,
-            ..
+            closure,
         } = target;
         let parameters = if let Some(function) = &function {
             function.parameters.clone()
@@ -246,6 +247,7 @@ impl Runtime {
         };
         self.callers.push(std::mem::take(&mut self.scope));
         let caller_arguments = self.current_arguments.take();
+        let caller_closure = std::mem::replace(&mut self.current_closure, closure.clone());
         let caller_function = self
             .current_function
             .replace(function.name.to_ascii_lowercase());
@@ -302,6 +304,17 @@ impl Runtime {
             }
             self.strict_types = function.strict_types;
             self.source = function.source.clone();
+            if let Some(closure) = &closure
+                && let Some(environment) = &closure.environment
+            {
+                for (name, capture) in &environment.captures {
+                    let value = match capture {
+                        crate::closure::CapturedValue::Value(value) => cell(value.clone()),
+                        crate::closure::CapturedValue::Reference(value) => value.clone(),
+                    };
+                    self.scope.insert(name.clone(), value);
+                }
+            }
             self.current_arguments = Some(arguments);
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
@@ -309,6 +322,7 @@ impl Runtime {
         self.scope = self.callers.pop().unwrap();
         self.current_function = caller_function;
         self.current_arguments = caller_arguments;
+        self.current_closure = caller_closure;
         self.strict_types = caller_strict;
         self.source = caller_source;
         result

@@ -18,7 +18,7 @@ Zend/tests/pipe_operator/optional_parameters.phpt PASS
 Zend/tests/pipe_operator/oss_fuzz_427814452.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/pipe_operator/oss_fuzz_439125710.phpt UNSUPPORTED: EXPECTF
 Zend/tests/pipe_operator/prec_001.phpt UNSUPPORTED: EXPECTF
-Zend/tests/pipe_operator/prec_002.phpt FAIL: ParseError: Expected ')' on line 4
+Zend/tests/pipe_operator/prec_002.phpt PASS
 Zend/tests/pipe_operator/prec_003.phpt UNSUPPORTED: EXPECTF
 Zend/tests/pipe_operator/prec_004.phpt UNSUPPORTED: EXPECTF
 Zend/tests/pipe_operator/prec_005.phpt FAIL: ParseError: Expected ';' on line 3
@@ -33,5 +33,5 @@ Zend/tests/pipe_operator/simple_userland_call.phpt PASS
 Zend/tests/pipe_operator/too_many_parameters.phpt UNSUPPORTED: EXPECTF
 Zend/tests/pipe_operator/type_mismatch.phpt UNSUPPORTED: EXPECTF
 Zend/tests/pipe_operator/void_return.phpt FAIL: ParseError: Expected ';' on line 6
-Zend/tests/pipe_operator/wrapped_chains.phpt FAIL: ParseError: Expected ';' on line 11
-8 passed, 11 failed, 12 unsupported
+Zend/tests/pipe_operator/wrapped_chains.phpt PASS
+10 passed, 9 failed, 12 unsupported

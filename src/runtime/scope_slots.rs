@@ -93,6 +93,11 @@ impl Scope {
 
     fn reserve_expression(&mut self, expr: &Expr) {
         match &expr.kind {
+            ExprKind::Lambda(lambda) => {
+                for capture in &lambda.captures {
+                    self.reserve(&capture.name);
+                }
+            }
             ExprKind::Variable(name) if !expr.is_globals() => self.reserve(name),
             ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
             ExprKind::Group(inner)

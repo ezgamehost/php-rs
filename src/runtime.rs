@@ -12,6 +12,7 @@ use std::{
 
 mod builtins;
 mod casting;
+mod closures;
 mod constants;
 mod destructuring;
 mod function_arguments;
@@ -38,6 +39,7 @@ pub struct Runtime {
     callers: Vec<Scope>,
     static_variables: HashMap<Option<Vec<u8>>, Scope>,
     current_function: Option<Vec<u8>>,
+    current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
@@ -414,6 +416,7 @@ impl Runtime {
             }
             ExprKind::Call(callee, args) => self.call(callee, args, line),
             ExprKind::Callable(callee) => self.acquire_callable(callee, line),
+            ExprKind::Lambda(lambda) => self.acquire_lambda(lambda),
             ExprKind::Literal(value) => Ok(value.clone()),
             ExprKind::Interpolated(parts) => {
                 let mut result = Vec::new();

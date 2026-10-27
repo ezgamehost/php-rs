@@ -1,0 +1,141 @@
+PHP 8.5.0 Zend/tests/closures baseline, 2026-10-26
+Runner: php-rs-phpt --reference /path/to/php-8.5.0/sapi/cli/php --cwd /path/to/php-8.5.0 /path/to/php-8.5.0/Zend/tests/closures
+Unsupported cases were not executed. Exit status: 1.
+
+Reference: PHP 8.5 (sapi/cli/php)
+Zend/tests/closures/bug50146.phpt FAIL: ParseError: Expected ';' on line 7
+Zend/tests/closures/bug52060.phpt FAIL: Error: Call to undefined function method_exists() on line 5
+Zend/tests/closures/bug52193.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug53958.phpt PASS
+Zend/tests/closures/bug54358.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/bug54367.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/bug69802_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug70397.phpt FAIL: ParseError: Expected expression on line 4
+Zend/tests/closures/bug70630.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug70685.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug70987.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/bug75290.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug77627.phpt FAIL: ParseError: Expected expression on line 2
+Zend/tests/closures/bug78658.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug78689.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/closures/bug79778.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/bug80929.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_001.phpt FAIL: Error: Call to undefined function is_callable() on line 11
+Zend/tests/closures/closure_002.phpt PASS
+Zend/tests/closures/closure_003.phpt PASS
+Zend/tests/closures/closure_004.phpt PASS
+Zend/tests/closures/closure_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_006.phpt PASS
+Zend/tests/closures/closure_007.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_008.phpt FAIL: Error: Call to undefined function preg_replace_callback() on line 7
+Zend/tests/closures/closure_009.phpt PASS
+Zend/tests/closures/closure_010.phpt PASS
+Zend/tests/closures/closure_011.phpt PASS
+Zend/tests/closures/closure_012.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_013.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_014.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_015.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/closures/closure_016.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_017.phpt FAIL: ParseError: Expected parameter variable on line 3
+Zend/tests/closures/closure_018.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_019.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_020.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_021.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/closures/closure_022.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_023.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_024.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/closures/closure_026.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_027.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_028.phpt PASS
+Zend/tests/closures/closure_029.phpt FAIL: ParseError: Unexpected byte 0x40 on line 5
+Zend/tests/closures/closure_030.phpt FAIL: ParseError: Expected expression on line 6
+Zend/tests/closures/closure_031.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/closures/closure_032.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_033.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_034.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_035.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_036.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_037.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_038.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_039.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_040.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_041.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_042.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_043.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_044.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_045.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_046.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_047.phpt FAIL: Error: Call to undefined function preg_replace_callback() on line 5
+Zend/tests/closures/closure_048.phpt FAIL: Error: Call to undefined function preg_replace_callback() on line 9
+Zend/tests/closures/closure_049.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_050.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_051.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_052.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_053.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_054.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_055.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_056.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_057.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_058.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_059.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_060.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_061.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_062.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_063.phpt FAIL: ParseError: Expected expression on line 5
+Zend/tests/closures/closure_064.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_065.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_066.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_067.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_068.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_array_key_error.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_array_offset_error.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_bindTo_preserves_used_variables.phpt FAIL: ParseError: Expected expression on line 8
+Zend/tests/closures/closure_bug66622.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/closures/closure_call.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_call_bind.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_call_internal.phpt FAIL: ParseError: Expected expression on line 3
+Zend/tests/closures/closure_call_leak_with_exception.phpt FAIL: ParseError: Expected expression on line 6
+Zend/tests/closures/closure_compare.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/closures/closure_const_expr/attributes.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/closures/closure_const_expr/attributes_ast_printing.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/closures/closure_const_expr/attributes_ast_printing_runtime.phpt FAIL: ParseError: Expected expression on line 5
+Zend/tests/closures/closure_const_expr/attributes_autoload.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/closures/closure_const_expr/attributes_scope_001.phpt UNSUPPORTED: EXTENSIONS
+Zend/tests/closures/closure_const_expr/attributes_scope_002.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/closures/closure_const_expr/basic.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/class_const.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/complex_array.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/complex_new.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/default_args.phpt PASS
+Zend/tests/closures/closure_const_expr/disallows_non_static.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/disallows_using_variables.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/property_initializer.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/property_initializer_scope_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/property_initializer_scope_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/static_initalizer.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/static_property_initializer.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_const_expr/static_variable.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_extra_args.phpt FAIL: ParseError: Expected ')' on line 3
+Zend/tests/closures/closure_from_callable_basic.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_from_callable_error.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_from_callable_gc.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_from_callable_lsb.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_from_callable_non_static_statically.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_from_callable_rebinding.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_from_callable_reflection.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_get_current.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/closures/closure_instantiate.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/closure_invoke_case_insensitive.phpt FAIL: ParseError: Expected parameter variable on line 3
+Zend/tests/closures/closure_invoke_ref_warning.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_static_property_error.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_use_auto_global.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_use_parameter_name.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_use_trailing_comma.phpt PASS
+Zend/tests/closures/closure_use_variable_twice.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/closure_write_prop.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/closures/fake_closure_in_internal_func_leaks.phpt FAIL: Error: Call to undefined function array_filter() on line 4
+Zend/tests/closures/gh12073.phpt UNSUPPORTED: EXPECTF, SKIPIF
+Zend/tests/closures/gh19653_1.phpt PASS
+Zend/tests/closures/gh19653_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/closures/gh8083.phpt FAIL: Expected "object(Closure)#1 (2) {\n  [\"function\"]=>\n  string(4) \"func\"\n  [\"static\"]=>\n  array(1) {\n    [\"i\"]=>\n    NULL\n  }\n}\n", got "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(4) \"func\"\n}\n"
+12 passed, 64 failed, 59 unsupported

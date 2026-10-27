@@ -53,6 +53,10 @@ new request. The CLI returns the low eight bits of the requested status.
   normal argument binding, callable/Closure/object types, and PHP 8.5 constant
   initializers. The pipe operator (`|>`) chains callable strings and these
   function objects, preserving left-to-right evaluation and caller strictness.
+- Anonymous functions with `use` captures by value or reference, arrow functions
+  with automatic value captures, nested closures, recursion, and per-instance
+  static variables. Static anonymous functions can initialize PHP 8.5 constants
+  and parameter defaults. Inline closures work in pipe chains.
 - Live `global` bindings and function-local `static` storage, including dynamic
   initializers, recursive calls, and local `unset` behavior. Variable variables
   (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
@@ -92,13 +96,15 @@ new request. The CLI returns the low eight bits of the requested status.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
 
-Known gaps include intersection/DNF types, anonymous/arrow functions, most builtins,
+Known gaps include intersection/DNF types, most builtins,
 general objects and methods, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
-Class-name and object type declarations can be parsed; only first-class function
-objects are implemented so far. General class resolution, Closure methods,
+Class-name and object type declarations can be parsed; only Closure objects are
+implemented so far. General class resolution, Closure methods, `$this` binding,
 reflection, and complete object diagnostics/handle allocation remain unfinished.
-Callable checks currently cover function names and first-class function objects.
+Callable checks currently cover function names and Closure objects.
+Closure reference captures work, but general references and by-reference
+parameters/returns remain unfinished. Reference cycles are not yet collected.
 Other `declare` directives are not implemented. Shutdown callbacks, output
 handlers, and object destructor execution remain unimplemented.
 Automatic initialization and scope handling for the other superglobals are not
@@ -143,6 +149,8 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 - [Type declarations and strict typing](https://www.php.net/manual/en/language.types.declarations.php)
 - [Function argument inspection](https://www.php.net/manual/en/function.func-get-args.php)
 - [First-class callables](https://www.php.net/manual/en/functions.first_class_callable_syntax.php)
+- [Anonymous functions](https://www.php.net/manual/en/functions.anonymous.php)
+- [Arrow functions](https://www.php.net/manual/en/functions.arrow.php)
 - [Pipe operator](https://www.php.net/manual/en/language.operators.functional.php)
 - [Exit](https://www.php.net/manual/en/function.exit.php)
 - [Goto](https://www.php.net/manual/en/control-structures.goto.php)
