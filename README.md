@@ -36,6 +36,7 @@ output and warnings when execution fails. Parsing happens before execution.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
   by value, numbered `break`/`continue`, and `return`. Loops support alternative
   `: … endfor` / `endwhile` / `endforeach` syntax.
+- Alternative `if` / `elseif` / `else` syntax with `endif`, including templates.
 - `switch` with loose case comparison, fall-through, numbered control flow,
   alternative syntax, and PHP 8.5 case-semicolon deprecation warnings.
 - `match` expressions with strict comparisons, grouped conditions, lazy arms,

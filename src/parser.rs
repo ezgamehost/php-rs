@@ -82,7 +82,7 @@ impl Parser {
             return Ok(Stmt::Echo(values));
         }
         if self.eat("if") {
-            return self.if_statement();
+            return self.if_statement(true);
         }
         if self.eat("switch") {
             return self.switch_statement();
@@ -392,19 +392,61 @@ impl Parser {
         }
         Ok(args)
     }
-    fn if_statement(&mut self) -> Result<Stmt, Error> {
+    fn if_statement(&mut self, allow_alternative: bool) -> Result<Stmt, Error> {
         self.expect("(")?;
         let cond = self.expr(0)?;
         self.expect(")")?;
+        if self.is(":") {
+            if !allow_alternative {
+                return Err(Error::parse(
+                    "Cannot mix if statement syntaxes",
+                    self.token().line,
+                ));
+            }
+            return self.alternative_if(cond);
+        }
         let yes = self.statement()?;
         let no = if self.eat("elseif") {
-            Some(Box::new(self.if_statement()?))
+            Some(Box::new(self.if_statement(false)?))
         } else if self.eat("else") {
             Some(Box::new(self.statement()?))
         } else {
             None
         };
         Ok(Stmt::If(cond, Box::new(yes), no))
+    }
+    fn alternative_if(&mut self, mut condition: Expr) -> Result<Stmt, Error> {
+        let mut branches = Vec::new();
+        loop {
+            self.expect(":")?;
+            let mut body = Vec::new();
+            while !self.is("elseif") && !self.is("else") && !self.is("endif") {
+                body.push(self.statement()?);
+            }
+            branches.push((condition, Stmt::Block(body)));
+            if !self.eat("elseif") {
+                break;
+            }
+            self.expect("(")?;
+            condition = self.expr(0)?;
+            self.expect(")")?;
+        }
+        let mut alternative = if self.eat("else") {
+            self.expect(":")?;
+            let mut body = Vec::new();
+            while !self.is("endif") {
+                body.push(self.statement()?);
+            }
+            Some(Box::new(Stmt::Block(body)))
+        } else {
+            None
+        };
+        self.expect("endif")?;
+        self.expect(";")?;
+        for (condition, body) in branches.into_iter().rev() {
+            alternative = Some(Box::new(Stmt::If(condition, Box::new(body), alternative)));
+        }
+        Ok(*alternative.unwrap())
     }
     fn array_elements(&mut self, close: &str) -> Result<Vec<(Option<Expr>, Expr)>, Error> {
         let mut elements = Vec::new();
