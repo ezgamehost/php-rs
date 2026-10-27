@@ -3,7 +3,6 @@ use std::{
     env,
     ffi::{OsStr, OsString},
     fs,
-    io::Write,
     path::{Path, PathBuf},
     process::{Command, ExitCode, Stdio},
 };
@@ -20,13 +19,21 @@ fn main() -> ExitCode {
 fn run() -> Result<bool, String> {
     let mut args = env::args_os().skip(1);
     let mut reference = None;
+    let mut working_directory = env::current_dir().map_err(|error| error.to_string())?;
     let mut paths = Vec::new();
     while let Some(arg) = args.next() {
         if arg == "--reference" {
             reference = Some(args.next().ok_or("--reference requires a PHP 8.5 binary")?);
+        } else if arg == "--cwd" {
+            let directory = args.next().ok_or("--cwd requires a directory")?;
+            working_directory = fs::canonicalize(directory)
+                .map_err(|error| format!("Working directory: {error}"))?;
+            if !working_directory.is_dir() {
+                return Err("Working directory is not a directory".into());
+            }
         } else if arg == "--help" {
             println!(
-                "Usage: php-rs-phpt [--reference PHP_8_5_BINARY] [FILE_OR_DIRECTORY ...]\nDefault directory: tests/phpt. Unsupported tests make the run unsuccessful."
+                "Usage: php-rs-phpt [--reference PHP_8_5_BINARY] [--cwd SUITE_ROOT] [FILE_OR_DIRECTORY ...]\nDefault directory: tests/phpt. Unsupported tests make the run unsuccessful."
             );
             return Ok(true);
         } else if arg.as_encoded_bytes().starts_with(b"-") {
@@ -38,7 +45,12 @@ fn run() -> Result<bool, String> {
     if paths.is_empty() {
         paths.push(PathBuf::from("tests/phpt"));
     }
-    if let Some(binary) = &reference {
+    if let Some(binary) = &mut reference {
+        if Path::new(binary).components().count() > 1 {
+            *binary = fs::canonicalize(&*binary)
+                .map_err(|error| format!("Reference PHP: {error}"))?
+                .into_os_string();
+        }
         verify_reference(binary)?;
     }
     let mut files = Vec::new();
@@ -55,18 +67,24 @@ fn run() -> Result<bool, String> {
         let bytes = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         let outcome = match Case::parse(&bytes) {
             Err(error) => Outcome::Failed(format!("Malformed PHPT: {error}")),
-            Ok(case) => {
-                let outcome = case.run();
-                if outcome == Outcome::Passed {
-                    if let Some(binary) = &reference {
-                        reference_check(binary, &case)?
+            Ok(case) if !case.unsupported_sections().is_empty() => {
+                Outcome::Unsupported(case.unsupported_sections().to_vec())
+            }
+            Ok(case) => match case.prepare(&path) {
+                Err(error) => Outcome::Failed(error),
+                Ok(prepared) => {
+                    let outcome = prepared.run(&working_directory);
+                    if outcome == Outcome::Passed {
+                        if let Some(binary) = &reference {
+                            reference_check(binary, &case, prepared.path(), &working_directory)?
+                        } else {
+                            outcome
+                        }
                     } else {
                         outcome
                     }
-                } else {
-                    outcome
                 }
-            }
+            },
         };
         let label = match outcome {
             Outcome::Passed => {
@@ -121,23 +139,19 @@ fn verify_reference(binary: &OsString) -> Result<(), String> {
     );
     Ok(())
 }
-fn reference_check(binary: &OsString, case: &Case) -> Result<Outcome, String> {
-    let mut child = Command::new(binary)
+fn reference_check(
+    binary: &OsString,
+    case: &Case,
+    path: &Path,
+    working_directory: &Path,
+) -> Result<Outcome, String> {
+    let output = Command::new(binary)
         .args(["-n", "-d", "display_errors=stderr", "-d", "log_errors=0"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| e.to_string())?;
-    let mut stdin = child.stdin.take().ok_or("Reference stdin unavailable")?;
-    // Write concurrently so large input/output cannot deadlock on pipe capacity.
-    let source = case.source.clone();
-    let writer = std::thread::spawn(move || stdin.write_all(&source));
-    let output = child.wait_with_output().map_err(|e| e.to_string())?;
-    writer
-        .join()
-        .map_err(|_| "Reference input writer panicked")?
-        .map_err(|e| e.to_string())?;
+        .arg(path)
+        .current_dir(working_directory)
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|error| error.to_string())?;
     if !output.status.success() || !output.stderr.is_empty() {
         return Ok(Outcome::Failed(format!(
             "Reference PHP failed: {}",

@@ -1,7 +1,7 @@
 PHP 8.5.0 return-type conformance baseline
 Reference: PHP 8.5.0
 Measured: 2026-10-26
-Command: php-rs-phpt --reference /path/to/php-8.5 Zend/tests/return_types
+Command: php-rs-phpt --cwd /path/to/php-8.5.0 --reference /path/to/php-8.5 Zend/tests/return_types
 
 Reference: PHP 8.5 (sapi/cli/php)
 Zend/tests/return_types/001.phpt UNSUPPORTED: EXPECTF

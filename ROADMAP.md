@@ -11,8 +11,9 @@ definition of completion.
    edge cases with the reference interpreter.
 2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
    runner, twenty-five differential fixtures, explicit unsupported reports, and CI.
-   Local reference is PHP 8.5.0. Remaining: full upstream sections, reproducible
-   reference provisioning in CI, per-fixture file identity/working directory,
+   Local reference is PHP 8.5.0. Supported fixtures execute as real files with
+   a selectable suite working directory and generated-file cleanup.
+   Remaining: full upstream sections, reproducible reference provisioning in CI,
    diagnostic comparison, isolation, and timeouts.
    Never count skipped tests as passing.
 3. **Core language (arrays started):** ordered arrays, key coercion, copy-on-write

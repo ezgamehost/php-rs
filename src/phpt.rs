@@ -1,7 +1,12 @@
 //! PHPT parsing and exact-output conformance checks. Unsupported sections are
 //! reported explicitly, never ignored or treated as successful tests.
 use crate::Runtime;
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    fs::{self, OpenOptions},
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug)]
 pub struct Case {
@@ -16,6 +21,36 @@ pub enum Outcome {
     Failed(String),
     Unsupported(Vec<String>),
 }
+
+/// A fixture's temporary .php sibling. Existing files are never replaced.
+/// The generated file is removed when this handle is dropped.
+#[derive(Debug)]
+pub struct PreparedCase<'a> {
+    case: &'a Case,
+    path: PathBuf,
+}
+
+impl PreparedCase<'_> {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn run(&self, working_directory: &Path) -> Outcome {
+        let mut runtime = Runtime::default();
+        if let Err(error) = runtime.set_working_directory(working_directory) {
+            return Outcome::Failed(format!("Working directory: {error}"));
+        }
+        let result = runtime.execute_file(&self.path);
+        self.case.runtime_outcome(&runtime, result)
+    }
+}
+
+impl Drop for PreparedCase<'_> {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
 impl Case {
     pub fn parse(bytes: &[u8]) -> Result<Self, String> {
         let mut sections: BTreeMap<String, Vec<u8>> = BTreeMap::new();
@@ -83,12 +118,50 @@ impl Case {
     pub fn unsupported_sections(&self) -> &[String] {
         &self.unsupported
     }
+
+    pub fn prepare(&self, fixture: &Path) -> Result<PreparedCase<'_>, String> {
+        if !self.unsupported.is_empty() {
+            return Err("Cannot prepare an unsupported fixture".into());
+        }
+        let path = fs::canonicalize(fixture)
+            .map_err(|error| error.to_string())?
+            .with_extension("php");
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .map_err(|error| {
+                if error.kind() == std::io::ErrorKind::AlreadyExists {
+                    format!(
+                        "Generated file already exists; refusing to overwrite {}",
+                        path.display()
+                    )
+                } else {
+                    format!("Cannot create {}: {error}", path.display())
+                }
+            })?;
+        let prepared = PreparedCase { case: self, path };
+        let written = file.write_all(&self.source);
+        drop(file);
+        written.map_err(|error| error.to_string())?;
+        Ok(prepared)
+    }
+
     pub fn run(&self) -> Outcome {
         if !self.unsupported.is_empty() {
             return Outcome::Unsupported(self.unsupported.clone());
         }
         let mut runtime = Runtime::default();
-        if let Err(error) = runtime.execute(&self.source) {
+        let result = runtime.execute(&self.source);
+        self.runtime_outcome(&runtime, result)
+    }
+
+    fn runtime_outcome(
+        &self,
+        runtime: &Runtime,
+        result: Result<crate::Value, crate::Error>,
+    ) -> Outcome {
+        if let Err(error) = result {
             return Outcome::Failed(error.to_string());
         }
         if !runtime.warnings.is_empty() {

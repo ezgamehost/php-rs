@@ -40,6 +40,7 @@ pub struct Runtime {
     source: Rc<crate::source::Source>,
     included_files: Vec<std::path::PathBuf>,
     included_set: HashSet<std::path::PathBuf>,
+    working_directory: Option<std::path::PathBuf>,
 }
 struct Location {
     name: Vec<u8>,

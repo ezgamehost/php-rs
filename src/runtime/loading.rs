@@ -9,23 +9,50 @@ use std::{
 };
 
 impl Runtime {
+    /// Set this request's working directory without changing the host process.
+    pub fn set_working_directory(&mut self, path: impl AsRef<Path>) -> std::io::Result<()> {
+        let path = fs::canonicalize(self.working_directory().join(path))?;
+        if !path.is_dir() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotADirectory,
+                "Working directory is not a directory",
+            ));
+        }
+        self.working_directory = Some(path);
+        Ok(())
+    }
+
+    fn working_directory(&self) -> PathBuf {
+        self.working_directory
+            .clone()
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+    }
+
+    fn memory_source(&self, name: &[u8]) -> Rc<Source> {
+        Rc::new(Source {
+            name: name.to_vec(),
+            directory: self.working_directory(),
+            path: None,
+        })
+    }
+
     /// Execute a PHP document as standard input, preserving request state.
     pub fn execute(&mut self, source: &[u8]) -> Result<Value, Error> {
-        self.execute_document(source, Rc::new(Source::default()))
+        self.execute_document(source, self.memory_source(b"Standard input code"))
     }
 
     /// Execute PHP code without an opening tag, as with the CLI's -r option.
     pub fn execute_code(&mut self, code: &[u8]) -> Result<Value, Error> {
         self.execute_document(
             &code_document(code),
-            Rc::new(Source::memory(b"Command line code")),
+            self.memory_source(b"Command line code"),
         )
     }
 
     /// Execute a file with its canonical path as the source identity.
     pub fn execute_file(&mut self, path: impl AsRef<Path>) -> Result<Value, Error> {
         let requested = path.as_ref();
-        let path = fs::canonicalize(requested).map_err(|error| {
+        let path = fs::canonicalize(self.working_directory().join(requested)).map_err(|error| {
             Error::new(
                 ErrorKind::Error,
                 format!("Cannot open {}: {error}", requested.display()),
@@ -180,9 +207,10 @@ impl Runtime {
         // before the executing file's directory. Explicit ./ and ../ paths
         // are always relative to the working directory.
         if path.is_absolute() || name.starts_with(b"./") || name.starts_with(b"../") {
-            return fs::canonicalize(path);
+            return fs::canonicalize(self.working_directory().join(path));
         }
-        fs::canonicalize(&path).or_else(|_| fs::canonicalize(self.source.directory.join(path)))
+        fs::canonicalize(self.working_directory().join(&path))
+            .or_else(|_| fs::canonicalize(self.source.directory.join(path)))
     }
 }
 

@@ -21,6 +21,8 @@ The library exposes `run`, `lint`, and a request-local `Runtime`. `Runtime` reta
 output and warnings when execution fails. Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
+`Runtime::set_working_directory` configures relative path resolution for one
+request without changing the host process's working directory.
 
 ## Current coverage
 
@@ -89,8 +91,11 @@ plus descriptive `DESCRIPTION` and `CREDITS` sections. Other sections are report
 as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
 fail a test. `--reference` checks the PHP major/minor version and validates passing
 fixtures against both interpreters. It does not compare exact diagnostic text.
-PHPT `FILE` sections currently execute as stdin in the runner's working directory,
-so fixture-specific file identities and working directories remain unfinished.
+The runner writes each supported `FILE` section to a temporary `.php` sibling
+of the `.phpt` fixture and runs both interpreters against that filename. It
+refuses to overwrite an existing file and removes generated files after the run.
+Use `--cwd /path/to/php-src` to select the suite root; the default is the current
+directory. Test code is not sandboxed, and process timeouts remain unfinished.
 See [docs/conformance.md](docs/conformance.md) for measured upstream results.
 
 ## Disk usage
