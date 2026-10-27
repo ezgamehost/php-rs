@@ -6,6 +6,37 @@ impl Runtime {
         let Some(parent) = &class.parent else {
             return Ok(());
         };
+        for constant in &class.declaration.constants {
+            let Some(owner) = parent.constant_owner(&constant.name) else {
+                continue;
+            };
+            let inherited = owner
+                .declaration
+                .constants
+                .iter()
+                .find(|c| c.name == constant.name)
+                .expect("constant owner");
+            if let Some(parent_type) = &inherited.ty {
+                let child_type = constant.ty.as_ref().map(|ty| class_type(ty, class));
+                let parent_type = class_type(parent_type, &owner);
+                if child_type.is_none()
+                    || !self.type_subset(child_type.as_ref(), Some(&parent_type), class)
+                {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        format!(
+                            "Type of {}::{} must be compatible with {}::{} of type {}",
+                            String::from_utf8_lossy(&class.name),
+                            String::from_utf8_lossy(&constant.name),
+                            String::from_utf8_lossy(&owner.name),
+                            String::from_utf8_lossy(&constant.name),
+                            inherited.ty.as_ref().unwrap()
+                        ),
+                        constant.value.line,
+                    ));
+                }
+            }
+        }
         for function in &class.declaration.methods {
             let name = method_name(function);
             let Some(inherited) = objects::method(parent, name) else {
@@ -117,16 +148,7 @@ impl Runtime {
         } else {
             stored.as_deref()?
         };
-        for member in &mut ty.members {
-            let class = match member.as_str() {
-                "self" => Some(scope),
-                "parent" => scope.parent.as_deref(),
-                _ => None,
-            };
-            if let Some(class) = class {
-                *member = String::from_utf8_lossy(&class.name).into_owned();
-            }
-        }
+        ty = class_type(&ty, scope);
         Some(ty)
     }
 
@@ -197,4 +219,19 @@ impl Runtime {
 
 fn method_name(function: &FunctionDecl) -> &[u8] {
     function.name.rsplit(|b| *b == b':').next().unwrap()
+}
+
+fn class_type(ty: &TypeDecl, scope: &Class) -> TypeDecl {
+    let mut ty = ty.clone();
+    for member in &mut ty.members {
+        let class = match member.as_str() {
+            "self" => Some(scope),
+            "parent" => scope.parent.as_deref(),
+            _ => None,
+        };
+        if let Some(class) = class {
+            *member = String::from_utf8_lossy(&class.name).into_owned();
+        }
+    }
+    ty
 }

@@ -83,9 +83,13 @@ impl Runtime {
             ));
         }
         if let Some(parent) = &parent {
-            for (name, _) in &decl.constants {
-                if let Some(owner) = parent.constant_owner(name)
-                    && owner.declaration.final_constants.contains(name)
+            for constant in &decl.constants {
+                if let Some(owner) = parent.constant_owner(&constant.name)
+                    && owner
+                        .declaration
+                        .constants
+                        .iter()
+                        .any(|c| c.name == constant.name && c.is_final)
                 {
                     return Err(Error::new(
                         ErrorKind::Error,
@@ -188,7 +192,6 @@ impl Runtime {
                     properties: Vec::new(),
                     static_properties: Vec::new(),
                     constants: Vec::new(),
-                    final_constants: Vec::new(),
                     methods: Vec::new(),
                     line: 0,
                 }),

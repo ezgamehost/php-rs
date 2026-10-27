@@ -66,7 +66,7 @@ impl Class {
         self.name.eq_ignore_ascii_case(name) || self.parent.as_ref().is_some_and(|p| p.is_a(name))
     }
     pub fn constant_owner(self: &Rc<Self>, name: &[u8]) -> Option<Rc<Self>> {
-        if self.declaration.constants.iter().any(|(n, _)| n == name) {
+        if self.declaration.constants.iter().any(|c| c.name == name) {
             Some(self.clone())
         } else {
             self.parent.as_ref().and_then(|p| p.constant_owner(name))

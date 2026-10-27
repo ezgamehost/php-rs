@@ -141,10 +141,17 @@ pub(crate) struct ClassDecl {
     pub name: Vec<u8>,
     pub properties: Vec<(Vec<u8>, Option<Expr>)>,
     pub static_properties: Vec<(Vec<u8>, Option<Expr>)>,
-    pub constants: Vec<(Vec<u8>, Expr)>,
-    pub final_constants: Vec<Vec<u8>>,
+    pub constants: Vec<ClassConstant>,
     pub methods: Vec<Rc<FunctionDecl>>,
     pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ClassConstant {
+    pub name: Vec<u8>,
+    pub value: Expr,
+    pub ty: Option<TypeDecl>,
+    pub is_final: bool,
 }
 
 #[derive(Debug, Clone)]

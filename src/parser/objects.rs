@@ -1,5 +1,5 @@
 use super::*;
-use crate::ast::ClassDecl;
+use crate::ast::{ClassConstant, ClassDecl};
 
 impl Parser {
     pub(super) fn class_declaration(&mut self, is_final: bool) -> Result<Stmt, Error> {
@@ -40,8 +40,7 @@ impl Parser {
         let outer_class = std::mem::replace(&mut self.class_name, name.clone());
         let mut properties = Vec::new();
         let mut static_properties = Vec::new();
-        let mut constants = Vec::new();
-        let mut final_constants = Vec::new();
+        let mut constants: Vec<ClassConstant> = Vec::new();
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
         while !self.eat("}") {
@@ -139,6 +138,26 @@ impl Parser {
                 function.name = qualified;
                 methods.push(method);
             } else if self.eat("const") && !static_method {
+                // An untyped constant has a name immediately followed by '='.
+                let ty = if self
+                    .tokens
+                    .get(self.pos + 1)
+                    .is_some_and(|t| matches!(&t.kind, Kind::Symbol(s) if s == "="))
+                {
+                    None
+                } else {
+                    let ty = self.type_declaration(true)?;
+                    if ["callable", "void", "never"]
+                        .iter()
+                        .any(|name| ty.contains(name))
+                    {
+                        return Err(Error::parse(
+                            format!("Class constants cannot have type {ty}"),
+                            self.token().line,
+                        ));
+                    }
+                    Some(ty)
+                };
                 loop {
                     let Kind::Word(constant) = self.token().kind.clone() else {
                         return Err(Error::parse(
@@ -153,24 +172,30 @@ impl Parser {
                             self.token().line,
                         ));
                     }
-                    if constants.iter().any(|(n, _)| n == &constant) {
+                    if constants.iter().any(|c| c.name == constant) {
                         return Err(Error::parse(
                             "Cannot redefine class constant",
                             self.token().line,
                         ));
                     }
                     self.expect("=")?;
-                    let value = self.expr(0)?;
+                    let mut value = self.expr(0)?;
                     if !value.is_constant_expression() {
                         return Err(Error::parse(
                             "Constant expression contains invalid operations",
                             value.line,
                         ));
                     }
-                    if final_method {
-                        final_constants.push(constant.clone());
+                    if let Some(ty) = &ty {
+                        logical_constants::initializer(&mut value, &mut self.warnings);
+                        self.validate_constant_value(&constant, ty, &value)?;
                     }
-                    constants.push((constant, value));
+                    constants.push(ClassConstant {
+                        name: constant,
+                        value,
+                        ty: ty.clone(),
+                        is_final: final_method,
+                    });
                     if !self.eat(",") {
                         break;
                     }
@@ -233,7 +258,6 @@ impl Parser {
             properties,
             static_properties,
             constants,
-            final_constants,
             methods,
             line,
         })))

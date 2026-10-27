@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 40 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 41 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust | 60 | 107 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -27,6 +27,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 3 | 31 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 19 | 37 | 39 |
+| PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 3 | 12 | 14 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -213,5 +214,20 @@ shared and redeclared static properties, dynamic access, array mutations,
 probes, initializer timing, and cyclic constant errors. A 214-case differential
 check and the existing 300-case class-scope matrix matched stdout, exit status,
 and diagnostic presence against PHP 8.5.0. These checks do not claim exact
-diagnostic wording. Typed class constants, non-public members, all constant
+diagnostic wording. Intersection/DNF constant types, non-public members, all constant
 expression forms, and the remaining upstream failures are still unfinished.
+
+
+The [typed-constant report](conformance/php-8.5.0-typed_class_constants.txt)
+adds three passing upstream fixtures. Twelve fail and fourteen require
+unsupported PHPT sections. Twelve project tests and a reference-checked PHPT
+cover strict scalar and class type checks, nullable/union types, integer-to-float
+conversion, lazy failures, compile-time failures, and covariant overrides.
+The implementation follows the [typed class constants RFC](https://wiki.php.net/rfc/typed_class_constants)
+for strict checking and inheritance, with PHP 8.5.0 probes for evaluation timing.
+A 712-case matrix matches stdout, exit status, and diagnostic presence. Closure
+values in this matrix are compared by their debug type; complete Closure dumps
+remain an existing gap. The 300-case class-scope matrix also remains green.
+The class and inheritance suite counts are unchanged. Intersection/DNF types,
+non-public constants, interfaces, traits, enums, exception handling, and exact
+fatal diagnostic formatting remain incomplete.

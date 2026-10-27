@@ -246,3 +246,63 @@ impl Parser {
         Ok(())
     }
 }
+
+impl Parser {
+    pub(super) fn validate_constant_value(
+        &self,
+        name: &[u8],
+        ty: &TypeDecl,
+        value: &Expr,
+    ) -> Result<(), Error> {
+        let Some(value) = compile_time_value(value) else {
+            return Ok(());
+        };
+        if ty.accepts(&value) || ty.contains("float") && matches!(value, Value::Int(_)) {
+            return Ok(());
+        }
+        Err(Error::parse(
+            format!(
+                "Cannot use value for class constant {}::{} of type {ty}",
+                String::from_utf8_lossy(&self.class_name),
+                String::from_utf8_lossy(name)
+            ),
+            self.token().line,
+        ))
+    }
+}
+
+// Callable and class-constant values remain lazy, even when their types appear
+// obvious. Only expressions the compiler can fully resolve are checked here.
+fn compile_time_value(expr: &Expr) -> Option<Value> {
+    let eligible = match &expr.kind {
+        ExprKind::Literal(_) | ExprKind::Constant(_) => true,
+        ExprKind::Group(e) | ExprKind::Unary(_, e) | ExprKind::Cast(_, e) => {
+            compile_time_value(e).is_some()
+        }
+        ExprKind::Binary(_, a, b) | ExprKind::Index(a, Some(b)) => {
+            compile_time_value(a).is_some() && compile_time_value(b).is_some()
+        }
+        ExprKind::Conditional(a, b, c) => {
+            let value = compile_time_value(a)?;
+            if value.to_bool(expr.line, &mut Vec::new()) {
+                b.as_ref().is_none_or(|b| compile_time_value(b).is_some())
+            } else {
+                compile_time_value(c).is_some()
+            }
+        }
+        ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
+            elements.iter().all(|element| match element {
+                ArrayElement::Entry(k, v) => {
+                    k.as_ref().is_none_or(|k| compile_time_value(k).is_some())
+                        && compile_time_value(v).is_some()
+                }
+                ArrayElement::Unpack(v) => compile_time_value(v).is_some(),
+                ArrayElement::Hole => false,
+            })
+        }
+        _ => false,
+    };
+    eligible
+        .then(|| crate::Runtime::constant_without_diagnostics(expr))
+        .flatten()
+}

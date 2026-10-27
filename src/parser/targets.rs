@@ -79,8 +79,8 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                         expression(value, false)?;
                     }
                 }
-                for (_, value) in &class.constants {
-                    expression(value, false)?;
+                for constant in &class.constants {
+                    expression(&constant.value, false)?;
                 }
                 for method in &class.methods {
                     validate(&[Stmt::Function(method.clone())])?;

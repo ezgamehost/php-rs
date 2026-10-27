@@ -21,8 +21,8 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
                         initializer(value, warnings);
                     }
                 }
-                for (_, value) in &mut class.constants {
-                    initializer(value, warnings);
+                for constant in &mut class.constants {
+                    initializer(&mut constant.value, warnings);
                 }
                 for method in &mut class.methods {
                     fold(&mut Rc::make_mut(method).body, warnings);
@@ -265,7 +265,7 @@ fn constant(expr: &Expr) -> Option<Value> {
 // Constant initializers use Zend's AST evaluator, which tests logical operands
 // once and visits both children before short-circuiting. Ordinary expressions
 // instead use the compiler's short-circuit path above.
-fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
+pub(super) fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
     let line = expr.line;
     match &mut expr.kind {
         ExprKind::Binary(op, left, right) if op == "??" => {

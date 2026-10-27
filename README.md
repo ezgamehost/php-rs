@@ -129,7 +129,7 @@ Known gaps include intersection/DNF types, most builtins, references, exceptions
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: interfaces, traits,
 visibility modifiers other than public, typed/readonly properties, hooks,
-typed class constants, complete constant/default-expression compatibility, cloning,
+intersection/DNF constant types, complete constant/default-expression compatibility, cloning,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.

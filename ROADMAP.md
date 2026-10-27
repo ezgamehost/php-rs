@@ -69,8 +69,9 @@ definition of completion.
    static binding, contextual class types, scoped callables, and `::class` are
    implemented. Public static properties share inherited storage unless redeclared;
    public class constants support inheritance, final restrictions, dynamic names,
-   and lazy dependency resolution. Remaining: interfaces, traits, abstract members,
-   typed class constants, complete constant/default resolution,
+   lazy dependency resolution, strict type validation, and covariant type overrides.
+   Remaining: interfaces, traits, abstract members, intersection/DNF constant types,
+   complete constant/default resolution,
    visibility, typed/readonly properties and hooks, magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,

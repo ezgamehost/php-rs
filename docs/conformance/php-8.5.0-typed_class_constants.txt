@@ -1,0 +1,35 @@
+PHP 8.5.0 Zend/tests/type_declarations/typed_class_constants*.phpt baseline (2026-10-26)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/type_declarations/typed_class_constants*.phpt
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/type_declarations/typed_class_constants_ast_print.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/type_declarations/typed_class_constants_diamond_error1.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/type_declarations/typed_class_constants_inheritance_error1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_error2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_error3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_error4.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_error5.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_error6.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_success1.phpt PASS
+Zend/tests/type_declarations/typed_class_constants_inheritance_success2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_inheritance_success3.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/type_declarations/typed_class_constants_inheritance_success4.phpt FAIL: ParseError: Constant expression contains invalid operations on line 3
+Zend/tests/type_declarations/typed_class_constants_inheritance_success5.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/type_declarations/typed_class_constants_multiple_constants.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_error1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_error10.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_error11.phpt FAIL: ParseError: Expected ';' on line 2
+Zend/tests/type_declarations/typed_class_constants_type_error12.phpt PASS
+Zend/tests/type_declarations/typed_class_constants_type_error2.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/type_declarations/typed_class_constants_type_error3.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/type_declarations/typed_class_constants_type_error4.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_error5.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_error6.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_error7.phpt FAIL: ParseError: Expected class constant name on line 3
+Zend/tests/type_declarations/typed_class_constants_type_error8.phpt FAIL: ParseError: Expected class constant name on line 3
+Zend/tests/type_declarations/typed_class_constants_type_error9.phpt FAIL: ParseError: Expected ';' on line 15
+Zend/tests/type_declarations/typed_class_constants_type_success1.phpt PASS
+Zend/tests/type_declarations/typed_class_constants_type_success2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/type_declarations/typed_class_constants_type_success3.phpt FAIL: ParseError: Expected ';' on line 2
+3 passed, 12 failed, 14 unsupported
