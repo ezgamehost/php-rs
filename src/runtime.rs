@@ -12,6 +12,7 @@ use std::{
 
 mod array_callbacks;
 mod builtins;
+mod callbacks;
 mod casting;
 mod class_scope;
 mod cloning;

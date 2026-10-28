@@ -19,13 +19,19 @@ namespace declarations, class/function/constant imports and grouped imports,
 qualified and relative names, and global fallback for unqualified functions and
 constants. Dynamic strings remain literal. Resolution follows the
 [PHP namespace rules](https://www.php.net/manual/en/language.namespaces.rules.php).
+The [callback invocation slice](conformance/php-8.5.0-call-user-func-hillclimb.txt)
+adds another 20 passes with zero regressions. It implements `call_user_func`,
+`call_user_func_array`, closure `__invoke`, and callback validation diagnostics.
+Named array arguments follow the [PHP callback rules](https://www.php.net/manual/en/function.call-user-func-array.php);
+direct positional calls follow the compiler path, while wrapper calls retain
+internal callback coercion and trace frames.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 813 | 4035 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 833 | 4015 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

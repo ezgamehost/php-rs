@@ -443,6 +443,9 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<CallTarget, Error> {
+        if matches!(value, Value::Closure(_)) && name.eq_ignore_ascii_case(b"__invoke") {
+            return self.resolve_callable(value, line);
+        }
         let Value::Object(object) = value else {
             return Err(Error::new(
                 ErrorKind::Error,

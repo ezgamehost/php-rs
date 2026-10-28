@@ -166,6 +166,7 @@ new request. The CLI returns the low eight bits of the requested status.
   `declare(strict_types=1)` preserves caller and declaration scope across calls;
   strict calls also check scalar arguments to the supported internal functions.
 - Core builtins: `var_dump`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
+  `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
   `function_exists`, and `get_included_files`/`get_required_files`.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`

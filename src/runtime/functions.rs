@@ -40,6 +40,11 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let target = self.resolve_callee(callee, line)?;
+        if let Some(builtin @ (Builtin::CallUserFunc | Builtin::CallUserFuncArray)) = target.builtin
+            && self.can_inline_callback(callee, args, builtin)
+        {
+            return self.inline_callback(args, builtin, line);
+        }
         self.invoke(
             target,
             args,
@@ -147,7 +152,7 @@ impl Runtime {
         self.resolve_native_callback(value, line).map(Some).map_err(|error| {
             Error::new(ErrorKind::TypeError, format!(
                 "{function}(): Argument #{position} ($callback) must be a valid callback{}, {}",
-                if nullable { " or null" } else { "" }, error.message,
+                if nullable { " or null" } else { "" }, self.callback_error(value, &error),
             ), line)
         })
     }
@@ -189,6 +194,10 @@ impl Runtime {
                 let method = array.get(&ArrayKey::Int(1));
                 if let (Some(Value::Object(object)), Some(Value::String(name))) = (base, method) {
                     self.resolve_method(Value::Object(object.clone()), &name.bytes(), line)
+                } else if let (Some(Value::Closure(closure)), Some(Value::String(name))) =
+                    (base, method)
+                {
+                    self.resolve_method(Value::Closure(closure.clone()), &name.bytes(), line)
                 } else if let (Some(Value::String(class)), Some(Value::String(name))) =
                     (base, method)
                 {

@@ -25,6 +25,8 @@ pub(super) enum Builtin {
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
+    CallUserFunc,
+    CallUserFuncArray,
     FunctionExists,
     Define,
     Defined,
@@ -64,6 +66,8 @@ impl Builtin {
             b"array_map" => Self::ArrayMap,
             b"array_filter" => Self::ArrayFilter,
             b"array_reduce" => Self::ArrayReduce,
+            b"call_user_func" => Self::CallUserFunc,
+            b"call_user_func_array" => Self::CallUserFuncArray,
             b"array_key_exists" | b"key_exists" => Self::ArrayKeyExists,
             b"function_exists" => Self::FunctionExists,
             b"define" => Self::Define,
@@ -119,6 +123,8 @@ impl Builtin {
                 ("initial", true, false),
             ],
             Self::ArrayKeyExists => &[("key", false, false), ("array", false, false)],
+            Self::CallUserFunc => &[("callback", false, false), ("args", false, true)],
+            Self::CallUserFuncArray => &[("callback", false, false), ("args", false, false)],
             Self::FunctionExists => &[("function", false, false)],
             Self::Define => &[
                 ("constant_name", false, false),
@@ -257,6 +263,9 @@ impl Runtime {
                 Ok(Value::Bool(exists))
             }
             Builtin::ArrayMap => self.array_map(&args, &extra, line),
+            Builtin::CallUserFunc | Builtin::CallUserFuncArray => {
+                self.call_user_function(builtin, &args, &extra, line)
+            }
             Builtin::ArrayFilter => self.array_filter(&args, line),
             Builtin::ArrayReduce => self.array_reduce(&args, line),
             Builtin::Exit

@@ -1,0 +1,66 @@
+PHP 8.5.0 full Zend suite: callback invocation (2026-10-28)
+Before: a112a6a
+After: call_user_func, call_user_func_array, closure __invoke, callback validation diagnostics
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests
+Every passing fixture also matches reference PHP output and exit status.
+Existing Rust tests: 797 passed. Project PHPT: 57 passed. No new custom tests.
+Direct positional calls preserve caller strictness; dynamic/named/unpacked/namespace-fallback wrappers use weak callback coercion.
+General references, __call dispatch, and remaining Closure APIs are not implemented.
+
+Before: 5256 cases; 813 passed, 4035 failed, 408 unsupported
+After: 5256 cases; 833 passed, 4015 failed, 408 unsupported
+New passes: 20; regressions: 0
+NEW PASS: Zend/tests/bug70895.phpt
+NEW PASS: Zend/tests/call_user_functions/bug43426.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_001.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_array_invalid_type.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_closure_from_static_method.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_strict_arginfo_check.phpt
+NEW PASS: Zend/tests/closures/closure_013.phpt
+NEW PASS: Zend/tests/closures/closure_030.phpt
+NEW PASS: Zend/tests/closures/closure_058.phpt
+NEW PASS: Zend/tests/dynamic_call/bug46246.phpt
+NEW PASS: Zend/tests/dynamic_call/bug77877.phpt
+NEW PASS: Zend/tests/first_class_callable/first_class_callable_009.phpt
+NEW PASS: Zend/tests/inheritance/bug63468.phpt
+NEW PASS: Zend/tests/methods-on-non-objects-call-user-func.phpt
+NEW PASS: Zend/tests/named_params/call_user_func_array.phpt
+NEW PASS: Zend/tests/named_params/runtime_cache_init.phpt
+NEW PASS: Zend/tests/namespaces/ns_031.phpt
+NEW PASS: Zend/tests/namespaces/ns_032.phpt
+NEW PASS: Zend/tests/objects/objects_027.phpt
+NEW PASS: Zend/tests/unset/unset_cv12.phpt
+
+Most frequent remaining failure messages:
+821: ParseError: Expected ';'
+249: ParseError: Expected expression
+173: ParseError: Invalid non-public member declaration
+168: Error: Class "ReflectionClass" not found
+120: ParseError: Expected parameter variable
+120: Error: Call to undefined function set_error_handler()
+59: Error: Class "Fiber" not found
+56: Error: Call to undefined function spl_autoload_register()
+50: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+42: ParseError: Constant expression contains invalid operations
+37: ParseError: Expected ')'
+37: ParseError: Unexpected byte 0x40
+37: ParseError: Expected '{'
+34: ParseError: Expected public property or method
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
