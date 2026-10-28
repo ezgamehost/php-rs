@@ -103,6 +103,10 @@ new request. The CLI returns the low eight bits of the requested status.
   arguments/returns/properties, native string parameters, and comparisons (including
   nested arrays/objects and switch matching). Strict string types reject objects;
   failed return conversions chain the original exception under a TypeError.
+- Nullsafe property access and method calls (`?->`) short-circuit member chains,
+  array offsets, and static access while preserving independent argument/key
+  expressions. They support `isset`/`empty`/coalescing, interpolation, and
+  constant/default expressions; writes through nullsafe chains are rejected.
 - Object conversion in string-offset assignments, including negative offsets,
   extension, typed properties, access checks, and reentrant replacement/unsetting.
   Shared string buffers preserve copies created before or during conversion.

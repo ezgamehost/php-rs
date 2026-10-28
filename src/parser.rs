@@ -45,6 +45,7 @@ pub(crate) fn parse_source(
     targets::validate(&statements)?;
     jumps::validate(&statements)?;
     logical_constants::fold(&mut statements, &mut parser.warnings);
+    targets::validate_method_names(&statements)?;
     Ok((statements, parser.warnings, parser.strict_types))
 }
 struct Parser {
@@ -840,6 +841,7 @@ impl Parser {
                                         | ExprKind::Index(_, _)
                                         | ExprKind::Call(_, _)
                                         | ExprKind::Property(_, _)
+                                        | ExprKind::NullsafeProperty(_, _)
                                 )
                             {
                                 return Err(Error::parse(
@@ -939,7 +941,7 @@ impl Parser {
                         args.push(self.expr(0)?);
                     }
                     self.expect(")")?;
-                    if args.iter().any(|e| !e.is_writable()) {
+                    if args.iter().any(|e| !e.is_isset_target()) {
                         return Err(Error::parse("Cannot use isset() on an expression", line));
                     }
                     ExprKind::Isset(args)
@@ -978,7 +980,7 @@ impl Parser {
         loop {
             if clone_call
                 && matches!(lhs.kind, ExprKind::Call(_, _) | ExprKind::Callable(_))
-                && ["->", "::", "[", "("].iter().any(|op| self.is(op))
+                && ["->", "?->", "::", "[", "("].iter().any(|op| self.is(op))
             {
                 return Err(Error::parse(
                     "Parenthesize clone() before dereferencing it",
@@ -1002,10 +1004,18 @@ impl Parser {
                 lhs = Expr { kind, line };
                 continue;
             }
-            if min <= 23 && self.eat("->") {
+            if min <= 23 && (self.is("->") || self.is("?->")) {
+                let nullsafe = self.eat("?->");
+                if !nullsafe {
+                    self.expect("->")?;
+                }
                 let name = self.property_name()?;
                 lhs = Expr {
-                    kind: ExprKind::Property(Box::new(lhs), Box::new(name)),
+                    kind: if nullsafe {
+                        ExprKind::NullsafeProperty(Box::new(lhs), Box::new(name))
+                    } else {
+                        ExprKind::Property(Box::new(lhs), Box::new(name))
+                    },
                     line,
                 };
                 continue;
@@ -1018,6 +1028,13 @@ impl Parser {
                         .is_some_and(|t| t.kind == Kind::Symbol(")".into()))
                 {
                     self.pos += 2;
+                    if lhs.is_nullsafe_callee() && !matches!(lhs.kind, ExprKind::ScopedMember(_, _))
+                    {
+                        return Err(Error::parse(
+                            "Cannot combine nullsafe operator with Closure creation",
+                            line,
+                        ));
+                    }
                     ExprKind::Callable(Box::new(lhs))
                 } else {
                     ExprKind::Call(Box::new(lhs), self.arguments()?)

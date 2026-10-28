@@ -173,6 +173,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         ExprKind::StaticProperty(left, right)
         | ExprKind::ScopedMember(left, right)
         | ExprKind::Property(left, right)
+        | ExprKind::NullsafeProperty(left, right)
         | ExprKind::Assign(left, _, right) => {
             expression(left, warnings);
             expression(right, warnings);
@@ -243,7 +244,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
     }
 }
 
-fn constant(expr: &Expr) -> Option<Value> {
+pub(super) fn constant(expr: &Expr) -> Option<Value> {
     fn eligible(expr: &Expr) -> bool {
         match &expr.kind {
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,

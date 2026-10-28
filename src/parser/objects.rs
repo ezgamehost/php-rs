@@ -524,10 +524,18 @@ impl Parser {
                         kind: ExprKind::Index(Box::new(value), Some(Box::new(key))),
                         line,
                     };
-                } else if self.eat("->") {
+                } else if self.is("->") || self.is("?->") {
+                    let nullsafe = self.eat("?->");
+                    if !nullsafe {
+                        self.expect("->")?;
+                    }
                     let name = self.property_name()?;
                     value = Expr {
-                        kind: ExprKind::Property(Box::new(value), Box::new(name)),
+                        kind: if nullsafe {
+                            ExprKind::NullsafeProperty(Box::new(value), Box::new(name))
+                        } else {
+                            ExprKind::Property(Box::new(value), Box::new(name))
+                        },
                         line,
                     };
                 } else {
@@ -571,10 +579,18 @@ impl Parser {
                         kind: ExprKind::Index(Box::new(target), Some(Box::new(key))),
                         line,
                     };
-                } else if self.eat("->") {
+                } else if self.is("->") || self.is("?->") {
+                    let nullsafe = self.eat("?->");
+                    if !nullsafe {
+                        self.expect("->")?;
+                    }
                     let name = self.property_name()?;
                     target = Expr {
-                        kind: ExprKind::Property(Box::new(target), Box::new(name)),
+                        kind: if nullsafe {
+                            ExprKind::NullsafeProperty(Box::new(target), Box::new(name))
+                        } else {
+                            ExprKind::Property(Box::new(target), Box::new(name))
+                        },
                         line,
                     };
                 } else {

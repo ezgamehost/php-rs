@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 56 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
@@ -17,19 +17,20 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/magic_methods`, Rust and reference PHP for passing cases | 16 | 70 | 71 |
 | PHP 8.5.0 `Zend/tests/offsets`, Rust | 0 | 10 | 10 |
 | PHP 8.5.0 `Zend/tests/numeric_strings`, Rust and reference PHP for passing cases | 1 | 3 | 4 |
+| PHP 8.5.0 `Zend/tests/nullsafe_operator`, Rust and reference PHP for passing cases | 14 | 7 | 26 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 3 | 2 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
-| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 7 | 14 | 44 |
+| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 8 | 13 | 44 |
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 28 | 48 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
 | PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 56 | 69 | 158 |
 | PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 24 | 10 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 11 | 3 | 11 |
-| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 31 | 25 | 39 |
+| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 35 | 21 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 4 | 11 | 14 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 17 | 59 | 44 |
 | PHP 8.5.0 `Zend/tests/readonly_props`, Rust and reference PHP for passing cases | 7 | 15 | 18 |
@@ -562,3 +563,35 @@ from ordinary object properties: protected exception-property access, severity
 property redeclarations, property hooks, reflection/serialization, and error
 handler APIs remain incomplete. This supersedes earlier notes listing the
 ErrorException and SPL exception classes as wholly unsupported.
+
+
+The nullsafe-operator slice adds `?->` property and method access with a distinct
+short-circuit state, so a skipped receiver differs from a method that returns
+null. Member chains propagate the short circuit through parentheses, offsets,
+static properties, static calls, and static callable creation. Dynamic function
+calls, class constants, and `::class` end the chain. Names, keys, and arguments
+retain independent chains and execute only when their containing operation is
+reached. Quiet reads preserve PHP's different rules for `isset`, `empty`, and
+coalescing across instance/static access. Arrow captures, interpolation, and
+constant/default expressions recognize nullsafe properties. Write contexts and
+instance callable creation reject nullsafe chains before execution. Dynamic
+method names require strings; constant non-string method names are rejected
+after expression folding, leaving pruned branches undiagnosed.
+
+All **780 Rust tests**, including **24 new regressions**, and **57 project PHPT
+fixtures** pass; project fixtures also match PHP 8.5.0. The reproducible
+[nullsafe comparison](conformance/php-8.5.0-nullsafe-differential.txt) matches
+**408 cases with zero mismatches**. Prior Stringable, method-visibility, and
+native-exception matrices also match (306, 863, and 440 cases). The new
+[upstream nullsafe report](conformance/php-8.5.0-nullsafe_operator.txt) records
+**14 passed, 7 failed, 26 unsupported**. Remaining executable failures involve
+references/by-reference parameters and returns, object casts, and error handlers.
+Refreshed classes, closures, first-class-callable, and constants reports lose no
+previously recorded passes; the latter two now record 8 and 35 passes.
+Formatting and Clippy checks pass.
+
+The [nullsafe RFC](https://wiki.php.net/rfc/nullsafe_operator), PHP 8.5.0 upstream
+fixtures, and reference probes establish the tested chain boundaries. General
+reference support, enum/property-hook integration, complete constant-expression
+coverage, and exact compile-fatal diagnostics remain subject to the previously
+recorded implementation gaps.

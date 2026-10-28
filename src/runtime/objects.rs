@@ -449,7 +449,11 @@ impl Runtime {
                 format!(
                     "Call to a member function {}() on {}",
                     String::from_utf8_lossy(name),
-                    builtins::debug_type(&value)
+                    match value {
+                        Value::Bool(true) => "true",
+                        Value::Bool(false) => "false",
+                        _ => builtins::debug_type(&value),
+                    }
                 ),
                 line,
             ));

@@ -1,0 +1,53 @@
+PHP 8.5.0 Zend/tests/nullsafe_operator baseline (2026-10-28)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/nullsafe_operator
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/nullsafe_operator/001.phpt PASS
+Zend/tests/nullsafe_operator/002.phpt PASS
+Zend/tests/nullsafe_operator/003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/009.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/010.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/011.phpt PASS
+Zend/tests/nullsafe_operator/012.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/nullsafe_operator/013.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/014.phpt PASS
+Zend/tests/nullsafe_operator/015.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/016.phpt FAIL: ParseError: Expected parameter variable on line 7
+Zend/tests/nullsafe_operator/017.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/018.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/019.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/020.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/021.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/022.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/023.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/024.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/025.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/026.phpt PASS
+Zend/tests/nullsafe_operator/027.phpt FAIL: ParseError: Expected parameter variable on line 3
+Zend/tests/nullsafe_operator/028.phpt FAIL: ParseError: Expected '(' on line 3
+Zend/tests/nullsafe_operator/029.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/030.phpt PASS
+Zend/tests/nullsafe_operator/031.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/032.phpt PASS
+Zend/tests/nullsafe_operator/033.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/034.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/035.phpt PASS
+Zend/tests/nullsafe_operator/036.phpt PASS
+Zend/tests/nullsafe_operator/037.phpt PASS
+Zend/tests/nullsafe_operator/038.phpt FAIL: ParseError: Unsupported cast (object) in this context on line 3
+Zend/tests/nullsafe_operator/039.phpt FAIL: Error: Call to undefined function set_error_handler() on line 3
+Zend/tests/nullsafe_operator/040.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/nullsafe_operator/bug81216.phpt PASS
+Zend/tests/nullsafe_operator/bug81216_2.phpt PASS
+Zend/tests/nullsafe_operator/constant_propagation.phpt PASS
+Zend/tests/nullsafe_operator/gh8661.phpt PASS
+Zend/tests/nullsafe_operator/oss-fuzz-69765.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/oss_fuzz_60011_1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/nullsafe_operator/oss_fuzz_60011_2.phpt UNSUPPORTED: EXPECTF
+14 passed, 7 failed, 26 unsupported

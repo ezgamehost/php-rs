@@ -91,7 +91,7 @@ impl Runtime {
             ExprKind::ScopedMember(class, name) => self.resolve_scoped_call(class, name, line),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;
-                let name = self.variable_name(name)?;
+                let name = self.method_name(name)?;
                 self.resolve_method(value, &name, line)
             }
             ExprKind::Constant(name) => self.resolve_name(name.clone(), line),
@@ -99,6 +99,17 @@ impl Runtime {
                 let value = self.eval(callee)?;
                 self.resolve_callable(value, line)
             }
+        }
+    }
+
+    pub(super) fn method_name(&mut self, name: &Expr) -> Result<Vec<u8>, Error> {
+        match self.eval(name)? {
+            Value::String(name) => Ok(name.to_vec()),
+            _ => Err(Error::new(
+                ErrorKind::Error,
+                "Method name must be a string",
+                name.line,
+            )),
         }
     }
 

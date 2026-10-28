@@ -90,7 +90,7 @@ impl Runtime {
             };
             (name, false)
         };
-        let name = self.variable_name(name)?;
+        let name = self.method_name(name)?;
         self.resolve_class_method(&class, &name, forwarding, true, line)
     }
 

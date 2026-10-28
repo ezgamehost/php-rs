@@ -56,7 +56,7 @@ Zend/tests/first_class_callable/first_class_callable_010.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_011.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_012.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_013.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/first_class_callable_014.phpt FAIL: ParseError: Expected expression on line 4
+Zend/tests/first_class_callable/first_class_callable_014.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_015.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_016.phpt FAIL: ParseError: Expected function name on line 3
 Zend/tests/first_class_callable/first_class_callable_assert.phpt FAIL: ParseError: Expected ';' on line 3
@@ -68,4 +68,4 @@ Zend/tests/first_class_callable/first_class_callable_optimization.phpt FAIL: Exp
 Zend/tests/first_class_callable/first_class_callable_refs.phpt FAIL: ParseError: Expected '(' on line 3
 Zend/tests/first_class_callable/first_class_callable_signature.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/gh18062.phpt FAIL: Error: Call to undefined function is_callable() on line 17
-7 passed, 14 failed, 44 unsupported
+8 passed, 13 failed, 44 unsupported

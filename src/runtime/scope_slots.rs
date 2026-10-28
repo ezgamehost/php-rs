@@ -132,6 +132,7 @@ impl Scope {
             ExprKind::StaticProperty(left, right)
             | ExprKind::ScopedMember(left, right)
             | ExprKind::Property(left, right)
+            | ExprKind::NullsafeProperty(left, right)
             | ExprKind::Binary(_, left, right)
             | ExprKind::Assign(left, _, right) => {
                 self.reserve_expression(left);

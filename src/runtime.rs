@@ -27,6 +27,7 @@ mod jumps;
 mod loading;
 mod matching;
 mod method_visibility;
+mod nullsafe;
 mod objects;
 mod offsets;
 mod readonly;
@@ -538,6 +539,18 @@ impl Runtime {
         )
     }
     fn coalesce_read(&mut self, expr: &Expr, probe: bool) -> Result<Value, Error> {
+        if expr.has_nullsafe_chain() {
+            let access = if probe && !expr.is_isset_target() {
+                Access::Read
+            } else if probe {
+                Access::Probe
+            } else {
+                Access::Coalesce
+            };
+            return self
+                .nullsafe_chain(expr, access)
+                .map(|value| value.unwrap_or(Value::Null));
+        }
         match &expr.kind {
             ExprKind::Variable(_) if expr.is_globals() => Ok(self.globals_snapshot()),
             ExprKind::Variable(name) => Ok(self.lookup(name).unwrap_or(Value::Null)),
@@ -582,6 +595,11 @@ impl Runtime {
         }
     }
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
+        if expr.has_nullsafe_chain() {
+            return self
+                .nullsafe_chain(expr, Access::Read)
+                .map(|value| value.unwrap_or(Value::Null));
+        }
         let line = expr.line;
         match &expr.kind {
             ExprKind::Eval(code) => {
@@ -623,6 +641,7 @@ impl Runtime {
                 self.read_location(&mut location, line, false, None)
             }
             ExprKind::New(class, args) => self.new_object(class, args, line),
+            ExprKind::NullsafeProperty(_, _) => unreachable!("nullsafe chain evaluated above"),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;
                 let name = self.variable_name(name)?;

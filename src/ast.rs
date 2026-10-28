@@ -28,6 +28,7 @@ pub(crate) enum ExprKind {
     Lambda(Rc<LambdaDecl>),
     New(Box<Expr>, Vec<Argument>),
     Property(Box<Expr>, Box<Expr>),
+    NullsafeProperty(Box<Expr>, Box<Expr>),
     ScopedMember(Box<Expr>, Box<Expr>),
     StaticProperty(Box<Expr>, Box<Expr>),
     ClassName(Box<Expr>),
@@ -140,6 +141,9 @@ impl Expr {
     }
 
     pub fn is_writable(&self) -> bool {
+        if self.has_nullsafe_chain() {
+            return false;
+        }
         match &self.kind {
             ExprKind::Variable(_)
             | ExprKind::DynamicVariable(_)
@@ -152,6 +156,46 @@ impl Expr {
                 }
                 base.is_writable()
             }
+            _ => false,
+        }
+    }
+
+    /// Only member calls propagate a short circuit. Arguments, dynamic calls,
+    /// class constants, and class-name expressions start independent chains.
+    pub fn is_nullsafe_callee(&self) -> bool {
+        match &self.kind {
+            ExprKind::NullsafeProperty(_, _) => true,
+            ExprKind::Property(base, _) | ExprKind::ScopedMember(base, _) => {
+                base.has_nullsafe_chain()
+            }
+            _ => false,
+        }
+    }
+
+    pub fn has_nullsafe_chain(&self) -> bool {
+        match &self.kind {
+            ExprKind::NullsafeProperty(_, _) => true,
+            ExprKind::Property(base, _)
+            | ExprKind::StaticProperty(base, _)
+            | ExprKind::Index(base, _)
+            | ExprKind::Group(base) => base.has_nullsafe_chain(),
+            ExprKind::Call(callee, _) => callee.is_nullsafe_callee(),
+            ExprKind::Callable(callee) => {
+                matches!(&callee.kind, ExprKind::ScopedMember(base, _) if base.has_nullsafe_chain())
+            }
+            _ => false,
+        }
+    }
+
+    pub fn is_isset_target(&self) -> bool {
+        match &self.kind {
+            ExprKind::Variable(_)
+            | ExprKind::DynamicVariable(_)
+            | ExprKind::Property(_, _)
+            | ExprKind::NullsafeProperty(_, _)
+            | ExprKind::StaticProperty(_, _)
+            | ExprKind::Index(_, _) => true,
+            ExprKind::Group(inner) => inner.is_isset_target(),
             _ => false,
         }
     }
@@ -329,7 +373,10 @@ impl Expr {
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
             ExprKind::Cast(kind, e) => *kind != CastKind::Void && e.is_constant_expression(),
             ExprKind::Binary(op, _, _) if matches!(op.as_str(), "|>" | "instanceof") => false,
-            ExprKind::Index(a, Some(b)) | ExprKind::Binary(_, a, b) => {
+            ExprKind::Index(a, Some(b))
+            | ExprKind::Binary(_, a, b)
+            | ExprKind::Property(a, b)
+            | ExprKind::NullsafeProperty(a, b) => {
                 a.is_constant_expression() && b.is_constant_expression()
             }
             ExprKind::Conditional(a, b, c) => {

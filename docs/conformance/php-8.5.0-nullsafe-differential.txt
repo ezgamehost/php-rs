@@ -1,0 +1,11 @@
+PHP 8.5.0 nullsafe differential (2026-10-28)
+Command: python3 tools/check_nullsafe.py --reference <php-8.5.0>/sapi/cli/php
+Runtime: target/debug/php-rs (cargo build)
+Reference: PHP 8.5.0, -n -d display_errors=stderr
+Comparison: stdout, exit status, stderr presence.
+This does not assert byte-for-byte agreement of uncaught diagnostics or warnings.
+Scopes: chain boundaries, side effects, quiet reads, dynamic names, typed properties,
+static callables, interpolation, constant/default expressions, and write rejection.
+References, object casts, enum/property hooks, and error handlers are not covered.
+
+Cases: 408 Mismatches: 0

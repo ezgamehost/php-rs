@@ -183,6 +183,21 @@ impl Lexer<'_> {
             }
             self.bump();
             tokens.push(symbol("]", line));
+        } else {
+            let op = if self.starts(b"?->") { "?->" } else { "->" };
+            if self.starts(op.as_bytes())
+                && self
+                    .source
+                    .get(self.pos + op.len())
+                    .is_some_and(|c| ident_start(*c))
+            {
+                self.pos += op.len();
+                tokens.push(symbol(op, line));
+                tokens.push(Token {
+                    kind: Kind::Word(self.identifier()),
+                    line,
+                });
+            }
         }
         tokens.push(Token {
             kind: Kind::End,
