@@ -37,7 +37,7 @@ new request. The CLI returns the low eight bits of the requested status.
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
 - PHP 8.5 NaN conversion warnings for boolean, string, and array conversions;
   NaN comparisons remain silent and unordered against numbers and strings.
-- Explicit scalar and array casts, cast-alias deprecations, and PHP 8.5 `(void)`
+- Explicit scalar, array, and object casts, cast-alias deprecations, and PHP 8.5 `(void)`
   result discarding in statements and permitted `for` clauses.
 - Global `const` declarations, `define`/`defined`/`constant`, qualified lookup,
   and core numeric, version, separator, and error-level constants.
@@ -225,6 +225,11 @@ of the `.phpt` fixture and runs both interpreters against that filename. It
 refuses to overwrite an existing file and removes generated files after the run.
 Use `--cwd /path/to/php-src` to select the suite root; the default is the current
 directory. Test code is not sandboxed, and process timeouts remain unfinished.
+Use upstream PHPT failures as the primary implementation backlog. Compare the
+same suite before and after each slice with `python3 tools/compare_phpt.py
+before.log after.log`; the tool lists new passes and fails on regressions.
+Keep unsupported cases separate from passes, and run the existing Rust tests as
+regression checks. Expanding PHPT-runner coverage is part of this workflow.
 See [docs/conformance.md](docs/conformance.md) for measured upstream results.
 
 ## Disk usage

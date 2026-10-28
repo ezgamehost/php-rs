@@ -620,6 +620,8 @@ impl Runtime {
                 let value = self.eval(operand)?;
                 if matches!(kind, crate::ast::CastKind::String) {
                     Ok(Value::String(self.string_bytes(&value, line)?.into()))
+                } else if matches!(kind, crate::ast::CastKind::Object) {
+                    Ok(self.cast_object(value, line))
                 } else {
                     casting::cast(*kind, value, line, &mut self.warnings)
                 }

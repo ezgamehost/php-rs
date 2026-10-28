@@ -4,6 +4,39 @@ use crate::{
 };
 use std::{cell::RefCell, rc::Rc};
 
+pub(crate) struct PropertyName<'a> {
+    pub scope: Option<&'a [u8]>,
+    pub name: &'a [u8],
+}
+
+/// Decode property-table keys, including the extra source segment in anonymous
+/// class names. Array-to-object casts may also supply malformed encoded keys.
+pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str> {
+    if raw.first() != Some(&0) {
+        return Ok(PropertyName {
+            scope: None,
+            name: raw,
+        });
+    }
+    if raw.len() < 3 || raw[1] == 0 {
+        return Err("Illegal member variable name");
+    }
+    let split = raw[1..]
+        .iter()
+        .position(|b| *b == 0)
+        .map(|i| i + 1)
+        .filter(|i| *i < raw.len() - 1)
+        .ok_or("Corrupt member variable name")?;
+    let mut name = &raw[split + 1..];
+    if let Some(end) = name.iter().position(|b| *b == 0) {
+        name = &name[end + 1..];
+    }
+    Ok(PropertyName {
+        scope: Some(&raw[1..split]),
+        name,
+    })
+}
+
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
     pub(crate) throwable: RefCell<Option<ThrowableData>>,

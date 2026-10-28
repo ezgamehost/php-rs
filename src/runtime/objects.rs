@@ -657,7 +657,16 @@ impl Runtime {
             visited.insert(key.clone());
             self.assign_target(value_target, value.clone())?;
             if let Some(target) = key_target {
-                self.assign_target(target, key.to_value())?;
+                let raw = key.to_value().to_bytes();
+                let name = match crate::object::property_name(&raw) {
+                    Ok(name) => name.name,
+                    Err(message) => {
+                        self.warnings
+                            .push(format!("Notice: {message} on line {}", target.line));
+                        &raw
+                    }
+                };
+                self.assign_target(target, Value::String(name.to_vec().into()))?;
             }
             match self.block(std::slice::from_ref(body))? {
                 Flow::Next | Flow::Continue(1) => {}

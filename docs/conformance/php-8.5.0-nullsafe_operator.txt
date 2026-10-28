@@ -40,7 +40,7 @@ Zend/tests/nullsafe_operator/034.phpt UNSUPPORTED: EXPECTF
 Zend/tests/nullsafe_operator/035.phpt PASS
 Zend/tests/nullsafe_operator/036.phpt PASS
 Zend/tests/nullsafe_operator/037.phpt PASS
-Zend/tests/nullsafe_operator/038.phpt FAIL: ParseError: Unsupported cast (object) in this context on line 3
+Zend/tests/nullsafe_operator/038.phpt PASS
 Zend/tests/nullsafe_operator/039.phpt FAIL: Error: Call to undefined function set_error_handler() on line 3
 Zend/tests/nullsafe_operator/040.phpt FAIL: ParseError: Expected '(' on line 2
 Zend/tests/nullsafe_operator/bug81216.phpt PASS
@@ -50,4 +50,4 @@ Zend/tests/nullsafe_operator/gh8661.phpt PASS
 Zend/tests/nullsafe_operator/oss-fuzz-69765.phpt UNSUPPORTED: EXPECTF
 Zend/tests/nullsafe_operator/oss_fuzz_60011_1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/nullsafe_operator/oss_fuzz_60011_2.phpt UNSUPPORTED: EXPECTF
-14 passed, 7 failed, 26 unsupported
+15 passed, 6 failed, 26 unsupported

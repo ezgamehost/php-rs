@@ -1,0 +1,54 @@
+PHP 8.5.0 full Zend suite: object-cast slice (2026-10-28)
+Before: isolated build of 7f7f490
+After: object-cast implementation
+Command for both builds:
+php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests
+Comparison: python3 tools/compare_phpt.py before.log after.log
+Passing cases also checked with reference PHP; unsupported sections not executed.
+
+Before: 5256 cases; 660 passed, 1834 failed, 2762 unsupported
+After: 5256 cases; 669 passed, 1825 failed, 2762 unsupported
+New passes: 9; regressions: 0
+NEW PASS: Zend/tests/bug80194.phpt
+NEW PASS: Zend/tests/foreach/bug39825.phpt
+NEW PASS: Zend/tests/foreach/foreach_010.phpt
+NEW PASS: Zend/tests/foreach/foreach_018.phpt
+NEW PASS: Zend/tests/gc/gc_044.phpt
+NEW PASS: Zend/tests/nullsafe_operator/038.phpt
+NEW PASS: Zend/tests/varSyntax/indirectFcall.phpt
+NEW PASS: Zend/tests/varSyntax/issetOnTemp.phpt
+NEW PASS: Zend/tests/zend_operators.phpt
+
+Most frequent remaining failure messages:
+588: ParseError: Expected ';'
+168: ParseError: Expected expression
+103: ParseError: Invalid non-public member declaration
+95: Error: Call to undefined function set_error_handler()
+52: ParseError: Expected parameter variable
+50: Error: Class "ReflectionClass" not found
+36: Error: Undefined constant "yield"
+33: ParseError: Expected '('
+27: Error: Call to undefined function spl_autoload_register()
+24: Error: Class "Fiber" not found
+21: ParseError: Set visibility requires a static property
+20: ParseError: Expected ')'
+19: Error: Call to undefined function set_exception_handler()
+17: Error: Interface "ArrayAccess" not found
+17: ParseError: Unexpected byte 0x40
+
+Unsupported section combinations:
+2354: EXPECTF
+116: INI
+67: EXPECTF, INI
+39: EXTENSIONS
+36: EXPECTF, SKIPIF
+28: SKIPIF
+27: EXPECTF, EXTENSIONS
+17: EXTENSIONS, INI
+16: EXPECTF, INI, SKIPIF
+15: EXPECTF, EXTENSIONS, INI, SKIPIF
+11: EXPECTF, EXTENSIONS, INI
+9: INI, SKIPIF
+5: CLEAN
+3: CLEAN, EXPECTF
+3: EXPECTF, EXTENSIONS, SKIPIF

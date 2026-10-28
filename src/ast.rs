@@ -51,6 +51,7 @@ pub(crate) enum CastKind {
     Bool,
     String,
     Array,
+    Object,
     Void,
 }
 
@@ -350,6 +351,14 @@ pub(crate) enum Argument {
 }
 impl Expr {
     pub fn is_constant_expression(&self) -> bool {
+        self.constant_expression(true)
+    }
+
+    pub fn is_class_initializer(&self) -> bool {
+        self.constant_expression(false)
+    }
+
+    fn constant_expression(&self, allow_object_cast: bool) -> bool {
         match &self.kind {
             ExprKind::Lambda(lambda) => {
                 lambda.is_static && !lambda.arrow && lambda.captures.is_empty()
@@ -364,33 +373,39 @@ impl Expr {
             },
             ExprKind::ScopedMember(class, name) => {
                 matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
-                    && name.is_constant_expression()
+                    && name.constant_expression(allow_object_cast)
             }
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::ClassName(class) => {
                 matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
             }
-            ExprKind::Group(e) | ExprKind::Unary(_, e) => e.is_constant_expression(),
-            ExprKind::Cast(kind, e) => *kind != CastKind::Void && e.is_constant_expression(),
+            ExprKind::Group(e) | ExprKind::Unary(_, e) => e.constant_expression(allow_object_cast),
+            ExprKind::Cast(kind, e) => {
+                *kind != CastKind::Void
+                    && (allow_object_cast || *kind != CastKind::Object)
+                    && e.constant_expression(allow_object_cast)
+            }
             ExprKind::Binary(op, _, _) if matches!(op.as_str(), "|>" | "instanceof") => false,
             ExprKind::Index(a, Some(b))
             | ExprKind::Binary(_, a, b)
             | ExprKind::Property(a, b)
             | ExprKind::NullsafeProperty(a, b) => {
-                a.is_constant_expression() && b.is_constant_expression()
+                a.constant_expression(allow_object_cast) && b.constant_expression(allow_object_cast)
             }
             ExprKind::Conditional(a, b, c) => {
-                a.is_constant_expression()
-                    && b.as_ref().is_none_or(|b| b.is_constant_expression())
-                    && c.is_constant_expression()
+                a.constant_expression(allow_object_cast)
+                    && b.as_ref()
+                        .is_none_or(|b| b.constant_expression(allow_object_cast))
+                    && c.constant_expression(allow_object_cast)
             }
             ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 elements.iter().all(|element| match element {
                     ArrayElement::Entry(k, v) => {
-                        k.as_ref().is_none_or(Expr::is_constant_expression)
-                            && v.is_constant_expression()
+                        k.as_ref()
+                            .is_none_or(|key| key.constant_expression(allow_object_cast))
+                            && v.constant_expression(allow_object_cast)
                     }
-                    ArrayElement::Unpack(v) => v.is_constant_expression(),
+                    ArrayElement::Unpack(v) => v.constant_expression(allow_object_cast),
                     ArrayElement::Hole => false,
                 })
             }

@@ -363,7 +363,7 @@ impl Parser {
                     }
                     self.expect("=")?;
                     let mut value = self.expr(0)?;
-                    if !value.is_constant_expression() {
+                    if !value.is_class_initializer() {
                         return Err(Error::parse(
                             "Constant expression contains invalid operations",
                             value.line,
@@ -439,10 +439,7 @@ impl Parser {
                     } else {
                         None
                     };
-                    if default
-                        .as_ref()
-                        .is_some_and(|e| !e.is_constant_expression())
-                    {
+                    if default.as_ref().is_some_and(|e| !e.is_class_initializer()) {
                         return Err(Error::parse(
                             "Constant expression contains invalid operations",
                             self.token().line,

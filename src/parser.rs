@@ -792,6 +792,7 @@ impl Parser {
                     "bool" | "boolean" => (CastKind::Bool, "bool"),
                     "string" | "binary" => (CastKind::String, "string"),
                     "array" => (CastKind::Array, "array"),
+                    "object" => (CastKind::Object, "object"),
                     _ => {
                         return Err(Error::parse(
                             format!("Unsupported cast ({name}) in this context"),

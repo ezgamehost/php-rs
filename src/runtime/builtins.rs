@@ -330,9 +330,9 @@ impl Runtime {
                         line,
                     ));
                 }
-                dump(first, 0, &mut self.output);
+                dump(first, 0, &mut self.output, line, &mut self.warnings);
                 for (_, value) in extra.entries() {
-                    dump(value, 0, &mut self.output);
+                    dump(value, 0, &mut self.output, line, &mut self.warnings);
                 }
                 Ok(Value::Null)
             }
@@ -528,10 +528,17 @@ fn count(array: &PhpArray, recursive: bool) -> i64 {
             0
         }
 }
-fn dump(value: &Value, depth: usize, out: &mut Vec<u8>) {
-    dump_inner(value, depth, out, &mut HashSet::new());
+fn dump(value: &Value, depth: usize, out: &mut Vec<u8>, line: usize, warnings: &mut Vec<String>) {
+    dump_inner(value, depth, out, &mut HashSet::new(), line, warnings);
 }
-fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet<usize>) {
+fn dump_inner(
+    value: &Value,
+    depth: usize,
+    out: &mut Vec<u8>,
+    seen: &mut HashSet<usize>,
+    line: usize,
+    warnings: &mut Vec<String>,
+) {
     match value {
         Value::Object(object) => {
             if !seen.insert(object.object_id) {
@@ -565,11 +572,31 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
             for key in &keys {
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
                 out.extend_from_slice(b"[\"");
-                out.extend(key.to_value().to_bytes());
-                out.extend_from_slice(b"\"]=>\n");
+                let raw = key.to_value().to_bytes();
+                let decoded = crate::object::property_name(&raw).unwrap_or_else(|message| {
+                    warnings.push(format!("Notice: {message} on line {line}"));
+                    crate::object::PropertyName {
+                        scope: None,
+                        name: &raw,
+                    }
+                });
+                if let Some(scope) = decoded.scope {
+                    let name = decoded.name.split(|b| *b == 0).next().unwrap();
+                    out.extend_from_slice(name);
+                    if scope.first() == Some(&b'*') {
+                        out.extend_from_slice(b"\":protected]=>\n");
+                    } else {
+                        out.extend_from_slice(b"\":\"");
+                        out.extend_from_slice(scope);
+                        out.extend_from_slice(b"\":private]=>\n");
+                    }
+                } else {
+                    out.extend_from_slice(decoded.name);
+                    out.extend_from_slice(b"\"]=>\n");
+                }
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
                 if let Some(value) = properties.get(key) {
-                    dump_inner(value, depth + 2, out, seen);
+                    dump_inner(value, depth + 2, out, seen, line, warnings);
                 } else {
                     let name = key.to_value().to_bytes();
                     let owner = object
@@ -633,6 +660,8 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
                 depth,
                 &mut rendered,
                 seen,
+                line,
+                warnings,
             );
             let start = rendered.iter().position(|b| *b == b'(').unwrap();
             out.extend_from_slice(format!("object(Closure)#{} ", closure.object_id).as_bytes());
@@ -664,7 +693,7 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
                     }
                 }
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
-                dump_inner(value, depth + 2, out, seen);
+                dump_inner(value, depth + 2, out, seen, line, warnings);
             }
             out.extend(std::iter::repeat_n(b' ', depth));
             out.extend_from_slice(b"}\n");

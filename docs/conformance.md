@@ -5,9 +5,14 @@ CLI reference. Upstream fixtures run as real files with the source checkout as
 their working directory. These are narrow measurements, not full PHP
 compatibility claims.
 
+The primary progress measure is now before/after performance on the upstream
+PHP suite, with existing Rust tests used as regression checks. The first full
+Zend comparison is [recorded here](conformance/php-8.5.0-object-casts-hillclimb.txt).
+
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 669 | 1825 | 2762 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
@@ -17,7 +22,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/magic_methods`, Rust and reference PHP for passing cases | 16 | 70 | 71 |
 | PHP 8.5.0 `Zend/tests/offsets`, Rust | 0 | 10 | 10 |
 | PHP 8.5.0 `Zend/tests/numeric_strings`, Rust and reference PHP for passing cases | 1 | 3 | 4 |
-| PHP 8.5.0 `Zend/tests/nullsafe_operator`, Rust and reference PHP for passing cases | 14 | 7 | 26 |
+| PHP 8.5.0 `Zend/tests/nullsafe_operator`, Rust and reference PHP for passing cases | 15 | 6 | 26 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
@@ -595,3 +600,34 @@ fixtures, and reference probes establish the tested chain boundaries. General
 reference support, enum/property-hook integration, complete constant-expression
 coverage, and exact compile-fatal diagnostics remain subject to the previously
 recorded implementation gaps.
+
+
+The object-cast slice was measured against all **5,256 upstream Zend fixtures**,
+using an isolated build of parent commit `7f7f490` as the baseline. Results improve
+from **660 passed / 1,834 failed / 2,762 unsupported** to **669 passed / 1,825 failed /
+2,762 unsupported**: **9 new passes and zero regressions**. Passing cases also
+match the PHP 8.5.0 reference, including exit status. The
+[comparison report](conformance/php-8.5.0-object-casts-hillclimb.txt) lists each new
+pass and the leading failure/unsupported categories. `tools/compare_phpt.py`
+compares runner logs and exits unsuccessfully if a previously passing case
+regresses. The largest runner gap is `EXPECTF`: 2,354 fixtures require only that
+additional section, with further fixtures combining it with INI/other sections.
+
+Object casts preserve existing object/closure identity, create empty stdClass
+instances from null, wrap scalar values in a `scalar` property, and convert array
+keys to string property names without recursively converting values. Array and
+string writes retain copy-on-write behavior; nested object handles remain shared.
+Global constants, parameter defaults, and static-variable initializers accept
+object casts, while class constants and property initializers reject them.
+Encoded property names survive array roundtrips and are decoded for iteration
+and object dumps, with notices for malformed names. The behavior is grounded in
+the [PHP object manual](https://www.php.net/manual/en/language.types.object.php),
+PHP 8.5.0 `convert_to_object`/`zend_unmangle_property_name_ex`, and upstream tests.
+
+All **797 Rust tests** and **57 reference-checked project PHPT fixtures** pass;
+formatting and Clippy pass. The object-cast Rust cases were written before the
+workflow changed to prioritize upstream tests. No new project PHPT fixtures or
+generated differential matrix were added for this slice. Exact object-handle
+reuse, general references, full property visibility, and diagnostic formatting
+remain incomplete. Upstream unsupported cases remain explicitly uncounted as
+passes.

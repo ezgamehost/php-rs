@@ -24,6 +24,7 @@ pub(super) fn cast(
         ));
     }
     Ok(match kind {
+        CastKind::Object => unreachable!("object allocation is handled by Runtime"),
         CastKind::Void => Value::Null,
         CastKind::Bool => Value::Bool(value.to_bool(line, warnings)),
         CastKind::String => Value::String(string_bytes(&value, line, warnings)?.into()),
@@ -95,6 +96,36 @@ pub(super) fn cast(
             }
         }),
     })
+}
+
+impl Runtime {
+    pub(super) fn cast_object(&mut self, value: Value, line: usize) -> Value {
+        if matches!(value, Value::Object(_) | Value::Closure(_)) {
+            return value;
+        }
+        let mut properties = PhpArray::default();
+        match value {
+            Value::Null => {}
+            Value::Array(array) => {
+                for (key, value) in array.entries() {
+                    properties.insert(ArrayKey::String(key.to_value().to_bytes()), value.clone());
+                }
+            }
+            value => {
+                value.warn_nan("object", line, &mut self.warnings);
+                properties.insert(ArrayKey::String(b"scalar".to_vec()), value);
+            }
+        }
+        self.next_object_id += 1;
+        Value::Object(Rc::new(crate::PhpObject {
+            class: self.find_class(b"stdClass").expect("built-in stdClass"),
+            class_name: "stdClass".to_owned(),
+            properties: RefCell::new(properties),
+            reinitializable: RefCell::default(),
+            throwable: RefCell::new(None),
+            object_id: self.next_object_id,
+        }))
+    }
 }
 
 fn out_of_range(number: f64) -> bool {
