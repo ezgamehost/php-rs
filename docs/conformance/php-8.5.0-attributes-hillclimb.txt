@@ -1,0 +1,46 @@
+Before: 5256 cases; 1372 passed, 3476 failed, 408 unsupported
+After: 5256 cases; 1381 passed, 3467 failed, 408 unsupported
+New passes: 9; regressions: 0
+NEW PASS: Zend/tests/attributes/034_target_values.phpt
+NEW PASS: Zend/tests/attributes/nodiscard/suppress_assign.phpt
+NEW PASS: Zend/tests/attributes/nodiscard/suppress_cast.phpt
+NEW PASS: Zend/tests/bug55305.phpt
+NEW PASS: Zend/tests/bug79477.phpt
+NEW PASS: Zend/tests/clone/bug27268.phpt
+NEW PASS: Zend/tests/foreach/foreach_shadowed_dyn_property.phpt
+NEW PASS: Zend/tests/magic_methods/bug70223.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_086.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+213: Error: Class "ReflectionClass" not found
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+24: Error: Call to undefined function set_exception_handler()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

@@ -154,6 +154,11 @@ impl Lexer<'_> {
                 }
                 continue;
             }
+            if self.starts(b"#[") {
+                self.pos += 2;
+                self.emit(Kind::Symbol("#[".into()), line);
+                continue;
+            }
             if self.starts(b"//") || c == b'#' {
                 while self.pos < self.source.len()
                     && self.source[self.pos] != b'\n'

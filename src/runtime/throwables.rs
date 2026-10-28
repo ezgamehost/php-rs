@@ -134,6 +134,7 @@ impl Runtime {
             properties: Vec::new(),
             static_properties: Vec::new(),
             allow_dynamic: false,
+            forbid_dynamic: false,
             defaults: RefCell::default(),
             static_values: RefCell::default(),
             constant_values: RefCell::default(),
@@ -165,6 +166,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::AttributeConstruct) {
+            return self.native_attribute_constructor(line);
+        }
         let Some(Value::Object(object)) = self.lookup(b"this") else {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -178,7 +182,7 @@ impl Runtime {
         let mut data = object.throwable.borrow_mut();
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
-            NativeMethod::ThrowableToString => unreachable!(),
+            NativeMethod::ThrowableToString | NativeMethod::AttributeConstruct => unreachable!(),
             NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {
                     unreachable!()

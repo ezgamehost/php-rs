@@ -32,7 +32,7 @@ impl Scope {
                         }
                     }
                 }
-                Stmt::Const(values) => {
+                Stmt::Const(values, _) => {
                     for (_, value) in values {
                         self.reserve_expression(value);
                     }

@@ -114,6 +114,7 @@ impl Parser {
         self.control_depth = outer_depth;
         self.finally_depths = outer_finally_depths;
         let function = Rc::new(FunctionDecl {
+            attributes: Vec::new(),
             returns_reference,
             trait_origin: None,
             native: None,

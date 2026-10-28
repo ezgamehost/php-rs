@@ -1070,6 +1070,7 @@ fn optimized_trace_call(builtin: Option<Builtin>, args: &[Argument], in_function
 
 pub(super) fn magic_parameter() -> Parameter {
     Parameter {
+        attributes: Vec::new(),
         by_reference: false,
         name: b"arguments".to_vec(),
         ty: None,

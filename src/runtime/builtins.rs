@@ -194,6 +194,7 @@ impl Builtin {
         definitions
             .iter()
             .map(|(name, optional, variadic)| Parameter {
+                attributes: Vec::new(),
                 by_reference: false,
                 promotion: None,
                 name: name.as_bytes().to_vec(),

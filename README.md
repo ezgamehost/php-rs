@@ -97,6 +97,11 @@ new request. The CLI returns the low eight bits of the requested status.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and
   permitted string sources, checking target names without autoloading them.
+- Attribute groups on classes, functions/methods, properties, parameters, constants,
+  closures, arrows, and anonymous classes retain resolved names and constant arguments.
+  Internal target/repetition checks support delayed target validation.
+  `AllowDynamicProperties` is inherited; core attribute classes expose PHP 8.5 target
+  flags and constructors. Reflection and remaining attribute runtime effects are unfinished.
 - Public/protected/private instance properties and constructor promotion, with
   separate private slots across inheritance, scoped iteration and `get_object_vars`,
   mangled array-cast keys, and asymmetric setters. Final properties and readonly
@@ -248,7 +253,7 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
-generators, attributes, extensions, and most PHP 8.5 additions.
+generators, complete attribute behavior, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties,
 property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,

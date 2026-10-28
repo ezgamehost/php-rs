@@ -91,7 +91,7 @@ impl Validator {
                         }
                     }
                 }
-                Stmt::Const(constants) => {
+                Stmt::Const(constants, _) => {
                     for (_, value) in constants {
                         self.expression(value, false)?;
                     }

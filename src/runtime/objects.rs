@@ -254,7 +254,11 @@ impl Runtime {
                 methods.push(function.clone());
             }
         }
-        let allow_dynamic = parent.as_ref().is_some_and(|p| p.allow_dynamic);
+        let allow_dynamic = decl
+            .attributes
+            .iter()
+            .any(|a| a.name.eq_ignore_ascii_case(b"AllowDynamicProperties"))
+            || parent.as_ref().is_some_and(|p| p.allow_dynamic);
         for interface in &interfaces {
             for function in &interface.methods {
                 if !methods
@@ -274,6 +278,7 @@ impl Runtime {
             properties,
             methods,
             allow_dynamic,
+            forbid_dynamic: false,
             defaults: RefCell::new(None),
             static_properties,
             static_values: RefCell::default(),
@@ -291,6 +296,9 @@ impl Runtime {
         if let Some(class) = self.builtin_classes.borrow().get(&name) {
             return Some(class.clone());
         }
+        if let Some(class) = self.builtin_attribute_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_throwable_class(&name) {
             return Some(class);
         }
@@ -303,6 +311,7 @@ impl Runtime {
                 properties: Vec::new(),
                 methods: Vec::new(),
                 allow_dynamic: true,
+                forbid_dynamic: false,
                 defaults: RefCell::new(None),
                 static_properties: Vec::new(),
                 static_values: RefCell::default(),
@@ -311,6 +320,7 @@ impl Runtime {
                 initialized: std::cell::Cell::new(false),
                 initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
+                    attributes: Vec::new(),
                     is_trait: false,
                     trait_uses: Vec::new(),
                     trait_requirements: Vec::new(),
@@ -623,7 +633,7 @@ impl Runtime {
         }
         self.warn_static_as_instance(object, name, line);
         let key = self.instance_property_key(object, name);
-        if object.class.declaration.is_readonly
+        if (object.class.declaration.is_readonly || object.class.forbid_dynamic)
             && self.instance_property_owner(&object.class, name).is_none()
         {
             return Err(Error::new(

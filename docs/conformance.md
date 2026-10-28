@@ -324,14 +324,31 @@ pass; no new custom tests were added. Custom debug properties in `var_dump`, com
 closure metadata, object identity reuse, callback reentrancy edge cases, and resource
 printing remain unfinished.
 
+The [attribute foundation slice](conformance/php-8.5.0-attributes-hillclimb.txt)
+adds 9 Zend passes with zero regressions. The lexer recognizes `#[...]`; the parser
+retains attributes on classes, functions/methods, properties, parameters, constants,
+closures/arrows, and anonymous classes. Deferred argument parsing uses declaration
+scope for names and magic constants, validates constant expressions (including new
+expressions), and keeps argument evaluation deferred. Internal target/repetition
+checks support `DelayedTargetValidation`; class-specific restrictions and invalid
+`NoDiscard` return/magic-method declarations are checked. `AllowDynamicProperties`
+sets inherited object behavior. Core attribute classes expose target flags, native
+constructor argument checks, readonly payloads, and internal dynamic-property
+restrictions. The dedicated upstream `print_r` suite improves to 5 passes, 1 failure,
+and 7 unsupported cases. All 797 existing Rust tests, 57 reference-checked project
+fixtures, formatting, and Clippy pass; no new custom tests were added. Attribute
+reflection/instantiation, full Override/Deprecated/NoDiscard runtime behavior,
+sensitive-parameter redaction, property hooks, and fatal diagnostic rendering remain
+unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 4 | 2 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1372 | 3476 | 408 |
+| PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1381 | 3467 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

@@ -12,6 +12,7 @@ use std::{
 };
 
 mod array_callbacks;
+mod attributes;
 mod autoload;
 mod builtins;
 mod callbacks;
@@ -150,7 +151,7 @@ impl Runtime {
                     self.bind_static(name, initializer.as_ref())?;
                 }
             }
-            Stmt::Const(constants) => {
+            Stmt::Const(constants, _) => {
                 for (name, expr) in constants {
                     let value = self.eval_default(expr)?;
                     self.define_constant(name.clone(), value, expr.line);

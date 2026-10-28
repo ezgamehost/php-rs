@@ -102,6 +102,7 @@ pub(crate) struct Class {
     pub properties: Vec<PropertyDecl>,
     pub methods: Vec<Rc<FunctionDecl>>,
     pub allow_dynamic: bool,
+    pub forbid_dynamic: bool,
     pub defaults: RefCell<Option<PhpArray>>,
     pub static_properties: Vec<PropertyDecl>,
     pub static_values: RefCell<std::collections::HashMap<Vec<u8>, Rc<RefCell<crate::Value>>>>,

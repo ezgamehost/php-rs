@@ -46,7 +46,7 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
                     }
                 }
             }
-            Stmt::Const(values) => {
+            Stmt::Const(values, _) => {
                 for (_, value) in values {
                     initializer(value, warnings);
                 }

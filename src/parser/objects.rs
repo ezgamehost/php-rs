@@ -103,7 +103,14 @@ impl Parser {
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
         while !self.eat("}") {
+            let attribute_range = self.take_attributes()?;
             if !is_interface && self.eat("use") {
+                if attribute_range.is_some() {
+                    return Err(Error::parse(
+                        "Attributes cannot target a trait use",
+                        self.token().line,
+                    ));
+                }
                 trait_uses.push(self.trait_use()?);
                 continue;
             }
@@ -232,6 +239,7 @@ impl Parser {
                 let Stmt::Function(mut method) = self.function(true, abstract_method)? else {
                     unreachable!()
                 };
+                self.attach_function_attributes(attribute_range, Rc::make_mut(&mut method), true)?;
                 if abstract_method && method.parameters.iter().any(|p| p.promotion.is_some()) {
                     return Err(Error::parse(
                         "Cannot declare promoted property in an abstract constructor",
@@ -465,13 +473,20 @@ impl Parser {
                         logical_constants::initializer(&mut value, &mut self.warnings);
                         self.validate_constant_value(&constant, ty, &value)?;
                     }
+                    let attributes = self
+                        .parse_attributes_at(attribute_range, attributes::Target::ClassConstant)?;
                     constants.push(ClassConstant {
+                        attributes,
                         visibility,
                         name: constant,
                         value,
                         ty: ty.clone(),
                         is_final: final_method,
                     });
+                    Self::validate_attributes(
+                        &constants.last().unwrap().attributes,
+                        attributes::Target::ClassConstant,
+                    )?;
                     if !self.eat(",") {
                         break;
                     }
@@ -559,7 +574,10 @@ impl Parser {
                             self.token().line,
                         ));
                     }
+                    let attributes =
+                        self.parse_attributes_at(attribute_range, attributes::Target::Property)?;
                     let property = PropertyDecl {
+                        attributes,
                         declaring_class: Vec::new(),
                         visibility,
                         set_visibility,
@@ -571,6 +589,7 @@ impl Parser {
                         default,
                         ty: ty.clone(),
                     };
+                    Self::validate_attributes(&property.attributes, attributes::Target::Property)?;
                     if static_method {
                         static_properties.push(property);
                     } else {
@@ -592,6 +611,7 @@ impl Parser {
         self.class_parent = outer_parent;
         self.trait_name = outer_trait;
         Ok(Stmt::Class(Rc::new(ClassDecl {
+            attributes: Vec::new(),
             is_trait,
             trait_uses,
             trait_requirements: Vec::new(),
@@ -615,6 +635,7 @@ impl Parser {
 
     pub(super) fn new_expression(&mut self) -> Result<ExprKind, Error> {
         let line = self.token().line;
+        let attribute_range = self.take_attributes()?;
         let readonly = self.is("readonly") && self.tokens.get(self.pos + 1).is_some_and(|token| matches!(&token.kind, Kind::Word(name) if name.eq_ignore_ascii_case(b"class")));
         if self.is("class") || readonly {
             if readonly {
@@ -626,17 +647,24 @@ impl Parser {
             } else {
                 Vec::new()
             };
-            let Stmt::Class(class) =
+            let Stmt::Class(mut class) =
                 self.class_declaration(false, readonly, false, false, false, Some(line))?
             else {
                 unreachable!()
             };
+            self.attach_class_attributes(attribute_range, Rc::make_mut(&mut class))?;
             return Ok(ExprKind::New(
                 Box::new(Expr {
                     kind: ExprKind::AnonymousClass(class),
                     line,
                 }),
                 args,
+            ));
+        }
+        if attribute_range.is_some() {
+            return Err(Error::parse(
+                "Attributes on new expressions require an anonymous class",
+                line,
             ));
         }
         let class = if let Kind::Word(name) = self.token().kind.clone() {

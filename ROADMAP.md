@@ -145,7 +145,7 @@ definition of completion.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   complete property/constant diagnostics, property hooks, remaining magic methods, reflection, attributes, enums,
+   complete property/constant diagnostics, property hooks, remaining magic methods, reflection, attribute instantiation and runtime effects, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function
@@ -161,9 +161,12 @@ definition of completion.
    filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.
 6. **PHP 8.5 specifics:** pipe operator implemented for available callable kinds;
-   clone-with implemented for available object kinds;
-   remaining: other callable kinds, URI extension, new APIs and
-   attributes, and migration-guide compatibility changes.
+   clone-with implemented for available object kinds. Attribute syntax and metadata
+   cover declaration targets, with internal target/repetition checks, delayed target
+   validation, inherited AllowDynamicProperties, and core attribute constructors.
+   NoDiscard checks void/never and magic method declaration restrictions.
+   Remaining: other callable kinds, URI extension, new APIs and
+   attribute reflection/instantiation and runtime effects, and migration-guide compatibility changes.
 7. **Deployment and completion audit:** configuration, environment and SAPI
    behavior, resource limits, supported-platform validation, upstream unit and
    PHPT suites, diagnostic fidelity, real-application integration, performance,

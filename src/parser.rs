@@ -8,6 +8,7 @@ use crate::{
 };
 
 use std::{collections::HashSet, rc::Rc};
+mod attributes;
 mod cloning;
 mod closures;
 mod exceptions;
@@ -169,9 +170,12 @@ impl Parser {
             }
         }
         self.expect(";")?;
-        Ok(Stmt::Const(constants))
+        Ok(Stmt::Const(constants, Vec::new()))
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
+        if self.is("#[") {
+            return self.attributed_statement();
+        }
         if self.eat("try") {
             return self.try_statement();
         }
@@ -614,6 +618,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            attributes: Vec::new(),
             returns_reference,
             trait_origin: None,
             native: None,
@@ -634,6 +639,9 @@ impl Parser {
         self.expect("(")?;
         let mut parameters = Vec::new();
         while !self.eat(")") {
+            let attribute_range = self.take_attributes()?;
+            let attributes =
+                self.parse_attributes_at(attribute_range, attributes::Target::Parameter)?;
             let promotion = self.parameter_promotion(allow_promotion)?;
             let ty = if self.is("?") || matches!(self.token().kind, Kind::Word(_)) {
                 Some(self.type_declaration(false)?)
@@ -680,6 +688,7 @@ impl Parser {
                 return Err(Error::parse("Invalid promoted property declaration", line));
             }
             parameters.push(Parameter {
+                attributes,
                 by_reference,
                 promotion,
                 ty,
@@ -1066,6 +1075,10 @@ impl Parser {
                 b"null" => ExprKind::Literal(Value::Null),
                 _ => self.resolve_identifier(name),
             },
+            Kind::Symbol(op) if op == "#[" => {
+                self.pos -= 1;
+                self.attributed_lambda()?
+            }
             Kind::Symbol(op) if op == "[" => ExprKind::Array(self.array_elements("]")?),
             Kind::Symbol(op) if op == "(" => {
                 let expr = self.expr(0)?;

@@ -97,7 +97,7 @@ pub(crate) enum Stmt {
     Goto(Vec<u8>, usize),
     Global(Vec<Expr>),
     Static(Vec<(Vec<u8>, Option<Expr>)>),
-    Const(Vec<(Vec<u8>, Expr)>),
+    Const(Vec<(Vec<u8>, Expr)>, Vec<Attribute>),
     Function(Rc<FunctionDecl>),
     Class(Rc<ClassDecl>),
     Text(Vec<u8>),
@@ -134,6 +134,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
+    AttributeConstruct,
     ThrowableConstruct,
     ErrorExceptionConstruct,
     ThrowableToString,
@@ -237,7 +238,15 @@ impl Expr {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct Attribute {
+    pub name: Vec<u8>,
+    pub arguments: Vec<Argument>,
+    pub line: usize,
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct ClassDecl {
+    pub attributes: Vec<Attribute>,
     pub is_interface: bool,
     pub is_trait: bool,
     pub trait_uses: Vec<TraitUse>,
@@ -282,6 +291,7 @@ pub(crate) enum TraitAdaptation {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PropertyDecl {
+    pub attributes: Vec<Attribute>,
     pub declaring_class: Vec<u8>,
     pub visibility: Visibility,
     pub set_visibility: Visibility,
@@ -314,6 +324,7 @@ impl PropertyDecl {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ClassConstant {
+    pub attributes: Vec<Attribute>,
     pub visibility: Visibility,
     pub name: Vec<u8>,
     pub value: Expr,
@@ -330,6 +341,7 @@ pub(crate) struct Promotion {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Parameter {
+    pub attributes: Vec<Attribute>,
     pub by_reference: bool,
     pub promotion: Option<Promotion>,
     pub name: Vec<u8>,
@@ -340,6 +352,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub attributes: Vec<Attribute>,
     pub returns_reference: bool,
     pub trait_origin: Option<Vec<u8>>,
     pub native: Option<NativeMethod>,
@@ -438,15 +451,30 @@ pub(crate) enum Argument {
 }
 impl Expr {
     pub fn is_constant_expression(&self) -> bool {
-        self.constant_expression(true)
+        self.constant_expression(true, false)
     }
 
     pub fn is_class_initializer(&self) -> bool {
-        self.constant_expression(false)
+        self.constant_expression(false, false)
     }
 
-    fn constant_expression(&self, allow_object_cast: bool) -> bool {
+    pub fn is_attribute_expression(&self) -> bool {
+        self.constant_expression(true, true)
+    }
+
+    fn constant_expression(&self, allow_object_cast: bool, allow_new: bool) -> bool {
         match &self.kind {
+            ExprKind::New(class, arguments) if allow_new => {
+                class
+                    .static_class_name()
+                    .is_some_and(|name| !name.eq_ignore_ascii_case(b"static"))
+                    && arguments.iter().all(|arg| match arg {
+                        Argument::Positional(expr) | Argument::Named(_, expr) => {
+                            expr.is_attribute_expression()
+                        }
+                        Argument::Unpack(_) => false,
+                    })
+            }
             ExprKind::Lambda(lambda) => {
                 lambda.is_static && !lambda.arrow && lambda.captures.is_empty()
             }
@@ -464,40 +492,43 @@ impl Expr {
                 class
                     .static_class_name()
                     .is_some_and(|name| !name.eq_ignore_ascii_case(b"static"))
-                    && name.constant_expression(allow_object_cast)
+                    && name.constant_expression(allow_object_cast, allow_new)
             }
             ExprKind::Literal(_) | ExprKind::Constant(_) | ExprKind::NamespacedName(_) => true,
             ExprKind::ClassName(class) => class
                 .static_class_name()
                 .is_some_and(|name| !name.eq_ignore_ascii_case(b"static")),
             ExprKind::Unary(op, _) if op == "@" => false,
-            ExprKind::Group(e) | ExprKind::Unary(_, e) => e.constant_expression(allow_object_cast),
+            ExprKind::Group(e) | ExprKind::Unary(_, e) => {
+                e.constant_expression(allow_object_cast, allow_new)
+            }
             ExprKind::Cast(kind, e) => {
                 *kind != CastKind::Void
                     && (allow_object_cast || *kind != CastKind::Object)
-                    && e.constant_expression(allow_object_cast)
+                    && e.constant_expression(allow_object_cast, allow_new)
             }
             ExprKind::Binary(op, _, _) if matches!(op.as_str(), "|>" | "instanceof") => false,
             ExprKind::Index(a, Some(b))
             | ExprKind::Binary(_, a, b)
             | ExprKind::Property(a, b)
             | ExprKind::NullsafeProperty(a, b) => {
-                a.constant_expression(allow_object_cast) && b.constant_expression(allow_object_cast)
+                a.constant_expression(allow_object_cast, allow_new)
+                    && b.constant_expression(allow_object_cast, allow_new)
             }
             ExprKind::Conditional(a, b, c) => {
-                a.constant_expression(allow_object_cast)
+                a.constant_expression(allow_object_cast, allow_new)
                     && b.as_ref()
-                        .is_none_or(|b| b.constant_expression(allow_object_cast))
-                    && c.constant_expression(allow_object_cast)
+                        .is_none_or(|b| b.constant_expression(allow_object_cast, allow_new))
+                    && c.constant_expression(allow_object_cast, allow_new)
             }
             ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 elements.iter().all(|element| match element {
                     ArrayElement::Entry(k, v) => {
                         k.as_ref()
-                            .is_none_or(|key| key.constant_expression(allow_object_cast))
-                            && v.constant_expression(allow_object_cast)
+                            .is_none_or(|key| key.constant_expression(allow_object_cast, allow_new))
+                            && v.constant_expression(allow_object_cast, allow_new)
                     }
-                    ArrayElement::Unpack(v) => v.constant_expression(allow_object_cast),
+                    ArrayElement::Unpack(v) => v.constant_expression(allow_object_cast, allow_new),
                     ArrayElement::Reference(_, _) | ArrayElement::Hole => false,
                 })
             }

@@ -104,6 +104,7 @@ impl Parser {
                 ));
             }
             properties.push(PropertyDecl {
+                attributes: param.attributes.clone(),
                 declaring_class: Vec::new(),
                 visibility: promotion.visibility,
                 set_visibility,
