@@ -115,7 +115,9 @@ definition of completion.
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function
-   existence implemented. Array map/filter/reduce support available callables,
+   existence implemented. Byte-string repetition/reversal and chr/ord conversion
+   include PHP 8.5 deprecations; common native argument diagnostics include parameter
+   names, received types, and argument counts. Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. SPL autoload queues support callback
    identity, prepend/removal, recursive lookup guards, exceptions, default file

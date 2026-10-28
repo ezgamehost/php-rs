@@ -6,6 +6,10 @@ pub(super) enum Builtin {
     Exit,
     Clone,
     Strlen,
+    StrRepeat,
+    StrRev,
+    Chr,
+    Ord,
     Count,
     VarDump,
     GetType,
@@ -53,6 +57,10 @@ impl Builtin {
             b"exit" | b"die" => Self::Exit,
             b"clone" => Self::Clone,
             b"strlen" => Self::Strlen,
+            b"str_repeat" => Self::StrRepeat,
+            b"strrev" => Self::StrRev,
+            b"chr" => Self::Chr,
+            b"ord" => Self::Ord,
             b"count" | b"sizeof" => Self::Count,
             b"var_dump" => Self::VarDump,
             b"gettype" => Self::GetType,
@@ -141,7 +149,10 @@ impl Builtin {
             Self::Autoload => &[("class", false, false), ("file_extensions", true, false)],
             Self::AutoloadExtensions => &[("file_extensions", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
-            Self::Strlen => &[("string", false, false)],
+            Self::Strlen | Self::StrRev => &[("string", false, false)],
+            Self::StrRepeat => &[("string", false, false), ("times", false, false)],
+            Self::Chr => &[("codepoint", false, false)],
+            Self::Ord => &[("character", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
             Self::GetType | Self::GetDebugType | Self::Is(_) => &[("value", false, false)],
@@ -273,6 +284,9 @@ impl Runtime {
             | Builtin::Autoload
             | Builtin::AutoloadExtensions => unreachable!(),
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
+            Builtin::StrRepeat | Builtin::StrRev | Builtin::Chr | Builtin::Ord => {
+                self.string_builtin(builtin, &args, line)
+            }
             Builtin::ClassAlias => self.class_alias(&args, line),
             Builtin::IsA | Builtin::IsSubclassOf => self.inspect_inheritance(builtin, &args, line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
@@ -513,7 +527,7 @@ impl Runtime {
             Value::Array(_) | Value::Closure(_) | Value::Object(_)
         ) || (self.strict_types && !matches!(value, Value::String(_)))
         {
-            return Err(type_error(function, position, "string", line));
+            return Err(type_error(value, function, position, "string", line));
         }
         self.warn_null(value, function, position, "string", line);
         value.warn_nan("string", line, &mut self.diagnostics);
@@ -533,7 +547,7 @@ impl Runtime {
             )
             || matches!(value, Value::String(s) if crate::value::numeric_string(&s.bytes()).is_none())
         {
-            return Err(type_error(function, position, "int", line));
+            return Err(type_error(value, function, position, "int", line));
         }
         let number = match value {
             Value::String(s) => crate::value::numeric_string(&s.bytes()).unwrap(),
@@ -542,7 +556,7 @@ impl Runtime {
         if let Value::Float(n) = number
             && (!n.is_finite() || !(-9223372036854775808.0..9223372036854775808.0).contains(&n))
         {
-            return Err(type_error(function, position, "int", line));
+            return Err(type_error(value, function, position, "int", line));
         }
         self.warn_null(value, function, position, "int", line);
         value.integer(line, &mut self.diagnostics)
@@ -559,7 +573,7 @@ impl Runtime {
             Value::Array(_) | Value::Closure(_) | Value::Object(_)
         ) || (self.strict_types && !matches!(value, Value::Bool(_)))
         {
-            return Err(type_error(function, position, "bool", line));
+            return Err(type_error(value, function, position, "bool", line));
         }
         self.warn_null(value, function, position, "bool", line);
         Ok(value.to_bool(line, &mut self.diagnostics))
@@ -573,14 +587,29 @@ impl Runtime {
         line: usize,
     ) {
         if matches!(value, Value::Null) {
-            self.diagnostics.push(format!("Deprecated: {function}(): Passing null to parameter #{position} of type {kind} is deprecated on line {line}"));
+            self.diagnostics.push(format!("Deprecated: {function}(): Passing null to parameter #{position}{} of type {kind} is deprecated on line {line}", parameter_label(function, position)));
         }
     }
 }
-fn type_error(function: &str, position: usize, kind: &str, line: usize) -> Error {
+fn parameter_label(function: &str, position: usize) -> String {
+    Builtin::lookup(function.to_ascii_lowercase().as_bytes())
+        .and_then(|builtin| builtin.parameters().get(position - 1).cloned())
+        .map_or_else(String::new, |p| {
+            format!(" (${})", String::from_utf8_lossy(&p.name))
+        })
+}
+fn type_error(value: &Value, function: &str, position: usize, kind: &str, line: usize) -> Error {
+    let given = match value {
+        Value::Bool(true) => "true",
+        Value::Bool(false) => "false",
+        _ => debug_type(value),
+    };
     Error::new(
         ErrorKind::TypeError,
-        format!("{function}(): Argument #{position} must be of type {kind}"),
+        format!(
+            "{function}(): Argument #{position}{} must be of type {kind}, {given} given",
+            parameter_label(function, position)
+        ),
         line,
     )
 }
@@ -592,7 +621,7 @@ pub(super) fn require_array<'a>(
 ) -> Result<&'a PhpArray, Error> {
     match value {
         Value::Array(array) => Ok(array),
-        _ => Err(type_error(function, position, "array", line)),
+        _ => Err(type_error(value, function, position, "array", line)),
     }
 }
 pub(super) fn debug_type(value: &Value) -> &str {

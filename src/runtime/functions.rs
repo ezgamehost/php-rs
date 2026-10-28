@@ -414,8 +414,40 @@ impl Runtime {
             context,
         } = target;
         if let Some(builtin) = builtin {
+            let supplied_fixed = bound
+                .fixed
+                .iter()
+                .rposition(Option::is_some)
+                .map_or(0, |i| i + 1);
+            let supplied = supplied_fixed + bound.extra.len();
+            let required = parameters
+                .iter()
+                .filter(|p| !p.variadic && p.default.is_none())
+                .count();
+            let maximum = parameters.iter().filter(|p| !p.variadic).count();
+            let count_error = |count: usize, direction: &str| {
+                Error::new(
+                    ErrorKind::ArgumentCountError,
+                    format!(
+                        "{}() expects {} {} argument{}, {} given",
+                        String::from_utf8_lossy(&name),
+                        if !bound.variadic && required == maximum {
+                            "exactly"
+                        } else {
+                            direction
+                        },
+                        count,
+                        if count == 1 { "" } else { "s" },
+                        supplied
+                    ),
+                    line,
+                )
+            };
             for (index, param) in parameters.iter().enumerate() {
                 if !param.variadic && param.default.is_none() && bound.fixed[index].is_none() {
+                    if index >= supplied_fixed && supplied < required {
+                        return Err(count_error(required, "at least"));
+                    }
                     return Err(Error::new(
                         ErrorKind::ArgumentCountError,
                         format!(
@@ -429,15 +461,7 @@ impl Runtime {
                 }
             }
             if !bound.variadic && !bound.extra.is_empty() {
-                return Err(Error::new(
-                    ErrorKind::ArgumentCountError,
-                    format!(
-                        "{}() expects at most {} arguments",
-                        String::from_utf8_lossy(&name),
-                        parameters.len()
-                    ),
-                    line,
-                ));
+                return Err(count_error(maximum, "at most"));
             }
             return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
         }

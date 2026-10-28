@@ -140,13 +140,30 @@ fixtures record 2 passes and 4 failures. The FILE section of upstream
 executed directly; its INI section remains unsupported by the runner and is not
 counted as a pass. Closure class aliases, declaration-list APIs, complete native
 class coverage, and exact warning/compile-fatal behavior remain incomplete.
+The [byte-string builtin slice](conformance/php-8.5.0-byte-strings-hillclimb.txt)
+adds 28 Zend passes with zero regressions. `str_repeat` handles binary input,
+zero/negative counts, checked length arithmetic, and fallible allocation;
+`strrev` reverses bytes. `chr` constrains integers to one byte and emits PHP 8.5's
+out-of-range deprecation; `ord` returns the first byte (zero for empty input),
+deprecating strings whose length differs from one. Common scalar coercion preserves
+strictness and Stringable behavior. Native argument diagnostics now include
+parameter names and supplied types, and distinguish missing named arguments from
+argument-count errors. PHP 8.5.0 `ext/standard/string.c` and upstream fixtures
+establish these behaviors. All 797 existing Rust tests, 57 reference-checked
+project fixtures, formatting, and Clippy pass, without new custom tests.
+The focused standard string suite records 7 passes, 4 failures, and 2 unsupported
+fixtures. The FILE section of upstream `str_repeat.phpt` also matches reference
+output and status directly with its requested precision setting; its INI section
+remains unsupported by the runner and is not counted as passing. Expected-warning
+interleaving, complete memory-limit semantics, and other string builtins remain
+unfinished.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1132 | 3716 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1160 | 3688 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

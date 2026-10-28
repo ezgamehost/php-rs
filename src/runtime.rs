@@ -39,6 +39,7 @@ mod property_visibility;
 mod readonly;
 mod scope_slots;
 mod static_members;
+mod string_builtins;
 mod string_offsets;
 mod stringable;
 mod termination;

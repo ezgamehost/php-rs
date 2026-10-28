@@ -215,6 +215,8 @@ new request. The CLI returns the low eight bits of the requested status.
   string prefixes, and indented heredoc/nowdoc strings.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
+- Binary-safe `str_repeat`, `strrev`, `chr`, and `ord`, with scalar/Stringable
+  coercion where applicable and PHP 8.5 byte-range/length deprecations.
 
 Known gaps include intersection/DNF types, most builtins, references, complete exception APIs,
 generators, attributes, extensions, and most PHP 8.5 additions.
