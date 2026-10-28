@@ -1,0 +1,74 @@
+Before: 5256 cases; 1275 passed, 3573 failed, 408 unsupported
+After: 5256 cases; 1312 passed, 3536 failed, 408 unsupported
+New passes: 37; regressions: 0
+NEW PASS: Zend/tests/assign_obj_ref_return.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/reference_2.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/static_props.phpt
+NEW PASS: Zend/tests/bug35163_3.phpt
+NEW PASS: Zend/tests/bug35239.phpt
+NEW PASS: Zend/tests/bug68191.phpt
+NEW PASS: Zend/tests/bug70083.phpt
+NEW PASS: Zend/tests/bug70288.phpt
+NEW PASS: Zend/tests/bug71539_1.phpt
+NEW PASS: Zend/tests/bug72543_3.phpt
+NEW PASS: Zend/tests/bug72543_5.phpt
+NEW PASS: Zend/tests/bug76752.phpt
+NEW PASS: Zend/tests/bug78151.phpt
+NEW PASS: Zend/tests/clone/bug68262.phpt
+NEW PASS: Zend/tests/dereference/dereference_008.phpt
+NEW PASS: Zend/tests/dereference/dereference_011.phpt
+NEW PASS: Zend/tests/dynamic_prop_name_leak.phpt
+NEW PASS: Zend/tests/exceptions/exception_during_by_reference_magic_get.phpt
+NEW PASS: Zend/tests/foreach/foreach_by_ref_to_property.phpt
+NEW PASS: Zend/tests/gh11244-004.phpt
+NEW PASS: Zend/tests/in-de-crement/incdec_ref_property.phpt
+NEW PASS: Zend/tests/magic_methods/bug39449.phpt
+NEW PASS: Zend/tests/magic_methods/bug52879.phpt
+NEW PASS: Zend/tests/magic_methods/bug71359.phpt
+NEW PASS: Zend/tests/magic_methods/bug72854.phpt
+NEW PASS: Zend/tests/magic_methods/overloaded_prop_assign_op_refs.phpt
+NEW PASS: Zend/tests/object_property_ref_incdec.phpt
+NEW PASS: Zend/tests/objects/objects_019.phpt
+NEW PASS: Zend/tests/readonly_props/gh7942.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_modification.phpt
+NEW PASS: Zend/tests/strlen.phpt
+NEW PASS: Zend/tests/switch/bug71914.phpt
+NEW PASS: Zend/tests/type_coercion/type_casts/string_cast_reference_tostring.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_073.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_074.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_098.phpt
+NEW PASS: Zend/tests/write_property_ref_overwrite_return.phpt
+
+Most frequent remaining failure messages:
+539: ParseError: Expected ';'
+209: Error: Class "ReflectionClass" not found
+133: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+53: Error: References to typed properties are not supported yet
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+32: Error: Call to undefined function print_r()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

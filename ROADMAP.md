@@ -84,10 +84,14 @@ definition of completion.
    Typed returns coerce the referent; ordinary expression reads dereference it,
    while reference consumers retain identity. Getter and string-conversion paths
    handle returned references, and method overrides preserve reference contracts.
-   Remaining: property references, object reference iteration, cycle collection,
+   Untyped instance/static property references preserve aliases across ordinary
+   writes, rebinding, returns, arguments, destructuring, and array iteration.
+   Magic getters retain references, and readonly/asymmetric access is checked.
+   Object snapshots drop singleton reference wrappers and dumps detect cycles.
+   Remaining: typed property references, object reference iteration, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
-   Traversable unpacking and promoted property references,
+   Traversable unpacking and typed promoted property references,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    complete namespace validation and error/exception behavior.

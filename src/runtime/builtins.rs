@@ -694,7 +694,11 @@ fn dump_inner(
         Value::Indirect(slot) => dump_inner(&slot.borrow(), depth, out, seen, line, warnings),
         Value::Reference(reference) => {
             let value = reference.borrow();
-            let recursive = matches!(&*value, Value::Array(array) if seen.contains(&(Rc::as_ptr(array) as usize)));
+            let recursive = match &*value {
+                Value::Array(array) => seen.contains(&(Rc::as_ptr(array) as usize)),
+                Value::Object(object) => seen.contains(&object.object_id),
+                _ => false,
+            };
             if Rc::strong_count(reference) > 1 && !recursive {
                 out.push(b'&');
             }

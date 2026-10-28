@@ -489,13 +489,6 @@ impl Runtime {
             drop(array);
             reference
         } else if let Some(location) = &mut location {
-            if location.object.is_some() || location.static_class.is_some() {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    "References to properties are not supported yet",
-                    line,
-                ));
-            }
             drop(array);
             self.location_reference(location, line)?
         } else {

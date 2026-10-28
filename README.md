@@ -78,6 +78,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - Reference returns from functions, methods, closures, and arrows retain variable
   or array-element cells for reference assignment, arguments, and iteration.
   Return coercion updates the referent; ordinary reads still copy values.
+- Untyped instance and static properties retain reference aliases across writes,
+  rebinding, function calls, and array-element operations. Magic getters can expose
+  existing references; readonly and asymmetric setters restrict reference access.
 - Instance classes and `stdClass`, constructors, shared object handles,
   dynamic property names, nested property/array writes, and basic live property
   iteration. Instance methods bind `$this`, support named/typed arguments, and
@@ -236,7 +239,7 @@ new request. The CLI returns the low eight bits of the requested status.
 - Binary-safe `str_repeat`, `strrev`, `chr`, and `ord`, with scalar/Stringable
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 
-Known gaps include intersection/DNF types, most builtins, property references, complete exception APIs,
+Known gaps include intersection/DNF types, most builtins, typed property references, complete exception APIs,
 generators, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties,
 property hooks,
@@ -249,8 +252,8 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
 reference captures, reference parameters/returns, and reference destructuring work.
-Property references, object reference iteration, Traversable unpacking, promoted
-property references, and cycle collection remain unfinished.
+Typed property references, object reference iteration, Traversable unpacking,
+and cycle collection remain unfinished.
 Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception
 handlers, protected exception-property access (including severity), and complete compile-time fatal

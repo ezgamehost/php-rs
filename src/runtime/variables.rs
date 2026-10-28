@@ -123,11 +123,7 @@ impl Runtime {
         }
         let mut source = self.location(source)?;
         if source.object.is_some() || source.static_class.is_some() {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "References to properties are not supported yet",
-                line,
-            ));
+            return self.location_reference(&mut source, line);
         }
         if source.name == b"this" {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
@@ -178,14 +174,10 @@ impl Runtime {
             ));
         }
         for location in [&target, &source] {
-            if location.object.is_some() || location.static_class.is_some() {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    "References to properties are not supported yet",
-                    line,
-                ));
-            }
-            if location.name == b"this" {
+            if location.object.is_none()
+                && location.static_class.is_none()
+                && location.name == b"this"
+            {
                 return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
             }
         }
@@ -201,11 +193,7 @@ impl Runtime {
         line: usize,
     ) -> Result<(), Error> {
         if target.object.is_some() || target.static_class.is_some() {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "References to properties are not supported yet",
-                line,
-            ));
+            return self.bind_property_reference(target, reference, line);
         }
         if target.name == b"this" {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
@@ -240,6 +228,9 @@ impl Runtime {
         location: &mut Location,
         line: usize,
     ) -> Result<Cell, Error> {
+        if location.object.is_some() || location.static_class.is_some() {
+            return self.property_reference(location, line);
+        }
         let root = self
             .location_scope(location)
             .get_or_insert(&location.name, Value::Null);

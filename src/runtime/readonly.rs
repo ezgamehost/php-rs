@@ -10,7 +10,7 @@ impl Runtime {
         self.check_readonly_access(location, unset, !location.keys.is_empty(), line)
     }
 
-    fn check_readonly_access(
+    pub(super) fn check_readonly_access(
         &self,
         location: &Location,
         unset: bool,

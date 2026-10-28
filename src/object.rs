@@ -66,12 +66,12 @@ impl PhpObject {
         for property in &self.class.properties {
             let key = crate::ArrayKey::String(property.storage_name());
             if let Some(value) = properties.get(&key) {
-                result.insert(key, value.clone());
+                result.insert(key, value.copy_array_entry());
             }
         }
         for (key, value) in properties.entries() {
             if result.get(key).is_none() {
-                result.insert(key.clone(), value.clone());
+                result.insert(key.clone(), value.copy_array_entry());
             }
         }
         result
