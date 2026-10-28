@@ -24,6 +24,7 @@ impl Lexer<'_> {
                     php: true,
                     interpolation: true,
                     tokens: Vec::new(),
+                    doc_comment: None,
                 };
                 let tokens = nested.scan()?;
                 self.pos = nested.pos;
@@ -149,6 +150,7 @@ impl Lexer<'_> {
         let line = self.line;
         self.bump();
         let mut tokens = vec![Token {
+            doc_comment: None,
             kind: Kind::Variable(self.identifier()),
             line,
         }];
@@ -177,7 +179,11 @@ impl Lexer<'_> {
                 }
                 Kind::Value(Value::String(self.source[start..self.pos].to_vec().into()))
             };
-            tokens.push(Token { kind, line });
+            tokens.push(Token {
+                doc_comment: None,
+                kind,
+                line,
+            });
             if !self.starts(b"]") {
                 return Err(Error::parse("Expected ']' in string interpolation", line));
             }
@@ -194,12 +200,14 @@ impl Lexer<'_> {
                 self.pos += op.len();
                 tokens.push(symbol(op, line));
                 tokens.push(Token {
+                    doc_comment: None,
                     kind: Kind::Word(self.identifier()),
                     line,
                 });
             }
         }
         tokens.push(Token {
+            doc_comment: None,
             kind: Kind::End,
             line,
         });
@@ -268,6 +276,7 @@ impl Lexer<'_> {
                     php: true,
                     interpolation: false,
                     tokens: Vec::new(),
+                    doc_comment: None,
                 }
                 .string_body(None, true);
             }
@@ -291,6 +300,7 @@ fn finish(mut parts: Vec<StringPart>, mut out: Vec<u8>) -> Kind {
 }
 fn symbol(text: &str, line: usize) -> Token {
     Token {
+        doc_comment: None,
         kind: Kind::Symbol(text.into()),
         line,
     }

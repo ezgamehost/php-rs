@@ -111,15 +111,21 @@ new request. The CLI returns the low eight bits of the requested status.
 - Function/method/parameter reflection exposes names, source lines, visibility,
   signature metadata, defaults, attributes, named/union types, and closure captures.
   Reflective invocation supports named arguments, argument-array references, weak
-  coercion, non-public methods, and closure creation. Class-constant reflection,
-  complete builtin signatures, prototypes/static variables, lazy objects, full reflector
+  coercion, non-public methods, and closure creation.
+  Complete builtin signatures, prototypes/static variables, lazy objects, full reflector
   interfaces, and declaration string representations remain unfinished.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining
   typed-reference and readonly constraints. Declaration strings cover ordinary defaults;
-  doc comments, unevaluated expression rendering, raw/hooked access, lazy objects,
+  unevaluated expression rendering, raw/hooked access, lazy objects,
   and complete internal property metadata remain unfinished.
+- Class-constant reflection supports individual/filtered discovery, deferred values,
+  declared types, visibility/final/deprecated flags, declaring classes, attributes,
+  and declaration strings. Ordinary property and constant documentation comments
+  survive lexing, grouped declarations, inheritance, and trait composition.
+  Reflection metadata field writes raise ReflectionException; fields retain their
+  native typed-property behavior for unsetting and references.
 - Public/protected/private instance properties and constructor promotion, with
   separate private slots across inheritance, scoped iteration and `get_object_vars`,
   mangled array-cast keys, and asymmetric setters. Final properties and readonly

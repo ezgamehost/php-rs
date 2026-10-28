@@ -9,7 +9,7 @@ impl Runtime {
                 "
                 public const int IS_IMPLICIT_ABSTRACT=16, IS_EXPLICIT_ABSTRACT=64,
                     IS_FINAL=32, IS_READONLY=65536;
-                public readonly string $name;
+                public string $name;
                 private function __clone(): void {}
                 public function __construct(object|string $objectOrClass) {}
                 public function getName(): string {}
@@ -45,6 +45,8 @@ impl Runtime {
                 public function getProperty(string $name): ReflectionProperty {}
                 public function getProperties(?int $filter=null): array {}
                 public function hasConstant(string $name): bool {}
+                public function getReflectionConstant(string $name): ReflectionClassConstant|false {}
+                public function getReflectionConstants(?int $filter=null): array {}
                 public function getConstant(string $name): mixed {}
                 public function getConstants(?int $filter=null): array {}
                 public function getFileName(): string|false {}
@@ -82,7 +84,7 @@ impl Runtime {
             ",
             ),
             b"reflectionfunctionabstract" => ("ReflectionFunctionAbstract", None, "
-                public readonly string $name;
+                public string $name;
                 private function __clone(): void {}
                 public function getName(): string {}
                 public function getShortName(): string {}
@@ -122,7 +124,7 @@ impl Runtime {
             "),
             b"reflectionmethod" => ("ReflectionMethod", Some("ReflectionFunctionAbstract"), "
                 public const int IS_STATIC=16, IS_PUBLIC=1, IS_PROTECTED=2, IS_PRIVATE=4, IS_ABSTRACT=64, IS_FINAL=32;
-                public readonly string $class;
+                public string $class;
                 public function __construct(object|string $objectOrMethod, ?string $method=null) {}
                 public static function createFromMethodName(string $method): static {}
                 public function isPublic(): bool {}
@@ -139,16 +141,39 @@ impl Runtime {
                 public function invokeArgs(?object $object, array $args): mixed {}
                 public function setAccessible(bool $accessible): void {}
             "),
+            b"reflectionclassconstant" => ("ReflectionClassConstant", None, "
+                public const int IS_PUBLIC=1, IS_PROTECTED=2, IS_PRIVATE=4, IS_FINAL=32;
+                public string $name;
+                public string $class;
+                private function __clone(): void {}
+                public function __construct(object|string $class, string $constant) {}
+                public function __toString(): string {}
+                public function getName(): string {}
+                public function getValue(): mixed {}
+                public function isPublic(): bool {}
+                public function isPrivate(): bool {}
+                public function isProtected(): bool {}
+                public function isFinal(): bool {}
+                public function getModifiers(): int {}
+                public function getDeclaringClass(): ReflectionClass {}
+                public function getDocComment(): string|false {}
+                public function getAttributes(?string $name=null, int $flags=0): array {}
+                public function isEnumCase(): bool {}
+                public function isDeprecated(): bool {}
+                public function hasType(): bool {}
+                public function getType(): ?ReflectionType {}
+            "),
             b"reflectionproperty" => ("ReflectionProperty", None, "
                 public const int IS_STATIC=16, IS_READONLY=128, IS_PUBLIC=1, IS_PROTECTED=2,
                     IS_PRIVATE=4, IS_ABSTRACT=64, IS_PROTECTED_SET=2048, IS_PRIVATE_SET=4096,
                     IS_VIRTUAL=512, IS_FINAL=32;
-                public readonly string $name;
-                public readonly string $class;
+                public string $name;
+                public string $class;
                 private function __clone(): void {}
                 public function __construct(object|string $class, string $property) {}
                 public function getName(): string {}
                 public function getMangledName(): string {}
+                public function getDocComment(): string|false {}
                 public function isPublic(): bool {}
                 public function isProtected(): bool {}
                 public function isPrivate(): bool {}
@@ -179,7 +204,7 @@ impl Runtime {
                 public function __toString(): string {}
             "),
             b"reflectionparameter" => ("ReflectionParameter", None, "
-                public readonly string $name;
+                public string $name;
                 private function __clone(): void {}
                 public function __construct($function, int|string $param) {}
                 public function getName(): string {}
@@ -219,7 +244,10 @@ impl Runtime {
         } else {
             ""
         };
-        let implements = if matches!(canonical, "ReflectionType" | "ReflectionProperty") {
+        let implements = if matches!(
+            canonical,
+            "ReflectionType" | "ReflectionProperty" | "ReflectionClassConstant"
+        ) {
             " implements Stringable"
         } else {
             ""
@@ -263,7 +291,10 @@ impl Runtime {
             declaration,
             properties,
             parent,
-            interfaces: if matches!(canonical, "ReflectionType" | "ReflectionProperty") {
+            interfaces: if matches!(
+                canonical,
+                "ReflectionType" | "ReflectionProperty" | "ReflectionClassConstant"
+            ) {
                 vec![self.find_class(b"Stringable").unwrap()]
             } else {
                 Vec::new()

@@ -504,6 +504,28 @@ doc comments, unevaluated default-expression rendering, and complete internal pr
 metadata (including throwable properties) remain unfinished. Expected diagnostic matching
 still blocks deprecation/error fixtures; unsupported sections are not counted as passes.
 
+The [class-constant reflection slice](conformance/php-8.5.0-class-constant-reflection-hillclimb.txt)
+adds 5 Zend and 10 reflection passes with zero regressions in either suite.
+`ReflectionClassConstant` and class-level individual/filtered discovery expose deferred
+values, declared types, visibility/final/deprecated flags, declaring classes, attributes,
+and declaration strings. Deferred values retain existing constant-expression type checks
+and propagate errors through both value access and string conversion. Attribute evaluation
+uses the constant's declaring scope, including constants composed from traits.
+
+The lexer preserves documentation comments for ordinary properties and class constants,
+including separate comments within grouped declarations. Their reflection APIs and
+string representations expose those comments. Native reflector `name`/`class` fields now
+use PHP's reflection-specific write exception while retaining ordinary typed-property
+unsetting/reference behavior. Missing constant errors preserve the written class name
+(such as `self`) and check existence before rejecting direct trait-constant access.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, with formatting
+and Clippy green. No new custom tests were added. Global-constant reflection, enums,
+class/function/promoted-property documentation comments, complete reflector interfaces
+and internal metadata, and class/function declaration rendering remain unfinished.
+Expected diagnostic matching still blocks fatal/deprecation fixtures; unsupported sections
+are not counted as passes.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -511,8 +533,8 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1485 | 3363 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 196 | 259 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1490 | 3358 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 206 | 249 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |

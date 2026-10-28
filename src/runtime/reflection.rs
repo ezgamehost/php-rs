@@ -6,6 +6,7 @@ use crate::{
 };
 
 mod attributes;
+mod constants;
 mod declarations;
 mod functions;
 mod parameters;
@@ -15,6 +16,10 @@ use properties::PropertyReflection;
 #[derive(Clone)]
 pub(crate) enum ReflectionData {
     Class(Rc<Class>),
+    ClassConstant {
+        owner: Rc<Class>,
+        name: Vec<u8>,
+    },
     Object(Rc<PhpObject>),
     Property(PropertyReflection),
     Function(FunctionReflection),
@@ -79,6 +84,10 @@ impl Runtime {
                     string(&object.class.name),
                 );
             }
+            ReflectionData::ClassConstant { owner, name } => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(name));
+                properties.insert(ArrayKey::String(b"class".to_vec()), string(&owner.name));
+            }
             ReflectionData::Property(property) => {
                 properties.insert(ArrayKey::String(b"name".to_vec()), string(&property.name));
                 properties.insert(
@@ -116,7 +125,7 @@ impl Runtime {
         }))
     }
 
-    fn reflection_error(&mut self, message: impl Into<String>, line: usize) -> Error {
+    pub(super) fn reflection_error(&mut self, message: impl Into<String>, line: usize) -> Error {
         let args = [Argument::Positional(literal(string(message.into()), line))];
         let class = self.find_class(b"ReflectionException").unwrap();
         match self.instantiate_class(class, &args, true, line) {
@@ -184,6 +193,9 @@ impl Runtime {
             return Err(self.reflection_error("Cannot clone object using __clone()", line));
         }
         if name == b"__construct" {
+            if object.class.is_a(b"ReflectionClassConstant") {
+                return self.reflection_class_constant_constructor(&object, line);
+            }
             if object.class.is_a(b"ReflectionProperty") {
                 return self.reflection_property_constructor(&object, line);
             }
@@ -246,6 +258,10 @@ impl Runtime {
             ReflectionData::Object(object) => {
                 self.reflect_class_method(&object.class, Some(&object), &name, supplied, line)
             }
+            ReflectionData::ClassConstant {
+                owner,
+                name: constant,
+            } => self.reflect_class_constant_method(&object, &owner, &constant, &name, line),
             ReflectionData::Property(property) => {
                 self.reflect_property_method(property, &name, supplied, line)
             }
@@ -312,7 +328,8 @@ impl Runtime {
                             && !class.is_a(b"ReflectionFunctionAbstract")
                             && !class.is_a(b"ReflectionParameter")
                             && !class.is_a(b"ReflectionType")
-                            && !class.is_a(b"ReflectionProperty"))),
+                            && !class.is_a(b"ReflectionProperty")
+                            && !class.is_a(b"ReflectionClassConstant"))),
             ),
             b"isinterface" => Value::Bool(decl.is_interface),
             b"istrait" => Value::Bool(decl.is_trait),
@@ -471,6 +488,9 @@ impl Runtime {
             ),
             b"hasproperty" | b"getproperty" | b"getproperties" => {
                 return self.reflect_class_properties(class, object, name, line);
+            }
+            b"getreflectionconstant" | b"getreflectionconstants" => {
+                return self.reflect_class_constants(class, name, line);
             }
             b"hasconstant" => Value::Bool(
                 class

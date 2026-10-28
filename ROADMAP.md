@@ -153,12 +153,18 @@ definition of completion.
    visibility-bypassing reads/writes with type/reference/readonly checks.
    Promoted and trait properties retain declaration order; ReflectionObject keeps
    its receiver for live dynamic-property discovery.
-   Native methods share argument-count validation with other internal functions.
+   Class-constant reflection supports individual/filtered discovery, deferred values,
+   types/flags/attributes, declaring classes, and declaration strings. Ordinary
+   property/constant documentation comments survive lexing and composition.
+   Native reflector metadata fields use the reflection write handler rather than
+   PHP readonly-property flags. Native methods share argument-count validation
+   with other internal functions.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   complete property/constant diagnostics, property hooks, remaining magic methods, class-constant reflection,
-   property doc comments/raw access and expression stringification, complete internal
+   complete property/constant diagnostics, property hooks, remaining magic methods, global-constant reflection,
+   promoted-property/class/function doc comments, raw property access and expression
+   stringification, complete internal
    property/builtin signature metadata, prototypes/static variables, lazy objects,
    complete attribute instantiation and runtime effects, enums,
    generators, fibers, garbage collection, and weak references.

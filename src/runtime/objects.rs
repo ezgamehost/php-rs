@@ -641,6 +641,25 @@ impl Runtime {
         value: Value,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(name, b"name" | b"class")
+            && (object.class.is_a(b"ReflectionClass")
+                || object.class.is_a(b"ReflectionFunctionAbstract")
+                || object.class.is_a(b"ReflectionParameter")
+                || object.class.is_a(b"ReflectionProperty")
+                || object.class.is_a(b"ReflectionClassConstant")
+                || object.class.is_a(b"ReflectionAttribute")
+                || object.class.is_a(b"ReflectionType"))
+            && object.class.properties.iter().any(|p| p.name == name)
+        {
+            return Err(self.reflection_error(
+                format!(
+                    "Cannot set read-only property {}::${}",
+                    object.class_name,
+                    String::from_utf8_lossy(name)
+                ),
+                line,
+            ));
+        }
         let value = value.dereferenced();
         if name.first() == Some(&0) {
             return Err(Error::new(

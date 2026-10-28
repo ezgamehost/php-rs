@@ -35,6 +35,7 @@ impl Runtime {
         name: &Expr,
         line: usize,
     ) -> Result<Value, Error> {
+        let diagnostic_class = class.static_class_name().map(<[u8]>::to_vec);
         let class_name = self.member_class_name(class, line)?;
         let name = self.eval(name)?;
         let Value::String(name) = name else {
@@ -51,7 +52,7 @@ impl Runtime {
         if !self.in_constant_expression && name.bytes().eq_ignore_ascii_case(b"class") {
             return Ok(Value::String(class.name.clone().into()));
         }
-        self.read_class_constant(&class, &name.bytes(), line)
+        self.read_class_constant(&class, &name.bytes(), diagnostic_class.as_deref(), line)
     }
 
     pub(super) fn named_class_constant(
@@ -90,7 +91,7 @@ impl Runtime {
         {
             return Ok(Value::Bool(false));
         }
-        let value = self.read_class_constant(&class, name, line)?;
+        let value = self.read_class_constant(&class, name, Some(&qualified[..split]), line)?;
         Ok(if defined { Value::Bool(true) } else { value })
     }
 
@@ -98,8 +99,20 @@ impl Runtime {
         &mut self,
         class: &Rc<Class>,
         name: &[u8],
+        diagnostic_class: Option<&[u8]>,
         line: usize,
     ) -> Result<Value, Error> {
+        let owner = class.constant_owner(name).ok_or_else(|| {
+            Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Undefined constant {}::{}",
+                    String::from_utf8_lossy(diagnostic_class.unwrap_or(&class.name)),
+                    String::from_utf8_lossy(name)
+                ),
+                line,
+            )
+        })?;
         if class.declaration.is_trait && !self.checking_trait_values {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -111,17 +124,6 @@ impl Runtime {
                 line,
             ));
         }
-        let owner = class.constant_owner(name).ok_or_else(|| {
-            Error::new(
-                ErrorKind::Error,
-                format!(
-                    "Undefined constant {}::{}",
-                    String::from_utf8_lossy(&class.name),
-                    String::from_utf8_lossy(name)
-                ),
-                line,
-            )
-        })?;
         if !self.can_access_constant(&owner, name) {
             let constant = owner
                 .declaration

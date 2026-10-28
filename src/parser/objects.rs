@@ -103,6 +103,7 @@ impl Parser {
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
         while !self.eat("}") {
+            let mut member_start = self.pos;
             let attribute_range = self.take_attributes()?;
             if !is_interface && self.eat("use") {
                 if attribute_range.is_some() {
@@ -448,6 +449,10 @@ impl Parser {
                             self.token().line,
                         ));
                     };
+                    let doc_comment = self.tokens[member_start..=self.pos]
+                        .iter()
+                        .rev()
+                        .find_map(|t| t.doc_comment.clone());
                     self.pos += 1;
                     if constant.eq_ignore_ascii_case(b"class") || constant.contains(&b'\\') {
                         return Err(Error::parse(
@@ -476,6 +481,7 @@ impl Parser {
                     let attributes = self
                         .parse_attributes_at(attribute_range, attributes::Target::ClassConstant)?;
                     constants.push(ClassConstant {
+                        doc_comment,
                         attributes,
                         visibility,
                         name: constant,
@@ -490,6 +496,7 @@ impl Parser {
                     if !self.eat(",") {
                         break;
                     }
+                    member_start = self.pos;
                 }
                 self.expect(";")?;
             } else if public
@@ -544,6 +551,10 @@ impl Parser {
                             self.token().line,
                         ));
                     };
+                    let doc_comment = self.tokens[member_start..=self.pos]
+                        .iter()
+                        .rev()
+                        .find_map(|t| t.doc_comment.clone());
                     self.pos += 1;
                     if properties
                         .iter()
@@ -577,6 +588,7 @@ impl Parser {
                     let attributes =
                         self.parse_attributes_at(attribute_range, attributes::Target::Property)?;
                     let property = PropertyDecl {
+                        doc_comment,
                         order: properties.len() + static_properties.len(),
                         is_promoted: false,
                         attributes,
@@ -600,6 +612,7 @@ impl Parser {
                     if !self.eat(",") {
                         break;
                     }
+                    member_start = self.pos;
                 }
                 self.expect(";")?;
             } else {

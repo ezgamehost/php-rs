@@ -246,6 +246,9 @@ impl Runtime {
         let flags = property.modifiers();
         Ok(match name {
             b"getname" => string(&property.name),
+            b"getdoccomment" => decl
+                .and_then(|p| p.doc_comment.as_ref())
+                .map_or(Value::Bool(false), string),
             b"getmangledname" => string(decl.map_or_else(
                 || property.name.clone(),
                 |p| p.storage_name_for(&property.owner.name),
@@ -420,7 +423,16 @@ impl Runtime {
     }
 
     fn reflected_property_string(&mut self, property: &PropertyReflection) -> Result<Value, Error> {
-        let mut out = b"Property [ ".to_vec();
+        let mut out = Vec::new();
+        if let Some(comment) = property
+            .declaration
+            .as_ref()
+            .and_then(|p| p.doc_comment.as_ref())
+        {
+            out.extend(comment);
+            out.push(b'\n');
+        }
+        out.extend(b"Property [ ");
         if let Some(decl) = &property.declaration {
             if decl.is_final {
                 out.extend(b"final ");

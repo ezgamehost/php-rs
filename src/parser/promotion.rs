@@ -104,6 +104,7 @@ impl Parser {
                 ));
             }
             properties.push(PropertyDecl {
+                doc_comment: None,
                 order: properties.len() + static_properties.len(),
                 is_promoted: true,
                 attributes: param.attributes.clone(),

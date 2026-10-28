@@ -1,0 +1,87 @@
+Zend suite
+
+Before: 5256 cases; 1485 passed, 3363 failed, 408 unsupported
+After: 5256 cases; 1490 passed, 3358 failed, 408 unsupported
+New passes: 5; regressions: 0
+NEW PASS: Zend/tests/attributes/013_class_scope.phpt
+NEW PASS: Zend/tests/attributes/014_class_const_group.phpt
+NEW PASS: Zend/tests/traits/constant_019.phpt
+NEW PASS: Zend/tests/traits/constant_020.phpt
+NEW PASS: Zend/tests/traits/constant_021.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 196 passed, 259 failed, 37 unsupported
+After: 492 cases; 206 passed, 249 failed, 37 unsupported
+New passes: 10; regressions: 0
+NEW PASS: ext/reflection/tests/002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_getValue_typed.phpt
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_isDeprecated_userland.phpt
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_toString_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_unset_name.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getConstants_filter.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getReflectionConstant.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getReflectionConstants_filter.phpt
+NEW PASS: ext/reflection/tests/bug77325.phpt
+NEW PASS: ext/reflection/tests/bug79062.phpt
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+19: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+9: ReflectionException: Class "Object" does not exist
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: global-constant reflection, enums, class/function/promoted-property documentation comments, complete reflector interfaces and internal metadata, and class/function declaration rendering remain unfinished. Expected diagnostic matching still blocks fatal/deprecation fixtures. Unsupported sections are not counted as passes.

@@ -14,6 +14,7 @@ pub(crate) enum Kind {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token {
+    pub doc_comment: Option<Vec<u8>>,
     pub kind: Kind,
     pub line: usize,
 }
@@ -32,6 +33,7 @@ pub(crate) fn lex(source: &[u8]) -> Result<Vec<Token>, Error> {
         php: false,
         interpolation: false,
         tokens: Vec::new(),
+        doc_comment: None,
     }
     .scan()
 }
@@ -42,6 +44,7 @@ struct Lexer<'a> {
     php: bool,
     interpolation: bool,
     tokens: Vec<Token>,
+    doc_comment: Option<Vec<u8>>,
 }
 impl Lexer<'_> {
     fn cast(&mut self) -> Option<String> {
@@ -83,7 +86,11 @@ impl Lexer<'_> {
         c
     }
     fn emit(&mut self, kind: Kind, line: usize) {
-        self.tokens.push(Token { kind, line });
+        self.tokens.push(Token {
+            kind,
+            line,
+            doc_comment: self.doc_comment.take(),
+        });
     }
     fn opening(&self) -> usize {
         if self.starts(b"<?=") {
@@ -169,6 +176,12 @@ impl Lexer<'_> {
                 continue;
             }
             if self.starts(b"/*") {
+                let start = self.pos;
+                let is_doc = self.starts(b"/**")
+                    && self
+                        .source
+                        .get(start + 3)
+                        .is_some_and(u8::is_ascii_whitespace);
                 self.pos += 2;
                 while self.pos < self.source.len() && !self.starts(b"*/") {
                     self.bump();
@@ -177,6 +190,9 @@ impl Lexer<'_> {
                     return Err(Error::parse("Unterminated comment", line));
                 }
                 self.pos += 2;
+                if is_doc {
+                    self.doc_comment = Some(self.source[start..self.pos].to_vec());
+                }
                 continue;
             }
             let kind = if c == b'('
