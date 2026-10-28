@@ -58,6 +58,8 @@ new request. The CLI returns the low eight bits of the requested status.
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted
   keys, signed padding, and native size validation.
+- `range` generates integer, floating-point, and byte-string sequences, with native
+  endpoint/step coercion, direction checks, conversion diagnostics, and size bounds.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.

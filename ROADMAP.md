@@ -235,6 +235,8 @@ definition of completion.
    Array slice/reverse/chunk preserve or renumber keys and copy element references.
    Fill/fill_keys/pad implement repeated values, key conversion, signed padding,
    and size validation. Exact allocation-fatal reporting and memory limits remain.
+   Range supports integer/float/byte sequences, numeric-string ambiguity, signed
+   steps, endpoint warnings, and maximum-size validation.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

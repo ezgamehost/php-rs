@@ -64,6 +64,7 @@ pub(super) enum Builtin {
     GetClassVars,
     GetClassMethods,
     Is(&'static str),
+    Range,
     ArraySlice,
     ArrayReverse,
     ArrayChunk,
@@ -190,6 +191,7 @@ impl Builtin {
             b"is_string" => Self::Is("string"),
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
+            b"range" => Self::Range,
             b"array_slice" => Self::ArraySlice,
             b"array_reverse" => Self::ArrayReverse,
             b"array_chunk" => Self::ArrayChunk,
@@ -362,6 +364,11 @@ impl Builtin {
                 ("strict", true, false),
             ],
             Self::ArrayValues => &[("array", false, false)],
+            Self::Range => &[
+                ("start", false, false),
+                ("end", false, false),
+                ("step", true, false),
+            ],
             Self::ArraySlice => &[
                 ("array", false, false),
                 ("offset", false, false),
@@ -435,6 +442,7 @@ impl Builtin {
                             Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
                         }
                         (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
+                        (Self::Range, "step") => Value::Int(1),
                         (
                             Self::ArraySlice | Self::ArrayReverse | Self::ArrayChunk,
                             "preserve_keys",
@@ -672,6 +680,7 @@ impl Runtime {
                 };
                 Ok(Value::Bool(exists))
             }
+            Builtin::Range => self.range(&args, line),
             Builtin::ArraySlice
             | Builtin::ArrayReverse
             | Builtin::ArrayChunk
@@ -965,7 +974,7 @@ impl Runtime {
         self.warn_null(value, function, position, "bool", line);
         Ok(value.to_bool(line, &mut self.diagnostics))
     }
-    fn warn_null(
+    pub(super) fn warn_null(
         &mut self,
         value: &Value,
         function: &str,

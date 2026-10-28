@@ -975,6 +975,38 @@ allocation-fatal formatting/catchability, configurable memory limits, complete n
 reflection metadata, and further array APIs remain unfinished. Unsupported fixture
 counts are unchanged.
 
+The [range slice](conformance/php-8.5.0-range-hillclimb.txt) adds **19 upstream passes**:
+15 standard array fixtures, three Zend fixtures, and one standard string fixture, with
+no regressions across arrays, Zend, reflection, SPL, and strings. `range` supports integer,
+floating-point, and binary character sequences, including decreasing ranges, equal
+endpoints, and non-dividing steps. Native union conversion preserves numeric strings for
+endpoint interpretation, accepts weak bool/null and Stringable endpoints where PHP does,
+and applies strict types. The step is converted and validated before endpoint processing.
+
+Single-byte digit strings retain PHP's numeric/character ambiguity. Empty strings,
+multibyte nonnumeric strings, mixed numeric/character endpoints, and fractional character
+steps emit the corresponding warnings and use PHP's fallback numeric values. Integral
+floating steps can produce integer or character sequences; fractional/out-of-integer-range
+steps select floating-point generation. Nonfinite endpoints/steps, zero steps, negative
+steps for increasing ranges, and steps wider than unequal endpoints produce ValueErrors.
+
+Integer distance/count calculations avoid signed overflow. Float values derive from the
+original endpoint plus/minus each index times the step, preserving PHP's rounding rather
+than accumulating increments. Range-size checks precede allocation and include PHP's
+reported excess/count bounds. Parameter metadata includes the default step of one.
+
+Zend reaches **2039 / 2809 / 408**, standard arrays **151 / 637 / 52**, and strings
+**317 / 261 / 152**. Reflection remains **274 / 181 / 37** and SPL **22 / 662 / 94**.
+All 797 existing Rust tests and 57 reference-checked project fixtures pass; formatting and
+Clippy pass. No new custom tests or generated matrices were added. Five additional upstream
+INI-bearing range programs match reference output/exit when run directly with their PHP
+settings. Two others differ only in float output under unsupported serialize_precision=14;
+both match PHP at the runtime's default serialize_precision=-1. They remain unsupported
+and are not counted as passes. PHP 8.5.0 range and native argument-conversion code, upstream
+fixtures, and direct reference checks establish these behaviors. Remaining executable
+range fixtures require pow(); INI precision settings, native reflection type completeness,
+error handlers, and memory-limit/fatal-allocation behavior remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -982,12 +1014,12 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2036 | 2812 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2039 | 2809 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 136 | 652 | 52 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 316 | 262 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 151 | 637 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 317 | 261 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

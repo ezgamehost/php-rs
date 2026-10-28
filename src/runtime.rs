@@ -48,6 +48,7 @@ mod offsets;
 mod printing;
 mod property_references;
 mod property_visibility;
+mod range;
 mod readonly;
 mod reference_paths;
 mod reference_types;
