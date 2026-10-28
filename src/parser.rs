@@ -605,6 +605,7 @@ impl Parser {
             } else {
                 None
             };
+            let by_reference = self.eat("&");
             let variadic = self.eat("...");
             let Kind::Variable(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
@@ -644,6 +645,7 @@ impl Parser {
                 return Err(Error::parse("Invalid promoted property declaration", line));
             }
             parameters.push(Parameter {
+                by_reference,
                 promotion,
                 ty,
                 implicit_nullable: false,

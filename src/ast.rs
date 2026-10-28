@@ -317,6 +317,7 @@ pub(crate) struct Promotion {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Parameter {
+    pub by_reference: bool,
     pub promotion: Option<Promotion>,
     pub name: Vec<u8>,
     pub ty: Option<TypeDecl>,

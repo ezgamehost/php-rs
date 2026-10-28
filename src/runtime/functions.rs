@@ -184,7 +184,9 @@ impl Runtime {
         // Internal callbacks use weak argument coercion. The common invocation
         // path still installs the function's own strictness for its body/return.
         let caller_strict = std::mem::replace(&mut self.strict_types, false);
-        let result = self.invoke_at(target.clone(), &arguments, line, true, true);
+        let mut target = target.clone();
+        target.reference_values = true;
+        let result = self.invoke_at(target, &arguments, line, true, true);
         self.strict_types = caller_strict;
         result
     }
@@ -229,6 +231,7 @@ impl Runtime {
             }
             Value::String(name) => self.resolve_name(name.to_vec(), line),
             Value::Closure(closure) => Ok(CallTarget {
+                reference_values: false,
                 magic_name: closure.magic_name.clone(),
                 this: closure.this.clone(),
                 context: closure.context.clone(),
@@ -279,6 +282,7 @@ impl Runtime {
             ));
         }
         Ok(CallTarget {
+            reference_values: false,
             magic_name: None,
             this: None,
             context: None,
@@ -310,7 +314,7 @@ impl Runtime {
         if let Some(name) = target.magic_name.take() {
             target.name = target.function.as_ref().unwrap().name.clone();
             let parameters = [magic_parameter()];
-            let bound = self.bind_call_arguments(&parameters, args, line)?;
+            let bound = self.bind_call_arguments(&parameters, args, &target, line)?;
             let literal = |value| {
                 Argument::Positional(Expr {
                     kind: ExprKind::Literal(value),
@@ -336,7 +340,7 @@ impl Runtime {
         } else {
             builtin.unwrap().parameters()
         };
-        let bound = self.bind_call_arguments(&parameters, args, line)?;
+        let bound = self.bind_call_arguments(&parameters, args, &target, line)?;
         let optimized = !dynamic
             && target.name != b"key_exists"
             && optimized_trace_call(builtin, args, self.current_function.is_some());
@@ -362,18 +366,29 @@ impl Runtime {
         &mut self,
         parameters: &[Parameter],
         args: &[Argument],
+        target: &CallTarget,
         line: usize,
     ) -> Result<BoundArguments, Error> {
         let mut bound = BoundArguments::new(parameters);
         for arg in args {
             match arg {
                 Argument::Positional(expr) => {
-                    let value = self.eval(expr)?;
-                    bound.push(None, value, parameters, line)?;
+                    let (value, reference) =
+                        if let Some(index) = bound.parameter_index(parameters, None) {
+                            self.eval_call_argument(expr, &parameters[index], index, target, line)?
+                        } else {
+                            (self.eval(expr)?, None)
+                        };
+                    bound.push(None, value, reference, parameters, line)?;
                 }
                 Argument::Named(name, expr) => {
-                    let value = self.eval(expr)?;
-                    bound.push(Some(name.clone()), value, parameters, line)?;
+                    let (value, reference) =
+                        if let Some(index) = bound.parameter_index(parameters, Some(name)) {
+                            self.eval_call_argument(expr, &parameters[index], index, target, line)?
+                        } else {
+                            (self.eval(expr)?, None)
+                        };
+                    bound.push(Some(name.clone()), value, reference, parameters, line)?;
                 }
                 Argument::Unpack(expr) => {
                     let Value::Array(array) = self.eval(expr)? else {
@@ -388,12 +403,93 @@ impl Runtime {
                             ArrayKey::Int(_) => None,
                             ArrayKey::String(name) => Some(name.clone()),
                         };
-                        bound.push(name, value.clone(), parameters, line)?;
+                        if bound
+                            .parameter_index(parameters, name.as_deref())
+                            .is_some_and(|index| parameters[index].by_reference)
+                        {
+                            return Err(Error::new(
+                                ErrorKind::Error,
+                                "References to unpacked array elements are not supported yet",
+                                line,
+                            ));
+                        }
+                        bound.push(name, value.clone(), None, parameters, line)?;
                     }
                 }
             }
         }
+        for (value, reference) in bound.fixed.iter_mut().zip(&bound.references) {
+            if let Some(reference) = reference {
+                *value = Some(reference.borrow().clone());
+            }
+        }
         Ok(bound)
+    }
+
+    fn eval_call_argument(
+        &mut self,
+        expr: &Expr,
+        parameter: &Parameter,
+        index: usize,
+        target: &CallTarget,
+        line: usize,
+    ) -> Result<(Value, Option<variables::Cell>), Error> {
+        if !parameter.by_reference {
+            return Ok((self.eval(expr)?, None));
+        }
+        if parameter.variadic {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Reference variadic arrays are not supported yet",
+                line,
+            ));
+        }
+        if target.reference_values {
+            let value = self.eval(expr)?;
+            self.diagnostics.push(format!(
+                "{}(): Argument #{} (${}) must be passed by reference, value given on line {line}",
+                String::from_utf8_lossy(&target.name),
+                index + 1,
+                String::from_utf8_lossy(&parameter.name)
+            ));
+            return Ok((value, None));
+        }
+        let mut expr = expr;
+        while let ExprKind::Group(inner) = &expr.kind {
+            expr = inner;
+        }
+        let reference = if let ExprKind::Assign(left, op, right) = &expr.kind
+            && op == "=&"
+        {
+            Some(self.reference_assignment(left, right, line)?)
+        } else if matches!(&expr.kind, ExprKind::Variable(name) if name == b"this") {
+            Some(cell(self.eval(expr)?))
+        } else if expr.is_writable() && !expr.is_globals() {
+            Some(self.argument_reference(expr, line)?)
+        } else {
+            None
+        };
+        if let Some(reference) = reference {
+            let value = reference.borrow().clone();
+            return Ok((value, Some(reference)));
+        }
+        let value = self.eval(expr)?;
+        if matches!(expr.kind, ExprKind::Call(_, _) | ExprKind::New(_, _)) {
+            self.diagnostics.push(format!(
+                "Notice: Only variables should be passed by reference on line {line}"
+            ));
+            return Ok((value, None));
+        }
+        Err(Error::new(
+            ErrorKind::Error,
+            format!(
+                "{}(): Argument #{} (${}) could not be passed by reference",
+                String::from_utf8_lossy(&target.name),
+                index + 1,
+                String::from_utf8_lossy(&parameter.name)
+            ),
+            line,
+        ))
     }
 
     fn invoke_bound(
@@ -405,6 +501,7 @@ impl Runtime {
         dynamic: bool,
     ) -> Result<Value, Error> {
         let CallTarget {
+            reference_values: _,
             magic_name: _,
             name,
             function,
@@ -551,6 +648,8 @@ impl Runtime {
                         values.insert(key.clone(), value);
                     }
                     Value::Array(Rc::new(values))
+                } else if let Some(reference) = &bound.references[index] {
+                    reference.borrow().clone()
                 } else if let Some(value) = bound.fixed[index].take() {
                     value
                 } else if last_required.is_none_or(|last| index > last)
@@ -574,7 +673,13 @@ impl Runtime {
                 } else {
                     self.check_argument(value, param, &function, index + 1, caller_strict, line)?
                 };
-                self.scope.insert(param.name.clone(), cell(value));
+                let reference = if let Some(reference) = bound.references[index].take() {
+                    *reference.borrow_mut() = value;
+                    reference
+                } else {
+                    cell(value)
+                };
+                self.scope.insert(param.name.clone(), reference);
                 self.trace_frames.last_mut().unwrap().bound = index + 1;
             }
             if let Some(native) = function.native {
@@ -640,6 +745,7 @@ fn redeclared(decl: &FunctionDecl) -> Error {
 }
 struct BoundArguments {
     fixed: Vec<Option<Value>>,
+    references: Vec<Option<variables::Cell>>,
     extra: PhpArray,
     positional: usize,
     saw_named: bool,
@@ -649,16 +755,28 @@ impl BoundArguments {
     fn new(parameters: &[Parameter]) -> Self {
         Self {
             fixed: vec![None; parameters.len()],
+            references: vec![None; parameters.len()],
             extra: PhpArray::default(),
             positional: 0,
             saw_named: false,
             variadic: parameters.last().is_some_and(|p| p.variadic),
         }
     }
+    fn parameter_index(&self, parameters: &[Parameter], name: Option<&[u8]>) -> Option<usize> {
+        let index = if let Some(name) = name {
+            parameters
+                .iter()
+                .position(|p| p.name == name && !p.variadic)
+        } else {
+            (self.positional < parameters.len()).then_some(self.positional)
+        };
+        index.or_else(|| self.variadic.then(|| parameters.len() - 1))
+    }
     fn push(
         &mut self,
         name: Option<Vec<u8>>,
         value: Value,
+        reference: Option<variables::Cell>,
         parameters: &[Parameter],
         line: usize,
     ) -> Result<(), Error> {
@@ -672,6 +790,7 @@ impl BoundArguments {
                     return Err(overwritten(&name, line));
                 }
                 self.fixed[index] = Some(value);
+                self.references[index] = reference;
             } else if self.variadic {
                 let key = ArrayKey::String(name.clone());
                 if self.extra.get(&key).is_some() {
@@ -700,6 +819,7 @@ impl BoundArguments {
             self.positional += 1;
             if index < parameters.len() && !parameters[index].variadic {
                 self.fixed[index] = Some(value);
+                self.references[index] = reference;
             } else {
                 self.extra.append(value, line)?;
             }
@@ -793,6 +913,7 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut dyn WarningSink, switches:
 
 #[derive(Clone)]
 pub(super) struct CallTarget {
+    pub(super) reference_values: bool,
     pub(super) magic_name: Option<Vec<u8>>,
     pub(super) name: Vec<u8>,
     pub(super) function: Option<Rc<FunctionDecl>>,
@@ -824,6 +945,7 @@ fn optimized_trace_call(builtin: Option<Builtin>, args: &[Argument], in_function
 
 pub(super) fn magic_parameter() -> Parameter {
     Parameter {
+        by_reference: false,
         name: b"arguments".to_vec(),
         ty: None,
         implicit_nullable: false,

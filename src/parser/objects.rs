@@ -306,6 +306,10 @@ impl Parser {
                         }
                     });
                     if method.parameters.iter().filter(|p| !p.variadic).count() != count
+                        || method
+                            .parameters
+                            .iter()
+                            .any(|p| !p.variadic && p.by_reference)
                         || invalid_name_type
                         || invalid_arguments_type
                         || invalid_return

@@ -75,6 +75,41 @@ impl Runtime {
         source: &Expr,
         line: usize,
     ) -> Result<Value, Error> {
+        let reference = self.reference_assignment(target, source, line)?;
+        let value = reference.borrow().clone();
+        Ok(value)
+    }
+
+    pub(super) fn argument_reference(&mut self, source: &Expr, line: usize) -> Result<Cell, Error> {
+        let source = self.location(source)?;
+        if source.object.is_some() || source.static_class.is_some() || !source.keys.is_empty() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "References to array elements and properties are not supported yet",
+                line,
+            ));
+        }
+        if source.name == b"this" {
+            return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
+        }
+        if source.name == b"GLOBALS" && !source.global {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Cannot acquire reference to $GLOBALS",
+                line,
+            ));
+        }
+        Ok(self
+            .location_scope(&source)
+            .get_or_insert(&source.name, Value::Null))
+    }
+
+    pub(super) fn reference_assignment(
+        &mut self,
+        target: &Expr,
+        source: &Expr,
+        line: usize,
+    ) -> Result<Cell, Error> {
         let target = self.location(target)?;
         let source = self.location(source)?;
         if target.name == b"GLOBALS"
@@ -117,9 +152,9 @@ impl Runtime {
         let reference = self
             .location_scope(&source)
             .get_or_insert(&source.name, Value::Null);
-        let value = reference.borrow().clone();
-        self.location_scope(&target).insert(target.name, reference);
-        Ok(value)
+        self.location_scope(&target)
+            .insert(target.name, reference.clone());
+        Ok(reference)
     }
 
     pub(super) fn globals(&self) -> &Scope {

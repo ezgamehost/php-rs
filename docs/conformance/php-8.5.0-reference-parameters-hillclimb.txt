@@ -1,0 +1,52 @@
+Before: 5256 cases; 1178 passed, 3670 failed, 408 unsupported
+After: 5256 cases; 1193 passed, 3655 failed, 408 unsupported
+New passes: 15; regressions: 0
+NEW PASS: Zend/tests/add_optional_by_ref_arg.phpt
+NEW PASS: Zend/tests/assign_obj_to_ref_inference.phpt
+NEW PASS: Zend/tests/bug72038.phpt
+NEW PASS: Zend/tests/closures/closure_017.phpt
+NEW PASS: Zend/tests/closures/closure_029.phpt
+NEW PASS: Zend/tests/closures/closure_invoke_case_insensitive.phpt
+NEW PASS: Zend/tests/dynamic_call/bug69124.phpt
+NEW PASS: Zend/tests/named_params/cannot_pass_by_ref.phpt
+NEW PASS: Zend/tests/nullsafe_operator/016.phpt
+NEW PASS: Zend/tests/pipe_operator/call_by_ref.phpt
+NEW PASS: Zend/tests/restrict_globals/invalid_pass_by_ref.phpt
+NEW PASS: Zend/tests/traits/no_static_arg_binding.phpt
+NEW PASS: Zend/tests/try/catch_finally_004.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_weak_reference.phpt
+NEW PASS: Zend/tests/variadic/legal_variadic_override.phpt
+
+Most frequent remaining failure messages:
+524: ParseError: Expected ';'
+207: Error: Class "ReflectionClass" not found
+132: Error: Call to undefined function set_error_handler()
+107: Error: References to array elements and properties are not supported yet
+105: ParseError: Expected expression
+65: Error: Class "Fiber" not found
+57: ParseError: Expected '('
+49: Error: Undefined constant "yield"
+46: ParseError: Expected function name
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+37: Error: Interface "ArrayAccess" not found
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+27: ParseError: Invalid abstract method declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

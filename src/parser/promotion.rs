@@ -133,7 +133,7 @@ impl Parser {
                             }),
                         ),
                     }),
-                    "=".to_owned(),
+                    if param.by_reference { "=&" } else { "=" }.to_owned(),
                     Box::new(Expr {
                         line,
                         kind: ExprKind::Variable(param.name.clone()),

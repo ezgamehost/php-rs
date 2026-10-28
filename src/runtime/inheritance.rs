@@ -329,6 +329,9 @@ impl Runtime {
                 let Some(child_param) = child_param else {
                     return false;
                 };
+                if parent_param.by_reference != child_param.by_reference {
+                    return false;
+                }
                 let parent_type = self.signature_type(parent_param.ty.as_ref(), parent, class);
                 let child_type = self.signature_type(child_param.ty.as_ref(), child, class);
                 if !self.type_subset(parent_type.as_ref(), child_type.as_ref(), class) {

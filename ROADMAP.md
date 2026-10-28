@@ -64,9 +64,13 @@ definition of completion.
    Variable reference assignment shares cells across named/dynamic variables,
    individual GLOBALS entries, closure captures, and global/static bindings.
    Rebinding preserves other aliases; undefined reference sources initialize to null.
+   Fixed by-reference parameters retain source cells across argument evaluation,
+   apply entry coercion to the caller, and distinguish callback value warnings
+   from ordinary by-reference argument errors. Signatures preserve reference mode.
    Remaining: array/property references,
    advanced interpolation, complete
-   operators, complete class-context magic constants, other superglobals, by-reference functions,
+   operators, complete class-context magic constants, other superglobals,
+   by-reference returns, variadics/unpacking and promoted property references,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    complete namespace validation and error/exception behavior.

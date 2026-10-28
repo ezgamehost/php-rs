@@ -191,6 +191,7 @@ impl Builtin {
         definitions
             .iter()
             .map(|(name, optional, variadic)| Parameter {
+                by_reference: false,
                 promotion: None,
                 name: name.as_bytes().to_vec(),
                 ty: None,
@@ -780,7 +781,11 @@ fn dump_inner(
             if !parameters.is_empty() {
                 let mut entries = PhpArray::default();
                 for param in parameters {
-                    let mut key = b"$".to_vec();
+                    let mut key = if param.by_reference {
+                        b"&$".to_vec()
+                    } else {
+                        b"$".to_vec()
+                    };
                     key.extend(param.name);
                     entries.insert(
                         ArrayKey::String(key),

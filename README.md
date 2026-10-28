@@ -62,6 +62,8 @@ new request. The CLI returns the low eight bits of the requested status.
   exception restoration, and explicit mask changes inside suppressed expressions.
 - Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
+  Fixed by-reference parameters bind variable/global cells, including named calls,
+  entry coercion, and callback temporary-value warnings.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
   with live parameter values, default gaps, and separate variadic argument copies.
 - Instance classes and `stdClass`, constructors, shared object handles,
@@ -232,8 +234,10 @@ complete closure debugging and magic-constant context, exact object handle reuse
 involving deletion/reinsertion of visited properties also remain unfinished.
 Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
-Variable reference assignment and closure reference captures work, but array/property references and by-reference
-parameters/returns remain unfinished. Reference cycles are not yet collected.
+Variable reference assignment, closure reference captures, and fixed reference
+parameters work. Array/property references, reference variadics/unpacking,
+promoted property references, and by-reference returns remain unfinished.
+Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception
 handlers, protected exception-property access (including severity), and complete compile-time fatal
 error distinctions remain unfinished.

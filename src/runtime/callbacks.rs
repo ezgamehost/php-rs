@@ -104,9 +104,10 @@ impl Runtime {
         let name = callback_builtin_name(builtin);
         // PHP's direct-call compiler path resolves the callback before evaluating
         // its arguments, preserves caller strictness, and omits the wrapper frame.
-        let target = self
+        let mut target = self
             .native_callback(&callback, name, 1, false, line)?
             .unwrap();
+        target.reference_values = true;
         if matches!(builtin, Builtin::CallUserFunc) {
             self.invoke_at(target, &args[1..], line, true, false)
         } else {
@@ -126,7 +127,7 @@ impl Runtime {
         extra: &PhpArray,
         line: usize,
     ) -> Result<Value, Error> {
-        let target = self
+        let mut target = self
             .native_callback(
                 args[0].as_ref().unwrap(),
                 callback_builtin_name(builtin),
@@ -135,6 +136,7 @@ impl Runtime {
                 line,
             )?
             .unwrap();
+        target.reference_values = true;
         let values = if matches!(builtin, Builtin::CallUserFuncArray) {
             callback_array(args[1].as_ref().unwrap(), line)?
         } else {
