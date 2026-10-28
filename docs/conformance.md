@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 50 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 51 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -33,6 +33,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/readonly_classes`, Rust and reference PHP for passing cases | 1 | 6 | 16 |
 | PHP 8.5.0 `Zend/tests/ctor_promotion`, Rust and reference PHP for passing cases | 1 | 6 | 11 |
 | PHP 8.5.0 `Zend/tests/clone`, Rust and reference PHP for passing cases | 2 | 10 | 14 |
+| PHP 8.5.0 `Zend/tests/asymmetric_visibility`, Rust (no passing fixtures) | 0 | 21 | 18 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -392,3 +393,22 @@ The [PHP visibility manual](https://www.php.net/manual/en/language.oop5.visibili
 and PHP 8.5.0 probes establish these rules. Non-public instance properties,
 asymmetric static-property visibility, property promotion visibility, and the
 other previously documented gaps remain incomplete.
+
+
+The asymmetric static-property slice adds seventeen project regressions and a
+reference-checked PHPT for PHP 8.5 setter visibility, explicit final static
+properties, implicit finality of non-private `private(set)` declarations, and
+inheritance of separate read/write permissions. An 827-case differential matrix
+matches PHP 8.5.0 stdout, exit status, and diagnostic presence. Direct mutation
+of an object stored in a readable static property is allowed; writes through an
+array stored there require setter access. Coalescing avoids write checks when
+it finds a non-null value. Nested unsets preserve uninitialized storage and
+reject scalar offsets. Existing class, inheritance, and typed-property suite
+counts remain unchanged, with no passing fixtures lost.
+The new [asymmetric-visibility report](conformance/php-8.5.0-asymmetric_visibility.txt)
+records 0 passes, 21 failures, and 18 unsupported cases. It includes instance
+properties, references, exceptions, hooks, and diagnostic expectations beyond
+the current implementation. The [static asymmetric visibility RFC](https://wiki.php.net/rfc/static-aviz)
+and local PHP 8.5.0 probes establish the implemented rules. Reference operations,
+asymmetric instance properties, final instance properties, exact diagnostic
+parity, and the previously documented language gaps remain incomplete.

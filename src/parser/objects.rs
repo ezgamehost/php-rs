@@ -77,23 +77,45 @@ impl Parser {
             let mut abstract_method = false;
             let mut public = false;
             let mut visibility = Visibility::Public;
+            let mut set_visibility = None;
             let mut var = false;
             let mut static_method = false;
             let mut readonly_property = false;
             loop {
+                if self.is("public") || self.is("protected") || self.is("private") {
+                    let access = if self.eat("public") {
+                        Visibility::Public
+                    } else if self.eat("protected") {
+                        Visibility::Protected
+                    } else {
+                        self.expect("private")?;
+                        Visibility::Private
+                    };
+                    if self.eat("(") {
+                        self.expect("set")?;
+                        self.expect(")")?;
+                        if set_visibility.replace(access).is_some() {
+                            return Err(Error::parse(
+                                "Multiple set visibility modifiers are not allowed",
+                                self.token().line,
+                            ));
+                        }
+                    } else {
+                        if public {
+                            return Err(Error::parse(
+                                "Multiple access type modifiers are not allowed",
+                                self.token().line,
+                            ));
+                        }
+                        visibility = access;
+                        public = true;
+                    }
+                    continue;
+                }
                 let flag = if self.eat("final") {
                     &mut final_method
                 } else if self.eat("abstract") {
                     &mut abstract_method
-                } else if self.eat("public") {
-                    visibility = Visibility::Public;
-                    &mut public
-                } else if self.eat("protected") {
-                    visibility = Visibility::Protected;
-                    &mut public
-                } else if self.eat("private") {
-                    visibility = Visibility::Private;
-                    &mut public
                 } else if self.eat("var") {
                     var = true;
                     &mut public
@@ -111,6 +133,14 @@ impl Parser {
                     ));
                 }
                 *flag = true;
+            }
+            if set_visibility.is_some()
+                && (!static_method || self.is("function") || self.is("const") || is_interface)
+            {
+                return Err(Error::parse(
+                    "Set visibility requires a static property",
+                    self.token().line,
+                ));
             }
             if visibility != Visibility::Public
                 && ((!self.is("function") && !self.is("const") && !static_method) || is_interface)
@@ -355,7 +385,15 @@ impl Parser {
                     }
                 }
                 self.expect(";")?;
-            } else if (public || static_method || readonly_property) && !final_method {
+            } else if (public || static_method || readonly_property)
+                && (!final_method || static_method)
+            {
+                if final_method && visibility == Visibility::Private {
+                    return Err(Error::parse(
+                        "Property cannot be both final and private",
+                        self.token().line,
+                    ));
+                }
                 let ty = if matches!(self.token().kind, Kind::Variable(_)) {
                     None
                 } else {
@@ -368,6 +406,19 @@ impl Parser {
                     }
                     Some(ty)
                 };
+                if set_visibility.is_some() && ty.is_none() {
+                    return Err(Error::parse(
+                        "Properties with set visibility must have a type",
+                        self.token().line,
+                    ));
+                }
+                let set_visibility = set_visibility.unwrap_or(visibility);
+                if set_visibility < visibility {
+                    return Err(Error::parse(
+                        "Set visibility must not be wider than read visibility",
+                        self.token().line,
+                    ));
+                }
                 loop {
                     let Kind::Variable(property) = self.token().kind.clone() else {
                         return Err(Error::parse(
@@ -410,6 +461,10 @@ impl Parser {
                     }
                     let property = PropertyDecl {
                         visibility,
+                        set_visibility,
+                        is_final: final_method
+                            || (set_visibility == Visibility::Private
+                                && visibility != Visibility::Private),
                         is_readonly: readonly,
                         name: property,
                         default,

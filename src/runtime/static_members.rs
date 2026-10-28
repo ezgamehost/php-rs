@@ -310,14 +310,7 @@ impl Runtime {
             .iter()
             .find(|p| p.name == name)
             .expect("static property owner");
-        if property.visibility == Visibility::Public
-            || self.class_context.as_ref().is_some_and(|context| {
-                context.scope.name.eq_ignore_ascii_case(&owner.name)
-                    || (property.visibility == Visibility::Protected
-                        && !context.scope.declaration.is_interface
-                        && (context.scope.is_a(&owner.name) || owner.is_a(&context.scope.name)))
-            })
-        {
+        if self.can_access_static_visibility(owner, property.visibility) {
             return Ok(true);
         }
         if silent {
@@ -334,6 +327,59 @@ impl Runtime {
                 "Cannot access {visibility} property {}::${}",
                 String::from_utf8_lossy(&class.name),
                 String::from_utf8_lossy(name)
+            ),
+            line,
+        ))
+    }
+
+    fn can_access_static_visibility(&self, owner: &Class, visibility: Visibility) -> bool {
+        visibility == Visibility::Public
+            || self.class_context.as_ref().is_some_and(|context| {
+                context.scope.name.eq_ignore_ascii_case(&owner.name)
+                    || (visibility == Visibility::Protected
+                        && !context.scope.declaration.is_interface
+                        && (context.scope.is_a(&owner.name) || owner.is_a(&context.scope.name)))
+            })
+    }
+
+    pub(super) fn check_static_set_access(
+        &self,
+        location: &Location,
+        indirect: bool,
+        line: usize,
+    ) -> Result<(), Error> {
+        let Some(class) = &location.static_class else {
+            return Ok(());
+        };
+        let Some(owner) = class.static_owner(&location.name) else {
+            return Ok(());
+        };
+        let property = owner
+            .declaration
+            .static_properties
+            .iter()
+            .find(|p| p.name == location.name)
+            .expect("static property owner");
+        if self.can_access_static_visibility(&owner, property.set_visibility) {
+            return Ok(());
+        }
+        self.check_static_property_access(class, &owner, &location.name, line, false)?;
+        let visibility = if property.set_visibility == Visibility::Private {
+            "private"
+        } else {
+            "protected"
+        };
+        Err(Error::new(
+            ErrorKind::Error,
+            format!(
+                "Cannot {}modify {visibility}(set) property {}::${} from {}",
+                if indirect { "indirectly " } else { "" },
+                String::from_utf8_lossy(&owner.name),
+                String::from_utf8_lossy(&location.name),
+                self.class_context.as_ref().map_or_else(
+                    || "global scope".to_owned(),
+                    |c| format!("scope {}", String::from_utf8_lossy(&c.scope.name))
+                )
             ),
             line,
         ))

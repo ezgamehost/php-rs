@@ -130,6 +130,20 @@ impl Runtime {
                         class.declaration.line,
                     ));
                 }
+                if parent_property.is_final {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot override final property",
+                        class.declaration.line,
+                    ));
+                }
+                if property.set_visibility > parent_property.set_visibility {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot narrow inherited property set visibility",
+                        class.declaration.line,
+                    ));
+                }
                 let owner = if is_static {
                     parent.static_owner(&property.name)
                 } else {

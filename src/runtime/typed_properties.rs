@@ -127,6 +127,7 @@ impl Runtime {
         // Resolve the declaration before mutating storage. An absent value in a
         // declared typed slot represents uninitialized storage, not null.
         let stored = self.static_cell(class, &location.name, line, false)?;
+        self.check_static_set_access(location, !location.keys.is_empty(), line)?;
         let owner = class
             .static_owner(&location.name)
             .expect("declared static property");

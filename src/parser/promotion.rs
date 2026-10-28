@@ -66,6 +66,8 @@ impl Parser {
             }
             properties.push(PropertyDecl {
                 visibility: Visibility::Public,
+                set_visibility: Visibility::Public,
+                is_final: false,
                 name: param.name.clone(),
                 ty: param.ty.clone(),
                 is_readonly,

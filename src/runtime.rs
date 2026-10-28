@@ -256,6 +256,7 @@ impl Runtime {
                         if let Some(value) =
                             self.static_cell(class, &location.name, target.line, false)?
                         {
+                            self.check_static_set_access(&location, true, target.line)?;
                             unset_path(
                                 &mut value.borrow_mut(),
                                 &mut location.keys,
@@ -751,6 +752,7 @@ impl Runtime {
                         false,
                         Some("Cannot use assign-op operators with string offsets"),
                     )?;
+                    self.check_static_set_access(&location, true, line)?;
                     binary(&op[..op.len() - 1], lhs, rhs, line, &mut self.warnings)?
                 };
                 self.write_location(&mut location, value, line)
@@ -764,6 +766,7 @@ impl Runtime {
                     Some("Cannot increment/decrement string offsets"),
                 )?;
                 self.check_readonly_write(&location, false, line)?;
+                self.check_static_set_access(&location, true, line)?;
                 self.validate_property_increment(&location, &old, *delta, line)?;
                 let new = increment(&old, *delta, line, &mut self.warnings)?;
                 let new = self.write_location(&mut location, new, line)?;

@@ -1,0 +1,45 @@
+PHP 8.5.0 Zend/tests/asymmetric_visibility baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/asymmetric_visibility
+Reference checking enabled; no upstream fixture passed. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/asymmetric_visibility/__set.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/__unset.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/ast_printing.phpt UNSUPPORTED: INI
+Zend/tests/asymmetric_visibility/bug001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/bug002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/bug003.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/bug004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/cpp_no_type.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/cpp_private.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/asymmetric_visibility/cpp_protected.phpt FAIL: ParseError: Expected parameter variable on line 5
+Zend/tests/asymmetric_visibility/cpp_wider_set_scope.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/decrease_scope_private_private.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/decrease_scope_private_protected.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/decrease_scope_protected_protected.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/dim_add.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/duplicate_modifier.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/duplicate_modifier_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/gh19044.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/asymmetric_visibility/nested_write.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/no_type.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/object_reference.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/override_private_public.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/override_protected_private.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/override_protected_public.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/override_public_private.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/override_public_protected.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/private.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/protected.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/readonly.phpt FAIL: ParseError: Set visibility requires a static property on line 5
+Zend/tests/asymmetric_visibility/reference.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/reference_2.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/scope_rebinding.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/static_props.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/unset.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/unshared_rw_cache_slot.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/variation.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/asymmetric_visibility/variation_nested.phpt FAIL: ParseError: Set visibility requires a static property on line 9
+Zend/tests/asymmetric_visibility/virtual_get_only.phpt UNSUPPORTED: EXPECTF
+Zend/tests/asymmetric_visibility/virtual_set_only.phpt UNSUPPORTED: EXPECTF
+0 passed, 21 failed, 18 unsupported

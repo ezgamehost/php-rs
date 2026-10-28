@@ -97,6 +97,23 @@ impl Runtime {
     ) -> Result<(Value, Option<Location>), Error> {
         match &expr.kind {
             ExprKind::Group(inner) => self.write_base_value(inner, silent),
+            ExprKind::StaticProperty(class, name) => {
+                let mut location = self.static_location(class, name, expr.line)?;
+                if silent
+                    && self
+                        .static_cell(
+                            location.static_class.as_ref().expect("static property"),
+                            &location.name,
+                            expr.line,
+                            false,
+                        )?
+                        .is_none()
+                {
+                    return Ok((Value::Null, None));
+                }
+                let value = self.read_location(&mut location, expr.line, silent, None)?;
+                Ok((value, Some(location)))
+            }
             ExprKind::Property(base, name) => {
                 let (value, _) = self.write_base_value(base, silent)?;
                 let name = self.variable_name(name)?;
@@ -129,6 +146,14 @@ impl Runtime {
                 let key = self.eval(key)?;
                 if let Some(origin) = origin {
                     self.check_readonly_access(&origin, silent, true, expr.line)?;
+                    self.check_static_set_access(&origin, true, expr.line)?;
+                }
+                if silent && matches!(value, Value::Int(_) | Value::Float(_) | Value::Bool(true)) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot unset offset in a non-array variable",
+                        expr.line,
+                    ));
                 }
                 let value = read_offset(
                     value,

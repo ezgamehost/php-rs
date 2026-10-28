@@ -85,6 +85,9 @@ new request. The CLI returns the low eight bits of the requested status.
   class constants support scope-aware access, inheritance, `final`, dynamic names,
   lazy dependency resolution, cycle errors, and lookup through `constant`/`defined`. `self`, `parent`, and
   `static` select the appropriate class for both kinds of member access.
+  PHP 8.5 asymmetric static-property visibility separates reads from writes with
+  `public(set)`, `protected(set)`, and `private(set)`. Explicit and implicit final
+  static properties prevent redeclaration; indirect array writes check setter access.
 - Typed public instance properties and typed static properties of all visibility
   levels, including uninitialized state, strict defaults, weak/strict assignment checks, invariant inherited types,
   typed array writes, integer increment limits, and reinitialization after `unset`.
@@ -155,7 +158,7 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties, traits,
-non-public instance properties, asymmetric static-property visibility, property hooks,
+non-public instance properties, asymmetric instance-property visibility, property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
