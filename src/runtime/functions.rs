@@ -343,7 +343,12 @@ impl Runtime {
         } else {
             builtin.unwrap().parameters()
         };
-        let bound = self.bind_call_arguments(&parameters, args, &target, line)?;
+        let mut bound = self.bind_call_arguments(&parameters, args, &target, line)?;
+        bound.direct_positional = !dynamic
+            && !internal
+            && args
+                .iter()
+                .all(|arg| matches!(arg, Argument::Positional(_)));
         let optimized = !dynamic
             && target.name != b"key_exists"
             && optimized_trace_call(builtin, args, self.current_function.is_some());
@@ -868,6 +873,7 @@ fn redeclared(decl: &FunctionDecl) -> Error {
     )
 }
 pub(super) struct BoundArguments {
+    pub(super) direct_positional: bool,
     pub(super) fixed: Vec<Option<Value>>,
     pub(super) references: Vec<Option<variables::Cell>>,
     pub(super) extra: PhpArray,
@@ -878,6 +884,7 @@ pub(super) struct BoundArguments {
 impl BoundArguments {
     fn new(parameters: &[Parameter]) -> Self {
         Self {
+            direct_positional: false,
             fixed: vec![None; parameters.len()],
             references: vec![None; parameters.len()],
             extra: PhpArray::default(),

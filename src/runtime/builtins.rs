@@ -19,6 +19,10 @@ pub(super) enum Builtin {
     SubstrCompare,
     SubstrCount,
     StrSpan(bool),
+    Explode,
+    Implode(&'static str),
+    StrSplit,
+    ChunkSplit,
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -111,6 +115,11 @@ impl Builtin {
             b"substr_count" => Self::SubstrCount,
             b"strspn" => Self::StrSpan(true),
             b"strcspn" => Self::StrSpan(false),
+            b"explode" => Self::Explode,
+            b"implode" => Self::Implode("implode"),
+            b"join" => Self::Implode("join"),
+            b"str_split" => Self::StrSplit,
+            b"chunk_split" => Self::ChunkSplit,
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -252,6 +261,18 @@ impl Builtin {
                 ("offset", true, false),
                 ("length", true, false),
             ],
+            Self::Explode => &[
+                ("separator", false, false),
+                ("string", false, false),
+                ("limit", true, false),
+            ],
+            Self::Implode(_) => &[("separator", false, false), ("array", true, false)],
+            Self::StrSplit => &[("string", false, false), ("length", true, false)],
+            Self::ChunkSplit => &[
+                ("string", false, false),
+                ("length", true, false),
+                ("separator", true, false),
+            ],
             Self::StrReplace(_) => &[
                 ("search", false, false),
                 ("replace", false, false),
@@ -330,6 +351,10 @@ impl Builtin {
                 implicit_nullable: false,
                 default: optional.then_some(Expr {
                     kind: ExprKind::Literal(match (self, *name) {
+                        (Self::Explode, "limit") => Value::Int(i64::MAX),
+                        (Self::StrSplit, "length") => Value::Int(1),
+                        (Self::ChunkSplit, "length") => Value::Int(76),
+                        (Self::ChunkSplit, "separator") => Value::String(b"\r\n".to_vec().into()),
                         (Self::StringSearch(_), "offset") => Value::Int(0),
                         (Self::SubstrCount | Self::StrSpan(_), "offset") => Value::Int(0),
                         (Self::SubstrCompare, "case_insensitive") => Value::Bool(false),
@@ -362,6 +387,7 @@ impl Runtime {
             fixed: args,
             references,
             extra,
+            direct_positional,
             ..
         } = bound;
         if matches!(
@@ -444,6 +470,9 @@ impl Runtime {
             Builtin::SubstrCompare => self.substring_compare(&args, line),
             Builtin::SubstrCount => self.substring_count(&args, line),
             Builtin::StrSpan(included) => self.string_span(included, &args, line),
+            Builtin::Explode => self.explode_string(&args, line),
+            Builtin::Implode(name) => self.implode_strings(name, direct_positional, &args, line),
+            Builtin::StrSplit | Builtin::ChunkSplit => self.split_chunks(builtin, &args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
@@ -837,7 +866,13 @@ fn parameter_label(function: &str, position: usize) -> String {
             format!(" (${})", String::from_utf8_lossy(&p.name))
         })
 }
-fn type_error(value: &Value, function: &str, position: usize, kind: &str, line: usize) -> Error {
+pub(super) fn type_error(
+    value: &Value,
+    function: &str,
+    position: usize,
+    kind: &str,
+    line: usize,
+) -> Error {
     let given = match value {
         Value::Bool(true) => "true",
         Value::Bool(false) => "false",

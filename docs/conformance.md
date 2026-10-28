@@ -760,6 +760,29 @@ native signatures, and upstream fixtures establish these behaviors. Locale-sensi
 substring comparison beyond the default C locale, other string APIs, complete native
 reflection metadata, INI support, and diagnostic matching remain unfinished.
 
+The [string split/join slice](conformance/php-8.5.0-string-split-hillclimb.txt) adds
+**29 upstream passes**: 26 standard string fixtures and three Zend fixtures, with no
+regressions across strings, Zend, reflection, and SPL. `explode` supports binary
+separators, positive limits with a final remainder, zero-as-one, negative tail removal,
+and empty-input rules. `str_split` returns fixed byte chunks; `chunk_split` appends a
+separator after each chunk, including the empty-input compatibility case. Non-positive
+chunk lengths and empty explode separators raise PHP argument errors after coercion.
+
+`implode` and `join` retain insertion order, convert array elements when reached, preserve
+references, and join converted strings without changing source elements. Bound calls now
+record whether arguments were supplied directly and positionally. This preserves PHP's
+specialized `implode` argument checks while leaving its alias, named/unpacked calls, and
+callbacks on the general signature path. A targeted reference probe confirms the distinct
+results for direct/dynamic calls and the alias, named, and unpacked forms.
+
+The full string suite reaches **234 / 344 / 152**, and Zend **1662 / 3186 / 408**.
+Reflection remains **244 / 211 / 37**, and SPL **18 / 666 / 94**. All 797 existing Rust
+tests and 57 reference-checked project fixtures pass; formatting and Clippy pass. No
+custom tests were added. PHP 8.5.0 `ext/standard/string.c`, native signatures, upstream
+fixtures, and the targeted probe establish these behaviors. Complete native reflection
+metadata and frameless-call behavior, INI configuration, streams, other string APIs, and
+diagnostic matching remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -767,11 +790,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1659 | 3189 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1662 | 3186 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 208 | 370 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 234 | 344 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

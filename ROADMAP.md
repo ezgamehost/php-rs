@@ -213,6 +213,8 @@ definition of completion.
    Binary comparisons and bounded/insensitive variants, substring comparison, literal
    character spans, and substring counting preserve their distinct range/error rules.
    Locale-sensitive substring comparison beyond the default C locale remains unfinished.
+   String splitting/joining supports explode limits, fixed byte chunks, chunk separators,
+   insertion-ordered array conversion, aliases, and implode direct-call argument parsing.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only
