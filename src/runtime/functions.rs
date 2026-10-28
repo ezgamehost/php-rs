@@ -766,16 +766,35 @@ impl Runtime {
                 {
                     self.eval_default(default)?
                 } else {
-                    return Err(Error::new(
-                        ErrorKind::ArgumentCountError,
+                    let message = if index >= supplied_fixed {
+                        let required = last_required.unwrap() + 1;
+                        let maximum = function.parameters.iter().filter(|p| !p.variadic).count();
+                        let site = self
+                            .trace_frames
+                            .last()
+                            .and_then(traces::TraceFrame::call_site)
+                            .map_or(String::new(), |(file, line)| {
+                                format!(" in {} on line {line}", String::from_utf8_lossy(&file))
+                            });
+                        format!(
+                            "Too few arguments to function {}(), {supplied_fixed} passed{site} and {} {required} expected",
+                            String::from_utf8_lossy(&function.name),
+                            if required == maximum {
+                                "exactly"
+                            } else {
+                                "at least"
+                            },
+                        )
+                    } else {
                         format!(
                             "{}(): Argument #{} (${}) not passed",
                             String::from_utf8_lossy(&function.name),
                             index + 1,
                             String::from_utf8_lossy(&param.name)
-                        ),
-                        line,
-                    ));
+                        )
+                    };
+                    let error = Error::new(ErrorKind::ArgumentCountError, message, function.line);
+                    return Err(self.materialize_error_from(error, &function.source.name));
                 };
                 let value = if param.variadic {
                     value

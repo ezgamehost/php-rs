@@ -179,15 +179,37 @@ impl Runtime {
             self.source = source;
         }
         converted?.ok_or_else(|| {
-            Error::new(
+            let site = if function.native.is_none() {
+                self.trace_frames
+                    .last()
+                    .and_then(traces::TraceFrame::call_site)
+                    .map_or(String::new(), |(file, line)| {
+                        format!(
+                            ", called in {} on line {line}",
+                            String::from_utf8_lossy(&file)
+                        )
+                    })
+            } else {
+                String::new()
+            };
+            let error = Error::new(
                 ErrorKind::TypeError,
                 format!(
-                    "{}(): Argument #{position} (${}) must be of type {ty}, {given} given",
+                    "{}(): Argument #{position} (${}) must be of type {ty}, {given} given{site}",
                     String::from_utf8_lossy(&function.name),
                     String::from_utf8_lossy(&param.name)
                 ),
-                line,
-            )
+                if function.native.is_none() {
+                    function.line
+                } else {
+                    line
+                },
+            );
+            if function.native.is_none() {
+                self.materialize_error_from(error, &function.source.name)
+            } else {
+                error
+            }
         })
     }
 

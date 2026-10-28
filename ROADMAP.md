@@ -186,6 +186,9 @@ definition of completion.
    Objects and closures share a request-local handle allocator, recycling released
    handles in PHP's last-freed-first order after contained values are released.
    spl_object_id and spl_object_hash expose the handle without affecting ownership.
+   User-function argument-count/type diagnostics retain declaration locations,
+   PHP calling locations, and the distinction between named gaps and positional
+   omissions. Internal callback/reflection invocations omit PHP calling locations.
    Trait composition installs aliases before the original method, matching Zend.
    Formatted printing/string construction supports printf,
    sprintf, vprintf, and vsprintf, including positional arguments, star width/precision,

@@ -607,6 +607,23 @@ Cyclic garbage collection, destructor callbacks, and complete lifetime parity re
 unfinished; this implements handle recycling for objects whose owning references are
 actually released.
 
+The [argument-diagnostic slice](conformance/php-8.5.0-argument-errors-hillclimb.txt)
+adds **23 upstream passes**: 19 Zend and four reflection, with zero regressions in
+Zend, reflection, and SPL. Missing positional arguments report the supplied/required
+counts and distinguish exact from minimum arity. Named argument gaps retain their
+parameter-specific message. User-function type mismatches and count errors use the
+function declaration's file and line; messages include the calling PHP file/line when
+there is a PHP call site. Reflection and internal callback invocations retain their
+location-free messages. Existing argument binding and type-check order are preserved.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass; formatting
+and Clippy pass. No custom tests were added. Behavior follows PHP 8.5.0
+`zend_missing_arg_error` and `zend_verify_arg_error`, with upstream fixtures covering
+ordinary calls, named arguments, reflection construction, closures, traits, and pipes.
+Passing a generator-containing fixture that fails during argument checking does not
+establish generator execution support. Uncaught fatal rendering, diagnostic output
+interleaving, and remaining type-system behavior are still incomplete.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -614,8 +631,8 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1596 | 3252 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 240 | 215 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1615 | 3233 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 17 | 667 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

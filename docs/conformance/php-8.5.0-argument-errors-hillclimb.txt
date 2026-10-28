@@ -1,0 +1,125 @@
+Zend suite
+
+Before: 5256 cases; 1596 passed, 3252 failed, 408 unsupported
+After: 5256 cases; 1615 passed, 3233 failed, 408 unsupported
+New passes: 19; regressions: 0
+NEW PASS: Zend/tests/enum/enum-as-params.phpt
+NEW PASS: Zend/tests/first_class_callable/first_class_callable_015.phpt
+NEW PASS: Zend/tests/func_get_arg_basic.phpt
+NEW PASS: Zend/tests/func_get_args_basic.phpt
+NEW PASS: Zend/tests/func_num_args_basic.phpt
+NEW PASS: Zend/tests/function_arguments/argument_count_incorrect_userland.phpt
+NEW PASS: Zend/tests/function_arguments/argument_count_incorrect_userland_strict.phpt
+NEW PASS: Zend/tests/generators/generator_with_type_check_2.phpt
+NEW PASS: Zend/tests/gh19719.phpt
+NEW PASS: Zend/tests/pipe_operator/too_many_parameters.phpt
+NEW PASS: Zend/tests/pipe_operator/type_mismatch.phpt
+NEW PASS: Zend/tests/recv_init_ref_type.phpt
+NEW PASS: Zend/tests/traits/trait_type_errors.phpt
+NEW PASS: Zend/tests/type_declarations/literal_types/false_no_coercion.phpt
+NEW PASS: Zend/tests/type_declarations/literal_types/true_no_coercion.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_constant_defaults.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_none.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_null.phpt
+NEW PASS: Zend/tests/typehints/or_null.phpt
+
+Most frequent remaining failure messages:
+372: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+49: Error: Interface "ArrayAccess" not found
+48: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+29: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 240 passed, 215 failed, 37 unsupported
+After: 492 cases; 244 passed, 211 failed, 37 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/reflection/tests/007.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_newInstanceArgs_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_newInstance_001.phpt
+NEW PASS: ext/reflection/tests/bug38217.phpt
+
+Most frequent remaining failure messages:
+24: ParseError: Expected ';'
+22: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+SPL suite
+
+Before: 778 cases; 17 passed, 667 failed, 94 unsupported
+After: 778 cases; 17 passed, 667 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+110: Error: Class "ArrayObject" not found
+67: Error: Class "ArrayIterator" not found
+63: Error: Class "SplFixedArray" not found
+44: Error: Class "SplFileObject" not found
+40: Error: Class "SplDoublyLinkedList" not found
+33: Error: Class "RecursiveArrayIterator" not found
+33: Error: Class "SplObjectStorage" not found
+21: Error: Class "SplTempFileObject" not found
+20: Error: Class "RecursiveIteratorIterator" not found
+19: Error: Class "SplFileInfo" not found
+17: Error: Class "SplMaxHeap" not found
+15: Error: Class "SplPriorityQueue" not found
+12: Error: Interface "Iterator" not found
+10: Error: Class "SplMinHeap" not found
+9: Error: Class "AppendIterator" not found
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF

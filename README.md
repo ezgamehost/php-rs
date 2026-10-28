@@ -70,6 +70,9 @@ new request. The CLI returns the low eight bits of the requested status.
   exception restoration, and explicit mask changes inside suppressed expressions.
 - Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
+  User-function argument errors distinguish missing positional arguments from
+  named gaps, report declaration locations, and include PHP calling locations
+  where applicable. Native callback invocations retain their distinct diagnostics.
   Fixed and variadic by-reference parameters bind variable/global/array cells,
   including named calls, entry coercion, and callback temporary-value warnings.
   Array argument unpacking separates copied arrays before binding element references.

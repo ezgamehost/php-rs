@@ -20,6 +20,14 @@ fn put(array: &mut PhpArray, key: &[u8], value: Value) {
 }
 
 impl TraceFrame {
+    pub(super) fn call_site(&self) -> Option<(Vec<u8>, usize)> {
+        let file = self.fields.get(&ArrayKey::String(b"file".to_vec()))?;
+        let Value::Int(line) = self.fields.get(&ArrayKey::String(b"line".to_vec()))? else {
+            return None;
+        };
+        Some((file.to_bytes(), *line as usize))
+    }
+
     pub(super) fn call(
         runtime: &Runtime,
         target: &CallTarget,
