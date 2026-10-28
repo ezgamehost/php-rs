@@ -325,6 +325,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `trim`/`ltrim`/`rtrim`/`chop` with binary character lists and inclusive ranges.
 - `str_replace`/`str_ireplace` support binary strings and arrays, sequential searches,
   preserved subject keys, and a reference parameter for the replacement count.
+- `substr` and `substr_replace` support byte offsets, negative/clamped bounds, nullable
+  lengths, and ordered array replacements with preserved subject keys.
 
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
 generators, complete attribute behavior, extensions, and most PHP 8.5 additions.

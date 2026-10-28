@@ -693,17 +693,41 @@ matching. All 797 existing Rust tests and 57 reference-checked project fixtures 
 formatting and Clippy pass. No custom tests were added. PHP 8.5.0 `ext/standard/string.c`,
 reference assignment helpers, and upstream fixtures establish the implemented behavior.
 
-The full Zend row below includes these changes; other subset rows remain
-historical measurements made before EXPECTF and namespace support.
+The [substring slice](conformance/php-8.5.0-substrings-hillclimb.txt) adds **14 upstream
+passes**: ten in the full standard string suite and four Zend fixtures, with no
+regressions across strings, Zend, reflection, and SPL. `substr` extracts byte ranges;
+`substr_replace` replaces ranges or inserts at clamped offsets. Both handle negative
+bounds, null lengths, offsets beyond the string, and the minimum signed integer without
+arithmetic overflow. Substring replacement accepts arrays of subjects, replacement
+values, offsets, and lengths, preserving subject keys and consuming other arrays in
+insertion order. Missing entries use PHP's defaults, including zero offsets, remaining
+lengths, and empty replacements. Scalar subjects reject array offset/length arguments.
+
+Array element conversions occur in subject/offset/length/replacement order. Integer
+conversion of elements uses cast semantics even in strict mode; top-level arguments use
+native parameter coercion and report nullable/union types in errors. Existing native
+integer conversion now shares a helper that accepts the declared diagnostic type.
+
+Full Zend reaches **1653 / 3195 / 408**. The full standard string suite improves from
+**96 / 482 / 152** to **106 / 472 / 152** across 730 fixtures; reflection remains
+**244 / 211 / 37**, and SPL **18 / 666 / 94**. All 797 existing Rust tests and 57
+reference-checked project fixtures pass, as do formatting and Clippy. No custom tests
+were added. PHP 8.5.0 `ext/standard/string.c`, native signatures, and upstream fixtures
+establish these rules. Other string APIs, complete native reflection metadata, INI
+support, and diagnostic matching remain unfinished.
+
+The full suite rows below include these changes. Subset rows retain the historical
+measurements reported by their individual slices.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1649 | 3199 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1653 | 3195 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 106 | 472 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

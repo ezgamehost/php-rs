@@ -12,6 +12,8 @@ pub(super) enum Builtin {
     StrUpper,
     Bin2Hex,
     StrReplace(bool),
+    Substr,
+    SubstrReplace,
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -83,6 +85,8 @@ impl Builtin {
             b"bin2hex" => Self::Bin2Hex,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
+            b"substr" => Self::Substr,
+            b"substr_replace" => Self::SubstrReplace,
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -203,6 +207,17 @@ impl Builtin {
                 ("replace", false, false),
                 ("subject", false, false),
                 ("count", true, false),
+            ],
+            Self::Substr => &[
+                ("string", false, false),
+                ("offset", false, false),
+                ("length", true, false),
+            ],
+            Self::SubstrReplace => &[
+                ("string", false, false),
+                ("replace", false, false),
+                ("offset", false, false),
+                ("length", true, false),
             ],
             Self::StrRepeat => &[("string", false, false), ("times", false, false)],
             Self::Chr => &[("codepoint", false, false)],
@@ -366,6 +381,8 @@ impl Runtime {
             Builtin::StrReplace(insensitive) => {
                 self.string_replace(insensitive, &args, &references, line)
             }
+            Builtin::Substr => self.substring(&args, line),
+            Builtin::SubstrReplace => self.substring_replace(&args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
@@ -690,6 +707,17 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<i64, Error> {
+        self.native_int_type(value, function, position, line, "int")
+    }
+
+    pub(super) fn native_int_type(
+        &mut self,
+        value: &Value,
+        function: &str,
+        position: usize,
+        line: usize,
+        kind: &str,
+    ) -> Result<i64, Error> {
         if (self.strict_types && !matches!(value, Value::Int(_)))
             || matches!(
                 value,
@@ -697,7 +725,7 @@ impl Runtime {
             )
             || matches!(value, Value::String(s) if crate::value::numeric_string(&s.bytes()).is_none())
         {
-            return Err(type_error(value, function, position, "int", line));
+            return Err(type_error(value, function, position, kind, line));
         }
         let number = match value {
             Value::String(s) => crate::value::numeric_string(&s.bytes()).unwrap(),
@@ -706,9 +734,9 @@ impl Runtime {
         if let Value::Float(n) = number
             && (!n.is_finite() || !(-9223372036854775808.0..9223372036854775808.0).contains(&n))
         {
-            return Err(type_error(value, function, position, "int", line));
+            return Err(type_error(value, function, position, kind, line));
         }
-        self.warn_null(value, function, position, "int", line);
+        self.warn_null(value, function, position, kind, line);
         value.integer(line, &mut self.diagnostics)
     }
     pub(super) fn native_bool(

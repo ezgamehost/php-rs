@@ -57,6 +57,7 @@ mod string_builtins;
 mod string_offsets;
 mod string_replace;
 mod stringable;
+mod substrings;
 mod termination;
 mod throwables;
 mod traces;
