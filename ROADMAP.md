@@ -215,6 +215,9 @@ definition of completion.
    Locale-sensitive substring comparison beyond the default C locale remains unfinished.
    String splitting/joining supports explode limits, fixed byte chunks, chunk separators,
    insertion-ordered array conversion, aliases, and implode direct-call argument parsing.
+   Byte translation and longest-match replacement maps preserve PHP replacement conversion
+   timing. Slash escaping/unescaping supports binary character masks, C controls, octal/hex
+   escapes, and distinct trailing-backslash rules.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

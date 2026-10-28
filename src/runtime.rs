@@ -59,6 +59,7 @@ mod string_offsets;
 mod string_replace;
 mod string_search;
 mod string_split;
+mod string_transform;
 mod stringable;
 mod substrings;
 mod termination;

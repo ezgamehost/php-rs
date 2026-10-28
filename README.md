@@ -333,6 +333,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `strspn`/`strcspn` character spans, and non-overlapping `substr_count`.
 - Binary `explode`, `implode`/`join`, `str_split`, and `chunk_split`, including
   split limits, ordered element conversion, and native argument-validation rules.
+- `strtr` byte tables and longest-match replacement maps, plus `addslashes`,
+  `stripslashes`, `addcslashes`, and `stripcslashes` for binary escaping/unescaping.
 
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
 generators, complete attribute behavior, extensions, and most PHP 8.5 additions.

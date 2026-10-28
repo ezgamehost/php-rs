@@ -116,7 +116,7 @@ impl Runtime {
     }
 }
 
-fn character_mask(
+pub(super) fn character_mask(
     bytes: &[u8],
     function: &str,
     line: usize,

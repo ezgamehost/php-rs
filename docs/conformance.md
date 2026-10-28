@@ -783,6 +783,29 @@ fixtures, and the targeted probe establish these behaviors. Complete native refl
 metadata and frameless-call behavior, INI configuration, streams, other string APIs, and
 diagnostic matching remain unfinished.
 
+The [string translation/escaping slice](conformance/php-8.5.0-string-transform-hillclimb.txt)
+adds **24 upstream string passes**, with no regressions across strings, Zend, reflection,
+and SPL. `strtr` supports byte translation tables and longest-match replacement maps.
+Translation tables stop at the shorter mapping string, with later duplicate source bytes
+winning. Replacement maps use decimal numeric keys, skip empty keys with warnings, and
+do not rescan replacement text. The single-entry path converts its value once even when
+it does not match; larger maps convert values on each match and preserve live references.
+Empty input bypasses replacement-map processing after argument validation.
+
+`addslashes`/`stripslashes` support quotes, backslashes, NUL, and PHP's ordinary slash
+removal rules. `addcslashes` reuses binary character masks and range validation, emits
+named control escapes or three-digit octal escapes, and preserves unselected bytes.
+`stripcslashes` decodes controls, up to two hex digits or three octal digits, unknown
+escapes, and byte truncation. Ordinary stripping removes a trailing backslash; C-style
+stripping retains it. Empty addcslashes input bypasses character-mask warnings.
+
+The full string suite reaches **258 / 320 / 152**. Zend remains **1662 / 3186 / 408**,
+reflection **244 / 211 / 37**, and SPL **18 / 666 / 94**. All 797 existing Rust tests and
+57 reference-checked project fixtures pass; formatting and Clippy pass. No custom tests
+were added. PHP 8.5.0 `ext/standard/string.c` and upstream fixtures establish the behavior.
+The remaining focused failures need streams or diagnostic-output matching; other string
+APIs, native reflection metadata, and INI configuration remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -794,7 +817,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 234 | 344 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 258 | 320 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

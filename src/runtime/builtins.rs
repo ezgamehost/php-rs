@@ -23,6 +23,8 @@ pub(super) enum Builtin {
     Implode(&'static str),
     StrSplit,
     ChunkSplit,
+    StrTranslate,
+    SlashEscape(bool, bool),
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -120,6 +122,11 @@ impl Builtin {
             b"join" => Self::Implode("join"),
             b"str_split" => Self::StrSplit,
             b"chunk_split" => Self::ChunkSplit,
+            b"strtr" => Self::StrTranslate,
+            b"addslashes" => Self::SlashEscape(true, false),
+            b"stripslashes" => Self::SlashEscape(false, false),
+            b"addcslashes" => Self::SlashEscape(true, true),
+            b"stripcslashes" => Self::SlashEscape(false, true),
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -235,6 +242,15 @@ impl Builtin {
                 &[("string", false, false)]
             }
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
+            Self::SlashEscape(true, true) => {
+                &[("string", false, false), ("characters", false, false)]
+            }
+            Self::SlashEscape(..) => &[("string", false, false)],
+            Self::StrTranslate => &[
+                ("string", false, false),
+                ("from", false, false),
+                ("to", true, false),
+            ],
             Self::StringSearch(kind) => kind.parameters(),
             Self::StrCompare(_, false) => &[("string1", false, false), ("string2", false, false)],
             Self::StrCompare(_, true) => &[
@@ -473,6 +489,8 @@ impl Runtime {
             Builtin::Explode => self.explode_string(&args, line),
             Builtin::Implode(name) => self.implode_strings(name, direct_positional, &args, line),
             Builtin::StrSplit | Builtin::ChunkSplit => self.split_chunks(builtin, &args, line),
+            Builtin::StrTranslate => self.translate_string(&args, line),
+            Builtin::SlashEscape(add, c_style) => self.escape_slashes(add, c_style, &args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
