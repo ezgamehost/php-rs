@@ -8,6 +8,10 @@ pub(super) enum Builtin {
     Strlen,
     StrRepeat,
     StrRev,
+    StrLower,
+    StrUpper,
+    Bin2Hex,
+    Trim(u8, &'static str),
     Chr,
     Ord,
     Count,
@@ -73,6 +77,13 @@ impl Builtin {
             b"strlen" => Self::Strlen,
             b"str_repeat" => Self::StrRepeat,
             b"strrev" => Self::StrRev,
+            b"strtolower" => Self::StrLower,
+            b"strtoupper" => Self::StrUpper,
+            b"bin2hex" => Self::Bin2Hex,
+            b"trim" => Self::Trim(3, "trim"),
+            b"ltrim" => Self::Trim(1, "ltrim"),
+            b"rtrim" => Self::Trim(2, "rtrim"),
+            b"chop" => Self::Trim(2, "chop"),
             b"chr" => Self::Chr,
             b"ord" => Self::Ord,
             b"count" | b"sizeof" => Self::Count,
@@ -180,7 +191,10 @@ impl Builtin {
             Self::Autoload => &[("class", false, false), ("file_extensions", true, false)],
             Self::AutoloadExtensions => &[("file_extensions", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
-            Self::Strlen | Self::StrRev => &[("string", false, false)],
+            Self::Strlen | Self::StrRev | Self::StrLower | Self::StrUpper | Self::Bin2Hex => {
+                &[("string", false, false)]
+            }
+            Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
             Self::StrRepeat => &[("string", false, false), ("times", false, false)],
             Self::Chr => &[("codepoint", false, false)],
             Self::Ord => &[("character", false, false)],
@@ -241,6 +255,9 @@ impl Builtin {
                 implicit_nullable: false,
                 default: optional.then_some(Expr {
                     kind: ExprKind::Literal(match (self, *name) {
+                        (Self::Trim(..), "characters") => {
+                            Value::String(b" \n\r\t\x0b\0".to_vec().into())
+                        }
                         (Self::IsCallable, "syntax_only") => Value::Bool(false),
                         (Self::DebugBacktrace, "options") => Value::Int(1),
                         (Self::DebugBacktrace | Self::DebugPrintBacktrace, _) => Value::Int(0),
@@ -344,9 +361,14 @@ impl Runtime {
             | Builtin::Autoload
             | Builtin::AutoloadExtensions => unreachable!(),
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
-            Builtin::StrRepeat | Builtin::StrRev | Builtin::Chr | Builtin::Ord => {
-                self.string_builtin(builtin, &args, line)
-            }
+            Builtin::StrRepeat
+            | Builtin::StrRev
+            | Builtin::Chr
+            | Builtin::Ord
+            | Builtin::StrLower
+            | Builtin::StrUpper
+            | Builtin::Bin2Hex
+            | Builtin::Trim(..) => self.string_builtin(builtin, &args, line),
             Builtin::ClassAlias => self.class_alias(&args, line),
             Builtin::IsA | Builtin::IsSubclassOf => self.inspect_inheritance(builtin, &args, line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),

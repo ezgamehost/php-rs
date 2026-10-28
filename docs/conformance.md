@@ -651,6 +651,24 @@ ArrayAccess declaration, compiled-variable cleanup, and upstream fixtures. Compl
 nested compound-assignment caching, tentative-return inheritance/formatting, other
 container APIs, destructors/GC, and diagnostic output matching remain unfinished.
 
+The [string case/trim slice](conformance/php-8.5.0-string-trim-hillclimb.txt) adds
+**20 upstream passes**: 16 standard string fixtures and four Zend fixtures, with no
+regressions across Zend, reflection, and SPL. `strtolower` and `strtoupper` convert
+ASCII letters while preserving every other byte. `bin2hex` emits two lowercase hex
+digits per input byte. `trim`, `ltrim`, `rtrim`, and `chop` apply PHP's default whitespace
+set or a supplied binary character list, including inclusive ranges and malformed-range
+warnings. Scalar/Stringable conversion and argument binding use the existing native
+function machinery; `chop` retains its own name in diagnostics.
+
+The focused upstream tests exercise all 256 byte values for case conversion, binary
+encoding, whitespace, custom lists, ranges, and alias behavior. Results are **16 passed /
+3 failed / 0 unsupported**; the three remaining fixtures require diagnostic output
+matching. Full Zend improves to **1647 / 3201 / 408**, with reflection **244 / 211 / 37**
+and SPL **18 / 666 / 94** unchanged. All 797 existing Rust tests and 57 reference-checked
+project fixtures pass, as do formatting and Clippy. No custom tests were added. Behavior
+follows PHP 8.5.0 `ext/standard/string.c`, native signatures, and upstream fixtures.
+Complete native reflection metadata and diagnostic interleaving/rendering remain gaps.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -658,10 +676,11 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1643 | 3205 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1647 | 3201 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
+| PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |

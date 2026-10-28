@@ -1,0 +1,162 @@
+Zend suite
+
+Before: 5256 cases; 1643 passed, 3205 failed, 408 unsupported
+After: 5256 cases; 1647 passed, 3201 failed, 408 unsupported
+New passes: 4; regressions: 0
+NEW PASS: Zend/tests/ArrayAccess/bug39297.phpt
+NEW PASS: Zend/tests/backtrace/bug39445.phpt
+NEW PASS: Zend/tests/new_without_parentheses/new_with_ctor_arguments_parentheses.phpt
+NEW PASS: Zend/tests/xor_002.phpt
+
+Most frequent remaining failure messages:
+372: ParseError: Expected ';'
+137: Error: Call to undefined function set_error_handler()
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+29: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+24: Error: Class "ArrayObject" not found
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 244 passed, 211 failed, 37 unsupported
+After: 492 cases; 244 passed, 211 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+24: ParseError: Expected ';'
+22: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Spl suite
+
+Before: 778 cases; 18 passed, 666 failed, 94 unsupported
+After: 778 cases; 18 passed, 666 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+110: Error: Class "ArrayObject" not found
+67: Error: Class "ArrayIterator" not found
+63: Error: Class "SplFixedArray" not found
+44: Error: Class "SplFileObject" not found
+40: Error: Class "SplDoublyLinkedList" not found
+33: Error: Class "RecursiveArrayIterator" not found
+33: Error: Class "SplObjectStorage" not found
+21: Error: Class "SplTempFileObject" not found
+20: Error: Class "RecursiveIteratorIterator" not found
+19: Error: Class "SplFileInfo" not found
+17: Error: Class "SplMaxHeap" not found
+15: Error: Class "SplPriorityQueue" not found
+13: Error: Interface "Iterator" not found
+10: Error: Class "SplMinHeap" not found
+9: Error: Class "AppendIterator" not found
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+Standard suite
+
+Before: 19 cases; 0 passed, 19 failed, 0 unsupported
+After: 19 cases; 16 passed, 3 failed, 0 unsupported
+New passes: 16; regressions: 0
+NEW PASS: ext/standard/tests/strings/bin2hex.phpt
+NEW PASS: ext/standard/tests/strings/bin2hex_001.phpt
+NEW PASS: ext/standard/tests/strings/bin2hex_basic.phpt
+NEW PASS: ext/standard/tests/strings/chop_basic.phpt
+NEW PASS: ext/standard/tests/strings/chop_variation3.phpt
+NEW PASS: ext/standard/tests/strings/chop_variation4.phpt
+NEW PASS: ext/standard/tests/strings/chop_variation5.phpt
+NEW PASS: ext/standard/tests/strings/ltrim.phpt
+NEW PASS: ext/standard/tests/strings/ltrim_basic.phpt
+NEW PASS: ext/standard/tests/strings/rtrim.phpt
+NEW PASS: ext/standard/tests/strings/rtrim_basic.phpt
+NEW PASS: ext/standard/tests/strings/strtolower.phpt
+NEW PASS: ext/standard/tests/strings/strtoupper1.phpt
+NEW PASS: ext/standard/tests/strings/trim.phpt
+NEW PASS: ext/standard/tests/strings/trim1.phpt
+NEW PASS: ext/standard/tests/strings/trim_basic.phpt
+
+Most frequent remaining failure messages:
+1: Unexpected diagnostics: ltrim(): Invalid '..'-range, no character to the left of '..' on line 7; ltrim(): Invalid '..'-range, no character to the right of '..' on line 8; ltrim(): 
+1: Unexpected diagnostics: rtrim(): Invalid '..'-range, no character to the left of '..' on line 7; rtrim(): Invalid '..'-range, no character to the right of '..' on line 8; rtrim(): 
+1: Unexpected diagnostics: trim(): Invalid '..'-range, no character to the left of '..' on line 7; trim(): Invalid '..'-range, no character to the right of '..' on line 8; trim(): Inv
+
+Unsupported section combinations:
+
+Validation
+
+797 existing Rust tests and 57 project PHPT fixtures pass.
+Project and passing upstream fixtures match PHP 8.5.0 output and exit status.
+Formatting and Clippy pass. No new custom tests or differential matrix.
+
+Implementation
+
+ASCII case conversion, lowercase binary-to-hex encoding, and trim/ltrim/rtrim/chop.
+Character masks support binary bytes, inclusive ranges, and malformed-range warnings.
+The three remaining standard fixtures require diagnostic output matching.
+Complete native reflection metadata and diagnostic rendering remain unfinished.
+
+Reproduce
+
+cargo build --bins
+cargo test
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+target/debug/php-rs-phpt --reference /tmp/php-rs-reference/php-8.5.0/sapi/cli/php --cwd /tmp/php-rs-reference/php-8.5.0 SUITE
+
+SUITE: Zend/tests, ext/reflection/tests, ext/spl/tests, or the 19 fixtures under
+ext/standard/tests/strings matching {strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt.
+Run each suite separately, then compare logs with tools/compare_phpt.py.
+Baseline runtime: e8c9851; bin2hex baseline measured before its implementation
+(the already implemented trim/case functions do not affect those three fixtures).

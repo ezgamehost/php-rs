@@ -9,6 +9,55 @@ impl Runtime {
     ) -> Result<Value, Error> {
         let first = args[0].as_ref().unwrap();
         match builtin {
+            Builtin::Bin2Hex => {
+                let bytes = self.native_string(first, "bin2hex", 1, line)?;
+                let length = bytes
+                    .len()
+                    .checked_mul(2)
+                    .ok_or_else(|| Error::new(ErrorKind::Error, "String size overflow", line))?;
+                let mut result = Vec::new();
+                result.try_reserve_exact(length).map_err(|_| {
+                    Error::new(ErrorKind::Error, "Unable to allocate string storage", line)
+                })?;
+                let digits = b"0123456789abcdef";
+                for byte in bytes {
+                    result.push(digits[(byte >> 4) as usize]);
+                    result.push(digits[(byte & 15) as usize]);
+                }
+                Ok(Value::String(result.into()))
+            }
+            Builtin::StrLower | Builtin::StrUpper => {
+                let upper = matches!(builtin, Builtin::StrUpper);
+                let name = if upper { "strtoupper" } else { "strtolower" };
+                let mut bytes = self.native_string(first, name, 1, line)?;
+                if upper {
+                    bytes.make_ascii_uppercase();
+                } else {
+                    bytes.make_ascii_lowercase();
+                }
+                Ok(Value::String(bytes.into()))
+            }
+            Builtin::Trim(mode, name) => {
+                let bytes = self.native_string(first, name, 1, line)?;
+                let characters = match &args[1] {
+                    Some(value) => self.native_string(value, name, 2, line)?,
+                    None => b" \t\n\r\x0b\0".to_vec(),
+                };
+                let mask = character_mask(&characters, name, line, &mut self.diagnostics);
+                let mut start = 0;
+                let mut end = bytes.len();
+                if mode & 1 != 0 {
+                    while start < end && mask[bytes[start] as usize] {
+                        start += 1;
+                    }
+                }
+                if mode & 2 != 0 {
+                    while start < end && mask[bytes[end - 1] as usize] {
+                        end -= 1;
+                    }
+                }
+                Ok(Value::String(bytes[start..end].to_vec().into()))
+            }
             Builtin::Chr => {
                 let code = self.native_int(first, "chr", 1, line)?;
                 if !(0..=255).contains(&code) {
@@ -65,4 +114,42 @@ impl Runtime {
             _ => unreachable!(),
         }
     }
+}
+
+fn character_mask(
+    bytes: &[u8],
+    function: &str,
+    line: usize,
+    warnings: &mut dyn WarningSink,
+) -> [bool; 256] {
+    let mut mask = [false; 256];
+    let mut index = 0;
+    while index < bytes.len() {
+        if index + 3 < bytes.len()
+            && bytes[index + 1..index + 3] == *b".."
+            && bytes[index] <= bytes[index + 3]
+        {
+            mask[bytes[index] as usize..=bytes[index + 3] as usize].fill(true);
+            index += 4;
+            continue;
+        }
+        if bytes.get(index..index + 2) == Some(b"..") {
+            let detail = if index == 0 {
+                ", no character to the left of '..'"
+            } else if index + 2 >= bytes.len() {
+                ", no character to the right of '..'"
+            } else if bytes[index - 1] > bytes[index + 2] {
+                ", '..'-range needs to be incrementing"
+            } else {
+                ""
+            };
+            warnings.push(format!(
+                "{function}(): Invalid '..'-range{detail} on line {line}"
+            ));
+        } else {
+            mask[bytes[index] as usize] = true;
+        }
+        index += 1;
+    }
+    mask
 }

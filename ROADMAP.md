@@ -202,7 +202,9 @@ definition of completion.
    byte padding, integer/float conversions, and validation errors. Locale configuration
    and resource formatting remain incomplete. Byte-string repetition/reversal and chr/ord conversion
    include PHP 8.5 deprecations; common native argument diagnostics include parameter
-   names, received types, and argument counts. Array map/filter/reduce support available callables,
+   names, received types, and argument counts. ASCII case conversion, bin2hex, and the
+   trim family support binary strings, default whitespace, custom character ranges, and
+   malformed-range warnings. Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only
    checks, autoloading, scoped/abstract/magic methods, descriptive output names,
