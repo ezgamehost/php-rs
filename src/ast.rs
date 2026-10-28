@@ -134,6 +134,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
+    Enum,
     Reflection,
     AttributeConstruct,
     SensitiveValue,
@@ -254,6 +255,8 @@ pub(crate) struct ClassDecl {
     pub attributes: Vec<Attribute>,
     pub is_interface: bool,
     pub is_trait: bool,
+    pub is_enum: bool,
+    pub enum_backing: Option<String>,
     pub trait_uses: Vec<TraitUse>,
     pub trait_requirements: Vec<Rc<FunctionDecl>>,
     pub trait_property_checks: Vec<(PropertyDecl, PropertyDecl)>,
@@ -332,6 +335,7 @@ impl PropertyDecl {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ClassConstant {
+    pub is_enum_case: bool,
     pub doc_comment: Option<Vec<u8>>,
     pub attributes: Vec<Attribute>,
     pub visibility: Visibility,

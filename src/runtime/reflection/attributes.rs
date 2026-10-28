@@ -193,6 +193,8 @@ impl Runtime {
                         Some("trait")
                     } else if decl.is_interface {
                         Some("interface")
+                    } else if decl.is_enum {
+                        Some("enum")
                     } else if canonical == "Attribute" && decl.is_abstract {
                         Some("abstract class")
                     } else if canonical == "AllowDynamicProperties" && decl.is_readonly {

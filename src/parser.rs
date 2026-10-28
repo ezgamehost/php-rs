@@ -179,14 +179,23 @@ impl Parser {
         if self.eat("try") {
             return self.try_statement();
         }
+        if self.is("enum")
+            && self
+                .tokens
+                .get(self.pos + 1)
+                .is_some_and(|t| matches!(t.kind, Kind::Word(_)))
+        {
+            self.pos += 1;
+            return self.class_declaration(true, false, false, objects::ClassKind::Enum, None);
+        }
         if self.eat("class") {
-            return self.class_declaration(false, false, false, false, false, None);
+            return self.class_declaration(false, false, false, objects::ClassKind::Class, None);
         }
         if self.eat("interface") {
-            return self.class_declaration(false, false, true, true, false, None);
+            return self.class_declaration(false, false, true, objects::ClassKind::Interface, None);
         }
         if self.eat("trait") {
-            return self.class_declaration(false, false, false, false, true, None);
+            return self.class_declaration(false, false, false, objects::ClassKind::Trait, None);
         }
         let readonly_class = self.is("readonly")
             && self.tokens.get(self.pos + 1).is_some_and(|token| {
@@ -217,7 +226,13 @@ impl Parser {
                 *flag = true;
             }
             self.expect("class")?;
-            return self.class_declaration(is_final, is_readonly, is_abstract, false, false, None);
+            return self.class_declaration(
+                is_final,
+                is_readonly,
+                is_abstract,
+                objects::ClassKind::Class,
+                None,
+            );
         }
         let line = self.token().line;
         if self.eat("goto") {

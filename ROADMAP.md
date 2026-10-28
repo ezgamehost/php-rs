@@ -160,6 +160,10 @@ definition of completion.
    Their reflectors expose values, namespace names, deprecation flags, attributes,
    extension ownership, and declaration strings. Basic extension name/version/persistence
    reflection is available for Core, standard, Reflection, and SPL.
+   Unit and backed enum cases retain singleton identities and readonly properties.
+   Native cases/from/tryFrom methods validate backing values and honor scalar coercion;
+   enum/case reflection exposes cases, types, values, and declaration metadata.
+   Enum declarations compose methods/traits/interfaces and enforce enum restrictions.
    Native reflector metadata fields use the reflection write handler rather than
    PHP readonly-property flags. Native methods share argument-count validation
    with other internal functions.
@@ -170,7 +174,8 @@ definition of completion.
    promoted-property/class/function doc comments, raw property access and expression
    stringification, complete internal
    property/builtin signature metadata, prototypes/static variables, lazy objects,
-   complete attribute instantiation and runtime effects, enums,
+   complete attribute instantiation and runtime effects, enum serialization and
+   full reflection strings,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function

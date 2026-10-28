@@ -67,7 +67,16 @@ impl Runtime {
             }
             Value::Object(object) => {
                 output.extend_from_slice(object.class_name.split('\0').next().unwrap().as_bytes());
-                output.extend_from_slice(b" Object\n");
+                if object.class.declaration.is_enum {
+                    output.extend(b" Enum");
+                    if let Some(backing) = &object.class.declaration.enum_backing {
+                        output.push(b':');
+                        output.extend(backing.bytes());
+                    }
+                    output.push(b'\n');
+                } else {
+                    output.extend_from_slice(b" Object\n");
+                }
                 let identity = (true, object.object_id);
                 if !seen.insert(identity) {
                     output.extend_from_slice(b" *RECURSION*");

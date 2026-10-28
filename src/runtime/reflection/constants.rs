@@ -19,6 +19,36 @@ impl Runtime {
                 line,
             )
         })?;
+        if object.class.is_a(b"ReflectionEnumUnitCase") {
+            let constant = owner
+                .declaration
+                .constants
+                .iter()
+                .find(|c| c.name == name)
+                .unwrap();
+            if !constant.is_enum_case {
+                return Err(self.reflection_error(
+                    format!(
+                        "Constant {}::{} is not a case",
+                        owner.display_name(),
+                        String::from_utf8_lossy(&name)
+                    ),
+                    line,
+                ));
+            }
+            if object.class.is_a(b"ReflectionEnumBackedCase")
+                && owner.declaration.enum_backing.is_none()
+            {
+                return Err(self.reflection_error(
+                    format!(
+                        "Enum case {}::{} is not a backed case",
+                        owner.display_name(),
+                        String::from_utf8_lossy(&name)
+                    ),
+                    line,
+                ));
+            }
+        }
         object
             .properties
             .borrow_mut()
@@ -134,6 +164,19 @@ impl Runtime {
                 out.extend(b" }\n");
                 string(out)
             }
+            b"getenum" => {
+                self.reflection_object(b"ReflectionEnum", ReflectionData::Class(owner.clone()))
+            }
+            b"getbackingvalue" => {
+                let Value::Object(case) = self.evaluate_class_constant(owner, name, line)? else {
+                    unreachable!()
+                };
+                case.properties
+                    .borrow()
+                    .get(&ArrayKey::String(b"value".to_vec()))
+                    .unwrap()
+                    .clone()
+            }
             b"ispublic" => Value::Bool(constant.visibility == Visibility::Public),
             b"isprotected" => Value::Bool(constant.visibility == Visibility::Protected),
             b"isprivate" => Value::Bool(constant.visibility == Visibility::Private),
@@ -158,7 +201,7 @@ impl Runtime {
                     line,
                 );
             }
-            b"isenumcase" => Value::Bool(false),
+            b"isenumcase" => Value::Bool(constant.is_enum_case),
             b"isdeprecated" => Value::Bool(
                 constant
                     .attributes

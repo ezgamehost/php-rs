@@ -1,0 +1,156 @@
+Zend suite
+
+Before: 5256 cases; 1498 passed, 3350 failed, 408 unsupported
+After: 5256 cases; 1572 passed, 3276 failed, 408 unsupported
+New passes: 74; regressions: 0
+NEW PASS: Zend/tests/attributes/override/015.phpt
+NEW PASS: Zend/tests/enum/__call.phpt
+NEW PASS: Zend/tests/enum/__callStatic.phpt
+NEW PASS: Zend/tests/enum/__class__.phpt
+NEW PASS: Zend/tests/enum/__function__.phpt
+NEW PASS: Zend/tests/enum/__invoke.phpt
+NEW PASS: Zend/tests/enum/__method__.phpt
+NEW PASS: Zend/tests/enum/backed-cases-int.phpt
+NEW PASS: Zend/tests/enum/backed-cases-string.phpt
+NEW PASS: Zend/tests/enum/backed-duplicate-int.phpt
+NEW PASS: Zend/tests/enum/backed-duplicate-string.phpt
+NEW PASS: Zend/tests/enum/backed-from-invalid-int.phpt
+NEW PASS: Zend/tests/enum/backed-from-invalid-string.phpt
+NEW PASS: Zend/tests/enum/backed-from-invalid-type.phpt
+NEW PASS: Zend/tests/enum/backed-from.phpt
+NEW PASS: Zend/tests/enum/backed-implements-multiple.phpt
+NEW PASS: Zend/tests/enum/backed-implements.phpt
+NEW PASS: Zend/tests/enum/backed-int-const-expr.phpt
+NEW PASS: Zend/tests/enum/backed-int.phpt
+NEW PASS: Zend/tests/enum/backed-mismatch.phpt
+NEW PASS: Zend/tests/enum/backed-negative-int.phpt
+NEW PASS: Zend/tests/enum/backed-string-heredoc.phpt
+NEW PASS: Zend/tests/enum/backed-string.phpt
+NEW PASS: Zend/tests/enum/backed-tryFrom-casing.phpt
+NEW PASS: Zend/tests/enum/backed-tryFrom.phpt
+NEW PASS: Zend/tests/enum/basic-methods.phpt
+NEW PASS: Zend/tests/enum/comparison.phpt
+NEW PASS: Zend/tests/enum/constant-aliases.phpt
+NEW PASS: Zend/tests/enum/constants.phpt
+NEW PASS: Zend/tests/enum/default-parameter.phpt
+NEW PASS: Zend/tests/enum/empty-from.phpt
+NEW PASS: Zend/tests/enum/enum-as-constant.phpt
+NEW PASS: Zend/tests/enum/enum-in-constant.phpt
+NEW PASS: Zend/tests/enum/enum-in-static-var.phpt
+NEW PASS: Zend/tests/enum/enum_exists.phpt
+NEW PASS: Zend/tests/enum/final.phpt
+NEW PASS: Zend/tests/enum/gh16954.phpt
+NEW PASS: Zend/tests/enum/gh7821.phpt
+NEW PASS: Zend/tests/enum/gh8176.phpt
+NEW PASS: Zend/tests/enum/gh8418.phpt
+NEW PASS: Zend/tests/enum/implements.phpt
+NEW PASS: Zend/tests/enum/instanceof-backed-enum.phpt
+NEW PASS: Zend/tests/enum/instanceof-unitenum.phpt
+NEW PASS: Zend/tests/enum/instanceof.phpt
+NEW PASS: Zend/tests/enum/keyword-whitespace.phpt
+NEW PASS: Zend/tests/enum/magic-constants.phpt
+NEW PASS: Zend/tests/enum/namespaces.phpt
+NEW PASS: Zend/tests/enum/no-clone.phpt
+NEW PASS: Zend/tests/enum/no-dynamic-properties.phpt
+NEW PASS: Zend/tests/enum/no-new-through-reflection.phpt
+NEW PASS: Zend/tests/enum/no-new.phpt
+NEW PASS: Zend/tests/enum/no-pass-properties-by-ref.phpt
+NEW PASS: Zend/tests/enum/no-return-properties-by-ref.phpt
+NEW PASS: Zend/tests/enum/no-unset-propertes.phpt
+NEW PASS: Zend/tests/enum/no-write-properties-cache-slot.phpt
+NEW PASS: Zend/tests/enum/no-write-properties-through-foreach-reference.phpt
+NEW PASS: Zend/tests/enum/no-write-properties-through-references.phpt
+NEW PASS: Zend/tests/enum/no-write-properties.phpt
+NEW PASS: Zend/tests/enum/print_r.phpt
+NEW PASS: Zend/tests/enum/reflectionclass.phpt
+NEW PASS: Zend/tests/enum/static-methods.phpt
+NEW PASS: Zend/tests/enum/traits-constants.phpt
+NEW PASS: Zend/tests/enum/traits.phpt
+NEW PASS: Zend/tests/enum/unit-cases.phpt
+NEW PASS: Zend/tests/enum/value-property-type.phpt
+NEW PASS: Zend/tests/enum/var_dump-nested.phpt
+NEW PASS: Zend/tests/enum/var_dump-reference.phpt
+NEW PASS: Zend/tests/prop_const_expr/default_args.phpt
+NEW PASS: Zend/tests/prop_const_expr/enum_initializer.phpt
+NEW PASS: Zend/tests/prop_const_expr/property_initializer.phpt
+NEW PASS: Zend/tests/prop_const_expr/static_property_initializer.phpt
+NEW PASS: Zend/tests/type_declarations/typed_class_constants_inheritance_success5.phpt
+NEW PASS: Zend/tests/type_declarations/typed_class_constants_type_error11.phpt
+NEW PASS: Zend/tests/type_declarations/typed_class_constants_type_success3.phpt
+
+Most frequent remaining failure messages:
+372: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+49: Error: Interface "ArrayAccess" not found
+48: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+29: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 219 passed, 236 failed, 37 unsupported
+After: 492 cases; 233 passed, 222 failed, 37 unsupported
+New passes: 14; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_isEnumCase.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isEnum.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnumBackedCase_getBackingValue.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnumBackedCase_getBackingValue_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnumUnitCase_construct.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnumUnitCase_getDocComment.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnumUnitCase_getValue.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_construct.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_getBackingType.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_hasCase.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_isBacked.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_setValue_readonly.phpt
+NEW PASS: ext/reflection/tests/bug81457.phpt
+NEW PASS: ext/reflection/tests/bug81681.phpt
+
+Most frequent remaining failure messages:
+24: ParseError: Expected ';'
+22: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI

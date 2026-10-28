@@ -23,6 +23,7 @@ pub(super) enum Builtin {
     GetParentClass,
     GetCalledClass,
     ClassExists,
+    EnumExists,
     ClassAlias,
     IsA,
     IsSubclassOf,
@@ -84,6 +85,7 @@ impl Builtin {
             b"get_parent_class" => Self::GetParentClass,
             b"get_called_class" => Self::GetCalledClass,
             b"class_exists" => Self::ClassExists,
+            b"enum_exists" => Self::EnumExists,
             b"class_alias" => Self::ClassAlias,
             b"is_a" => Self::IsA,
             b"is_subclass_of" => Self::IsSubclassOf,
@@ -139,6 +141,7 @@ impl Builtin {
             Self::GetClassVars => &[("class", false, false)],
             Self::GetClassMethods => &[("object_or_class", false, false)],
             Self::GetObjectVars => &[("object", false, false)],
+            Self::EnumExists => &[("enum", false, false), ("autoload", true, false)],
             Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
             Self::ClassAlias => &[
                 ("class", false, false),
@@ -353,7 +356,10 @@ impl Runtime {
                     line,
                 )),
             },
-            Builtin::ClassExists | Builtin::InterfaceExists | Builtin::TraitExists => {
+            Builtin::ClassExists
+            | Builtin::InterfaceExists
+            | Builtin::TraitExists
+            | Builtin::EnumExists => {
                 let class = self.native_string(first, &name, 1, line)?;
                 let autoload = args[1]
                     .as_ref()
@@ -367,7 +373,9 @@ impl Runtime {
                 };
                 Ok(Value::Bool(
                     found.is_some_and(|c| {
-                        c.declaration.is_interface == matches!(builtin, Builtin::InterfaceExists)
+                        (!matches!(builtin, Builtin::EnumExists) || c.declaration.is_enum)
+                            && c.declaration.is_interface
+                                == matches!(builtin, Builtin::InterfaceExists)
                             && c.declaration.is_trait == matches!(builtin, Builtin::TraitExists)
                     }) || matches!(builtin, Builtin::ClassExists)
                         && class
@@ -764,6 +772,20 @@ fn dump_inner(
             dump_inner(&value, depth, out, seen, line, warnings);
         }
         Value::Object(object) => {
+            if object.class.declaration.is_enum {
+                let name = object
+                    .properties
+                    .borrow()
+                    .get(&ArrayKey::String(b"name".to_vec()))
+                    .unwrap()
+                    .to_bytes();
+                out.extend(b"enum(");
+                out.extend(&object.class.name);
+                out.extend(b"::");
+                out.extend(name);
+                out.extend(b")\n");
+                return;
+            }
             if !seen.insert(object.object_id) {
                 out.extend_from_slice(b"*RECURSION*\n");
                 return;

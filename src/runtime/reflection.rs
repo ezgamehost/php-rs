@@ -8,6 +8,7 @@ use crate::{
 mod attributes;
 mod constants;
 mod declarations;
+mod enums;
 mod functions;
 mod global_constants;
 mod parameters;
@@ -75,6 +76,13 @@ fn literal(value: Value, line: usize) -> Expr {
 
 impl Runtime {
     fn reflection_object(&mut self, kind: &[u8], data: ReflectionData) -> Value {
+        let kind = if kind == b"ReflectionClass"
+            && matches!(&data, ReflectionData::Class(class) if class.declaration.is_enum)
+        {
+            b"ReflectionEnum".as_slice()
+        } else {
+            kind
+        };
         let class = self.find_class(kind).expect("reflection class");
         let mut properties = PhpArray::default();
         match &data {
@@ -248,6 +256,12 @@ impl Runtime {
                 )
                 .unwrap();
             let class = self.reflected_class(value.clone(), false, line)?;
+            if object.class.is_a(b"ReflectionEnum") && !class.declaration.is_enum {
+                return Err(self.reflection_error(
+                    format!("Class \"{}\" is not an enum", class.display_name()),
+                    line,
+                ));
+            }
             object
                 .properties
                 .borrow_mut()
@@ -313,8 +327,11 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let decl = &class.declaration;
-        let concrete = !decl.is_interface && !decl.is_trait && !decl.is_abstract;
+        let concrete = !decl.is_interface && !decl.is_trait && !decl.is_abstract && !decl.is_enum;
         Ok(match name {
+            b"hascase" | b"getcase" | b"getcases" | b"isbacked" | b"getbackingtype" => {
+                return self.reflect_enum_method(class, name, line);
+            }
             b"getname" => string(&class.name),
             b"getshortname" => string(class.name.rsplit(|b| *b == b'\\').next().unwrap()),
             b"getnamespacename" => string(
@@ -359,7 +376,7 @@ impl Runtime {
             ),
             b"isinterface" => Value::Bool(decl.is_interface),
             b"istrait" => Value::Bool(decl.is_trait),
-            b"isenum" => Value::Bool(false),
+            b"isenum" => Value::Bool(decl.is_enum),
             b"isabstract" => Value::Bool(
                 (decl.is_abstract && !decl.is_interface)
                     || class.methods.iter().any(|method| method.is_abstract),

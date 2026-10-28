@@ -199,23 +199,27 @@ impl Runtime {
             scope: owner.clone(),
             called: owner.clone(),
         });
-        let result = self.eval_default(&constant.value).and_then(|value| {
-            let Some(ty) = &constant.ty else {
-                return Ok(value);
-            };
-            let given = builtins::debug_type(&value).to_owned();
-            self.coerce_type(value, ty, true, line)?.ok_or_else(|| {
-                Error::new(
-                    ErrorKind::TypeError,
-                    format!(
-                        "Cannot assign {given} to class constant {}::{} of type {ty}",
-                        String::from_utf8_lossy(&owner.name),
-                        String::from_utf8_lossy(name)
-                    ),
-                    line,
-                )
+        let result = if constant.is_enum_case {
+            self.enum_case(owner, constant, line)
+        } else {
+            self.eval_default(&constant.value).and_then(|value| {
+                let Some(ty) = &constant.ty else {
+                    return Ok(value);
+                };
+                let given = builtins::debug_type(&value).to_owned();
+                self.coerce_type(value, ty, true, line)?.ok_or_else(|| {
+                    Error::new(
+                        ErrorKind::TypeError,
+                        format!(
+                            "Cannot assign {given} to class constant {}::{} of type {ty}",
+                            String::from_utf8_lossy(&owner.name),
+                            String::from_utf8_lossy(name)
+                        ),
+                        line,
+                    )
+                })
             })
-        });
+        };
         self.class_context = outer;
         owner.evaluating_constants.borrow_mut().remove(name);
         let value = result?;

@@ -34,7 +34,10 @@ impl Runtime {
                 if Rc::ptr_eq(a, b) {
                     return Ok(Some(Ordering::Equal));
                 }
-                if !a.class.name.eq_ignore_ascii_case(&b.class.name) {
+                if a.class.declaration.is_enum
+                    || b.class.declaration.is_enum
+                    || !a.class.name.eq_ignore_ascii_case(&b.class.name)
+                {
                     return Ok(None);
                 }
                 let pair = (Rc::as_ptr(a) as usize, Rc::as_ptr(b) as usize);

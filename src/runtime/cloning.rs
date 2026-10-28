@@ -36,7 +36,8 @@ impl Runtime {
             }
         };
         if let Value::Object(object) = original
-            && (object.class.is_a(b"ReflectionClass")
+            && (object.class.declaration.is_enum
+                || object.class.is_a(b"ReflectionClass")
                 || object.class.is_a(b"ReflectionAttribute")
                 || object.class.is_a(b"ReflectionFunctionAbstract")
                 || object.class.is_a(b"ReflectionType")

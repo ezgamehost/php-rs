@@ -6,16 +6,26 @@ use std::sync::atomic::{AtomicU64, Ordering};
 // while repeated executions of one declaration reuse its class and statics.
 static ANONYMOUS_CLASSES: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum ClassKind {
+    Class,
+    Interface,
+    Trait,
+    Enum,
+}
+
 impl Parser {
     pub(super) fn class_declaration(
         &mut self,
         is_final: bool,
         is_readonly: bool,
         is_abstract: bool,
-        is_interface: bool,
-        is_trait: bool,
+        kind: ClassKind,
         anonymous_line: Option<usize>,
     ) -> Result<Stmt, Error> {
+        let is_interface = kind == ClassKind::Interface;
+        let is_trait = kind == ClassKind::Trait;
+        let is_enum = kind == ClassKind::Enum;
         let line = anonymous_line.unwrap_or(self.token().line);
         if is_abstract && is_final {
             return Err(Error::parse(
@@ -47,7 +57,19 @@ impl Parser {
             }
             self.declared_name(&name, namespaces::Symbol::Class, line)?
         };
-        let parent = if !is_interface && !is_trait && self.eat("extends") {
+        let enum_backing = if is_enum && self.eat(":") {
+            let ty = self.type_declaration(false)?;
+            if ty.members.len() != 1 || !matches!(ty.members[0].as_str(), "int" | "string") {
+                return Err(Error::parse(
+                    "Enum backing type must be int or string",
+                    line,
+                ));
+            }
+            Some(ty.members[0].clone())
+        } else {
+            None
+        };
+        let parent = if !is_enum && !is_interface && !is_trait && self.eat("extends") {
             let Kind::Word(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
                     "Expected parent class name",
@@ -105,6 +127,61 @@ impl Parser {
         while !self.eat("}") {
             let mut member_start = self.pos;
             let attribute_range = self.take_attributes()?;
+            if is_enum && self.eat("case") {
+                let case_line = self.token().line;
+                let doc_comment = self.tokens[member_start..=self.pos]
+                    .iter()
+                    .rev()
+                    .find_map(|t| t.doc_comment.clone());
+                let case_name = self.label_name()?;
+                if case_name.eq_ignore_ascii_case(b"class")
+                    || constants.iter().any(|c| c.name == case_name)
+                {
+                    return Err(Error::parse("Cannot redefine class constant", case_line));
+                }
+                let has_value = self.eat("=");
+                if has_value != enum_backing.is_some() {
+                    return Err(Error::parse(
+                        format!(
+                            "Case {} of {}backed enum {} must {}have a value",
+                            String::from_utf8_lossy(&case_name),
+                            if enum_backing.is_some() { "" } else { "non-" },
+                            String::from_utf8_lossy(&name),
+                            if has_value { "not " } else { "" }
+                        ),
+                        case_line,
+                    ));
+                }
+                let value = if has_value {
+                    self.expr(0)?
+                } else {
+                    Expr {
+                        kind: ExprKind::Literal(Value::Null),
+                        line: case_line,
+                    }
+                };
+                if !value.is_class_initializer() {
+                    return Err(Error::parse(
+                        "Constant expression contains invalid operations",
+                        case_line,
+                    ));
+                }
+                self.expect(";")?;
+                let attributes =
+                    self.parse_attributes_at(attribute_range, attributes::Target::ClassConstant)?;
+                Self::validate_attributes(&attributes, attributes::Target::ClassConstant)?;
+                constants.push(ClassConstant {
+                    is_enum_case: true,
+                    doc_comment,
+                    attributes,
+                    visibility: Visibility::Public,
+                    name: case_name,
+                    value,
+                    ty: None,
+                    is_final: false,
+                });
+                continue;
+            }
             if !is_interface && self.eat("use") {
                 if attribute_range.is_some() {
                     return Err(Error::parse(
@@ -481,6 +558,7 @@ impl Parser {
                     let attributes = self
                         .parse_attributes_at(attribute_range, attributes::Target::ClassConstant)?;
                     constants.push(ClassConstant {
+                        is_enum_case: false,
                         doc_comment,
                         attributes,
                         visibility,
@@ -631,6 +709,8 @@ impl Parser {
             end_line: self.tokens[self.pos - 1].line,
             attributes: Vec::new(),
             is_trait,
+            is_enum,
+            enum_backing,
             trait_uses,
             trait_requirements: Vec::new(),
             trait_property_checks: Vec::new(),
@@ -666,7 +746,7 @@ impl Parser {
                 Vec::new()
             };
             let Stmt::Class(mut class) =
-                self.class_declaration(false, readonly, false, false, false, Some(line))?
+                self.class_declaration(false, readonly, false, ClassKind::Class, Some(line))?
             else {
                 unreachable!()
             };

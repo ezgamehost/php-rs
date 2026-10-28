@@ -237,6 +237,8 @@ impl Parser {
                 Some("trait")
             } else if class.is_interface {
                 Some("interface")
+            } else if class.is_enum {
+                Some("enum")
             } else if canonical == "AllowDynamicProperties" && class.is_readonly {
                 Some("readonly class")
             } else if canonical == "Attribute" && class.is_abstract {

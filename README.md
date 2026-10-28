@@ -94,6 +94,11 @@ new request. The CLI returns the low eight bits of the requested status.
 - Anonymous classes, including readonly declarations, constructor arguments,
   inheritance, interfaces, and traits. Repeated executions share the declaration's
   class and static state; separately compiled declarations have distinct identities.
+- Unit and int/string-backed enums with shared case identities, readonly name/value
+  properties, constants, methods, traits, interfaces, `cases`, `from`, and `tryFrom`.
+  Native UnitEnum/BackedEnum contracts, `enum_exists`, enum comparisons/dumps, and
+  enum/case reflection are supported. Serialization and full reflection strings
+  remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and
   permitted string sources, checking target names without autoloading them.

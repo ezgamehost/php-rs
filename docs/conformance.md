@@ -548,6 +548,29 @@ Runtime effects of user Deprecated attributes, remaining internal constants, ful
 reflector interfaces, and diagnostic matching remain incomplete. Unsupported sections
 are not counted as passes.
 
+The [enum slice](conformance/php-8.5.0-enums-hillclimb.txt) adds **74 Zend passes**
+and **14 reflection passes**, with **zero regressions** in either suite. Unit and
+int/string-backed enums retain shared case identities, readonly name/value properties,
+methods, constants, trait composition, and implemented interfaces. Native UnitEnum and
+BackedEnum contracts support `cases`, `from`, and `tryFrom`; backing values are evaluated
+in class scope and checked for type mismatches and duplicates. Native conversion follows
+the backing type and caller strictness. Enums cannot be instantiated, cloned, extended,
+or given dynamic properties. Disallowed properties, magic methods, and attributes are
+validated. The contextual enum keyword remains usable as a label or function name.
+
+Enum values participate in comparisons, constant/default expressions, `enum_exists`,
+`var_dump`, and `print_r`. ReflectionEnum and its unit/backed case reflectors expose
+cases, backing types/values, attributes, documentation, and declaring enums. Enum class
+reflection reports final, non-instantiable, and non-cloneable flags. Behavior is grounded
+in PHP 8.5.0's enum/reflection implementation and upstream fixtures.
+
+The enum directory records **67 passed / 77 failed / 3 unsupported**. All **797 existing
+Rust tests** and **57 reference-checked project fixtures** pass; formatting and Clippy
+pass. No custom tests were added. Remaining gaps include enum serialization, full
+reflection declaration strings, object-handle reuse, and dependencies on other missing
+APIs. Exact fatal/diagnostic matching and unsupported PHPT sections remain incomplete;
+rejected declarations do not count as passing expected-fatal fixtures.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -555,8 +578,8 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1498 | 3350 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 219 | 236 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1572 | 3276 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 233 | 222 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |

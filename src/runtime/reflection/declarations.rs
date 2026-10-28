@@ -62,6 +62,23 @@ impl Runtime {
                 public function newInstanceWithoutConstructor(): object {}
             ",
             ),
+            b"reflectionenum" => ("ReflectionEnum", Some("ReflectionClass"), "
+                public function __construct(object|string $objectOrClass) {}
+                public function hasCase(string $name): bool {}
+                public function getCase(string $name): ReflectionEnumUnitCase {}
+                public function getCases(): array {}
+                public function isBacked(): bool {}
+                public function getBackingType(): ?ReflectionNamedType {}
+            "),
+            b"reflectionenumunitcase" => ("ReflectionEnumUnitCase", Some("ReflectionClassConstant"), "
+                public function __construct(object|string $class, string $constant) {}
+                public function getEnum(): ReflectionEnum {}
+                public function getValue(): UnitEnum {}
+            "),
+            b"reflectionenumbackedcase" => ("ReflectionEnumBackedCase", Some("ReflectionEnumUnitCase"), "
+                public function __construct(object|string $class, string $constant) {}
+                public function getBackingValue(): int|string {}
+            "),
             b"reflectionobject" => (
                 "ReflectionObject",
                 Some("ReflectionClass"),

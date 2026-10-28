@@ -26,6 +26,7 @@ mod closures;
 mod comparison;
 mod constants;
 mod destructuring;
+mod enums;
 mod foreach;
 mod formatting;
 mod function_arguments;
@@ -93,6 +94,7 @@ pub struct Runtime {
     builtin_classes: RefCell<HashMap<Vec<u8>, Rc<crate::object::Class>>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Rc<constants::GlobalConstant>>,
+    enum_values: HashMap<Vec<u8>, Vec<(Vec<u8>, Value)>>,
     strict_types: bool,
     source: Rc<crate::source::Source>,
     included_files: Vec<std::path::PathBuf>,

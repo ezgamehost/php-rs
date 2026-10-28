@@ -124,6 +124,28 @@ impl Runtime {
         let Some(ty) = &param.ty else {
             return Ok(value);
         };
+        let enum_type;
+        let ty = if matches!(function.native, Some(crate::ast::NativeMethod::Enum)) {
+            let backing = self
+                .class_context
+                .as_ref()
+                .unwrap()
+                .scope
+                .declaration
+                .enum_backing
+                .as_deref()
+                .unwrap();
+            enum_type = TypeDecl {
+                members: if backing == "int" || strict {
+                    vec![backing.to_owned()]
+                } else {
+                    vec!["int".to_owned(), "string".to_owned()]
+                },
+            };
+            &enum_type
+        } else {
+            ty
+        };
         if function.native.is_some()
             && !strict
             && value == Value::Null

@@ -4,6 +4,8 @@ use crate::object::{Class, ThrowableData};
 
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
+        b"unitenum" => ("UnitEnum", None),
+        b"backedenum" => ("BackedEnum", None),
         b"stringable" => ("Stringable", None),
         b"throwable" => ("Throwable", None),
         b"reflectionexception" => ("ReflectionException", Some("Exception")),
@@ -43,7 +45,11 @@ impl Runtime {
         }
         // Parse internal declarations with the same signature representation as
         // user methods; native bodies are dispatched explicitly, never as PHP.
-        let code = if canonical == "Stringable" {
+        let code = if canonical == "UnitEnum" {
+            "<?php interface UnitEnum { public static function cases(): array; }".to_owned()
+        } else if canonical == "BackedEnum" {
+            "<?php interface BackedEnum extends UnitEnum { public static function from(int|string $value): static; public static function tryFrom(int|string $value): ?static; }".to_owned()
+        } else if canonical == "Stringable" {
             "<?php interface Stringable { public function __toString():string; }".to_owned()
         } else if canonical == "Throwable" {
             "<?php interface Throwable extends Stringable {}".to_owned()
@@ -99,7 +105,9 @@ impl Runtime {
             });
         }
         let parent = parent_name.and_then(|name| self.find_class(name.as_bytes()));
-        let interfaces = if canonical == "Exception" || canonical == "Error" {
+        let interfaces = if canonical == "BackedEnum" {
+            vec![self.find_class(b"UnitEnum").unwrap()]
+        } else if canonical == "Exception" || canonical == "Error" {
             vec![self.find_class(b"Throwable").expect("Throwable interface")]
         } else if canonical == "Throwable" {
             vec![
@@ -110,7 +118,7 @@ impl Runtime {
             Vec::new()
         };
         let mut methods = parent.as_ref().map_or_else(Vec::new, |p| p.methods.clone());
-        if canonical == "Throwable" {
+        if matches!(canonical, "Throwable" | "BackedEnum") {
             methods.extend(interfaces[0].methods.iter().cloned());
         }
         for own in &declaration.methods {
@@ -167,6 +175,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::Enum) {
+            return self.native_enum_method(line);
+        }
         if matches!(method, NativeMethod::Reflection) {
             return self.native_reflection_method(supplied, line);
         }
@@ -192,7 +203,8 @@ impl Runtime {
             NativeMethod::ThrowableToString
             | NativeMethod::AttributeConstruct
             | NativeMethod::SensitiveValue
-            | NativeMethod::Reflection => unreachable!(),
+            | NativeMethod::Reflection
+            | NativeMethod::Enum => unreachable!(),
             NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {
                     unreachable!()

@@ -81,6 +81,7 @@ impl Runtime {
     }
     fn link_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
         let decl = self.compose_traits(decl)?;
+        let decl = self.prepare_enum(decl)?;
         // __toString implies Stringable in PHP, so its public visibility is
         // checked when the class is linked rather than when its body is parsed.
         if !decl.is_trait
@@ -269,6 +270,7 @@ impl Runtime {
                 }
             }
         }
+        let forbid_dynamic = decl.is_enum;
         Ok(Rc::new(Class {
             aliases: RefCell::default(),
             interfaces,
@@ -278,7 +280,7 @@ impl Runtime {
             properties,
             methods,
             allow_dynamic,
-            forbid_dynamic: false,
+            forbid_dynamic,
             defaults: RefCell::new(None),
             static_properties,
             static_values: RefCell::default(),
@@ -328,6 +330,8 @@ impl Runtime {
                     end_line: 0,
                     attributes: Vec::new(),
                     is_trait: false,
+                    is_enum: false,
+                    enum_backing: None,
                     trait_uses: Vec::new(),
                     trait_requirements: Vec::new(),
                     trait_property_checks: Vec::new(),
@@ -429,6 +433,13 @@ impl Runtime {
         call_constructor: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        if class.declaration.is_enum {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!("Cannot instantiate enum {}", class.display_name()),
+                line,
+            ));
+        }
         if class.declaration.is_trait {
             return Err(Error::new(
                 ErrorKind::Error,
