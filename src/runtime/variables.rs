@@ -69,6 +69,59 @@ pub(super) fn cell(value: Value) -> Cell {
 }
 
 impl Runtime {
+    pub(super) fn assign_reference(
+        &mut self,
+        target: &Expr,
+        source: &Expr,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let target = self.location(target)?;
+        let source = self.location(source)?;
+        if target.name == b"GLOBALS"
+            && !target.global
+            && target.object.is_none()
+            && target.static_class.is_none()
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "$GLOBALS can only be modified using the $GLOBALS[$name] = $value syntax",
+                line,
+            ));
+        }
+        if source.name == b"GLOBALS"
+            && !source.global
+            && source.object.is_none()
+            && source.static_class.is_none()
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Cannot acquire reference to $GLOBALS",
+                line,
+            ));
+        }
+        for location in [&target, &source] {
+            if location.object.is_some()
+                || location.static_class.is_some()
+                || !location.keys.is_empty()
+            {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "References to array elements and properties are not supported yet",
+                    line,
+                ));
+            }
+            if location.name == b"this" {
+                return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
+            }
+        }
+        let reference = self
+            .location_scope(&source)
+            .get_or_insert(&source.name, Value::Null);
+        let value = reference.borrow().clone();
+        self.location_scope(&target).insert(target.name, reference);
+        Ok(value)
+    }
+
     pub(super) fn globals(&self) -> &Scope {
         self.callers.first().unwrap_or(&self.scope)
     }

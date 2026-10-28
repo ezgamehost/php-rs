@@ -822,6 +822,10 @@ impl Parser {
         Ok(ExprKind::Match(Box::new(subject), arms))
     }
     fn expr(&mut self, min: u8) -> Result<Expr, Error> {
+        self.expr_inner(min, true)
+    }
+
+    fn expr_inner(&mut self, min: u8, allow_operand_assignment: bool) -> Result<Expr, Error> {
         let token = self.token().clone();
         let line = token.line;
         self.pos += 1;
@@ -1155,7 +1159,7 @@ impl Parser {
                 };
                 continue;
             }
-            let op = match &self.token().kind {
+            let mut op = match &self.token().kind {
                 Kind::Symbol(op) => op.clone(),
                 Kind::Word(op) => String::from_utf8_lossy(op).to_ascii_lowercase(),
                 _ => break,
@@ -1166,7 +1170,8 @@ impl Parser {
             // PHP's variable-assignment grammar can start an operand even
             // below a higher-precedence operator: clone $copy = $original,
             // -$x = 2, and 1 + $x = 2 all consume the assignment on the right.
-            let operand_assignment = power == 4
+            let operand_assignment = allow_operand_assignment
+                && power == 4
                 && (lhs.is_writable()
                     || (op == "=" && matches!(lhs.kind, ExprKind::Array(_) | ExprKind::List(_))));
             if power < min && !operand_assignment {
@@ -1182,7 +1187,31 @@ impl Parser {
                 ));
             }
             self.pos += 1;
-            let rhs = if op == "instanceof" {
+            let rhs = if op == "=" && self.eat("&") {
+                op = "=&".into();
+                let source = self.expr_inner(23, false)?;
+                if source.has_nullsafe_chain() {
+                    return Err(Error::parse(
+                        "Cannot take reference of a nullsafe chain",
+                        source.line,
+                    ));
+                }
+                if matches!(source.kind, ExprKind::Group(_))
+                    || (!source.is_writable() && !matches!(source.kind, ExprKind::Call(_, _)))
+                {
+                    return Err(Error::parse(
+                        "Cannot assign by reference to this expression",
+                        source.line,
+                    ));
+                }
+                if source.is_globals() {
+                    return Err(Error::parse(
+                        "Cannot acquire reference to $GLOBALS",
+                        source.line,
+                    ));
+                }
+                source
+            } else if op == "instanceof" {
                 self.instanceof_target()?
             } else {
                 self.expr(if right { power } else { power + 1 })?

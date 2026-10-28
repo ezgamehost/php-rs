@@ -1,0 +1,55 @@
+Before: 5256 cases; 1160 passed, 3688 failed, 408 unsupported
+After: 5256 cases; 1178 passed, 3670 failed, 408 unsupported
+New passes: 18; regressions: 0
+NEW PASS: Zend/tests/array_append_COW.phpt
+NEW PASS: Zend/tests/assign_to_var_001.phpt
+NEW PASS: Zend/tests/assign_to_var_002.phpt
+NEW PASS: Zend/tests/assign_to_var_004.phpt
+NEW PASS: Zend/tests/bug68163.phpt
+NEW PASS: Zend/tests/bug73960.phpt
+NEW PASS: Zend/tests/bw_or_assign_with_ref.phpt
+NEW PASS: Zend/tests/dereference/dereference_003.phpt
+NEW PASS: Zend/tests/dynamic_call/bug69167.phpt
+NEW PASS: Zend/tests/foreach/bug35106.phpt
+NEW PASS: Zend/tests/list/bug71030.phpt
+NEW PASS: Zend/tests/list/list_002.phpt
+NEW PASS: Zend/tests/list/list_004.phpt
+NEW PASS: Zend/tests/magic_methods/bug47353.phpt
+NEW PASS: Zend/tests/nullsafe_operator/012.phpt
+NEW PASS: Zend/tests/pow_ref.phpt
+NEW PASS: Zend/tests/type_declarations/return_separation.phpt
+NEW PASS: Zend/tests/varvars_by_ref.phpt
+
+Most frequent remaining failure messages:
+521: ParseError: Expected ';'
+206: Error: Class "ReflectionClass" not found
+130: Error: Call to undefined function set_error_handler()
+120: ParseError: Expected parameter variable
+96: ParseError: Expected expression
+90: Error: References to array elements and properties are not supported yet
+64: Error: Class "Fiber" not found
+51: ParseError: Expected '('
+49: Error: Undefined constant "yield"
+46: ParseError: Expected function name
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+36: Error: Interface "ArrayAccess" not found
+32: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

@@ -51,6 +51,9 @@ new request. The CLI returns the low eight bits of the requested status.
   keys, skipped entries, indexed targets, and `foreach`.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
+- Reference assignment between named/dynamic variables and individual `$GLOBALS`
+  entries, sharing cells with closure captures and global/static bindings.
+  Rebinding detaches only the target name; ordinary reads still copy values.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
 - SPL autoloader registration, removal, inspection, and explicit dispatch, with
   default extension-based file loading, recursion guards, and loader exceptions.
@@ -218,7 +221,7 @@ new request. The CLI returns the low eight bits of the requested status.
 - Binary-safe `str_repeat`, `strrev`, `chr`, and `ord`, with scalar/Stringable
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 
-Known gaps include intersection/DNF types, most builtins, references, complete exception APIs,
+Known gaps include intersection/DNF types, most builtins, array/property references, complete exception APIs,
 generators, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties,
 property hooks,
@@ -229,7 +232,7 @@ complete closure debugging and magic-constant context, exact object handle reuse
 involving deletion/reinsertion of visited properties also remain unfinished.
 Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
-Closure reference captures work, but general references and by-reference
+Variable reference assignment and closure reference captures work, but array/property references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception
 handlers, protected exception-property access (including severity), and complete compile-time fatal

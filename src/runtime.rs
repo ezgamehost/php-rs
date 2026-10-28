@@ -894,6 +894,9 @@ impl Runtime {
                 }
             }
             ExprKind::Assign(target, op, expr) => {
+                if op == "=&" {
+                    return self.assign_reference(target, expr, line);
+                }
                 if matches!(target.kind, ExprKind::Destructure(_)) {
                     let value = self.eval(expr)?;
                     return self.assign_target(target, value);

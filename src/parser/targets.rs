@@ -284,9 +284,9 @@ impl Validator {
                 self.expression(left, false)?;
                 self.expression(right, false)?;
             }
-            ExprKind::Assign(left, _, right) => {
+            ExprKind::Assign(left, op, right) => {
                 self.expression(left, true)?;
-                self.expression(right, false)?;
+                self.expression(right, op == "=&")?;
             }
             ExprKind::Index(base, key) => {
                 if key.is_none() && base.is_globals() {

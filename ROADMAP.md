@@ -61,7 +61,10 @@ definition of completion.
    unbracketed namespaces, separate class/function/constant imports, aliases,
    grouped imports, and static name resolution with function/constant fallback
    are implemented. Namespace context is lexical and does not rewrite dynamic strings.
-   Remaining: references,
+   Variable reference assignment shares cells across named/dynamic variables,
+   individual GLOBALS entries, closure captures, and global/static bindings.
+   Rebinding preserves other aliases; undefined reference sources initialize to null.
+   Remaining: array/property references,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals, by-reference functions,
    Closure methods and complete object context handling,

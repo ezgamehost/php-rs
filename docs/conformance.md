@@ -157,13 +157,27 @@ output and status directly with its requested precision setting; its INI section
 remains unsupported by the runner and is not counted as passing. Expected-warning
 interleaving, complete memory-limit semantics, and other string builtins remain
 unfinished.
+The [variable-reference assignment slice](conformance/php-8.5.0-variable-references-hillclimb.txt)
+adds 18 Zend passes with zero regressions. `=&` binds named/dynamic variables and
+individual `$GLOBALS` entries to shared variable cells. Undefined sources become
+null without read warnings; rebinding replaces the target binding without
+overwriting its former aliases. Value reads preserve ordinary copy-on-write
+behavior. Existing closure reference captures and global/static bindings use the
+same cells. Parsing retains reference-assignment precedence and rejects whole
+`$GLOBALS`, `$this`, and nullsafe reference sources where required. All 797
+existing Rust tests, 57 reference-checked project fixtures, formatting, and Clippy
+pass. No new custom tests were added. The upstream language subset records
+97 passes, 137 failures, and 60 unsupported fixtures. Array-element and property
+references, references stored in arrays, by-reference parameters/returns,
+destructuring references, and reference-aware iteration remain incomplete;
+unsupported storage references still fail explicitly.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1160 | 3688 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1178 | 3670 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
