@@ -667,7 +667,7 @@ impl Runtime {
                 return Err(count_error(maximum, "at most"));
             }
             if let Some(builtin) = builtin {
-                return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
+                return self.call_builtin(builtin, &name, bound, line, dynamic);
             }
         }
         let function = function.unwrap();
@@ -853,10 +853,10 @@ fn redeclared(decl: &FunctionDecl) -> Error {
         decl.line,
     )
 }
-struct BoundArguments {
-    fixed: Vec<Option<Value>>,
-    references: Vec<Option<variables::Cell>>,
-    extra: PhpArray,
+pub(super) struct BoundArguments {
+    pub(super) fixed: Vec<Option<Value>>,
+    pub(super) references: Vec<Option<variables::Cell>>,
+    pub(super) extra: PhpArray,
     positional: usize,
     saw_named: bool,
     variadic: bool,

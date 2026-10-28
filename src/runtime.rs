@@ -15,6 +15,7 @@ mod array_callbacks;
 mod attributes;
 mod autoload;
 mod builtins;
+mod callable_inspection;
 mod callbacks;
 mod casting;
 mod class_aliases;

@@ -56,10 +56,25 @@ impl Runtime {
         let declaring = self
             .find_class(declaring_name(method))
             .expect("method class is linked");
+        let mut prototype = declaring.clone();
+        if method.visibility == Visibility::Protected {
+            let name = method.name.rsplit(|byte| *byte == b':').next().unwrap();
+            while let Some(parent) = &prototype.parent {
+                let Some(ancestor) = objects::method(parent, name) else {
+                    break;
+                };
+                if ancestor.visibility == Visibility::Private {
+                    break;
+                }
+                prototype = self
+                    .find_class(declaring_name(&ancestor))
+                    .expect("ancestor method class is linked");
+            }
+        }
         if self.class_context.as_ref().is_some_and(|context| {
             context.scope.name.eq_ignore_ascii_case(&declaring.name)
                 || (method.visibility == Visibility::Protected
-                    && (context.scope.is_a(&declaring.name) || declaring.is_a(&context.scope.name)))
+                    && (context.scope.is_a(&prototype.name) || prototype.is_a(&context.scope.name)))
         }) {
             return Ok(());
         }

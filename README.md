@@ -241,6 +241,11 @@ new request. The CLI returns the low eight bits of the requested status.
   visibility. Trait aliases precede their original method. `get_class_vars` returns
   visible instance and static declaration defaults, including null for uninitialized
   typed declarations, with class-name conversion and autoloading.
+- `is_callable` validates available function/method/closure/invokable targets,
+  supports syntax-only checks without autoloading, and writes descriptive callable
+  names through its reference output parameter. Scoped, abstract, and magic method
+  checks use caller visibility; deprecated callback forms emit diagnostics.
+  Protected overrides retain access through their non-private ancestor prototype.
 - Core builtins: `var_dump`, `print_r`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,

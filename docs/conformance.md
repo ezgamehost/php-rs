@@ -423,6 +423,27 @@ diagnostic matching and error handlers still block two targeted fixtures. Closur
 method names are inspectable; their binding/call APIs remain unimplemented. Property
 hooks and native-class metadata remain incomplete.
 
+The [callable inspection slice](conformance/php-8.5.0-callable-inspection-hillclimb.txt)
+adds 16 Zend passes and 4 standard-library passes, with zero Zend or reflection
+regressions. `is_callable` supports available function names, class/object method
+arrays, closures, and invokable objects. Syntax-only checks validate callback shape
+without autoloading. Semantic checks preserve caller visibility, active object context,
+abstract-method rejection, magic handlers, and autoloader exceptions. Deprecated
+self/parent/static and qualified-method callback forms emit diagnostics.
+
+The optional `callable_name` output preserves supplied string/array names and reports
+closure declaration names, including first-class methods and anonymous class names.
+Native dispatch now retains reference argument cells, so named output arguments and
+typed-property reference constraints use the shared reference machinery. `syntax_only`
+has its correct false default in parameter metadata. Protected overrides now use their
+original non-private prototype for access checks, fixing ordinary calls, magic method
+fallback, and trait cases as well as callable inspection.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, along with
+formatting and Clippy. No new custom tests were added. Three standard fixtures remain
+blocked by expected diagnostic matching, JSON, and file/resource functions. Remaining
+native callable APIs and complete callable compatibility remain unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -430,10 +451,11 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1429 | 3419 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1445 | 3403 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 141 | 314 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
+| PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

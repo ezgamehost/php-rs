@@ -168,7 +168,11 @@ definition of completion.
    include PHP 8.5 deprecations; common native argument diagnostics include parameter
    names, received types, and argument counts. Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
-   internal callback argument coercion. SPL autoload queues support callback
+   internal callback argument coercion. Callable inspection supports syntax-only
+   checks, autoloading, scoped/abstract/magic methods, descriptive output names,
+   and typed reference output assignments. Native dispatch retains argument cells.
+   Protected method access follows the original non-private prototype.
+   SPL autoload queues support callback
    identity, prepend/removal, recursive lookup guards, exceptions, default file
    extensions, and runtime class/interface/trait/member resolution. Remaining:
    inheritance-variance autoloading, configurable include paths, stream wrappers,

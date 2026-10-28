@@ -1,0 +1,105 @@
+Zend suite
+
+Before: 5256 cases; 1429 passed, 3419 failed, 408 unsupported
+After: 5256 cases; 1445 passed, 3403 failed, 408 unsupported
+New passes: 16; regressions: 0
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_008.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_009.phpt
+NEW PASS: Zend/tests/bug29210.phpt
+NEW PASS: Zend/tests/bug34678.phpt
+NEW PASS: Zend/tests/bug43651.phpt
+NEW PASS: Zend/tests/bug48899.phpt
+NEW PASS: Zend/tests/bug65108.phpt
+NEW PASS: Zend/tests/bug71622.phpt
+NEW PASS: Zend/tests/closures/closure_001.phpt
+NEW PASS: Zend/tests/closures/closure_016.phpt
+NEW PASS: Zend/tests/first_class_callable/gh18062.phpt
+NEW PASS: Zend/tests/inheritance/grandparent_prototype.phpt
+NEW PASS: Zend/tests/is_callable_trampoline_uaf.phpt
+NEW PASS: Zend/tests/magic_methods/bug61782.phpt
+NEW PASS: Zend/tests/traits/gh14009_001.phpt
+NEW PASS: Zend/tests/traits/gh14009_004.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 141 passed, 314 failed, 37 unsupported
+After: 492 cases; 141 passed, 314 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+38: Error: Class "ReflectionProperty" not found
+18: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+14: Error: Call to undefined method ReflectionClass::getProperty()
+9: ReflectionException: Class "Object" does not exist
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: Error: Class "ReflectionClassConstant" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Object of class ReflectionObject could not be converted to string
+5: ReflectionException: Class "ReflectionProperty" does not exist
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Class "Reflection" not found
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Standard is_callable fixtures
+
+Before: 7 cases; 0 passed, 7 failed, 0 unsupported
+After: 7 cases; 4 passed, 3 failed, 0 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/general_functions/is_callable_abstract_method.phpt
+NEW PASS: ext/standard/tests/general_functions/is_callable_anon.phpt
+NEW PASS: ext/standard/tests/general_functions/is_callable_basic1.phpt
+NEW PASS: ext/standard/tests/general_functions/is_callable_basic2.phpt
+
+Most frequent remaining failure messages:
+1: Unexpected diagnostics: Deprecated: Callables of the form ["B", "A::foo"] are deprecated
+1: Error: Call to undefined function json_encode()
+1: Error: Call to undefined function fopen()
+
+Unsupported section combinations:
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: expected diagnostic matching, file/resource functions, JSON, remaining native callable APIs, and complete callable compatibility remain unfinished. Unsupported sections are not counted as passes.
