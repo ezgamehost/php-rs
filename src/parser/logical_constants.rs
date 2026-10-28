@@ -253,7 +253,9 @@ pub(super) fn constant(expr: &Expr) -> Option<Value> {
             ExprKind::Literal(_) | ExprKind::Constant(_) => true,
             ExprKind::ClassName(value) | ExprKind::Group(value) => eligible(value),
             ExprKind::Unary(op, value) => {
-                eligible(value) && !(op == "!" && matches!(constant(value), Some(Value::Float(_))))
+                op != "@"
+                    && eligible(value)
+                    && !(op == "!" && matches!(constant(value), Some(Value::Float(_))))
             }
             ExprKind::Binary(op, left, right) => {
                 !matches!(op.as_str(), "??" | "|>" | "instanceof")

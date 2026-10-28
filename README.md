@@ -52,6 +52,8 @@ new request. The CLI returns the low eight bits of the requested status.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
+- Request-local `error_reporting` masks and `@` suppression, including nested scopes,
+  exception restoration, and explicit mask changes inside suppressed expressions.
 - Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,

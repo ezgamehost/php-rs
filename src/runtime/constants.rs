@@ -18,7 +18,7 @@ impl Runtime {
             )
         })?;
         if name.strip_prefix(b"\\").unwrap_or(name) == b"E_STRICT" {
-            self.warnings.push(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"));
+            self.diagnostics.push(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"));
         }
         Ok(value)
     }
@@ -26,7 +26,7 @@ impl Runtime {
     pub(super) fn define_constant(&mut self, name: Vec<u8>, value: Value, line: usize) -> bool {
         let key = key(&name);
         if self.constants.contains_key(&key) || predefined(&name).is_some() {
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Constant {} already defined, this will be an error in PHP 9 on line {line}",
                 String::from_utf8_lossy(&name)
             ));

@@ -8,7 +8,7 @@ pub(super) fn cast(
     kind: CastKind,
     value: Value,
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     if matches!(value, Value::Closure(_) | Value::Object(_))
         && matches!(kind, CastKind::Int | CastKind::Float)
@@ -112,7 +112,7 @@ impl Runtime {
                 }
             }
             value => {
-                value.warn_nan("object", line, &mut self.warnings);
+                value.warn_nan("object", line, &mut self.diagnostics);
                 properties.insert(ArrayKey::String(b"scalar".to_vec()), value);
             }
         }

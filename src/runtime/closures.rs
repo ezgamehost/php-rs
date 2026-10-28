@@ -18,7 +18,7 @@ impl Runtime {
             } else if lambda.arrow {
                 continue;
             } else {
-                self.warnings.push(format!(
+                self.diagnostics.push(format!(
                     "Undefined variable ${} on line {}",
                     String::from_utf8_lossy(&capture.name),
                     lambda.function.line

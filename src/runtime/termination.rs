@@ -4,7 +4,7 @@ use crate::ast::TypeDecl;
 impl Runtime {
     pub(super) fn terminate(&mut self, status: &Value, line: usize) -> Result<Value, Error> {
         let status = if !self.strict_types && matches!(status, Value::Null) {
-            self.warnings.push(format!("Deprecated: exit(): Passing null to parameter #1 ($status) of type string|int is deprecated on line {line}"));
+            self.diagnostics.push(format!("Deprecated: exit(): Passing null to parameter #1 ($status) of type string|int is deprecated on line {line}"));
             Value::Int(0)
         } else {
             let ty = TypeDecl {

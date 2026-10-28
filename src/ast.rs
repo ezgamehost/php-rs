@@ -431,6 +431,7 @@ impl Expr {
             ExprKind::ClassName(class) => class
                 .static_class_name()
                 .is_some_and(|name| !name.eq_ignore_ascii_case(b"static")),
+            ExprKind::Unary(op, _) if op == "@" => false,
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.constant_expression(allow_object_cast),
             ExprKind::Cast(kind, e) => {
                 *kind != CastKind::Void

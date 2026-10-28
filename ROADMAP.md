@@ -48,6 +48,8 @@ definition of completion.
    NaN boolean/string/array conversion warnings, implicit integer diagnostics,
    and silent unordered numeric/string comparisons implemented. Logical
    constant folding preserves compile-time warnings and short-circuit behavior.
+   `error_reporting` filters diagnostics at emission time; `@` scopes preserve
+   fatal error levels and restore masks across exceptions.
    Global constants, dynamic definition/lookup, and core predefined constants implemented.
    Parameter/return types for available values, nullable/union types, typed variadics,
    default validation, void/never returns, and strict_types implemented.
@@ -115,7 +117,8 @@ definition of completion.
 
 ## Validation gates for every slice
 
-- Add failing behavioral regressions before implementation.
+- Use failing upstream PHPT cases to drive implementation; run existing Rust tests
+  as regression checks and compare full Zend results before and after each slice.
 - Run `cargo fmt --check`, `cargo test`, and
   `cargo clippy --all-targets -- -D warnings`.
 - Compare relevant behavior against PHP 8.5; record reference version and scope.

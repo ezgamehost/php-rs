@@ -77,8 +77,10 @@ impl Runtime {
             return Ok(Value::Null);
         }
         self.scope.reconcile(std::mem::take(&mut self.variables));
+        self.diagnostics.messages = std::mem::take(&mut self.warnings);
         self.static_variables.remove(&None);
         let result = self.execute_unit(code, source, Value::Null, None);
+        self.warnings = std::mem::take(&mut self.diagnostics.messages);
         self.variables = self
             .scope
             .iter()
@@ -103,9 +105,12 @@ impl Runtime {
         if let Some(path) = &source.path {
             self.record_include(path.clone());
         }
-        self.warnings.extend(warnings);
+        let previous_compiling = std::mem::replace(&mut self.diagnostics.compiling, true);
+        self.diagnostics.extend(warnings);
         self.scope.reserve_variables(&statements);
-        self.prepare_functions(&mut statements)?;
+        let prepared = self.prepare_functions(&mut statements);
+        self.diagnostics.compiling = previous_compiling;
+        prepared?;
         let previous_source = std::mem::replace(&mut self.source, source);
         let previous_strict = std::mem::replace(&mut self.strict_types, strict);
         let previous_function = self.current_function.take();
@@ -185,7 +190,7 @@ impl Runtime {
         let (path, code) = match loaded {
             Ok(loaded) => loaded,
             Err(error) => {
-                self.warnings.push(format!(
+                self.diagnostics.push(format!(
                     "{label}({}): Failed to open stream: {error} on line {line}",
                     String::from_utf8_lossy(name)
                 ));
@@ -217,7 +222,7 @@ impl Runtime {
                 line,
             ))
         } else {
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "{label}(): Failed opening '{name}' for inclusion on line {line}"
             ));
             Ok(Value::Bool(false))

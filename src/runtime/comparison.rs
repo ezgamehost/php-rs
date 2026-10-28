@@ -57,7 +57,7 @@ impl Runtime {
                 } else {
                     "float"
                 };
-                self.warnings.push(format!(
+                self.diagnostics.push(format!(
                     "Notice: Object of class {} could not be converted to {kind} on line {line}",
                     builtins::debug_type(left)
                 ));
@@ -69,7 +69,7 @@ impl Runtime {
                 } else {
                     "float"
                 };
-                self.warnings.push(format!(
+                self.diagnostics.push(format!(
                     "Notice: Object of class {} could not be converted to {kind} on line {line}",
                     builtins::debug_type(right)
                 ));

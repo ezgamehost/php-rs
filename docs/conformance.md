@@ -31,13 +31,24 @@ aliases, visibility/final adaptations, abstract requirements, member compatibili
 and magic constants follow the [PHP trait semantics](https://www.php.net/manual/en/language.oop5.traits.php),
 including PHP 8.5 composition before inheritance. Some newly passing fixtures
 contain attributes; this does not establish attribute validation support.
+The [error-reporting slice](conformance/php-8.5.0-error-reporting-hillclimb.txt)
+adds 37 passes without regressions. `error_reporting` queries and updates a
+request-local mask, applying nullable integer argument coercion and signed
+32-bit mask conversion. Diagnostics are filtered when emitted, including
+compile warnings in subsequently loaded files. The `@` operator preserves PHP
+8's fatal levels, restores nested masks after exceptions, and preserves explicit
+changes that enable nonfatal reporting inside the expression. Constant
+initializers reject `@`. Existing Rust tests (797), reference-checked project
+PHPT fixtures (57), formatting, and Clippy all pass. No new custom tests or
+matrices were added. Error handlers, diagnostic interleaving, and exact fatal
+rendering remain incomplete.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 918 | 3930 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 955 | 3893 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

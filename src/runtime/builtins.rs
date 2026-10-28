@@ -36,6 +36,7 @@ pub(super) enum Builtin {
     FuncNumArgs,
     FuncGetArg,
     FuncGetArgs,
+    ErrorReporting,
 }
 impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
@@ -79,6 +80,7 @@ impl Builtin {
             b"func_num_args" => Self::FuncNumArgs,
             b"func_get_arg" => Self::FuncGetArg,
             b"func_get_args" => Self::FuncGetArgs,
+            b"error_reporting" => Self::ErrorReporting,
             _ => return None,
         })
     }
@@ -100,6 +102,7 @@ impl Builtin {
             Self::Exit => &[("status", true, false)],
             Self::GetIncludedFiles | Self::FuncNumArgs | Self::FuncGetArgs => &[],
             Self::FuncGetArg => &[("position", false, false)],
+            Self::ErrorReporting => &[("error_level", true, false)],
             Self::Strlen => &[("string", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
@@ -162,6 +165,24 @@ impl Runtime {
         line: usize,
         dynamic: bool,
     ) -> Result<Value, Error> {
+        if matches!(builtin, Builtin::ErrorReporting) {
+            let previous = self.diagnostics.reporting;
+            if let Some(value) = args[0]
+                .as_ref()
+                .filter(|value| !matches!(value, Value::Null))
+            {
+                self.diagnostics.reporting = self.native_int(value, "error_reporting", 1, line).map_err(|error| {
+                    if error.kind != ErrorKind::TypeError { return error; }
+                    let given = match value {
+                        Value::Bool(true) => "true",
+                        Value::Bool(false) => "false",
+                        _ => debug_type(value),
+                    };
+                    Error::new(ErrorKind::TypeError, format!("error_reporting(): Argument #1 ($error_level) must be of type ?int, {given} given"), line)
+                })? as i32 as i64;
+            }
+            return Ok(Value::Int(previous));
+        }
         if matches!(
             builtin,
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass
@@ -195,6 +216,7 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::ErrorReporting => unreachable!(),
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
             Builtin::GetObjectVars => match first {
@@ -202,7 +224,7 @@ impl Runtime {
                     crate::ast::CastKind::Array,
                     first.clone(),
                     line,
-                    &mut self.warnings,
+                    &mut self.diagnostics,
                 ),
                 Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),
                 _ => Err(Error::new(
@@ -289,7 +311,7 @@ impl Runtime {
                 if let Some(flag) = &args[2]
                     && self.native_bool(flag, &name, 3, line)?
                 {
-                    self.warnings.push(format!("define(): Argument #3 ($case_insensitive) is ignored since declaration of case-insensitive constants is no longer supported on line {line}"));
+                    self.diagnostics.push(format!("define(): Argument #3 ($case_insensitive) is ignored since declaration of case-insensitive constants is no longer supported on line {line}"));
                 }
                 Ok(Value::Bool(self.define_constant(
                     constant,
@@ -343,9 +365,9 @@ impl Runtime {
                         line,
                     ));
                 }
-                dump(first, 0, &mut self.output, line, &mut self.warnings);
+                dump(first, 0, &mut self.output, line, &mut self.diagnostics);
                 for (_, value) in extra.entries() {
-                    dump(value, 0, &mut self.output, line, &mut self.warnings);
+                    dump(value, 0, &mut self.output, line, &mut self.diagnostics);
                 }
                 Ok(Value::Null)
             }
@@ -402,7 +424,7 @@ impl Runtime {
             }
             Builtin::ArrayKeyExists => {
                 let array = require_array(args[1].as_ref().unwrap(), &name, 2, line)?;
-                let key = ArrayKey::from_value(first, line, &mut self.warnings)?;
+                let key = ArrayKey::from_value(first, line, &mut self.diagnostics)?;
                 Ok(Value::Bool(array.get(&key).is_some()))
             }
             Builtin::FunctionExists => {
@@ -435,7 +457,7 @@ impl Runtime {
             return Err(type_error(function, position, "string", line));
         }
         self.warn_null(value, function, position, "string", line);
-        value.warn_nan("string", line, &mut self.warnings);
+        value.warn_nan("string", line, &mut self.diagnostics);
         Ok(value.to_bytes())
     }
     pub(super) fn native_int(
@@ -464,7 +486,7 @@ impl Runtime {
             return Err(type_error(function, position, "int", line));
         }
         self.warn_null(value, function, position, "int", line);
-        value.integer(line, &mut self.warnings)
+        value.integer(line, &mut self.diagnostics)
     }
     fn native_bool(
         &mut self,
@@ -481,7 +503,7 @@ impl Runtime {
             return Err(type_error(function, position, "bool", line));
         }
         self.warn_null(value, function, position, "bool", line);
-        Ok(value.to_bool(line, &mut self.warnings))
+        Ok(value.to_bool(line, &mut self.diagnostics))
     }
     fn warn_null(
         &mut self,
@@ -492,7 +514,7 @@ impl Runtime {
         line: usize,
     ) {
         if matches!(value, Value::Null) {
-            self.warnings.push(format!("Deprecated: {function}(): Passing null to parameter #{position} of type {kind} is deprecated on line {line}"));
+            self.diagnostics.push(format!("Deprecated: {function}(): Passing null to parameter #{position} of type {kind} is deprecated on line {line}"));
         }
     }
 }
@@ -541,7 +563,13 @@ fn count(array: &PhpArray, recursive: bool) -> i64 {
             0
         }
 }
-fn dump(value: &Value, depth: usize, out: &mut Vec<u8>, line: usize, warnings: &mut Vec<String>) {
+fn dump(
+    value: &Value,
+    depth: usize,
+    out: &mut Vec<u8>,
+    line: usize,
+    warnings: &mut dyn WarningSink,
+) {
     dump_inner(value, depth, out, &mut HashSet::new(), line, warnings);
 }
 fn dump_inner(
@@ -550,7 +578,7 @@ fn dump_inner(
     out: &mut Vec<u8>,
     seen: &mut HashSet<usize>,
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) {
     match value {
         Value::Object(object) => {

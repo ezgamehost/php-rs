@@ -10,7 +10,7 @@ impl ArrayKey {
     pub(crate) fn from_value(
         value: &Value,
         line: usize,
-        warnings: &mut Vec<String>,
+        warnings: &mut dyn crate::diagnostics::WarningSink,
     ) -> Result<Self, Error> {
         Ok(match value {
             Value::Int(n) => Self::Int(*n),

@@ -15,7 +15,12 @@ pub enum Value {
 }
 
 impl Value {
-    pub(crate) fn warn_nan(&self, kind: &str, line: usize, warnings: &mut Vec<String>) {
+    pub(crate) fn warn_nan(
+        &self,
+        kind: &str,
+        line: usize,
+        warnings: &mut dyn crate::diagnostics::WarningSink,
+    ) {
         if matches!(self, Self::Float(n) if n.is_nan()) {
             warnings.push(format!(
                 "unexpected NAN value was coerced to {kind} on line {line}"
@@ -23,7 +28,11 @@ impl Value {
         }
     }
 
-    pub(crate) fn to_bool(&self, line: usize, warnings: &mut Vec<String>) -> bool {
+    pub(crate) fn to_bool(
+        &self,
+        line: usize,
+        warnings: &mut dyn crate::diagnostics::WarningSink,
+    ) -> bool {
         self.warn_nan("bool", line, warnings);
         self.is_truthy()
     }
@@ -50,7 +59,11 @@ impl Value {
             Self::Closure(_) | Self::Object(_) => b"Object".to_vec(),
         }
     }
-    pub(crate) fn number(&self, line: usize, warnings: &mut Vec<String>) -> Result<Self, Error> {
+    pub(crate) fn number(
+        &self,
+        line: usize,
+        warnings: &mut dyn crate::diagnostics::WarningSink,
+    ) -> Result<Self, Error> {
         match self {
             Self::Object(object) => Err(Error::new(
                 ErrorKind::TypeError,
@@ -86,7 +99,11 @@ impl Value {
             }
         }
     }
-    pub(crate) fn integer(&self, line: usize, warnings: &mut Vec<String>) -> Result<i64, Error> {
+    pub(crate) fn integer(
+        &self,
+        line: usize,
+        warnings: &mut dyn crate::diagnostics::WarningSink,
+    ) -> Result<i64, Error> {
         match self.number(line, warnings)? {
             Self::Int(n) => Ok(n),
             Self::Float(n) => {

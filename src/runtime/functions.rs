@@ -6,7 +6,7 @@ use std::collections::HashSet;
 
 impl Runtime {
     pub(super) fn prepare_functions(&mut self, stmts: &mut [Stmt]) -> Result<(), Error> {
-        diagnose_functions(stmts, &mut self.warnings);
+        diagnose_functions(stmts, &mut self.diagnostics);
         self.prepare_classes(stmts)?;
         let mut declarations = Vec::new();
         take_hoisted(stmts, &mut declarations);
@@ -643,11 +643,11 @@ fn overwritten(name: &[u8], line: usize) -> Error {
     )
 }
 
-fn diagnose_functions(stmts: &[Stmt], warnings: &mut Vec<String>) {
+fn diagnose_functions(stmts: &[Stmt], warnings: &mut dyn WarningSink) {
     diagnose_statements(stmts, warnings, &mut Vec::new());
 }
 
-fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mut Vec<bool>) {
+fn diagnose_statements(stmts: &[Stmt], warnings: &mut dyn WarningSink, switches: &mut Vec<bool>) {
     for stmt in stmts {
         match stmt {
             Stmt::Class(class) => {

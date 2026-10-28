@@ -1,0 +1,74 @@
+Before: 5256 cases; 918 passed, 3930 failed, 408 unsupported
+After: 5256 cases; 955 passed, 3893 failed, 408 unsupported
+New passes: 37; regressions: 0
+NEW PASS: Zend/tests/bug32428.phpt
+NEW PASS: Zend/tests/bug34786.phpt
+NEW PASS: Zend/tests/bug38287.phpt
+NEW PASS: Zend/tests/bug39018_2.phpt
+NEW PASS: Zend/tests/bug60169.phpt
+NEW PASS: Zend/tests/dereference/dereference_004.phpt
+NEW PASS: Zend/tests/error_reporting/bug27731.phpt
+NEW PASS: Zend/tests/error_reporting/bug33771.phpt
+NEW PASS: Zend/tests/error_reporting/bug72162.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting01.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting02.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting06.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting07.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting10.phpt
+NEW PASS: Zend/tests/instanceof_001.phpt
+NEW PASS: Zend/tests/inter_02.phpt
+NEW PASS: Zend/tests/throw/leaks.phpt
+NEW PASS: Zend/tests/traits/bugs/abstract-methods02.phpt
+NEW PASS: Zend/tests/traits/bugs/abstract-methods03.phpt
+NEW PASS: Zend/tests/traits/bugs/abstract-methods04.phpt
+NEW PASS: Zend/tests/traits/bugs/alias-semantics.phpt
+NEW PASS: Zend/tests/traits/bugs/alias-semantics02.phpt
+NEW PASS: Zend/tests/traits/bugs/overridding-conflicting-methods.phpt
+NEW PASS: Zend/tests/traits/conflict002.phpt
+NEW PASS: Zend/tests/traits/flattening002.phpt
+NEW PASS: Zend/tests/traits/flattening003.phpt
+NEW PASS: Zend/tests/traits/inheritance001.phpt
+NEW PASS: Zend/tests/traits/inheritance002.phpt
+NEW PASS: Zend/tests/traits/language001.phpt
+NEW PASS: Zend/tests/traits/language002.phpt
+NEW PASS: Zend/tests/traits/language003.phpt
+NEW PASS: Zend/tests/traits/language004.phpt
+NEW PASS: Zend/tests/traits/language005.phpt
+NEW PASS: Zend/tests/traits/language007.phpt
+NEW PASS: Zend/tests/traits/language009.phpt
+NEW PASS: Zend/tests/traits/language012.phpt
+NEW PASS: Zend/tests/traits/language013.phpt
+
+Most frequent remaining failure messages:
+547: ParseError: Expected ';'
+249: ParseError: Expected expression
+188: ParseError: Invalid non-public member declaration
+178: Error: Class "ReflectionClass" not found
+124: Error: Call to undefined function set_error_handler()
+122: ParseError: Expected parameter variable
+62: Error: Class "Fiber" not found
+57: Error: Call to undefined function spl_autoload_register()
+50: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+43: ParseError: Expected '{'
+42: ParseError: Constant expression contains invalid operations
+38: ParseError: Expected ')'
+33: ParseError: Set visibility requires a static property
+31: ParseError: Invalid interface member declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

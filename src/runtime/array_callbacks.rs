@@ -85,9 +85,9 @@ impl Runtime {
                     _ => vec![value.clone()],
                 };
                 self.call_callback(callback, &values, line)?
-                    .to_bool(line, &mut self.warnings)
+                    .to_bool(line, &mut self.diagnostics)
             } else {
-                value.to_bool(line, &mut self.warnings)
+                value.to_bool(line, &mut self.diagnostics)
             };
             if keep {
                 result.insert(key.clone(), value.clone());

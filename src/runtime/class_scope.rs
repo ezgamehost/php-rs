@@ -272,7 +272,7 @@ impl Runtime {
             }
         } else {
             if parent && self.class_context.is_none() {
-                self.warnings.push(format!("Deprecated: Calling get_parent_class() without arguments is deprecated on line {line}"));
+                self.diagnostics.push(format!("Deprecated: Calling get_parent_class() without arguments is deprecated on line {line}"));
                 return Ok(Value::Bool(false));
             }
             let class = self
@@ -286,7 +286,7 @@ impl Runtime {
                         line,
                     )
                 })?;
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Deprecated: Calling {name}() without arguments is deprecated on line {line}"
             ));
             Some(class)

@@ -72,7 +72,8 @@ fn constant_keys(arms: &[MatchArm]) -> Option<Vec<(Value, &MatchArm)>> {
                 return None;
             }
             let value = constants.eval(condition).ok()?;
-            if !constants.warnings.is_empty() || !matches!(value, Value::Int(_) | Value::String(_))
+            if !constants.diagnostics.is_empty()
+                || !matches!(value, Value::Int(_) | Value::String(_))
             {
                 return None;
             }

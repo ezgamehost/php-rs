@@ -515,7 +515,7 @@ impl Runtime {
     }
     fn warn_static_as_instance(&mut self, object: &PhpObject, name: &[u8], line: usize) {
         if self.instance_static_owner(&object.class, name).is_some() {
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Notice: Accessing static property {}::${} as non static on line {line}",
                 object.class_name,
                 String::from_utf8_lossy(name)
@@ -555,7 +555,7 @@ impl Runtime {
             {
                 return Err(Self::uninitialized_property(&owner, name, line));
             }
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Undefined property: {}::${} on line {line}",
                 object.class_name,
                 String::from_utf8_lossy(name)
@@ -597,7 +597,7 @@ impl Runtime {
             && !object.class.allow_dynamic
             && !object.class.properties.iter().any(|p| p.name == name)
         {
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
                 object.class_name,
                 String::from_utf8_lossy(name)
@@ -703,7 +703,7 @@ impl Runtime {
                 let name = match crate::object::property_name(&raw) {
                     Ok(name) => name.name,
                     Err(message) => {
-                        self.warnings
+                        self.diagnostics
                             .push(format!("Notice: {message} on line {}", target.line));
                         &raw
                     }

@@ -25,7 +25,7 @@ impl Storage {
         &self,
         keys: &mut [Offset],
         line: usize,
-        warnings: &mut Vec<String>,
+        warnings: &mut dyn WarningSink,
     ) -> Result<Preparation, Error> {
         match self {
             Self::Cell(cell) => match cell.upgrade() {
@@ -99,7 +99,7 @@ impl Runtime {
             };
             Storage::Cell(Rc::downgrade(&stored))
         };
-        let pending = match storage.prepare(&mut location.keys, line, &mut self.warnings)? {
+        let pending = match storage.prepare(&mut location.keys, line, &mut self.diagnostics)? {
             Preparation::Ordinary => return Ok(None),
             Preparation::Ignored => return Ok(Some(Value::Null)),
             Preparation::Character(pending) => pending,
@@ -117,7 +117,7 @@ impl Runtime {
             ));
         };
         if bytes.len() > 1 {
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Only the first byte will be assigned to the string offset on line {line}"
             ));
         }
@@ -153,7 +153,7 @@ fn prepare(
     value: &mut Value,
     keys: &mut [Offset],
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
     path: &mut Vec<(usize, ArrayKey)>,
 ) -> Result<Preparation, Error> {
     let Some((offset, rest)) = keys.split_first_mut() else {

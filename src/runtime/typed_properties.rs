@@ -143,7 +143,7 @@ impl Runtime {
             &mut location.keys,
             new_value,
             line,
-            &mut self.warnings,
+            &mut self.diagnostics,
         )?;
         let value = self.check_property_value(&owner, property, value, self.strict_types, line)?;
         let result = if location.keys.is_empty() {

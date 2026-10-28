@@ -20,7 +20,7 @@ impl Runtime {
                     &mut Offset::new(Some(key)),
                     destination.line,
                     Access::Read,
-                    &mut self.warnings,
+                    &mut self.diagnostics,
                 )?,
                 Value::Null => Value::Null,
                 other => {
@@ -31,7 +31,7 @@ impl Runtime {
                         Value::String(_) => "string",
                         _ => unreachable!(),
                     };
-                    self.warnings.push(format!(
+                    self.diagnostics.push(format!(
                         "Cannot use {name} as array on line {}",
                         destination.line
                     ));

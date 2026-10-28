@@ -1011,7 +1011,7 @@ impl Parser {
                 self.expect(")")?;
                 ExprKind::Group(Box::new(expr))
             }
-            Kind::Symbol(op) if ["+", "-", "!", "~"].contains(&op.as_str()) => {
+            Kind::Symbol(op) if ["+", "-", "!", "~", "@"].contains(&op.as_str()) => {
                 let power = if op == "!" { 19 } else { 20 };
                 ExprKind::Unary(op, Box::new(self.expr(power)?))
             }

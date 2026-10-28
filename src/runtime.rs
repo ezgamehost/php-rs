@@ -1,3 +1,4 @@
+use crate::diagnostics::{Diagnostics, FATAL_ERRORS, WarningSink};
 use crate::{
     ArrayKey, Error, ErrorKind, PhpArray, Value,
     ast::{ArrayElement, Expr, ExprKind, FunctionDecl, Stmt},
@@ -51,6 +52,7 @@ use variables::{Scope, cell};
 pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
+    diagnostics: Diagnostics,
     /// Global inputs before execute, and the global values after it returns.
     pub variables: HashMap<Vec<u8>, Value>,
     scope: Scope,
@@ -153,7 +155,7 @@ impl Runtime {
             }
             Stmt::Block(stmts) => return self.block(stmts),
             Stmt::If(cond, yes, no) => {
-                if self.eval(cond)?.to_bool(cond.line, &mut self.warnings) {
+                if self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics) {
                     return self.statement(yes);
                 }
                 if let Some(no) = no {
@@ -161,7 +163,7 @@ impl Runtime {
                 }
             }
             Stmt::While(cond, body) => {
-                while self.eval(cond)?.to_bool(cond.line, &mut self.warnings) {
+                while self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics) {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -175,16 +177,16 @@ impl Runtime {
                     Flow::Break(1) => break,
                     flow => return Ok(flow.leave_level()),
                 }
-                if !self.eval(cond)?.to_bool(cond.line, &mut self.warnings) {
+                if !self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics) {
                     break;
                 }
             },
             Stmt::For(init, cond, step, body) => {
                 self.eval_sequence(init)?;
-                while self
-                    .eval_sequence(cond)?
-                    .to_bool(cond.last().map_or(0, |expr| expr.line), &mut self.warnings)
-                {
+                while self.eval_sequence(cond)?.to_bool(
+                    cond.last().map_or(0, |expr| expr.line),
+                    &mut self.diagnostics,
+                ) {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -247,7 +249,7 @@ impl Runtime {
                         }
                     }
                 } else if !matches!(value, Value::Closure(_)) {
-                    self.warnings.push(format!(
+                    self.diagnostics.push(format!(
                         "foreach() argument must be of type array|object on line {}",
                         iter.line
                     ));
@@ -279,7 +281,7 @@ impl Runtime {
                                 &mut value.borrow_mut(),
                                 &mut location.keys,
                                 target.line,
-                                &mut self.warnings,
+                                &mut self.diagnostics,
                             )?;
                         }
                     } else if let Some(object) = &location.object {
@@ -293,7 +295,7 @@ impl Runtime {
                                     &mut value,
                                     &mut location.keys,
                                     target.line,
-                                    &mut self.warnings,
+                                    &mut self.diagnostics,
                                 )?;
                                 object.properties.borrow_mut().insert(key, value);
                             }
@@ -307,7 +309,7 @@ impl Runtime {
                             &mut value.borrow_mut(),
                             &mut location.keys,
                             target.line,
-                            &mut self.warnings,
+                            &mut self.diagnostics,
                         )?;
                     }
                 }
@@ -344,7 +346,7 @@ impl Runtime {
         Ok(if let Some(value) = self.lookup(name) {
             value
         } else {
-            self.warnings.push(format!(
+            self.diagnostics.push(format!(
                 "Undefined variable ${} on line {line}",
                 String::from_utf8_lossy(name)
             ));
@@ -443,7 +445,7 @@ impl Runtime {
                     } else {
                         Access::Read
                     },
-                    &mut self.warnings,
+                    &mut self.diagnostics,
                 )?;
             }
             return Ok(value);
@@ -463,7 +465,7 @@ impl Runtime {
                             .expect("declared static property");
                         return Err(Self::uninitialized_property(&owner, &location.name, line));
                     }
-                    self.warnings.push(format!(
+                    self.diagnostics.push(format!(
                         "Undefined {}variable ${} on line {line}",
                         if location.global { "global " } else { "" },
                         String::from_utf8_lossy(&location.name)
@@ -487,7 +489,7 @@ impl Runtime {
                 } else {
                     Access::Read
                 },
-                &mut self.warnings,
+                &mut self.diagnostics,
             )?;
         }
         Ok(value)
@@ -519,7 +521,7 @@ impl Runtime {
                 &mut location.keys,
                 new_value,
                 line,
-                &mut self.warnings,
+                &mut self.diagnostics,
             )?;
             let value = self.write_property_value(object, &location.name, value, line)?;
             return Ok(if location.keys.is_empty() {
@@ -539,7 +541,7 @@ impl Runtime {
             &mut location.keys,
             new_value,
             line,
-            &mut self.warnings,
+            &mut self.diagnostics,
         )
     }
     fn coalesce_read(&mut self, expr: &Expr, probe: bool) -> Result<Value, Error> {
@@ -592,7 +594,7 @@ impl Runtime {
                     } else {
                         Access::Coalesce
                     },
-                    &mut self.warnings,
+                    &mut self.diagnostics,
                 )
             }
             _ => self.eval(expr),
@@ -627,7 +629,7 @@ impl Runtime {
                 } else if matches!(kind, crate::ast::CastKind::Object) {
                     Ok(self.cast_object(value, line))
                 } else {
-                    casting::cast(*kind, value, line, &mut self.warnings)
+                    casting::cast(*kind, value, line, &mut self.diagnostics)
                 }
             }
             ExprKind::Match(subject, arms) => self.match_expression(subject, arms, line),
@@ -654,7 +656,7 @@ impl Runtime {
                 if let Value::Object(object) = value {
                     self.read_property_value(&object, &name, line, false)
                 } else {
-                    self.warnings.push(format!(
+                    self.diagnostics.push(format!(
                         "Attempt to read property \"{}\" on {} on line {line}",
                         String::from_utf8_lossy(&name),
                         builtins::debug_type(&value)
@@ -710,7 +712,7 @@ impl Runtime {
                         Some(key) => Some(ArrayKey::from_value(
                             &self.eval(key)?,
                             key.line,
-                            &mut self.warnings,
+                            &mut self.diagnostics,
                         )?),
                         None => None,
                     };
@@ -738,7 +740,7 @@ impl Runtime {
                     &mut Offset::new(Some(key)),
                     line,
                     Access::Read,
-                    &mut self.warnings,
+                    &mut self.diagnostics,
                 )
             }
             ExprKind::Isset(args) => {
@@ -752,7 +754,7 @@ impl Runtime {
             ExprKind::Empty(arg) => Ok(Value::Bool(
                 !self
                     .coalesce_read(arg, true)?
-                    .to_bool(line, &mut self.warnings),
+                    .to_bool(line, &mut self.diagnostics),
             )),
             ExprKind::Constant(name) => self.read_constant(name, line),
             ExprKind::NamespacedName(name) => {
@@ -772,15 +774,26 @@ impl Runtime {
                 self.read_constant(resolved, line)
             }
             ExprKind::Unary(op, expr) => {
+                if op == "@" {
+                    let previous = self.diagnostics.reporting;
+                    self.diagnostics.reporting &= FATAL_ERRORS;
+                    let result = self.eval(expr);
+                    if self.diagnostics.reporting & !FATAL_ERRORS == 0
+                        && previous & !FATAL_ERRORS != 0
+                    {
+                        self.diagnostics.reporting = previous;
+                    }
+                    return result;
+                }
                 let value = self.eval(expr)?;
                 match op.as_str() {
-                    "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.warnings))),
+                    "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.diagnostics))),
                     "~" => match value {
                         Value::String(s) => Ok(Value::String(
                             s.bytes().iter().map(|b| !b).collect::<Vec<_>>().into(),
                         )),
                         Value::Int(_) | Value::Float(_) => {
-                            Ok(Value::Int(!value.integer(line, &mut self.warnings)?))
+                            Ok(Value::Int(!value.integer(line, &mut self.diagnostics)?))
                         }
                         _ => Err(Error::new(
                             ErrorKind::TypeError,
@@ -788,8 +801,8 @@ impl Runtime {
                             line,
                         )),
                     },
-                    "+" => value.number(line, &mut self.warnings),
-                    "-" => match value.number(line, &mut self.warnings)? {
+                    "+" => value.number(line, &mut self.diagnostics),
+                    "-" => match value.number(line, &mut self.diagnostics)? {
                         Value::Int(n) => Ok(n
                             .checked_neg()
                             .map(Value::Int)
@@ -838,13 +851,13 @@ impl Runtime {
                 self.check_readonly_write(&location, false, line)?;
                 self.check_static_set_access(&location, true, line)?;
                 self.validate_property_increment(&location, &old, *delta, line)?;
-                let new = increment(&old, *delta, line, &mut self.warnings)?;
+                let new = increment(&old, *delta, line, &mut self.diagnostics)?;
                 let new = self.write_location(&mut location, new, line)?;
                 Ok(if *prefix { new } else { old })
             }
             ExprKind::Conditional(cond, yes, no) => {
                 let value = self.eval(cond)?;
-                if value.to_bool(cond.line, &mut self.warnings) {
+                if value.to_bool(cond.line, &mut self.diagnostics) {
                     match yes {
                         Some(yes) => self.eval(yes),
                         None => Ok(value),
@@ -869,12 +882,12 @@ impl Runtime {
                 }
                 let lhs = self.eval(left)?;
                 if matches!(op.as_str(), "&&" | "and" | "||" | "or") {
-                    let truth = lhs.to_bool(line, &mut self.warnings);
+                    let truth = lhs.to_bool(line, &mut self.diagnostics);
                     if truth == matches!(op.as_str(), "||" | "or") {
                         return Ok(Value::Bool(truth));
                     }
                     let rhs = self.eval(right)?;
-                    return Ok(Value::Bool(rhs.to_bool(line, &mut self.warnings)));
+                    return Ok(Value::Bool(rhs.to_bool(line, &mut self.diagnostics)));
                 }
                 let rhs = self.eval(right)?;
                 self.binary(op, lhs, rhs, line)
@@ -887,7 +900,7 @@ fn binary(
     left: Value,
     right: Value,
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     use Value::*;
     match op {
@@ -1012,7 +1025,7 @@ fn increment(
     value: &Value,
     delta: i64,
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     use Value::*;
     match value {
@@ -1071,7 +1084,11 @@ fn increment(
     }
 }
 
-fn string_bytes(value: &Value, line: usize, warnings: &mut Vec<String>) -> Result<Vec<u8>, Error> {
+fn string_bytes(
+    value: &Value,
+    line: usize,
+    warnings: &mut dyn WarningSink,
+) -> Result<Vec<u8>, Error> {
     if matches!(value, Value::Closure(_) | Value::Object(_)) {
         return Err(Error::new(
             ErrorKind::Error,

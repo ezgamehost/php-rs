@@ -1,6 +1,7 @@
 mod array;
 mod ast;
 mod closure;
+mod diagnostics;
 mod error;
 mod lexer;
 mod object;

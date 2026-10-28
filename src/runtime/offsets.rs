@@ -32,7 +32,7 @@ impl Offset {
         &mut self,
         line: usize,
         unsetting: bool,
-        warnings: &mut Vec<String>,
+        warnings: &mut dyn WarningSink,
     ) -> Result<ArrayKey, Error> {
         if let Some(key) = &self.array_key {
             return Ok(key.clone());
@@ -52,7 +52,7 @@ pub(super) fn read_offset(
     offset: &mut Offset,
     line: usize,
     access: Access,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     match value {
         Value::Object(object) => Err(Error::new(
@@ -112,7 +112,7 @@ pub(super) fn write_path(
     keys: &mut [Offset],
     new_value: Value,
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     let Some((offset, rest)) = keys.split_first_mut() else {
         *value = new_value.clone();
@@ -181,7 +181,7 @@ pub(super) fn unset_path(
     value: &mut Value,
     keys: &mut [Offset],
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<(), Error> {
     let Some((offset, rest)) = keys.split_first_mut() else {
         return Ok(());
@@ -214,7 +214,7 @@ pub(super) fn string_index(
     key: &Value,
     line: usize,
     access: Access,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Option<i64>, Error> {
     match key {
         Value::Int(n) => return Ok(Some(*n)),
@@ -270,7 +270,7 @@ fn write_string(
     key: &Value,
     new_value: Value,
     line: usize,
-    warnings: &mut Vec<String>,
+    warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     let index = string_index(key, line, Access::Read, warnings)?.unwrap();
     let Some(position) = position(index, bytes.len()) else {

@@ -131,7 +131,7 @@ impl Runtime {
                     ))
                 } else {
                     if !silent {
-                        self.warnings.push(format!(
+                        self.diagnostics.push(format!(
                             "Attempt to read property \"{}\" on {} on line {}",
                             String::from_utf8_lossy(&name),
                             builtins::debug_type(&value),
@@ -164,7 +164,7 @@ impl Runtime {
                     } else {
                         Access::Read
                     },
-                    &mut self.warnings,
+                    &mut self.diagnostics,
                 )?;
                 Ok((value, None))
             }

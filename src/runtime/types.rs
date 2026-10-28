@@ -17,7 +17,7 @@ impl Runtime {
             ..Self::default()
         };
         let value = runtime.eval(expr).ok()?;
-        runtime.warnings.is_empty().then_some(value)
+        runtime.diagnostics.is_empty().then_some(value)
     }
 
     pub(super) fn coerce_type(
@@ -82,7 +82,9 @@ impl Runtime {
                 _ => false,
             };
             if !prefer_float && in_range {
-                return Some(Value::Int(number.integer(line, &mut self.warnings).ok()?));
+                return Some(Value::Int(
+                    number.integer(line, &mut self.diagnostics).ok()?,
+                ));
             }
         }
         if ty.contains("float")
@@ -91,11 +93,11 @@ impl Runtime {
             return Some(Value::Float(number.as_float()));
         }
         if ty.contains("string") {
-            value.warn_nan("string", line, &mut self.warnings);
+            value.warn_nan("string", line, &mut self.diagnostics);
             return Some(Value::String(value.to_bytes().into()));
         }
         if ty.contains("bool") {
-            return Some(Value::Bool(value.to_bool(line, &mut self.warnings)));
+            return Some(Value::Bool(value.to_bool(line, &mut self.diagnostics)));
         }
         None
     }
@@ -127,7 +129,7 @@ impl Runtime {
             && !ty.contains("null")
             && (ty.contains("string") || ty.contains("int"))
         {
-            self.warnings.push(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)));
+            self.diagnostics.push(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)));
             return Ok(if ty.contains("string") {
                 Value::String(Vec::new().into())
             } else {
