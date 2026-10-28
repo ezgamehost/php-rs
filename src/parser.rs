@@ -618,6 +618,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            end_line: self.tokens[self.pos - 1].line,
             attributes: Vec::new(),
             returns_reference,
             trait_origin: None,

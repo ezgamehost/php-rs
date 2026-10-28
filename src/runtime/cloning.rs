@@ -36,7 +36,11 @@ impl Runtime {
             }
         };
         if let Value::Object(object) = original
-            && (object.class.is_a(b"ReflectionClass") || object.class.is_a(b"ReflectionAttribute"))
+            && (object.class.is_a(b"ReflectionClass")
+                || object.class.is_a(b"ReflectionAttribute")
+                || object.class.is_a(b"ReflectionFunctionAbstract")
+                || object.class.is_a(b"ReflectionType")
+                || object.class.is_a(b"ReflectionParameter"))
         {
             return Err(Error::new(
                 ErrorKind::Error,

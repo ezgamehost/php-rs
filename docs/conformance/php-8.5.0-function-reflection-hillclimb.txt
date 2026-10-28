@@ -1,0 +1,145 @@
+Zend suite
+
+Before: 5256 cases; 1393 passed, 3455 failed, 408 unsupported
+After: 5256 cases; 1404 passed, 3444 failed, 408 unsupported
+New passes: 11; regressions: 0
+NEW PASS: Zend/tests/arrow_functions/005.phpt
+NEW PASS: Zend/tests/attributes/004_name_resolution.phpt
+NEW PASS: Zend/tests/attributes/006_filter.phpt
+NEW PASS: Zend/tests/attributes/020_userland_attribute_validation.phpt
+NEW PASS: Zend/tests/attributes/gh8421.phpt
+NEW PASS: Zend/tests/closures/closure_065.phpt
+NEW PASS: Zend/tests/closures/closure_067.phpt
+NEW PASS: Zend/tests/closures/closure_068.phpt
+NEW PASS: Zend/tests/object_types/return_type_reflection.phpt
+NEW PASS: Zend/tests/object_types/type_hint_reflection.phpt
+NEW PASS: Zend/tests/return_types/never_reflected.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+135: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+25: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection extension suite
+
+Before: 492 cases; 72 passed, 383 failed, 37 unsupported
+After: 492 cases; 138 passed, 317 failed, 37 unsupported
+New passes: 66; regressions: 0
+NEW PASS: ext/reflection/tests/003.phpt
+NEW PASS: ext/reflection/tests/004.phpt
+NEW PASS: ext/reflection/tests/ReflectionAttribute_newInstance_deprecated.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getConstructor_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getMethod_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getMethods_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getMethods_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_construct.001.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getClosureScopeClass.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getClosureThis.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getClosureUsedVariables.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getClosure_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getFileName.001.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_isAnonymous.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_isClosure_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_isDeprecated_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_isDeprecated_userland.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_isVariadic_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_006.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_constructor_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_constructor_error2.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_createFromMethodName.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_getClosureThis.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_getClosure_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_getClosure_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_getDeclaringClass_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_invokeArgs_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_invokeArgs_error2.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_invoke_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_invoke_on_abstract_method_after_setAccessible.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_isDeprecated_interface.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_isDeprecated_parent.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_returnsReference_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionNamedType.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_getConstructor_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_DefaultValueConstant_basic1.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_DefaultValueConstant_basic2.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_DefaultValueConstant_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_ctor_cast.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_double_construct.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_getPosition_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_isVariadic_basic.phpt
+NEW PASS: ext/reflection/tests/bug29523.phpt
+NEW PASS: ext/reflection/tests/bug29828.phpt
+NEW PASS: ext/reflection/tests/bug30209.phpt
+NEW PASS: ext/reflection/tests/bug33312.phpt
+NEW PASS: ext/reflection/tests/bug38465.phpt
+NEW PASS: ext/reflection/tests/bug47254.phpt
+NEW PASS: ext/reflection/tests/bug48757.phpt
+NEW PASS: ext/reflection/tests/bug49092.phpt
+NEW PASS: ext/reflection/tests/bug60367.phpt
+NEW PASS: ext/reflection/tests/bug66430.phpt
+NEW PASS: ext/reflection/tests/bug67068.phpt
+NEW PASS: ext/reflection/tests/bug69180.phpt
+NEW PASS: ext/reflection/tests/bug70674.phpt
+NEW PASS: ext/reflection/tests/closures_002.phpt
+NEW PASS: ext/reflection/tests/closures_003_v1.phpt
+NEW PASS: ext/reflection/tests/closures_005.phpt
+NEW PASS: ext/reflection/tests/default_value_leak.phpt
+NEW PASS: ext/reflection/tests/gh10623.phpt
+NEW PASS: ext/reflection/tests/gh18373.phpt
+NEW PASS: ext/reflection/tests/request38992.phpt
+NEW PASS: ext/reflection/tests/static_type.phpt
+NEW PASS: ext/reflection/tests/types/ReflectionType_possible_types.phpt
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+38: Error: Class "ReflectionProperty" not found
+18: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+14: Error: Call to undefined method ReflectionClass::getProperty()
+9: ReflectionException: Class "Object" does not exist
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: Error: Class "ReflectionClassConstant" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Object of class ReflectionObject could not be converted to string
+5: ReflectionException: Class "ReflectionProperty" does not exist
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Class "Reflection" not found
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI

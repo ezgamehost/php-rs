@@ -362,6 +362,30 @@ interfaces/string formatting, dynamic properties in ReflectionObject, object-han
 reuse, and exact diagnostics remain unfinished. Other declaration targets still need
 attribute reflection, and runtime Override/Deprecated/NoDiscard effects remain open.
 
+The [function reflection slice](conformance/php-8.5.0-function-reflection-hillclimb.txt)
+adds 11 Zend passes and 66 reflection-suite passes, with zero regressions in either
+suite. `ReflectionFunction`, `ReflectionMethod`, and `ReflectionParameter` expose
+source/signature metadata, names, flags, parameter defaults, and declaration ownership.
+Named and union types support nullable metadata, string conversion, and type lists.
+Method discovery respects visibility/filtering, and `createFromMethodName` constructs
+the called reflection subclass. Function end lines and static closure flags are retained.
+
+Reflective invocation handles named arguments, argument-array references, weak scalar
+coercion, private/protected methods, late static binding, abstract-method errors, and
+copied reference returns. Closure creation preserves the callable, receiver, and scope;
+capture inspection preserves reference captures. Attribute inspection now applies to
+functions, methods, closures, and parameters using their declaration scope/source,
+strictness, target, and repetition metadata. Native method argument-count checks share
+the internal-function binder. The reflection implementation is split into declaration,
+attribute, function/type, and parameter modules.
+
+All 797 existing Rust tests, 57 reference-checked project fixtures, formatting, and
+Clippy pass; no new custom tests were added. Property/class-constant reflection,
+complete builtin parameter/return signatures, tentative return metadata, prototypes,
+static-variable inspection, doc comments/declaration formatting, intersection types,
+Reflector integration, and lazy objects remain unfinished. Missing printf/sprintf,
+Closure APIs, generators, and diagnostic rendering also block upstream cases.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -369,8 +393,8 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1393 | 3455 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 72 | 383 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1404 | 3444 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 138 | 317 | 37 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

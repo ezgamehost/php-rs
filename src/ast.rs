@@ -356,6 +356,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub end_line: usize,
     pub attributes: Vec<Attribute>,
     pub returns_reference: bool,
     pub trait_origin: Option<Vec<u8>>,

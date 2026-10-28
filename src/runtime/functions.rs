@@ -616,7 +616,7 @@ impl Runtime {
             this,
             context,
         } = target;
-        if let Some(builtin) = builtin {
+        if builtin.is_some() || function.as_ref().is_some_and(|f| f.native.is_some()) {
             let supplied_fixed = bound
                 .fixed
                 .iter()
@@ -666,22 +666,17 @@ impl Runtime {
             if !bound.variadic && !bound.extra.is_empty() {
                 return Err(count_error(maximum, "at most"));
             }
-            return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
+            if let Some(builtin) = builtin {
+                return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
+            }
         }
         let function = function.unwrap();
-        if function.native.is_some() && !bound.variadic && !bound.extra.is_empty() {
+        if function.is_abstract {
             return Err(Error::new(
-                ErrorKind::ArgumentCountError,
+                ErrorKind::Error,
                 format!(
-                    "{}() expects {} {} arguments, {} given",
-                    String::from_utf8_lossy(&function.name),
-                    if function.parameters.is_empty() {
-                        "exactly"
-                    } else {
-                        "at most"
-                    },
-                    function.parameters.len(),
-                    function.parameters.len() + bound.extra.len()
+                    "Cannot call abstract method {}()",
+                    String::from_utf8_lossy(&function.name)
                 ),
                 line,
             ));

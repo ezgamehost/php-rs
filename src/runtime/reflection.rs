@@ -5,14 +5,49 @@ use crate::{
     object::{Class, ClassContext},
 };
 
+mod attributes;
+mod declarations;
+mod functions;
+mod parameters;
+
 #[derive(Clone)]
 pub(crate) enum ReflectionData {
     Class(Rc<Class>),
+    Function(FunctionReflection),
+    Parameter {
+        function: FunctionReflection,
+        index: usize,
+    },
+    Type(crate::ast::TypeDecl),
     Attribute {
-        owner: Rc<Class>,
+        owner: AttributeContext,
         attribute: Attribute,
         repeated: bool,
     },
+}
+
+#[derive(Clone)]
+pub(crate) struct FunctionReflection {
+    target: super::functions::CallTarget,
+    is_method: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct AttributeContext {
+    class: Option<Rc<Class>>,
+    source: Rc<crate::source::Source>,
+    strict_types: bool,
+    target: i64,
+}
+impl AttributeContext {
+    fn class(class: &Rc<Class>) -> Self {
+        Self {
+            class: Some(class.clone()),
+            source: class.declaration.source.clone(),
+            strict_types: class.declaration.strict_types,
+            target: 1,
+        }
+    }
 }
 
 fn string(bytes: impl AsRef<[u8]>) -> Value {
@@ -27,144 +62,29 @@ fn literal(value: Value, line: usize) -> Expr {
 }
 
 impl Runtime {
-    pub(super) fn builtin_reflection_class(&self, name: &[u8]) -> Option<Rc<Class>> {
-        let (canonical, parent_name, body) = match name {
-            b"reflectionclass" => (
-                "ReflectionClass",
-                None,
-                "
-                public const int IS_IMPLICIT_ABSTRACT=16, IS_EXPLICIT_ABSTRACT=64,
-                    IS_FINAL=32, IS_READONLY=65536;
-                public readonly string $name;
-                private function __clone(): void {}
-                public function __construct(object|string $objectOrClass) {}
-                public function getName(): string {}
-                public function getShortName(): string {}
-                public function getNamespaceName(): string {}
-                public function inNamespace(): bool {}
-                public function isInternal(): bool {}
-                public function isUserDefined(): bool {}
-                public function isAnonymous(): bool {}
-                public function isInstantiable(): bool {}
-                public function isCloneable(): bool {}
-                public function isInterface(): bool {}
-                public function isTrait(): bool {}
-                public function isEnum(): bool {}
-                public function isAbstract(): bool {}
-                public function isFinal(): bool {}
-                public function isReadOnly(): bool {}
-                public function getModifiers(): int {}
-                public function isInstance(object $object): bool {}
-                public function getParentClass(): ReflectionClass|false {}
-                public function isSubclassOf(ReflectionClass|string $class): bool {}
-                public function implementsInterface(ReflectionClass|string $interface): bool {}
-                public function getInterfaceNames(): array {}
-                public function getInterfaces(): array {}
-                public function getTraitNames(): array {}
-                public function getTraits(): array {}
-                public function getTraitAliases(): array {}
-                public function hasMethod(string $name): bool {}
-                public function hasProperty(string $name): bool {}
-                public function hasConstant(string $name): bool {}
-                public function getConstant(string $name): mixed {}
-                public function getConstants(?int $filter=null): array {}
-                public function getFileName(): string|false {}
-                public function getStartLine(): int|false {}
-                public function getEndLine(): int|false {}
-                public function getStaticProperties(): array {}
-                public function getStaticPropertyValue(string $name, mixed $default=null): mixed {}
-                public function setStaticPropertyValue(string $name, mixed $value): void {}
-                public function getDefaultProperties(): array {}
-                public function getAttributes(?string $name=null, int $flags=0): array {}
-                public function newInstance(mixed ...$args): object {}
-                public function newInstanceArgs(array $args=[]): ?object {}
-                public function newInstanceWithoutConstructor(): object {}
-            ",
-            ),
-            b"reflectionobject" => (
-                "ReflectionObject",
-                Some("ReflectionClass"),
-                "
-                public function __construct(object $object) {}
-            ",
-            ),
-            b"reflectionattribute" => (
-                "ReflectionAttribute",
-                None,
-                "
-                public const int IS_INSTANCEOF=2;
-                private function __construct() {}
-                private function __clone(): void {}
-                public function getName(): string {}
-                public function getTarget(): int {}
-                public function isRepeated(): bool {}
-                public function getArguments(): array {}
-                public function newInstance(): object {}
-            ",
-            ),
-            _ => return None,
-        };
-        let code = format!("<?php class {canonical} {{ {body} }}");
-        let (mut statements, _, _) =
-            parser::parse(lexer::lex(code.as_bytes()).expect("reflection source"))
-                .expect("reflection declarations");
-        let Stmt::Class(mut declaration) = statements.remove(0) else {
-            unreachable!()
-        };
-        for method in &mut Rc::make_mut(&mut declaration).methods {
-            Rc::make_mut(method).native = Some(NativeMethod::Reflection);
-        }
-        let parent = parent_name.and_then(|name| self.find_class(name.as_bytes()));
-        let mut methods = parent.as_ref().map_or_else(Vec::new, |p| p.methods.clone());
-        for own in &declaration.methods {
-            let name = own.name.rsplit(|b| *b == b':').next().unwrap();
-            methods.retain(|method| {
-                !method
-                    .name
-                    .rsplit(|b| *b == b':')
-                    .next()
-                    .unwrap()
-                    .eq_ignore_ascii_case(name)
-            });
-            methods.push(own.clone());
-        }
-        let mut properties = parent
-            .as_ref()
-            .map_or_else(Vec::new, |p| p.properties.clone());
-        for property in &declaration.properties {
-            let mut property = property.clone();
-            property.declaring_class = declaration.name.clone();
-            properties.push(property);
-        }
-        let class = Rc::new(Class {
-            aliases: RefCell::default(),
-            name: canonical.as_bytes().to_vec(),
-            methods,
-            declaration,
-            properties,
-            parent,
-            interfaces: Vec::new(),
-            static_properties: Vec::new(),
-            allow_dynamic: false,
-            forbid_dynamic: false,
-            defaults: RefCell::default(),
-            static_values: RefCell::default(),
-            constant_values: RefCell::default(),
-            evaluating_constants: RefCell::default(),
-            initialized: std::cell::Cell::new(false),
-            initializing: std::cell::Cell::new(false),
-        });
-        self.builtin_classes
-            .borrow_mut()
-            .insert(name.to_vec(), class.clone());
-        Some(class)
-    }
-
     fn reflection_object(&mut self, kind: &[u8], data: ReflectionData) -> Value {
         let class = self.find_class(kind).expect("reflection class");
         let mut properties = PhpArray::default();
-        if let ReflectionData::Class(class) = &data {
-            properties.insert(ArrayKey::String(b"name".to_vec()), string(&class.name));
+        match &data {
+            ReflectionData::Class(class) => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(&class.name));
+            }
+            ReflectionData::Function(function) => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(function.name()));
+                if function.is_method {
+                    properties.insert(
+                        ArrayKey::String(b"class".to_vec()),
+                        string(&function.target.context.as_ref().unwrap().scope.name),
+                    );
+                }
+            }
+            ReflectionData::Parameter { function, index } => {
+                properties.insert(
+                    ArrayKey::String(b"name".to_vec()),
+                    string(&function.parameters()[*index].name),
+                );
+            }
+            _ => {}
         }
         self.next_object_id += 1;
         Value::Object(Rc::new(PhpObject {
@@ -224,6 +144,13 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if self
+            .current_function
+            .as_ref()
+            .is_some_and(|name| name.ends_with(b"::createfrommethodname"))
+        {
+            return self.reflection_method_factory(line);
+        }
         let Some(Value::Object(object)) = self.lookup(b"this") else {
             unreachable!()
         };
@@ -239,6 +166,12 @@ impl Runtime {
             return Err(self.reflection_error("Cannot clone object using __clone()", line));
         }
         if name == b"__construct" {
+            if object.class.is_a(b"ReflectionParameter") {
+                return self.reflection_parameter_constructor(&object, line);
+            }
+            if object.class.is_a(b"ReflectionFunctionAbstract") {
+                return self.reflection_function_constructor(&object, supplied, line);
+            }
             if self
                 .current_function
                 .as_ref()
@@ -282,6 +215,13 @@ impl Runtime {
             ReflectionData::Class(class) => {
                 self.reflect_class_method(&class, &name, supplied, line)
             }
+            ReflectionData::Function(function) => {
+                self.reflect_function_method(function, &name, line)
+            }
+            ReflectionData::Parameter { function, index } => {
+                self.reflect_parameter_method(function, index, &name, line)
+            }
+            ReflectionData::Type(ty) => self.reflect_type_method(ty, &name, line),
             ReflectionData::Attribute {
                 owner,
                 attribute,
@@ -333,7 +273,10 @@ impl Runtime {
                     && (name != b"iscloneable"
                         || (!class.is_a(b"Throwable")
                             && !class.is_a(b"ReflectionClass")
-                            && !class.is_a(b"ReflectionAttribute"))),
+                            && !class.is_a(b"ReflectionAttribute")
+                            && !class.is_a(b"ReflectionFunctionAbstract")
+                            && !class.is_a(b"ReflectionParameter")
+                            && !class.is_a(b"ReflectionType"))),
             ),
             b"isinterface" => Value::Bool(decl.is_interface),
             b"istrait" => Value::Bool(decl.is_trait),
@@ -437,6 +380,53 @@ impl Runtime {
                             }
                         }
                     }
+                }
+                Value::Array(Rc::new(result))
+            }
+            b"getmethod" | b"getconstructor" => {
+                let method_name = if name == b"getconstructor" {
+                    b"__construct".to_vec()
+                } else {
+                    self.lookup(b"name").unwrap().to_bytes()
+                };
+                if name == b"getconstructor" && objects::method(class, &method_name).is_none() {
+                    Value::Null
+                } else {
+                    let function = self.reflected_method(class, &method_name, line)?;
+                    self.reflection_object(b"ReflectionMethod", ReflectionData::Function(function))
+                }
+            }
+            b"getmethods" => {
+                let mut result = PhpArray::default();
+                let filter = self.lookup(b"filter").unwrap();
+                let mut methods = class.declaration.methods.clone();
+                for inherited in &class.methods {
+                    let short = inherited.name.rsplit(|b| *b == b':').next().unwrap();
+                    if inherited.visibility != Visibility::Private
+                        && !methods.iter().any(|m| {
+                            m.name
+                                .rsplit(|b| *b == b':')
+                                .next()
+                                .unwrap()
+                                .eq_ignore_ascii_case(short)
+                        })
+                    {
+                        methods.push(inherited.clone());
+                    }
+                }
+                for method in methods {
+                    let short = method.name.rsplit(|b| *b == b':').next().unwrap();
+                    let function = self.reflected_method(class, short, line)?;
+                    if matches!(filter, Value::Int(mask) if mask & function.modifiers() == 0) {
+                        continue;
+                    }
+                    result.append(
+                        self.reflection_object(
+                            b"ReflectionMethod",
+                            ReflectionData::Function(function),
+                        ),
+                        line,
+                    )?;
                 }
                 Value::Array(Rc::new(result))
             }
@@ -591,7 +581,14 @@ impl Runtime {
                     Value::Null
                 }
             }
-            b"getattributes" => return self.reflected_attributes(class, line),
+            b"getattributes" => {
+                return self.reflected_attributes(
+                    &class.declaration.attributes,
+                    &AttributeContext::class(class),
+                    "ReflectionClass",
+                    line,
+                );
+            }
             b"newinstance" | b"newinstanceargs" | b"newinstancewithoutconstructor" => {
                 let args = match self.lookup(b"args") {
                     Some(Value::Array(args)) => callbacks::callback_arguments(&args, line)?,
@@ -636,234 +633,6 @@ impl Runtime {
             _ => unreachable!("unhandled class reflection method"),
         })
     }
-
-    fn reflected_attributes(&mut self, owner: &Rc<Class>, line: usize) -> Result<Value, Error> {
-        let name = self.lookup(b"name").unwrap();
-        let flags = self.lookup(b"flags").unwrap();
-        if !matches!(flags, Value::Int(0 | 2)) {
-            return Err(Error::new(
-                ErrorKind::ValueError,
-                "ReflectionClass::getAttributes(): Argument #2 ($flags) must be a valid attribute filter flag",
-                line,
-            ));
-        }
-        let filter = match name {
-            Value::String(name) => Some(name.to_vec()),
-            _ => None,
-        };
-        if matches!(flags, Value::Int(2))
-            && let Some(name) = &filter
-            && self.load_class(name, line)?.is_none()
-        {
-            return Err(Error::new(
-                ErrorKind::Error,
-                format!("Class \"{}\" not found", String::from_utf8_lossy(name)),
-                line,
-            ));
-        }
-        let mut result = PhpArray::default();
-        for attribute in &owner.declaration.attributes {
-            if let Some(filter) = &filter {
-                let matches = if matches!(flags, Value::Int(2)) {
-                    self.load_class(&attribute.name, line)?
-                        .is_some_and(|class| class.is_a(filter))
-                } else {
-                    attribute.name.eq_ignore_ascii_case(filter)
-                };
-                if !matches {
-                    continue;
-                }
-            }
-            let repeated = owner
-                .declaration
-                .attributes
-                .iter()
-                .filter(|other| other.name.eq_ignore_ascii_case(&attribute.name))
-                .count()
-                > 1;
-            result.append(
-                self.reflection_object(
-                    b"ReflectionAttribute",
-                    ReflectionData::Attribute {
-                        owner: owner.clone(),
-                        attribute: attribute.clone(),
-                        repeated,
-                    },
-                ),
-                line,
-            )?;
-        }
-        Ok(Value::Array(Rc::new(result)))
-    }
-
-    fn attribute_arguments(
-        &mut self,
-        owner: &Rc<Class>,
-        attribute: &Attribute,
-    ) -> Result<PhpArray, Error> {
-        let outer = self.class_context.replace(ClassContext {
-            scope: owner.clone(),
-            called: owner.clone(),
-        });
-        let source = std::mem::replace(&mut self.source, owner.declaration.source.clone());
-        let strict = std::mem::replace(&mut self.strict_types, owner.declaration.strict_types);
-        let result = (|| {
-            let mut result = PhpArray::default();
-            for argument in &attribute.arguments {
-                match argument {
-                    Argument::Positional(expr) => {
-                        result.append(self.eval_default(expr)?, expr.line)?;
-                    }
-                    Argument::Named(name, expr) => {
-                        result.insert(ArrayKey::String(name.clone()), self.eval_default(expr)?);
-                    }
-                    Argument::Unpack(_) => unreachable!("attribute unpacking rejected by parser"),
-                }
-            }
-            Ok(result)
-        })();
-        self.class_context = outer;
-        self.source = source;
-        self.strict_types = strict;
-        result
-    }
-
-    fn reflect_attribute_method(
-        &mut self,
-        owner: &Rc<Class>,
-        attribute: &Attribute,
-        repeated: bool,
-        name: &[u8],
-        line: usize,
-    ) -> Result<Value, Error> {
-        Ok(match name {
-            b"getname" => string(&attribute.name),
-            b"gettarget" => Value::Int(1),
-            b"isrepeated" => Value::Bool(repeated),
-            b"getarguments" => Value::Array(Rc::new(self.attribute_arguments(owner, attribute)?)),
-            b"newinstance" => {
-                let class = self.load_class(&attribute.name, line)?.ok_or_else(|| {
-                    Error::new(
-                        ErrorKind::Error,
-                        format!(
-                            "Attribute class \"{}\" not found",
-                            String::from_utf8_lossy(&attribute.name)
-                        ),
-                        line,
-                    )
-                })?;
-                let marker = class
-                    .declaration
-                    .attributes
-                    .iter()
-                    .find(|a| a.name.eq_ignore_ascii_case(b"Attribute"));
-                let Some(marker) = marker else {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        format!(
-                            "Attempting to use non-attribute class \"{}\" as attribute",
-                            String::from_utf8_lossy(&attribute.name)
-                        ),
-                        line,
-                    ));
-                };
-                // Zend validates the first marker argument without constructing
-                // an Attribute object, coercing it, or evaluating extra arguments.
-                let mut marker = marker.clone();
-                marker.arguments.truncate(1);
-                let marker_args = self.attribute_arguments(&class, &marker)?;
-                let flags = marker_args
-                    .entries()
-                    .first()
-                    .map_or(Value::Int(127), |(_, value)| value.dereferenced());
-                let Value::Int(flags) = flags else {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        format!(
-                            "Attribute::__construct(): Argument #1 ($flags) must be of type int, {} given",
-                            builtins::debug_type(&flags)
-                        ),
-                        line,
-                    ));
-                };
-                let flags = i64::from(flags as u32);
-                if flags & !255 != 0 {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        "Invalid attribute flags specified",
-                        line,
-                    ));
-                }
-                if flags & 1 == 0 {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        format!(
-                            "Attribute \"{}\" cannot target class (allowed targets: {})",
-                            String::from_utf8_lossy(&attribute.name),
-                            attribute_target_names(flags)
-                        ),
-                        line,
-                    ));
-                }
-                let canonical = match class.name.as_slice() {
-                    b"Attribute" => Some("Attribute"),
-                    b"AllowDynamicProperties" => Some("AllowDynamicProperties"),
-                    _ => None,
-                };
-                if let Some(canonical) = canonical {
-                    let decl = &owner.declaration;
-                    let invalid = if decl.is_trait {
-                        Some("trait")
-                    } else if decl.is_interface {
-                        Some("interface")
-                    } else if canonical == "Attribute" && decl.is_abstract {
-                        Some("abstract class")
-                    } else if canonical == "AllowDynamicProperties" && decl.is_readonly {
-                        Some("readonly class")
-                    } else {
-                        None
-                    };
-                    if let Some(kind) = invalid {
-                        return Err(Error::new(
-                            ErrorKind::Error,
-                            format!(
-                                "Cannot apply #[\\{canonical}] to {kind} {}",
-                                owner.display_name()
-                            ),
-                            line,
-                        ));
-                    }
-                }
-                if repeated && flags & 128 == 0 {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        format!(
-                            "Attribute \"{}\" must not be repeated",
-                            String::from_utf8_lossy(&attribute.name)
-                        ),
-                        line,
-                    ));
-                }
-                let arguments = self.attribute_arguments(owner, attribute)?;
-                let source = std::mem::replace(&mut self.source, owner.declaration.source.clone());
-                let strict =
-                    std::mem::replace(&mut self.strict_types, owner.declaration.strict_types);
-                let result = self.instantiate_class(
-                    class,
-                    &[Argument::Unpack(literal(
-                        Value::Array(Rc::new(arguments)),
-                        attribute.line,
-                    ))],
-                    true,
-                    attribute.line,
-                );
-                self.source = source;
-                self.strict_types = strict;
-                result?
-            }
-            _ => unreachable!("unhandled attribute reflection method"),
-        })
-    }
 }
 
 fn collect_interfaces(class: &Rc<Class>, result: &mut Vec<Rc<Class>>) {
@@ -901,22 +670,6 @@ fn visibility_flags(visibility: Visibility) -> i64 {
         Visibility::Protected => 2,
         Visibility::Private => 4,
     }
-}
-
-fn attribute_target_names(flags: i64) -> String {
-    [
-        (1, "class"),
-        (2, "function"),
-        (4, "method"),
-        (8, "property"),
-        (16, "class constant"),
-        (32, "parameter"),
-        (64, "constant"),
-    ]
-    .into_iter()
-    .filter_map(|(bit, name)| (flags & bit != 0).then_some(name))
-    .collect::<Vec<_>>()
-    .join(", ")
 }
 
 // Reflection lists declarations before inherited properties and hides private

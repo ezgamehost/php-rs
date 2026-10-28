@@ -145,11 +145,15 @@ definition of completion.
    Class reflection supports names/source locations, flags, ancestry, interface/trait
    metadata, constants, property defaults, static property access, and construction.
    Class attribute reflection preserves deferred arguments and validates instantiation
-   in the declaration's source, scope, and strict-types mode.
+   in the declaration's source, scope, and strict-types mode. Function, method, and
+   parameter reflection includes source/signature metadata, attributes, defaults,
+   named/union types, closure creation/capture inspection, and reflective invocation.
+   Native methods share argument-count validation with other internal functions.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   complete property/constant diagnostics, property hooks, remaining magic methods, member/function/type reflection, lazy objects,
+   complete property/constant diagnostics, property hooks, remaining magic methods, property/class-constant reflection,
+   complete builtin signature metadata, prototypes/static variables, lazy objects,
    complete attribute instantiation and runtime effects, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
