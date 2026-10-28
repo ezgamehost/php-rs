@@ -1,0 +1,100 @@
+PHP 8.5.0 Zend/tests/exceptions baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/exceptions
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/exceptions/bug26698.phpt PASS
+Zend/tests/exceptions/bug30161.phpt FAIL: Error: Object of class hariCow could not be converted to string on line 28
+Zend/tests/exceptions/bug30162.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug30707.phpt PASS
+Zend/tests/exceptions/bug30725.phpt FAIL: Error: Interface "IteratorAggregate" not found on line 3
+Zend/tests/exceptions/bug31102.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug32226.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 7
+Zend/tests/exceptions/bug32252.phpt FAIL: Error: Interface "ArrayAccess" not found on line 3
+Zend/tests/exceptions/bug33802.phpt FAIL: Error: Call to undefined function set_error_handler() on line 2
+Zend/tests/exceptions/bug45805.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug47771.phpt PASS
+Zend/tests/exceptions/bug48228.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug48408.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug48409.phpt PASS
+Zend/tests/exceptions/bug48428.phpt PASS
+Zend/tests/exceptions/bug50005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug50383.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug51394.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/exceptions/bug53511.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug54043.phpt FAIL: Error: Class "DateTimeZone" not found on line 4
+Zend/tests/exceptions/bug60569.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug61362.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug63762.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug64135.phpt FAIL: Error: Call to undefined function set_error_handler() on line 7
+Zend/tests/exceptions/bug64821.1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug64821.2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug64821.3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug65254.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
+Zend/tests/exceptions/bug70012.phpt PASS
+Zend/tests/exceptions/bug70944.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug72581.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug73338.phpt FAIL: ParseError: Expected ')' on line 3
+Zend/tests/exceptions/bug73350.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug76025.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/bug78239.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/exceptions/exception_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_002.phpt PASS
+Zend/tests/exceptions/exception_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_009.phpt FAIL: my_exception:  on line 21
+Zend/tests/exceptions/exception_011.phpt UNSUPPORTED: EXPECTF, EXPECTHEADERS, INI
+Zend/tests/exceptions/exception_013.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_014.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_015.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_016.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_017.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_018.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_019.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_020.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_021.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_022.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_023.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_024.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/exceptions/exception_025.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_026.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_027.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_028.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_before_fatal.phpt FAIL: Error: Call to undefined function set_error_handler() on line 6
+Zend/tests/exceptions/exception_delayed_message.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_during_by_reference_magic_get.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/exceptions/exception_during_include_stat.phpt FAIL: Error: Call to undefined function stream_wrapper_register() on line 10
+Zend/tests/exceptions/exception_during_property_assign_op.phpt FAIL: Unexpected diagnostics: Undefined property: Test::$prop on line 11; Deprecated: Creation of dynamic property Test::$prop is deprecated on line 11
+Zend/tests/exceptions/exception_during_variance_autoload.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_during_variance_autoload_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_fatal_uncaught_error_reference_tostring.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_from_toString.phpt FAIL: Error: Object of class BadStr could not be converted to string on line 13
+Zend/tests/exceptions/exception_getters_with_ref_props.phpt FAIL: ParseError: Expected parameter variable on line 4
+Zend/tests/exceptions/exception_handler/bug40815.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 9
+Zend/tests/exceptions/exception_handler/bug47714.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 10
+Zend/tests/exceptions/exception_handler/exception_handler_001.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 3
+Zend/tests/exceptions/exception_handler/exception_handler_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_handler/exception_handler_003.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 6
+Zend/tests/exceptions/exception_handler/exception_handler_004.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 4
+Zend/tests/exceptions/exception_handler/exception_handler_005.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 3
+Zend/tests/exceptions/exception_handler/exception_handler_006.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 3
+Zend/tests/exceptions/exception_handler/exception_handler_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/exception_handler/exit_exception_handler.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 3
+Zend/tests/exceptions/gh10695_1.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 2
+Zend/tests/exceptions/gh10695_2.phpt FAIL: ParseError: Constant expression contains invalid operations on line 12
+Zend/tests/exceptions/gh10695_3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/gh10695_4.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/gh10695_5.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 2
+Zend/tests/exceptions/gh10695_6.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 2
+Zend/tests/exceptions/gh10695_7.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 2
+Zend/tests/exceptions/gh10810.phpt UNSUPPORTED: EXPECTF
+Zend/tests/exceptions/gh13446_1.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 5
+Zend/tests/exceptions/gh13446_2.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 8
+Zend/tests/exceptions/gh13446_3.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 11
+Zend/tests/exceptions/gh13446_4.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 7
+Zend/tests/exceptions/gh16188.phpt UNSUPPORTED: EXPECTF
+7 passed, 33 failed, 54 unsupported

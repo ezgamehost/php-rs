@@ -71,6 +71,7 @@ impl Parser {
             captures.iter().map(|c| c.name.clone()).collect(),
         );
         let outer_depth = std::mem::replace(&mut self.control_depth, 0);
+        let outer_finally_depths = std::mem::take(&mut self.finally_depths);
         let body = if arrow {
             self.expect("=>")?;
             let result = self.expr(0)?;
@@ -98,7 +99,9 @@ impl Parser {
         self.return_type = outer_return;
         self.static_names = outer_statics;
         self.control_depth = outer_depth;
+        self.finally_depths = outer_finally_depths;
         let function = Rc::new(FunctionDecl {
+            native: None,
             visibility: Visibility::Public,
             is_abstract: false,
             is_static: false,
@@ -163,6 +166,7 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
         | ExprKind::Eval(e)
         | ExprKind::Include(_, e)
         | ExprKind::Empty(e)
+        | ExprKind::Throw(e)
         | ExprKind::Print(e)
         | ExprKind::Increment(e, _, _) => collect_captures(e, captures),
         ExprKind::StaticProperty(a, b)

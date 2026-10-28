@@ -91,6 +91,20 @@ impl Runtime {
         let Some(ty) = &param.ty else {
             return Ok(value);
         };
+        if matches!(
+            function.native,
+            Some(crate::ast::NativeMethod::ThrowableConstruct)
+        ) && !strict
+            && value == Value::Null
+            && (ty.contains("string") || ty.contains("int"))
+        {
+            self.warnings.push(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)));
+            return Ok(if ty.contains("string") {
+                Value::String(Vec::new())
+            } else {
+                Value::Int(0)
+            });
+        }
         let given = builtins::debug_type(&value).to_owned();
         self.coerce_type(value, ty, strict, line).ok_or_else(|| {
             Error::new(

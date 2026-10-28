@@ -6,12 +6,23 @@ use std::{cell::RefCell, rc::Rc};
 
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
+    pub(crate) throwable: RefCell<Option<ThrowableData>>,
     pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,
     pub(crate) properties: RefCell<PhpArray>,
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) object_id: usize,
 }
+
+#[derive(Clone)]
+pub(crate) struct ThrowableData {
+    pub message: Vec<u8>,
+    pub code: i64,
+    pub file: Vec<u8>,
+    pub line: usize,
+    pub previous: Option<Rc<PhpObject>>,
+}
+impl Eq for PhpObject {}
 impl PhpObject {
     pub(crate) fn snapshot(&self) -> PhpArray {
         let properties = self.properties.borrow();

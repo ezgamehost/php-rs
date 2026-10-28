@@ -2,10 +2,12 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorKind {
+    Exception,
     /// Internal control signal, consumed at the request execution boundary.
     #[doc(hidden)]
     UnwindExit,
     ParseError,
+    CompileError,
     TypeError,
     DivisionByZeroError,
     ArithmeticError,
@@ -20,6 +22,7 @@ pub struct Error {
     pub kind: ErrorKind,
     pub message: String,
     pub line: usize,
+    pub(crate) throwable: Option<std::rc::Rc<crate::PhpObject>>,
 }
 
 impl Error {
@@ -28,6 +31,7 @@ impl Error {
             kind,
             message: message.into(),
             line,
+            throwable: None,
         }
     }
     pub(crate) fn parse(message: impl Into<String>, line: usize) -> Self {
@@ -37,7 +41,15 @@ impl Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}: {} on line {}", self.kind, self.message, self.line)
+        if let Some(object) = &self.throwable {
+            write!(
+                f,
+                "{}: {} on line {}",
+                object.class_name, self.message, self.line
+            )
+        } else {
+            write!(f, "{:?}: {} on line {}", self.kind, self.message, self.line)
+        }
     }
 }
 impl std::error::Error for Error {}

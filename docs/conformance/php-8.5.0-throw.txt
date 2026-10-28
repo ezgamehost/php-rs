@@ -1,0 +1,11 @@
+PHP 8.5.0 Zend/tests/throw baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/throw
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/throw/001.phpt FAIL: Expected "string(13) \"true && throw\"\nbool(false)\nstring(14) \"true and throw\"\nbool(false)\nbool(true)\nstring(14) \"false || throw\"\nbool(true)\nstring(14) \"false or throw\"\nstring(13) \"null ?? throw\"\nstring(3) \"foo\"\nstring(13) \"null ?: throw\"\nstring(3) \"foo\"\nstring(7) \"not yet\"\nstring(13) \"fn() => throw\"\nstring(3) \"bar\"\nstring(11) \"exception 1\"\nbool(true)\nstring(20) \"false ? true : throw\"\nstring(42) \"Unsupported operand types: Exception + int\"\nstring(35) \"throw $exception = new Exception();\"\nstring(37) \"throw $exception ??= new Exception();\"\nstring(30) \"throw null ?? new Exception();\"\n", got "string(13) \"true && throw\"\nbool(false)\nstring(14) \"true and throw\"\nbool(false)\nbool(true)\nstring(14) \"false || throw\"\nbool(true)\nstring(14) \"false or throw\"\nstring(13) \"null ?? throw\"\nstring(3) \"foo\"\nstring(13) \"null ?: throw\"\nstring(3) \"foo\"\nstring(7) \"not yet\"\nstring(13) \"fn() => throw\"\nstring(3) \"bar\"\nstring(11) \"exception 1\"\nbool(true)\nstring(20) \"false ? true : throw\"\nstring(35) \"Unsupported operand type: Exception\"\nstring(35) \"throw $exception = new Exception();\"\nstring(37) \"throw $exception ??= new Exception();\"\nstring(30) \"throw null ?? new Exception();\"\n"
+Zend/tests/throw/002.phpt PASS
+Zend/tests/throw/bug33318.phpt UNSUPPORTED: EXPECTF
+Zend/tests/throw/exit_in_finally.phpt PASS
+Zend/tests/throw/leaks.phpt FAIL: ParseError: Unexpected byte 0x40 on line 17
+2 passed, 2 failed, 1 unsupported

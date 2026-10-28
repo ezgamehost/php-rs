@@ -44,6 +44,18 @@ impl Scope {
                 }
                 Stmt::Expr(value) => self.reserve_expression(value),
                 Stmt::Block(body) => self.reserve_variables(body),
+                Stmt::Try(body, catches, finally) => {
+                    self.reserve_variables(body);
+                    for catch in catches {
+                        if let Some(name) = &catch.variable {
+                            self.reserve(name);
+                        }
+                        self.reserve_variables(&catch.body);
+                    }
+                    if let Some(finally) = finally {
+                        self.reserve_variables(finally);
+                    }
+                }
                 Stmt::If(condition, yes, no) => {
                     self.reserve_expression(condition);
                     self.reserve_variables(std::slice::from_ref(yes));
@@ -110,6 +122,7 @@ impl Scope {
             | ExprKind::Eval(inner)
             | ExprKind::Include(_, inner)
             | ExprKind::Empty(inner)
+            | ExprKind::Throw(inner)
             | ExprKind::Print(inner)
             | ExprKind::Increment(inner, _, _) => self.reserve_expression(inner),
             ExprKind::Assign(left, _, right) if matches!(left.kind, ExprKind::Destructure(_)) => {

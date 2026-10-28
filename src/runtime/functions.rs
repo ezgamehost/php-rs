@@ -308,6 +308,13 @@ impl Runtime {
             return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
         }
         let function = function.unwrap();
+        if function.native.is_some() && !bound.extra.is_empty() {
+            return Err(Error::new(
+                ErrorKind::ArgumentCountError,
+                "Too many arguments for internal method",
+                line,
+            ));
+        }
         let extra: Vec<_> = bound
             .extra
             .entries()
@@ -393,6 +400,13 @@ impl Runtime {
                 };
                 self.scope.insert(param.name.clone(), cell(value));
             }
+            if let Some(native) = function.native {
+                if let Some(object) = this {
+                    self.scope
+                        .insert(b"this".to_vec(), cell(Value::Object(object)));
+                }
+                return self.native_throwable_method(native, line);
+            }
             self.strict_types = function.strict_types;
             self.source = function.source.clone();
             if let Some(closure) = &closure
@@ -414,6 +428,7 @@ impl Runtime {
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
         })();
+        let result = result.map_err(|error| self.materialize_error(error));
         self.scope = self.callers.pop().unwrap();
         self.class_context = caller_context;
         self.current_function = caller_function;
@@ -553,6 +568,15 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mu
                 diagnose_functions(&decl.body, warnings);
             }
             Stmt::Block(body) => diagnose_statements(body, warnings, switches),
+            Stmt::Try(body, catches, finally) => {
+                diagnose_statements(body, warnings, switches);
+                for catch in catches {
+                    diagnose_statements(&catch.body, warnings, switches);
+                }
+                if let Some(finally) = finally {
+                    diagnose_statements(finally, warnings, switches);
+                }
+            }
             Stmt::If(_, yes, no) => {
                 diagnose_statements(std::slice::from_ref(yes), warnings, switches);
                 if let Some(no) = no {

@@ -36,6 +36,7 @@ pub(crate) enum ExprKind {
     Isset(Vec<Expr>),
     Empty(Box<Expr>),
     Print(Box<Expr>),
+    Throw(Box<Expr>),
     Assign(Box<Expr>, String, Box<Expr>),
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
@@ -87,6 +88,7 @@ pub(crate) enum Stmt {
     Echo(Vec<Expr>),
     Expr(Expr),
     Block(Vec<Stmt>),
+    Try(Vec<Stmt>, Vec<CatchClause>, Option<Vec<Stmt>>),
     If(Expr, Box<Stmt>, Option<Box<Stmt>>),
     While(Expr, Box<Stmt>),
     DoWhile(Box<Stmt>, Expr),
@@ -104,6 +106,23 @@ pub(crate) struct SwitchCase {
     pub condition: Option<Expr>,
     pub body: Vec<Stmt>,
     pub semicolon_line: Option<usize>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct CatchClause {
+    pub types: Vec<Vec<u8>>,
+    pub variable: Option<Vec<u8>>,
+    pub body: Vec<Stmt>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum NativeMethod {
+    ThrowableConstruct,
+    GetMessage,
+    GetCode,
+    GetFile,
+    GetLine,
+    GetPrevious,
 }
 
 impl Expr {
@@ -186,6 +205,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub native: Option<NativeMethod>,
     pub visibility: Visibility,
     pub is_abstract: bool,
     pub is_static: bool,

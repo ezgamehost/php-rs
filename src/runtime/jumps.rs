@@ -4,10 +4,14 @@ use crate::ast::SwitchCase;
 // Search only regions that can be entered without an active loop/switch frame.
 // A jump within a loop is resolved by that loop's body; an outward jump bubbles
 // up until its target is found, dropping the abandoned iteration state.
-fn contains_label(statement: &Stmt, name: &[u8]) -> bool {
+pub(super) fn contains_label(statement: &Stmt, name: &[u8]) -> bool {
     match statement {
         Stmt::Label(label, _) => label == name,
         Stmt::Block(body) => body.iter().any(|stmt| contains_label(stmt, name)),
+        Stmt::Try(body, catches, _) => {
+            label_index(body, name).is_some()
+                || catches.iter().any(|c| label_index(&c.body, name).is_some())
+        }
         Stmt::If(_, yes, no) => {
             contains_label(yes, name) || no.as_ref().is_some_and(|no| contains_label(no, name))
         }
@@ -15,7 +19,7 @@ fn contains_label(statement: &Stmt, name: &[u8]) -> bool {
     }
 }
 
-fn label_index(statements: &[Stmt], name: &[u8]) -> Option<usize> {
+pub(super) fn label_index(statements: &[Stmt], name: &[u8]) -> Option<usize> {
     statements
         .iter()
         .position(|stmt| contains_label(stmt, name))
@@ -51,6 +55,9 @@ impl Runtime {
     fn resume_statement(&mut self, statement: &Stmt, name: &[u8]) -> Result<Flow, Error> {
         match statement {
             Stmt::Label(_, _) => Ok(Flow::Next),
+            Stmt::Try(body, catches, finally) => {
+                self.try_block(body, catches, finally.as_deref(), Some(name))
+            }
             Stmt::Block(body) => {
                 let index = label_index(body, name).expect("validated block label");
                 self.block_from(body, index, Some(name.to_vec()))

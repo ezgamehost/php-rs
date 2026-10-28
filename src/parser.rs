@@ -10,6 +10,7 @@ use crate::{
 use std::{collections::HashSet, rc::Rc};
 mod cloning;
 mod closures;
+mod exceptions;
 mod jumps;
 mod logical_constants;
 mod objects;
@@ -30,6 +31,7 @@ pub(crate) fn parse_source(
         tokens,
         pos: 0,
         control_depth: 0,
+        finally_depths: Vec::new(),
         warnings: Vec::new(),
         strict_types: false,
         return_type: None,
@@ -49,6 +51,7 @@ struct Parser {
     tokens: Vec<Token>,
     pos: usize,
     control_depth: usize,
+    finally_depths: Vec<usize>,
     warnings: Vec<String>,
     strict_types: bool,
     return_type: Option<TypeDecl>,
@@ -137,6 +140,9 @@ impl Parser {
         Ok(Stmt::Const(constants))
     }
     fn statement(&mut self) -> Result<Stmt, Error> {
+        if self.eat("try") {
+            return self.try_statement();
+        }
         if self.eat("class") {
             return self.class_declaration(false, false, false, false);
         }
@@ -341,6 +347,16 @@ impl Parser {
                 }
                 level as usize
             };
+            if self
+                .finally_depths
+                .last()
+                .is_some_and(|depth| self.control_depth - level < *depth)
+            {
+                return Err(Error::parse(
+                    "jump out of a finally block is disallowed",
+                    line,
+                ));
+            }
             self.expect(";")?;
             return Ok(if is_break {
                 Stmt::Break(level)
@@ -488,6 +504,7 @@ impl Parser {
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
         let outer_static_names = std::mem::take(&mut self.static_names);
         let outer_control_depth = std::mem::replace(&mut self.control_depth, 0);
+        let outer_finally_depths = std::mem::take(&mut self.finally_depths);
         let mut body = Vec::new();
         while !is_abstract && !self.eat("}") {
             if self.token().kind == Kind::End {
@@ -496,12 +513,14 @@ impl Parser {
             body.push(self.statement()?);
         }
         self.control_depth = outer_control_depth;
+        self.finally_depths = outer_finally_depths;
         self.return_type = outer_return_type;
         self.static_names = outer_static_names;
         self.function_name = outer_function_name;
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            native: None,
             visibility: Visibility::Public,
             is_abstract,
             is_static: false,
@@ -768,6 +787,9 @@ impl Parser {
                 ExprKind::Cast(kind, Box::new(self.expr(20)?))
             }
             Kind::Value(value) => ExprKind::Literal(value),
+            Kind::Word(name) if name.eq_ignore_ascii_case(b"throw") => {
+                ExprKind::Throw(Box::new(self.expr(0)?))
+            }
             Kind::Interpolated(parts) => {
                 let mut expressions = Vec::new();
                 for part in parts {
@@ -781,6 +803,7 @@ impl Parser {
                                 tokens,
                                 pos: 0,
                                 control_depth: 0,
+                                finally_depths: Vec::new(),
                                 warnings: Vec::new(),
                                 strict_types: false,
                                 return_type: None,

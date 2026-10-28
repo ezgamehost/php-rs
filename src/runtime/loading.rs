@@ -96,8 +96,9 @@ impl Runtime {
         source: Rc<Source>,
         fallthrough: Value,
     ) -> Result<Value, Error> {
-        let (mut statements, warnings, strict) =
-            parser::parse_source(lexer::lex(code)?, source.clone())?;
+        let (mut statements, warnings, strict) = lexer::lex(code)
+            .and_then(|tokens| parser::parse_source(tokens, source.clone()))
+            .map_err(|error| self.materialize_error_from(error, &source.name))?;
         if let Some(path) = &source.path {
             self.record_include(path.clone());
         }

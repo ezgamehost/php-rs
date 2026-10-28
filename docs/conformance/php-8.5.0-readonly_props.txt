@@ -3,31 +3,31 @@ Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
 Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
-Zend/tests/readonly_props/array_append_initialization.phpt FAIL: ParseError: Expected ';' on line 19
+Zend/tests/readonly_props/array_append_initialization.phpt PASS
 Zend/tests/readonly_props/by_ref_foreach.phpt FAIL: ParseError: Expected expression on line 14
 Zend/tests/readonly_props/cache_slot.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/gh7942.phpt FAIL: ParseError: Expected parameter variable on line 5
 Zend/tests/readonly_props/initialization_scope.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/magic_get_set.phpt FAIL: ParseError: Expected ';' on line 33
+Zend/tests/readonly_props/magic_get_set.phpt FAIL: Error: Typed property Test::$prop must not be accessed before initialization on line 52
 Zend/tests/readonly_props/multiple_modifiers.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/override_with_attributes.phpt FAIL: Error: Class "ReflectionProperty" not found on line 18
-Zend/tests/readonly_props/promotion.phpt FAIL: ParseError: Expected ';' on line 13
+Zend/tests/readonly_props/promotion.phpt FAIL: Expected "object(Point)#1 (3) {\n  [\"x\"]=>\n  float(0)\n  [\"y\"]=>\n  float(0)\n  [\"z\"]=>\n  float(0)\n}\nCannot modify readonly property Point::$x\nobject(Point)#1 (3) {\n  [\"x\"]=>\n  float(1)\n  [\"y\"]=>\n  float(2)\n  [\"z\"]=>\n  float(3)\n}\n", got "object(Point)#1 (3) {\n  [\"x\"]=>\n  float(0)\n  [\"y\"]=>\n  float(0)\n  [\"z\"]=>\n  float(0)\n}\nCannot modify readonly property Point::$x\nobject(Point)#2 (3) {\n  [\"x\"]=>\n  float(1)\n  [\"y\"]=>\n  float(2)\n  [\"z\"]=>\n  float(3)\n}\n"
 Zend/tests/readonly_props/promotion_error1.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/public_set_non_readonly.phpt FAIL: ParseError: Multiple access type modifiers are not allowed on line 4
-Zend/tests/readonly_props/readonly_assign_no_sideeffect.phpt FAIL: ParseError: Expected ';' on line 22
-Zend/tests/readonly_props/readonly_clone_error1.phpt FAIL: ParseError: Expected ';' on line 18
-Zend/tests/readonly_props/readonly_clone_error2.phpt FAIL: ParseError: Expected ';' on line 24
-Zend/tests/readonly_props/readonly_clone_error3.phpt FAIL: ParseError: Expected ';' on line 26
-Zend/tests/readonly_props/readonly_clone_error4.phpt FAIL: ParseError: Expected ';' on line 18
+Zend/tests/readonly_props/public_set_non_readonly.phpt FAIL: ParseError: Set visibility requires a static property on line 4
+Zend/tests/readonly_props/readonly_assign_no_sideeffect.phpt PASS
+Zend/tests/readonly_props/readonly_clone_error1.phpt PASS
+Zend/tests/readonly_props/readonly_clone_error2.phpt PASS
+Zend/tests/readonly_props/readonly_clone_error3.phpt PASS
+Zend/tests/readonly_props/readonly_clone_error4.phpt FAIL: Expected "object(Foo)#2 (1) {\n  [\"bar\"]=>\n  int(3)\n}\nCannot modify readonly property Foo::$bar\nobject(Foo)#2 (1) {\n  [\"bar\"]=>\n  int(3)\n}\nCannot modify readonly property Foo::$bar\n", got "object(Foo)#2 (1) {\n  [\"bar\"]=>\n  int(3)\n}\nCannot modify readonly property Foo::$bar\nobject(Foo)#4 (1) {\n  [\"bar\"]=>\n  int(3)\n}\nCannot modify readonly property Foo::$bar\n"
 Zend/tests/readonly_props/readonly_clone_error5.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/readonly_props/readonly_clone_error6.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/readonly_clone_error7.phpt FAIL: ParseError: Expected ';' on line 16
+Zend/tests/readonly_props/readonly_clone_error7.phpt PASS
 Zend/tests/readonly_props/readonly_clone_success1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_clone_success2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_clone_success4.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_coercion_type_error.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_const.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/readonly_containing_object.phpt FAIL: ParseError: Expected ';' on line 15
+Zend/tests/readonly_props/readonly_containing_object.phpt FAIL: ParseError: Expected expression on line 33
 Zend/tests/readonly_props/readonly_method.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_method_trait.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readonly_modification.phpt FAIL: ParseError: Expected parameter variable on line 14
@@ -39,8 +39,8 @@ Zend/tests/readonly_props/readonly_without_type.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/readwrite_to_readonly.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_props/serialization.phpt FAIL: Error: Call to undefined function serialize() on line 9
 Zend/tests/readonly_props/static.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_props/unset.phpt FAIL: ParseError: Expected ';' on line 12
-Zend/tests/readonly_props/variation.phpt FAIL: ParseError: Expected ';' on line 88
-Zend/tests/readonly_props/variation_nested.phpt FAIL: ParseError: Expected ';' on line 57
+Zend/tests/readonly_props/unset.phpt FAIL: Error: Typed property Test2::$prop must not be accessed before initialization on line 35
+Zend/tests/readonly_props/variation.phpt PASS
+Zend/tests/readonly_props/variation_nested.phpt FAIL: Expected "Init: 1, op: r: 1\nInit: 1, op: w: done\nInit: 1, op: rw: done\nInit: 1, op: im: done\nInit: 1, op: is: 1\nInit: 1, op: us: done\nInit: 1, op: us_dim: done\nInit: 0, op: r: Typed property Test::$prop must not be accessed before initialization\nInit: 0, op: w: Cannot indirectly modify readonly property Test::$prop\nInit: 0, op: rw: Typed property Test::$prop must not be accessed before initialization\nInit: 0, op: im: Cannot indirectly modify readonly property Test::$prop\nInit: 0, op: is: 0\nInit: 0, op: us: done\nInit: 0, op: us_dim: done\n", got "Init: 1, op: r: 1\nInit: 1, op: w: done\nInit: 1, op: rw: done\nInit: 1, op: im: done\nInit: 1, op: is: 1\nInit: 1, op: us: done\nInit: 1, op: us_dim: done\nInit: 0, op: r: Typed property Test::$prop must not be accessed before initialization\nInit: 0, op: w: Typed property Test::$prop must not be accessed before initialization\nInit: 0, op: rw: Typed property Test::$prop must not be accessed before initialization\nInit: 0, op: im: Typed property Test::$prop must not be accessed before initialization\nInit: 0, op: is: 0\nInit: 0, op: us: done\nInit: 0, op: us_dim: done\n"
 Zend/tests/readonly_props/visibility_change.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
-0 passed, 22 failed, 18 unsupported
+7 passed, 15 failed, 18 unsupported

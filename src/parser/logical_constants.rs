@@ -53,6 +53,15 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
             }
             Stmt::Expr(value) => expression(value, warnings),
             Stmt::Block(body) => fold(body, warnings),
+            Stmt::Try(body, catches, finally) => {
+                fold(body, warnings);
+                for catch in catches {
+                    fold(&mut catch.body, warnings);
+                }
+                if let Some(finally) = finally {
+                    fold(finally, warnings);
+                }
+            }
             Stmt::If(condition, yes, no) => {
                 expression(condition, warnings);
                 fold(std::slice::from_mut(yes), warnings);
@@ -158,6 +167,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         | ExprKind::Eval(value)
         | ExprKind::Include(_, value)
         | ExprKind::Empty(value)
+        | ExprKind::Throw(value)
         | ExprKind::Print(value)
         | ExprKind::Increment(value, _, _) => expression(value, warnings),
         ExprKind::StaticProperty(left, right)

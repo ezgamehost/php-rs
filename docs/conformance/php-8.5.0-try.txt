@@ -1,0 +1,86 @@
+PHP 8.5.0 Zend/tests/try baseline (2026-10-27)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/try
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/try/bug70228.phpt FAIL: Error: Call to undefined function str_repeat() on line 5
+Zend/tests/try/bug70228_2.phpt PASS
+Zend/tests/try/bug70228_3.phpt PASS
+Zend/tests/try/bug70228_4.phpt PASS
+Zend/tests/try/bug70228_5.phpt PASS
+Zend/tests/try/bug70228_6.phpt PASS
+Zend/tests/try/bug70228_7.phpt PASS
+Zend/tests/try/bug70228_8.phpt PASS
+Zend/tests/try/bug71604.phpt FAIL: Error: Undefined constant "yield" on line 5
+Zend/tests/try/bug71604_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/bug71604_3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/bug72188.phpt PASS
+Zend/tests/try/bug72213.phpt PASS
+Zend/tests/try/bug72213_2.phpt PASS
+Zend/tests/try/bug72215.phpt PASS
+Zend/tests/try/bug72215_1.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/try/bug72215_2.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/try/bug72215_3.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/try/bug72216.phpt FAIL: ParseError: Expected '(' on line 2
+Zend/tests/try/bug72629.phpt FAIL: ParseError: Expected expression on line 4
+Zend/tests/try/bug73337.phpt FAIL: TypeError: Unsupported operand type: d on line 3
+Zend/tests/try/bug74444.phpt FAIL: Error: Class "RuntimeException" not found on line 64
+Zend/tests/try/catch_002.phpt PASS
+Zend/tests/try/catch_003.phpt PASS
+Zend/tests/try/catch_004.phpt PASS
+Zend/tests/try/catch_finally_001.phpt PASS
+Zend/tests/try/catch_finally_002.phpt PASS
+Zend/tests/try/catch_finally_003.phpt FAIL: ParseError: Expected '(' on line 19
+Zend/tests/try/catch_finally_004.phpt FAIL: ParseError: Expected parameter variable on line 7
+Zend/tests/try/catch_finally_005.phpt PASS
+Zend/tests/try/catch_finally_006.phpt PASS
+Zend/tests/try/catch_novar_1.phpt PASS
+Zend/tests/try/catch_novar_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/finally_goto_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/finally_goto_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/finally_goto_003.phpt PASS
+Zend/tests/try/finally_goto_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/finally_goto_005.phpt PASS
+Zend/tests/try/try_catch_finally_001.phpt PASS
+Zend/tests/try/try_catch_finally_002.phpt PASS
+Zend/tests/try/try_catch_finally_003.phpt PASS
+Zend/tests/try/try_catch_finally_004.phpt PASS
+Zend/tests/try/try_catch_finally_005.phpt PASS
+Zend/tests/try/try_catch_finally_006.phpt PASS
+Zend/tests/try/try_catch_finally_007.phpt PASS
+Zend/tests/try/try_finally_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_002.phpt PASS
+Zend/tests/try/try_finally_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_006.phpt PASS
+Zend/tests/try/try_finally_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_009.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_010.phpt PASS
+Zend/tests/try/try_finally_011.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_012.phpt FAIL: Expected "finally\nexception in main\n", got "finally\n"
+Zend/tests/try/try_finally_013.phpt PASS
+Zend/tests/try/try_finally_014.phpt PASS
+Zend/tests/try/try_finally_015.phpt PASS
+Zend/tests/try/try_finally_016.phpt FAIL: Expected "finally\nouter catch\n", got "finally\n"
+Zend/tests/try/try_finally_017.phpt FAIL: Expected "finally1\ncatch2\nfinally2\n", got "finally1\nfinally2\n"
+Zend/tests/try/try_finally_018.phpt PASS
+Zend/tests/try/try_finally_019.phpt FAIL: Expected "destruct3\nfinally1\ndestruct2\nfinally2\ndestruct1\n", got "finally1\nfinally2\n"
+Zend/tests/try/try_finally_020.phpt FAIL: Expected "destruct3\nfinally1\ndestruct2\ncatch\nfinally2\ndestruct1\n", got "finally1\ncatch\nfinally2\n"
+Zend/tests/try/try_finally_021.phpt PASS
+Zend/tests/try/try_finally_022.phpt FAIL: Expected "exception2\n", got ""
+Zend/tests/try/try_finally_023.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_024.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_025.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_026.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_027.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_finally_recursive_previous.phpt UNSUPPORTED: EXPECTF
+Zend/tests/try/try_multicatch_001.phpt PASS
+Zend/tests/try/try_multicatch_002.phpt PASS
+Zend/tests/try/try_multicatch_003.phpt PASS
+Zend/tests/try/try_multicatch_004.phpt PASS
+Zend/tests/try/try_multicatch_005.phpt PASS
+Zend/tests/try/try_multicatch_006.phpt PASS
+Zend/tests/try/try_multicatch_007.phpt PASS
+43 passed, 17 failed, 20 unsupported

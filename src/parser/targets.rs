@@ -120,6 +120,15 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
             }
             Stmt::Expr(expr) => expression(expr, false)?,
             Stmt::Block(body) => validate(body)?,
+            Stmt::Try(body, catches, finally) => {
+                validate(body)?;
+                for catch in catches {
+                    validate(&catch.body)?;
+                }
+                if let Some(finally) = finally {
+                    validate(finally)?;
+                }
+            }
             Stmt::If(condition, yes, no) => {
                 expression(condition, false)?;
                 validate(std::slice::from_ref(yes))?;
@@ -231,6 +240,7 @@ fn expression(expr: &Expr, target: bool) -> Result<(), Error> {
         | ExprKind::Cast(_, value)
         | ExprKind::Unary(_, value)
         | ExprKind::Empty(value)
+        | ExprKind::Throw(value)
         | ExprKind::Print(value) => expression(value, false)?,
         ExprKind::Increment(value, _, _) => expression(value, true)?,
         ExprKind::StaticProperty(left, right)

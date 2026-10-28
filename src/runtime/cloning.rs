@@ -88,7 +88,15 @@ impl Runtime {
         let Value::Object(original) = original else {
             unreachable!()
         };
+        if original.class.is_a(b"Throwable") {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Trying to clone an uncloneable throwable object",
+                line,
+            ));
+        }
         let object = Rc::new(PhpObject {
+            throwable: RefCell::new(None),
             class: original.class.clone(),
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),

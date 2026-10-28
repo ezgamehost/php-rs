@@ -80,6 +80,11 @@ new request. The CLI returns the low eight bits of the requested status.
   retain their declaring and called class contexts. `::class`, `get_called_class`,
   and `get_parent_class` expose class names. Static closure defaults use the
   declaring scope; property defaults are cached separately for each class.
+- Throw expressions and `try`/`catch`/`finally`, including union catches, rethrowing,
+  saved exception identity, runtime-error catches, and unwinding of return/loop
+  control. The built-in `Throwable` interface, `Exception`, `Error`, and core Error
+  subclasses support constructors and message/code/file/line/previous getters.
+  Exceptions thrown from `finally` retain the pending exception as their previous.
 - Public, protected, and private static properties with inherited shared storage,
   scope checks, independent private redeclarations, dynamic names, array mutation, and `isset`/`empty`/coalescing. Public, protected, and private
   class constants support scope-aware access, inheritance, `final`, dynamic names,
@@ -155,7 +160,7 @@ new request. The CLI returns the low eight bits of the requested status.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
 
-Known gaps include intersection/DNF types, most builtins, references, exceptions,
+Known gaps include intersection/DNF types, most builtins, references, complete exception APIs,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties, traits,
 non-public instance properties, asymmetric instance-property visibility, property hooks,
@@ -167,6 +172,9 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Closure reference captures work, but general references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
+Throwable stack traces, string conversion and property layouts, error/exception
+handlers, ErrorException/SPL exception classes, and complete compile-time fatal
+error distinctions remain unfinished.
 Other `declare` directives are not implemented. Shutdown callbacks, output
 handlers, and object destructor execution remain unimplemented.
 Automatic initialization and scope handling for the other superglobals are not

@@ -71,7 +71,11 @@ impl Runtime {
             ));
         }
         let name = decl.name.to_ascii_lowercase();
-        if self.classes.contains_key(&name) || name == b"stdclass" || name == b"closure" {
+        if self.classes.contains_key(&name)
+            || name == b"stdclass"
+            || name == b"closure"
+            || self.builtin_throwable_class(&name).is_some()
+        {
             return Err(Error::new(
                 ErrorKind::Error,
                 format!(
@@ -100,6 +104,16 @@ impl Runtime {
             ));
         }
         let interfaces = self.link_interfaces(&decl)?;
+        if !decl.is_interface
+            && interfaces.iter().any(|i| i.is_a(b"Throwable"))
+            && !parent.as_ref().is_some_and(|p| p.is_a(b"Throwable"))
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Class must extend Exception or Error to implement Throwable",
+                decl.line,
+            ));
+        }
         if parent
             .as_ref()
             .is_some_and(|p| p.declaration.is_readonly != decl.is_readonly)
@@ -224,6 +238,9 @@ impl Runtime {
             .strip_prefix(b"\\")
             .unwrap_or(name)
             .to_ascii_lowercase();
+        if let Some(class) = self.builtin_throwable_class(&name) {
+            return Some(class);
+        }
         if name == b"stdclass" {
             return Some(Rc::new(Class {
                 interfaces: Vec::new(),
@@ -350,6 +367,7 @@ impl Runtime {
         let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;
         let object = Rc::new(PhpObject {
+            throwable: RefCell::new(self.throwable_data(&class, line)),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),

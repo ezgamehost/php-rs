@@ -21,9 +21,9 @@ Zend/tests/type_declarations/typed_properties_015.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_016.phpt PASS
 Zend/tests/type_declarations/typed_properties_017.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_018.phpt FAIL: Error: Class "ReflectionClass" not found on line 7
-Zend/tests/type_declarations/typed_properties_019.phpt FAIL: ParseError: Expected ';' on line 12
-Zend/tests/type_declarations/typed_properties_020.phpt FAIL: ParseError: Expected ';' on line 9
-Zend/tests/type_declarations/typed_properties_021.phpt FAIL: ParseError: Expected ';' on line 6
+Zend/tests/type_declarations/typed_properties_019.phpt PASS
+Zend/tests/type_declarations/typed_properties_020.phpt PASS
+Zend/tests/type_declarations/typed_properties_021.phpt PASS
 Zend/tests/type_declarations/typed_properties_022.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_023.phpt FAIL: ParseError: Expected '(' on line 2
 Zend/tests/type_declarations/typed_properties_024.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
@@ -48,19 +48,19 @@ Zend/tests/type_declarations/typed_properties_042.phpt PASS
 Zend/tests/type_declarations/typed_properties_043.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_044.phpt UNSUPPORTED: SKIPIF
 Zend/tests/type_declarations/typed_properties_045.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
-Zend/tests/type_declarations/typed_properties_046.phpt FAIL: ParseError: Expected ';' on line 15
-Zend/tests/type_declarations/typed_properties_047.phpt FAIL: ParseError: Expected ';' on line 17
+Zend/tests/type_declarations/typed_properties_046.phpt FAIL: Expected "Cannot assign string to property Foo::$bbb of type int\nCannot assign string to property Foo::$bbb of type int\nCannot assign string to property Foo::$bbb of type int\nCannot assign string to property Foo::$bbb of type int\nCannot assign string to property Foo::$bbb of type int\n", got "Call to undefined function str_repeat()\nCall to undefined function str_repeat()\nCall to undefined function str_repeat()\nCall to undefined function str_repeat()\nCall to undefined function str_repeat()\n"
+Zend/tests/type_declarations/typed_properties_047.phpt PASS
 Zend/tests/type_declarations/typed_properties_048.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 Zend/tests/type_declarations/typed_properties_049.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_050.phpt PASS
-Zend/tests/type_declarations/typed_properties_051.phpt FAIL: ParseError: Expected ';' on line 16
+Zend/tests/type_declarations/typed_properties_051.phpt FAIL: TypeError: Cannot assign B to property A::$a of type string on line 14
 Zend/tests/type_declarations/typed_properties_052.phpt PASS
 Zend/tests/type_declarations/typed_properties_053.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_054.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_055.phpt UNSUPPORTED: EXPECTF
-Zend/tests/type_declarations/typed_properties_056.phpt FAIL: ParseError: Expected ';' on line 10
-Zend/tests/type_declarations/typed_properties_057.phpt FAIL: ParseError: Expected ';' on line 10
-Zend/tests/type_declarations/typed_properties_058.phpt FAIL: ParseError: Expected ';' on line 18
+Zend/tests/type_declarations/typed_properties_056.phpt FAIL: Error: Call to undefined function str_repeat() on line 9
+Zend/tests/type_declarations/typed_properties_057.phpt FAIL: Error: Call to undefined function str_repeat() on line 9
+Zend/tests/type_declarations/typed_properties_058.phpt PASS
 Zend/tests/type_declarations/typed_properties_059.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/type_declarations/typed_properties_060.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_061.phpt UNSUPPORTED: SKIPIF
@@ -78,14 +78,14 @@ Zend/tests/type_declarations/typed_properties_072.phpt FAIL: Error: Typed proper
 Zend/tests/type_declarations/typed_properties_073.phpt FAIL: ParseError: Expected function name on line 7
 Zend/tests/type_declarations/typed_properties_074.phpt FAIL: ParseError: Expected function name on line 7
 Zend/tests/type_declarations/typed_properties_075.phpt UNSUPPORTED: SKIPIF
-Zend/tests/type_declarations/typed_properties_076.phpt FAIL: ParseError: Expected ';' on line 20
+Zend/tests/type_declarations/typed_properties_076.phpt FAIL: ParseError: Expected expression on line 22
 Zend/tests/type_declarations/typed_properties_077.phpt PASS
 Zend/tests/type_declarations/typed_properties_078.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/type_declarations/typed_properties_079.phpt FAIL: ParseError: Expected expression on line 8
-Zend/tests/type_declarations/typed_properties_080.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/type_declarations/typed_properties_080.phpt FAIL: Expected "Typed static property Test::$a must not be accessed before initialization\nTyped static property Test::$b must not be accessed before initialization\nTyped static property Test::$c must not be accessed before initialization\n", got "Typed property Test::$a must not be accessed before initialization\nTyped property Test::$b must not be accessed before initialization\nTyped property Test::$c must not be accessed before initialization\n"
 Zend/tests/type_declarations/typed_properties_081.phpt FAIL: ParseError: Expected expression on line 8
 Zend/tests/type_declarations/typed_properties_082.phpt FAIL: ParseError: Expected expression on line 11
-Zend/tests/type_declarations/typed_properties_083.phpt FAIL: ParseError: Expected ';' on line 15
+Zend/tests/type_declarations/typed_properties_083.phpt FAIL: ParseError: Expected expression on line 39
 Zend/tests/type_declarations/typed_properties_084.phpt FAIL: Error: Call to undefined function class_alias() on line 2
 Zend/tests/type_declarations/typed_properties_085.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_086.phpt FAIL: Unexpected diagnostics: Deprecated: Creation of dynamic property T::$1 is deprecated on line 13
@@ -111,16 +111,16 @@ Zend/tests/type_declarations/typed_properties_106.phpt FAIL: ParseError: Expecte
 Zend/tests/type_declarations/typed_properties_107.phpt FAIL: ParseError: Expected expression on line 17
 Zend/tests/type_declarations/typed_properties_108.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_109.phpt UNSUPPORTED: EXPECTF
-Zend/tests/type_declarations/typed_properties_110.phpt FAIL: ParseError: Expected ';' on line 9
-Zend/tests/type_declarations/typed_properties_111.phpt FAIL: ParseError: Expected ';' on line 9
-Zend/tests/type_declarations/typed_properties_112.phpt FAIL: ParseError: Expected ';' on line 8
+Zend/tests/type_declarations/typed_properties_110.phpt PASS
+Zend/tests/type_declarations/typed_properties_111.phpt FAIL: Expected "Cannot assign true to property Foo::$value of type false\n", got "Cannot assign bool to property Foo::$value of type false"
+Zend/tests/type_declarations/typed_properties_112.phpt FAIL: Expected "Cannot assign false to property Foo::$value of type true\n", got "Cannot assign bool to property Foo::$value of type true"
 Zend/tests/type_declarations/typed_properties_113.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_114.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_115.phpt UNSUPPORTED: EXPECTF
-Zend/tests/type_declarations/typed_properties_cache_slot_opt.phpt FAIL: ParseError: Expected ';' on line 9
-Zend/tests/type_declarations/typed_properties_class_loading.phpt FAIL: ParseError: Expected ';' on line 13
-Zend/tests/type_declarations/typed_properties_failed_assign_is_not_init.phpt FAIL: ParseError: Expected ';' on line 13
-Zend/tests/type_declarations/typed_properties_magic_set.phpt FAIL: ParseError: Expected ';' on line 22
+Zend/tests/type_declarations/typed_properties_cache_slot_opt.phpt PASS
+Zend/tests/type_declarations/typed_properties_class_loading.phpt FAIL: ParseError: Expected expression on line 27
+Zend/tests/type_declarations/typed_properties_failed_assign_is_not_init.phpt PASS
+Zend/tests/type_declarations/typed_properties_magic_set.phpt FAIL: Expected "Typed property Test::$foo must not be accessed before initialization\nbool(false)\nint(42)\n__set foo = 42\n__set foo = 42\nint(42)\n__set foo = 42\n__set foo = 42\nint(42)\n__set foo = 42\n", got "Typed property Test::$foo must not be accessed before initialization\nbool(false)\nint(42)\nint(42)\nint(42)\n"
 Zend/tests/type_declarations/typed_properties_protected_inheritance_mismatch.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_reference_coercion_leak.phpt FAIL: ParseError: Expected expression on line 10
-9 passed, 67 failed, 44 unsupported
+17 passed, 59 failed, 44 unsupported

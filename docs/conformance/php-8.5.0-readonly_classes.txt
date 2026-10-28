@@ -1,4 +1,4 @@
-PHP 8.5.0 Zend/tests/readonly_classes baseline (2026-10-26)
+PHP 8.5.0 Zend/tests/readonly_classes baseline (2026-10-27)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/readonly_classes
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
@@ -11,7 +11,7 @@ Zend/tests/readonly_classes/gh10377_4.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/gh9285_error.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/gh9285_success.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/readonly_classes/readonly_class_duplicated_modifier.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_classes/readonly_class_dynamic_property.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/readonly_classes/readonly_class_dynamic_property.phpt PASS
 Zend/tests/readonly_classes/readonly_class_dynamic_property_attribute.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_class_final_modifier.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_class_inheritance_error1.phpt UNSUPPORTED: EXPECTF
@@ -19,11 +19,11 @@ Zend/tests/readonly_classes/readonly_class_inheritance_error2.phpt UNSUPPORTED: 
 Zend/tests/readonly_classes/readonly_class_inheritance_success.phpt PASS
 Zend/tests/readonly_classes/readonly_class_missing_type1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_class_missing_type2.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_classes/readonly_class_property1.phpt FAIL: ParseError: Expected ';' on line 14
-Zend/tests/readonly_classes/readonly_class_property2.phpt FAIL: ParseError: Expected ';' on line 12
+Zend/tests/readonly_classes/readonly_class_property1.phpt PASS
+Zend/tests/readonly_classes/readonly_class_property2.phpt PASS
 Zend/tests/readonly_classes/readonly_class_property3.phpt UNSUPPORTED: EXPECTF
-Zend/tests/readonly_classes/readonly_class_unserialize_error.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/readonly_classes/readonly_class_unserialize_error.phpt FAIL: Expected "Cannot create dynamic property C::$x\n", got "Call to undefined function unserialize()\n"
 Zend/tests/readonly_classes/readonly_enum.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_interface.phpt UNSUPPORTED: EXPECTF
 Zend/tests/readonly_classes/readonly_trait.phpt UNSUPPORTED: EXPECTF
-1 passed, 6 failed, 16 unsupported
+4 passed, 3 failed, 16 unsupported

@@ -104,6 +104,15 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
                 line,
             )
         })?;
+        if source
+            .iter()
+            .any(|r| scope.finally_regions.contains(r) && !target.contains(r))
+        {
+            return Err(Error::parse(
+                "jump out of a finally block is disallowed",
+                line,
+            ));
+        }
         if !source.starts_with(target) {
             return Err(Error::parse(
                 "'goto' into loop or switch statement is disallowed",
@@ -116,6 +125,7 @@ pub(super) fn validate(statements: &[Stmt]) -> Result<(), Error> {
 
 #[derive(Default)]
 struct JumpScope {
+    finally_regions: std::collections::HashSet<usize>,
     labels: HashMap<Vec<u8>, Vec<usize>>,
     jumps: Vec<(Vec<u8>, Vec<usize>, usize)>,
     next_region: usize,
@@ -136,6 +146,19 @@ impl JumpScope {
                 Stmt::Goto(name, line) => self.jumps.push((name.clone(), regions.clone(), *line)),
                 Stmt::Function(function) => validate(&function.body)?,
                 Stmt::Block(body) => self.collect(body, regions)?,
+                Stmt::Try(body, catches, finally) => {
+                    self.collect(body, regions)?;
+                    for catch in catches {
+                        self.collect(&catch.body, regions)?;
+                    }
+                    if let Some(finally) = finally {
+                        self.next_region += 1;
+                        self.finally_regions.insert(self.next_region);
+                        regions.push(self.next_region);
+                        self.collect(finally, regions)?;
+                        regions.pop();
+                    }
+                }
                 Stmt::If(_, yes, no) => {
                     self.collect(std::slice::from_ref(yes), regions)?;
                     if let Some(no) = no {

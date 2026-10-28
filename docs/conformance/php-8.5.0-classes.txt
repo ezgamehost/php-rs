@@ -38,7 +38,7 @@ tests/classes/array_access_009.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_010.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_011.phpt UNSUPPORTED: EXPECTF
 tests/classes/array_access_012.phpt UNSUPPORTED: EXPECTF
-tests/classes/array_access_013.phpt FAIL: ParseError: Expected ';' on line 5
+tests/classes/array_access_013.phpt FAIL: Error: Interface "ArrayAccess" not found on line 3
 tests/classes/array_conversion_keys.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/assign_op_property_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/autoload_001.phpt UNSUPPORTED: SKIPIF
@@ -48,16 +48,16 @@ tests/classes/autoload_004.phpt UNSUPPORTED: SKIPIF
 tests/classes/autoload_005.phpt UNSUPPORTED: EXPECTF, SKIPIF
 tests/classes/autoload_006.phpt UNSUPPORTED: EXPECTF, SKIPIF
 tests/classes/autoload_007.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
-tests/classes/autoload_008.phpt FAIL: ParseError: Expected ';' on line 9
+tests/classes/autoload_008.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
 tests/classes/autoload_009.phpt UNSUPPORTED: EXPECTF
 tests/classes/autoload_010.phpt UNSUPPORTED: EXPECTF
 tests/classes/autoload_011.phpt UNSUPPORTED: EXPECTF
-tests/classes/autoload_012.phpt FAIL: ParseError: Expected ';' on line 6
-tests/classes/autoload_013.phpt FAIL: ParseError: Expected ';' on line 7
-tests/classes/autoload_014.phpt FAIL: ParseError: Expected ';' on line 7
-tests/classes/autoload_015.phpt FAIL: ParseError: Expected ';' on line 7
-tests/classes/autoload_016.phpt FAIL: ParseError: Expected ';' on line 9
-tests/classes/autoload_017.phpt FAIL: ParseError: Expected ';' on line 9
+tests/classes/autoload_012.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
+tests/classes/autoload_013.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
+tests/classes/autoload_014.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
+tests/classes/autoload_015.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
+tests/classes/autoload_016.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
+tests/classes/autoload_017.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
 tests/classes/autoload_018.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
 tests/classes/autoload_019.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 2
 tests/classes/autoload_020.phpt UNSUPPORTED: EXPECTF
@@ -67,7 +67,7 @@ tests/classes/bug24399.phpt FAIL: Error: Call to undefined function is_subclass_
 tests/classes/bug24445.phpt PASS
 tests/classes/bug26737.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug27468.phpt UNSUPPORTED: EXPECTF
-tests/classes/bug27504.phpt FAIL: ParseError: Expected ';' on line 13
+tests/classes/bug27504.phpt FAIL: Error: Call to undefined function call_user_func_array() on line 14
 tests/classes/bug29446.phpt UNSUPPORTED: EXPECTF
 tests/classes/bug65768.phpt UNSUPPORTED: EXPECTF, INI
 tests/classes/bug75765.phpt UNSUPPORTED: EXPECTF
@@ -97,8 +97,8 @@ tests/classes/constants_error_006.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_error_007.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_scope_001.phpt PASS
 tests/classes/constants_visibility_001.phpt PASS
-tests/classes/constants_visibility_002.phpt FAIL: ParseError: Expected ';' on line 14
-tests/classes/constants_visibility_003.phpt FAIL: ParseError: Expected ';' on line 14
+tests/classes/constants_visibility_002.phpt PASS
+tests/classes/constants_visibility_003.phpt PASS
 tests/classes/constants_visibility_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_006.phpt UNSUPPORTED: EXPECTF
@@ -109,7 +109,7 @@ tests/classes/constants_visibility_error_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/constants_visibility_error_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_dtor.phpt FAIL: Expected "early::__construct\nearly::__construct\nearly::__destruct\nlate::__construct\nDone\nlate::__destruct\n", got "early::__construct\nearly::__construct\nlate::__construct\nDone\n"
 tests/classes/ctor_dtor_inheritance.phpt FAIL: Error: Call to undefined function print_r() on line 14
-tests/classes/ctor_failure.phpt FAIL: ParseError: Expected ';' on line 7
+tests/classes/ctor_failure.phpt PASS
 tests/classes/ctor_in_interface_01.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_in_interface_02.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_in_interface_03.phpt UNSUPPORTED: EXPECTF
@@ -117,7 +117,7 @@ tests/classes/ctor_in_interface_04.phpt UNSUPPORTED: EXPECTF
 tests/classes/ctor_visibility.phpt UNSUPPORTED: EXPECTF
 tests/classes/dereferencing_001.phpt FAIL: ParseError: Invalid non-public member declaration on line 12
 tests/classes/destructor_and_echo.phpt FAIL: Expected "Test::__construct\n===DONE===\nTest::__destruct\n", got "Test::__construct\n===DONE===\n"
-tests/classes/destructor_and_exceptions.phpt FAIL: ParseError: Expected ';' on line 10
+tests/classes/destructor_and_exceptions.phpt FAIL: Expected "FailClass::__destruct\nCaught: FailClass\nFatalException::__construct\nFailClass::__destruct\nCaught Exception: FailClass\n", got "FatalException::__construct\nDone: FatalException::__construct\nCaught Exception: \n"
 tests/classes/destructor_and_globals.phpt FAIL: ParseError: Invalid non-public member declaration on line 11
 tests/classes/destructor_and_references.phpt FAIL: ParseError: Expected expression on line 13
 tests/classes/destructor_inheritance.phpt FAIL: Expected "base::__construct\nbase::__destruct\nDone\n", got "base::__construct\nDone"
@@ -131,8 +131,8 @@ tests/classes/factory_and_singleton_003.phpt UNSUPPORTED: EXPECTF
 tests/classes/factory_and_singleton_004.phpt UNSUPPORTED: EXPECTF
 tests/classes/factory_and_singleton_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/factory_and_singleton_006.phpt UNSUPPORTED: EXPECTF
-tests/classes/factory_and_singleton_007.phpt FAIL: ParseError: Expected ';' on line 8
-tests/classes/factory_and_singleton_008.phpt FAIL: ParseError: Expected ';' on line 8
+tests/classes/factory_and_singleton_007.phpt PASS
+tests/classes/factory_and_singleton_008.phpt PASS
 tests/classes/factory_and_singleton_009.phpt FAIL: Expected "===DONE===\n\nWarning: Call to protected test::__destruct() from global scope during shutdown ignored in Unknown on line 0\n", got "===DONE===\n"
 tests/classes/factory_and_singleton_010.phpt FAIL: Expected "===DONE===\n\nWarning: Call to private test::__destruct() from global scope during shutdown ignored in Unknown on line 0\n", got "===DONE===\n"
 tests/classes/final.phpt PASS
@@ -178,7 +178,7 @@ tests/classes/iterators_003.phpt FAIL: ParseError: Invalid non-public member dec
 tests/classes/iterators_004.phpt PASS
 tests/classes/iterators_005.phpt UNSUPPORTED: EXPECTF
 tests/classes/iterators_006.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
-tests/classes/iterators_007.phpt FAIL: ParseError: Expected ';' on line 7
+tests/classes/iterators_007.phpt FAIL: Error: Interface "Iterator" not found on line 2
 tests/classes/iterators_008.phpt FAIL: ParseError: Invalid non-public member declaration on line 6
 tests/classes/method_call_variation_001.phpt PASS
 tests/classes/method_override_optional_arg_001.phpt UNSUPPORTED: EXPECTF
@@ -258,10 +258,10 @@ tests/classes/static_properties_undeclared_isset.phpt PASS
 tests/classes/static_properties_undeclared_read.phpt UNSUPPORTED: EXPECTF
 tests/classes/static_this.phpt UNSUPPORTED: EXPECTF
 tests/classes/this.phpt UNSUPPORTED: EXPECTF
-tests/classes/tostring_001.phpt FAIL: ParseError: Expected ';' on line 27
+tests/classes/tostring_001.phpt FAIL: Error: Call to undefined function print_r() on line 26
 tests/classes/tostring_002.phpt FAIL: Expected "Hello\n====DONE====\nHello\n", got "====DONE====\n"
-tests/classes/tostring_003.phpt FAIL: ParseError: Expected ';' on line 7
-tests/classes/tostring_004.phpt FAIL: ParseError: Expected ';' on line 12
+tests/classes/tostring_003.phpt FAIL: Expected "string(5) \"Damn!\"\n====DONE====\n", got "====DONE====\n"
+tests/classes/tostring_004.phpt FAIL: Error: Call to undefined function set_error_handler() on line 5
 tests/classes/type_hinting_001.phpt UNSUPPORTED: EXPECTF
 tests/classes/type_hinting_002.phpt UNSUPPORTED: EXPECTF
 tests/classes/type_hinting_003.phpt UNSUPPORTED: EXPECTF
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt PASS
 tests/classes/visibility_004b.phpt PASS
 tests/classes/visibility_004c.phpt PASS
 tests/classes/visibility_005.phpt FAIL: ParseError: Invalid non-public member declaration on line 7
-51 passed, 74 failed, 158 unsupported
+56 passed, 69 failed, 158 unsupported

@@ -4,7 +4,7 @@ Passing cases also checked with the PHP reference. Unsupported sections were not
 
 Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/first_class_callable/constexpr/attributes.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
-Zend/tests/first_class_callable/constexpr/attributes_ast_printing.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/first_class_callable/constexpr/attributes_ast_printing.phpt FAIL: ParseError: Expected ')' on line 19
 Zend/tests/first_class_callable/constexpr/attributes_ast_printing_runtime.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/first_class_callable/constexpr/attributes_scope_001.phpt UNSUPPORTED: EXTENSIONS
 Zend/tests/first_class_callable/constexpr/attributes_scope_002.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
@@ -26,7 +26,7 @@ Zend/tests/first_class_callable/constexpr/error_namespace_no_fallback_001.phpt U
 Zend/tests/first_class_callable/constexpr/error_namespace_no_fallback_002.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_static_call_instance_method.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_static_call_trait_method_001.phpt UNSUPPORTED: EXPECTF
-Zend/tests/first_class_callable/constexpr/error_static_call_trait_method_002.phpt FAIL: ParseError: Expected ';' on line 4
+Zend/tests/first_class_callable/constexpr/error_static_call_trait_method_002.phpt FAIL: ParseError: Expected ';' on line 7
 Zend/tests/first_class_callable/constexpr/error_unknown_class.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_unknown_function.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/constexpr/error_unknown_method.phpt UNSUPPORTED: EXPECTF
@@ -63,9 +63,9 @@ Zend/tests/first_class_callable/first_class_callable_assert.phpt FAIL: ParseErro
 Zend/tests/first_class_callable/first_class_callable_assert2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_assert3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/first_class_callable_dynamic.phpt FAIL: Unexpected diagnostics: Undefined variable $nam on line 41
-Zend/tests/first_class_callable/first_class_callable_errors.phpt FAIL: ParseError: Expected ';' on line 9
+Zend/tests/first_class_callable/first_class_callable_errors.phpt PASS
 Zend/tests/first_class_callable/first_class_callable_optimization.phpt FAIL: Expected "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n", got "object(Closure)#1 (1) {\n  [\"function\"]=>\n  string(5) \"test1\"\n}\nobject(Closure)#2 (1) {\n  [\"function\"]=>\n  string(5) \"test2\"\n}\n"
 Zend/tests/first_class_callable/first_class_callable_refs.phpt FAIL: ParseError: Expected '(' on line 3
 Zend/tests/first_class_callable/first_class_callable_signature.phpt UNSUPPORTED: EXPECTF
 Zend/tests/first_class_callable/gh18062.phpt FAIL: Error: Call to undefined function is_callable() on line 17
-6 passed, 15 failed, 44 unsupported
+7 passed, 14 failed, 44 unsupported

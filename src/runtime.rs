@@ -32,6 +32,7 @@ mod readonly;
 mod scope_slots;
 mod static_members;
 mod termination;
+mod throwables;
 mod typed_properties;
 mod types;
 mod variables;
@@ -54,6 +55,7 @@ pub struct Runtime {
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
+    builtin_classes: RefCell<HashMap<Vec<u8>, Rc<crate::object::Class>>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Value>,
     strict_types: bool,
@@ -97,7 +99,14 @@ impl Runtime {
         self.block_from(stmts, 0, None)
     }
     fn statement(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
+        let result = self.statement_inner(stmt);
+        result.map_err(|error| self.materialize_error(error))
+    }
+    fn statement_inner(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
         match stmt {
+            Stmt::Try(body, catches, finally) => {
+                return self.try_block(body, catches, finally.as_deref(), None);
+            }
             Stmt::Label(_, _) => {}
             Stmt::Goto(name, _) => return Ok(Flow::Goto(name.clone())),
             Stmt::Global(variables) => {
@@ -569,6 +578,10 @@ impl Runtime {
                 let value = self.eval(code)?;
                 let code = string_bytes(&value, line, &mut self.warnings)?;
                 self.eval_code(&code, line)
+            }
+            ExprKind::Throw(value) => {
+                let value = self.eval(value)?;
+                Err(self.throw_value(value, line))
             }
             ExprKind::Include(kind, path) => {
                 let value = self.eval(path)?;

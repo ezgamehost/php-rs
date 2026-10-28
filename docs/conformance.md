@@ -7,33 +7,36 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 51 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 52 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
-| PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
+| PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
-| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 8 | 10 | 71 |
+| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 10 | 8 | 71 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
-| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 6 | 15 | 44 |
+| PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 7 | 14 | 44 |
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
-| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 51 | 74 | 158 |
+| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 56 | 69 | 158 |
 | PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 24 | 10 | 36 |
 | PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 11 | 3 | 11 |
 | PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 31 | 25 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 4 | 11 | 14 |
-| PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 9 | 67 | 44 |
-| PHP 8.5.0 `Zend/tests/readonly_props`, Rust | 0 | 22 | 18 |
-| PHP 8.5.0 `Zend/tests/readonly_classes`, Rust and reference PHP for passing cases | 1 | 6 | 16 |
+| PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 17 | 59 | 44 |
+| PHP 8.5.0 `Zend/tests/readonly_props`, Rust and reference PHP for passing cases | 7 | 15 | 18 |
+| PHP 8.5.0 `Zend/tests/readonly_classes`, Rust and reference PHP for passing cases | 4 | 3 | 16 |
 | PHP 8.5.0 `Zend/tests/ctor_promotion`, Rust and reference PHP for passing cases | 1 | 6 | 11 |
-| PHP 8.5.0 `Zend/tests/clone`, Rust and reference PHP for passing cases | 2 | 10 | 14 |
+| PHP 8.5.0 `Zend/tests/clone`, Rust and reference PHP for passing cases | 6 | 6 | 14 |
 | PHP 8.5.0 `Zend/tests/asymmetric_visibility`, Rust (no passing fixtures) | 0 | 21 | 18 |
+| PHP 8.5.0 `Zend/tests/exceptions`, Rust and reference PHP for passing cases | 7 | 33 | 54 |
+| PHP 8.5.0 `Zend/tests/throw`, Rust and reference PHP for passing cases | 2 | 2 | 1 |
+| PHP 8.5.0 `Zend/tests/try`, Rust and reference PHP for passing cases | 43 | 17 | 20 |
 
 Every language-suite result, including failing test names and reasons, is in
 [the language baseline report](conformance/php-8.5.0-lang.txt). The language
@@ -412,3 +415,27 @@ the current implementation. The [static asymmetric visibility RFC](https://wiki.
 and local PHP 8.5.0 probes establish the implemented rules. Reference operations,
 asymmetric instance properties, final instance properties, exact diagnostic
 parity, and the previously documented language gaps remain incomplete.
+
+
+The exception-handling slice implements throw expressions, ordered catch matching,
+union catches, omitted catch variables, rethrowing, and finally unwinding across
+normal execution, returns, loop control, and exceptions. Exit bypasses catches
+and finally. Goto cannot cross finally boundaries; break/continue cannot leave
+a finally block. Built-in Throwable,
+Exception, Error, and the core Error subclasses support native constructors,
+message/code/file/line/previous getters, subclassing, and saved method callables.
+Thrown object identity survives unwinding; a new exception from finally chains
+the pending exception without introducing cycles. Runtime errors retain their
+origin before function scopes are restored, and eval syntax errors are catchable.
+Twenty-six project regressions, a reference-checked PHPT, and a 286-case
+differential matrix match PHP 8.5.0 stdout, exit status, and diagnostic presence.
+Existing tracked suites gain 34 passing fixtures with none lost. New reports
+cover [exceptions](conformance/php-8.5.0-exceptions.txt),
+[throw](conformance/php-8.5.0-throw.txt), and
+[try/finally](conformance/php-8.5.0-try.txt), with 52 passes combined.
+The [PHP exception manual](https://www.php.net/manual/en/language.exceptions.php)
+and local PHP 8.5.0 probes establish the semantics. Stack traces, Throwable string
+conversion and property layouts, exception/error handlers, ErrorException and SPL
+exception classes, complete compile-time fatal-error distinctions, destructor
+unwinding, and exact diagnostic parity remain incomplete. This supersedes earlier
+notes listing exception syntax and ordinary catch/finally execution as unsupported.
