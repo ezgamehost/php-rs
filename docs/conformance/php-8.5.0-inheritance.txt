@@ -15,14 +15,14 @@ Zend/tests/inheritance/argument_restriction_006.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug22725.phpt PASS
 Zend/tests/inheritance/bug29674.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug29689.phpt UNSUPPORTED: EXPECTF
-Zend/tests/inheritance/bug30451.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
+Zend/tests/inheritance/bug30451.phpt PASS
 Zend/tests/inheritance/bug33277.phpt PASS
 Zend/tests/inheritance/bug37212.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug37632.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug38772.phpt PASS
-Zend/tests/inheritance/bug39721.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+Zend/tests/inheritance/bug39721.phpt PASS
 Zend/tests/inheritance/bug41961.phpt PASS
-Zend/tests/inheritance/bug42211.phpt FAIL: ParseError: Invalid non-public member declaration on line 12
+Zend/tests/inheritance/bug42211.phpt PASS
 Zend/tests/inheritance/bug43200.phpt UNSUPPORTED: EXPECTF
 Zend/tests/inheritance/bug43200_2.phpt PASS
 Zend/tests/inheritance/bug43703.phpt PASS
@@ -73,4 +73,4 @@ Zend/tests/inheritance/interface_constructor_prototype_001.phpt UNSUPPORTED: EXP
 Zend/tests/inheritance/interface_constructor_prototype_002.phpt UNSUPPORTED: EXPECTF, XFAIL
 Zend/tests/inheritance/unused_shared_static_variables.phpt PASS
 Zend/tests/inheritance/update_consts_shadowed_private_prop.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
-21 passed, 13 failed, 36 unsupported
+24 passed, 10 failed, 36 unsupported

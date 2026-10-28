@@ -65,6 +65,7 @@ impl Parser {
                 ));
             }
             properties.push(PropertyDecl {
+                visibility: Visibility::Public,
                 name: param.name.clone(),
                 ty: param.ty.clone(),
                 is_readonly,

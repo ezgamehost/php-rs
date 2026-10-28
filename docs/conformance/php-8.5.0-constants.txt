@@ -16,8 +16,8 @@ Zend/tests/constants/bug41640.phpt FAIL: Error: Call to undefined function get_c
 Zend/tests/constants/bug42820.phpt FAIL: ParseError: Expected ';' on line 2
 Zend/tests/constants/bug44827.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/constants/bug45742.phpt PASS
-Zend/tests/constants/bug45910.phpt FAIL: ParseError: Invalid non-public member declaration on line 9
-Zend/tests/constants/bug45910_2.phpt FAIL: ParseError: Invalid non-public member declaration on line 9
+Zend/tests/constants/bug45910.phpt PASS
+Zend/tests/constants/bug45910_2.phpt PASS
 Zend/tests/constants/bug46304.phpt UNSUPPORTED: EXPECTF
 Zend/tests/constants/bug49472.phpt PASS
 Zend/tests/constants/bug50816.phpt PASS
@@ -98,4 +98,4 @@ Zend/tests/constants/oss_fuzz_416302790.phpt UNSUPPORTED: EXPECTF
 Zend/tests/constants/oss_fuzz_57821.phpt PASS
 Zend/tests/constants/selfParent_001.phpt PASS
 Zend/tests/constants/selfParent_002.phpt PASS
-29 passed, 27 failed, 39 unsupported
+31 passed, 25 failed, 39 unsupported

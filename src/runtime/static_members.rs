@@ -275,6 +275,9 @@ impl Runtime {
         silent: bool,
     ) -> Result<Option<variables::Cell>, Error> {
         if let Some(owner) = class.static_owner(name) {
+            if !self.check_static_property_access(class, &owner, name, line, silent)? {
+                return Ok(None);
+            }
             self.initialize_class(class)?;
             return Ok(owner.static_values.borrow().get(name).cloned());
         }
@@ -291,5 +294,77 @@ impl Runtime {
                 line,
             ))
         }
+    }
+
+    pub(super) fn check_static_property_access(
+        &self,
+        class: &Class,
+        owner: &Class,
+        name: &[u8],
+        line: usize,
+        silent: bool,
+    ) -> Result<bool, Error> {
+        let property = owner
+            .declaration
+            .static_properties
+            .iter()
+            .find(|p| p.name == name)
+            .expect("static property owner");
+        if property.visibility == Visibility::Public
+            || self.class_context.as_ref().is_some_and(|context| {
+                context.scope.name.eq_ignore_ascii_case(&owner.name)
+                    || (property.visibility == Visibility::Protected
+                        && !context.scope.declaration.is_interface
+                        && (context.scope.is_a(&owner.name) || owner.is_a(&context.scope.name)))
+            })
+        {
+            return Ok(true);
+        }
+        if silent {
+            return Ok(false);
+        }
+        let visibility = if property.visibility == Visibility::Private {
+            "private"
+        } else {
+            "protected"
+        };
+        Err(Error::new(
+            ErrorKind::Error,
+            format!(
+                "Cannot access {visibility} property {}::${}",
+                String::from_utf8_lossy(&class.name),
+                String::from_utf8_lossy(name)
+            ),
+            line,
+        ))
+    }
+
+    pub(super) fn instance_static_owner(
+        &self,
+        class: &Rc<Class>,
+        name: &[u8],
+    ) -> Option<Rc<Class>> {
+        if class.property_owner(name).is_some() {
+            return None;
+        }
+        if let Some(context) = &self.class_context
+            && class.is_a(&context.scope.name)
+            && context
+                .scope
+                .declaration
+                .static_properties
+                .iter()
+                .any(|p| p.name == name && p.visibility == Visibility::Private)
+        {
+            return Some(context.scope.clone());
+        }
+        class.static_owner(name).filter(|owner| {
+            owner.name == class.name
+                || owner
+                    .declaration
+                    .static_properties
+                    .iter()
+                    .any(|p| p.name == name && p.visibility != Visibility::Private)
+        })
     }
 }

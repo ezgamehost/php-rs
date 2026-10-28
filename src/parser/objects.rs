@@ -113,7 +113,7 @@ impl Parser {
                 *flag = true;
             }
             if visibility != Visibility::Public
-                && ((!self.is("function") && !self.is("const")) || is_interface)
+                && ((!self.is("function") && !self.is("const") && !static_method) || is_interface)
             {
                 return Err(Error::parse(
                     "Invalid non-public member declaration",
@@ -409,6 +409,7 @@ impl Parser {
                         ));
                     }
                     let property = PropertyDecl {
+                        visibility,
                         is_readonly: readonly,
                         name: property,
                         default,

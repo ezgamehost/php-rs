@@ -1,4 +1,4 @@
-PHP 8.5.0 Zend/tests/type_declarations/typed_properties*.phpt baseline (2026-10-26)
+PHP 8.5.0 Zend/tests/type_declarations/typed_properties*.phpt baseline (2026-10-27)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/type_declarations/typed_properties*.phpt
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
@@ -26,7 +26,7 @@ Zend/tests/type_declarations/typed_properties_020.phpt FAIL: ParseError: Expecte
 Zend/tests/type_declarations/typed_properties_021.phpt FAIL: ParseError: Expected ';' on line 6
 Zend/tests/type_declarations/typed_properties_022.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_023.phpt FAIL: ParseError: Expected '(' on line 2
-Zend/tests/type_declarations/typed_properties_024.phpt FAIL: ParseError: Expected public property or method on line 3
+Zend/tests/type_declarations/typed_properties_024.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
 Zend/tests/type_declarations/typed_properties_025.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_026.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_027.phpt PASS
@@ -47,10 +47,10 @@ Zend/tests/type_declarations/typed_properties_041.phpt PASS
 Zend/tests/type_declarations/typed_properties_042.phpt PASS
 Zend/tests/type_declarations/typed_properties_043.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_044.phpt UNSUPPORTED: SKIPIF
-Zend/tests/type_declarations/typed_properties_045.phpt FAIL: ParseError: Expected public property or method on line 5
+Zend/tests/type_declarations/typed_properties_045.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
 Zend/tests/type_declarations/typed_properties_046.phpt FAIL: ParseError: Expected ';' on line 15
 Zend/tests/type_declarations/typed_properties_047.phpt FAIL: ParseError: Expected ';' on line 17
-Zend/tests/type_declarations/typed_properties_048.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/type_declarations/typed_properties_048.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 Zend/tests/type_declarations/typed_properties_049.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_050.phpt PASS
 Zend/tests/type_declarations/typed_properties_051.phpt FAIL: ParseError: Expected ';' on line 16
@@ -82,7 +82,7 @@ Zend/tests/type_declarations/typed_properties_076.phpt FAIL: ParseError: Expecte
 Zend/tests/type_declarations/typed_properties_077.phpt PASS
 Zend/tests/type_declarations/typed_properties_078.phpt FAIL: ParseError: Expected ';' on line 3
 Zend/tests/type_declarations/typed_properties_079.phpt FAIL: ParseError: Expected expression on line 8
-Zend/tests/type_declarations/typed_properties_080.phpt FAIL: ParseError: Expected public property or method on line 5
+Zend/tests/type_declarations/typed_properties_080.phpt FAIL: ParseError: Expected ';' on line 9
 Zend/tests/type_declarations/typed_properties_081.phpt FAIL: ParseError: Expected expression on line 8
 Zend/tests/type_declarations/typed_properties_082.phpt FAIL: ParseError: Expected expression on line 11
 Zend/tests/type_declarations/typed_properties_083.phpt FAIL: ParseError: Expected ';' on line 15
@@ -92,7 +92,7 @@ Zend/tests/type_declarations/typed_properties_086.phpt FAIL: Unexpected diagnost
 Zend/tests/type_declarations/typed_properties_087.phpt FAIL: ParseError: Expected expression on line 7
 Zend/tests/type_declarations/typed_properties_088.phpt FAIL: Expected "object(A)#1 (1) {\n  [\"prop\"]=>\n  int(42)\n}\nobject(B)#1 (1) {\n  [\"prop\"]=>\n  string(2) \"42\"\n}\n", got "object(A)#1 (1) {\n  [\"prop\"]=>\n  int(42)\n}\nobject(B)#2 (1) {\n  [\"prop\"]=>\n  string(2) \"42\"\n}\n"
 Zend/tests/type_declarations/typed_properties_089.phpt UNSUPPORTED: EXPECTF
-Zend/tests/type_declarations/typed_properties_090.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/type_declarations/typed_properties_090.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 Zend/tests/type_declarations/typed_properties_092.phpt FAIL: ParseError: Expected '(' on line 3
 Zend/tests/type_declarations/typed_properties_093.phpt FAIL: ParseError: Expected ';' on line 7
 Zend/tests/type_declarations/typed_properties_094.phpt FAIL: ParseError: Expected expression on line 10
@@ -101,7 +101,7 @@ Zend/tests/type_declarations/typed_properties_096.phpt FAIL: ParseError: Expecte
 Zend/tests/type_declarations/typed_properties_097.phpt UNSUPPORTED: SKIPIF
 Zend/tests/type_declarations/typed_properties_098.phpt FAIL: ParseError: Expected expression on line 9
 Zend/tests/type_declarations/typed_properties_099.phpt FAIL: ParseError: Expected expression on line 8
-Zend/tests/type_declarations/typed_properties_100.phpt FAIL: ParseError: Expected public property or method on line 4
+Zend/tests/type_declarations/typed_properties_100.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 Zend/tests/type_declarations/typed_properties_101.phpt UNSUPPORTED: EXPECTF
 Zend/tests/type_declarations/typed_properties_102.phpt FAIL: ParseError: Expected expression on line 8
 Zend/tests/type_declarations/typed_properties_103.phpt UNSUPPORTED: EXPECTF

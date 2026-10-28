@@ -36,10 +36,10 @@ tests/lang/032.phpt PASS
 tests/lang/033.phpt UNSUPPORTED: EXPECTF
 tests/lang/034.phpt UNSUPPORTED: INI, SKIPIF
 tests/lang/035.phpt FAIL: ParseError: Expected ';' on line 13
-tests/lang/036.phpt FAIL: ParseError: Expected public property or method on line 3
-tests/lang/037.phpt FAIL: ParseError: Expected public property or method on line 4
+tests/lang/036.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+tests/lang/037.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/lang/038.phpt FAIL: ParseError: Expected ';' on line 15
-tests/lang/039.phpt FAIL: ParseError: Expected ';' on line 3
+tests/lang/039.phpt FAIL: ParseError: Expected ';' on line 19
 tests/lang/040.phpt PASS
 tests/lang/041.phpt UNSUPPORTED: EXPECTF
 tests/lang/042.phpt UNSUPPORTED: EXPECTF
@@ -73,7 +73,7 @@ tests/lang/bug23624.phpt FAIL: Error: Call to undefined function current() on li
 tests/lang/bug24054.phpt FAIL: Error: Call to undefined function printf() on line 5
 tests/lang/bug24396.phpt PASS
 tests/lang/bug24436.phpt PASS
-tests/lang/bug24499.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/lang/bug24499.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
 tests/lang/bug24573.phpt UNSUPPORTED: EXPECTF
 tests/lang/bug24640.phpt UNSUPPORTED: EXPECTF, INI
 tests/lang/bug24652.phpt FAIL: Error: Call to undefined function array_flip() on line 10
@@ -120,7 +120,7 @@ tests/lang/catchable_error_001.phpt UNSUPPORTED: EXPECTF
 tests/lang/catchable_error_002.phpt UNSUPPORTED: EXPECTF
 tests/lang/comments.phpt PASS
 tests/lang/comments2.phpt UNSUPPORTED: FILEEOF
-tests/lang/compare_objects_basic1.phpt FAIL: ParseError: Expected public property or method on line 11
+tests/lang/compare_objects_basic1.phpt FAIL: ParseError: Invalid non-public member declaration on line 11
 tests/lang/compare_objects_basic2.phpt FAIL: Error: Call to undefined function date_default_timezone_set() on line 4
 tests/lang/constants/PHP_INT_32bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/constants/PHP_INT_64bit.phpt UNSUPPORTED: SKIPIF
@@ -154,10 +154,10 @@ tests/lang/foreachLoop.017.phpt PASS
 tests/lang/foreachLoopIterator.001.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopIterator.002.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopIteratorAggregate.001.phpt UNSUPPORTED: EXPECTF
-tests/lang/foreachLoopIteratorAggregate.002.phpt FAIL: ParseError: Expected '{' on line 3
-tests/lang/foreachLoopIteratorAggregate.003.phpt FAIL: ParseError: Expected '{' on line 2
-tests/lang/foreachLoopIteratorAggregate.004.phpt FAIL: ParseError: Expected '{' on line 2
-tests/lang/foreachLoopObjects.001.phpt FAIL: ParseError: Expected public property or method on line 7
+tests/lang/foreachLoopIteratorAggregate.002.phpt FAIL: ParseError: Expected ';' on line 33
+tests/lang/foreachLoopIteratorAggregate.003.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+tests/lang/foreachLoopIteratorAggregate.004.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/lang/foreachLoopObjects.001.phpt FAIL: ParseError: Invalid non-public member declaration on line 7
 tests/lang/foreachLoopObjects.002.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.003.phpt UNSUPPORTED: EXPECTF
 tests/lang/foreachLoopObjects.004.phpt UNSUPPORTED: EXPECTF
@@ -242,7 +242,7 @@ tests/lang/operators/operator_notidentical_basic.phpt FAIL: Error: Call to undef
 tests/lang/operators/operator_notidentical_variation.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_notidentical_variation_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/operator_spaceship_basic.phpt PASS
-tests/lang/operators/overloaded_property_ref.phpt FAIL: ParseError: Expected public property or method on line 3
+tests/lang/operators/overloaded_property_ref.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
 tests/lang/operators/postdec_basiclong_64bit.phpt UNSUPPORTED: SKIPIF
 tests/lang/operators/postdec_variationStr.phpt UNSUPPORTED: EXPECTF
 tests/lang/operators/postinc_basiclong_64bit.phpt UNSUPPORTED: SKIPIF

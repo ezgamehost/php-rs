@@ -22,6 +22,9 @@ impl Runtime {
                 else {
                     continue;
                 };
+                if parent_property.visibility == crate::ast::Visibility::Private {
+                    continue;
+                }
                 let (Some(child_ty), Some(parent_ty)) = (&property.ty, &parent_property.ty) else {
                     continue;
                 };
@@ -117,6 +120,16 @@ impl Runtime {
                 else {
                     continue;
                 };
+                if parent_property.visibility == crate::ast::Visibility::Private {
+                    continue;
+                }
+                if property.visibility > parent_property.visibility {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot narrow inherited property visibility",
+                        class.declaration.line,
+                    ));
+                }
                 let owner = if is_static {
                     parent.static_owner(&property.name)
                 } else {

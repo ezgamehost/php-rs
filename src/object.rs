@@ -110,6 +110,8 @@ impl Class {
             .any(|p| p.name == name)
         {
             Some(self.clone())
+        } else if self.declaration.properties.iter().any(|p| p.name == name) {
+            None
         } else {
             self.parent.as_ref().and_then(|p| p.static_owner(name))
         }

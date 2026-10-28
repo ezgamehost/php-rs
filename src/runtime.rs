@@ -743,13 +743,14 @@ impl Runtime {
                         value => return Ok(value),
                     }
                 } else {
+                    // The RHS may change the target's value before PHP reads it.
+                    let rhs = self.eval(expr)?;
                     let lhs = self.read_location(
                         &mut location,
                         line,
                         false,
                         Some("Cannot use assign-op operators with string offsets"),
                     )?;
-                    let rhs = self.eval(expr)?;
                     binary(&op[..op.len() - 1], lhs, rhs, line, &mut self.warnings)?
                 };
                 self.write_location(&mut location, value, line)

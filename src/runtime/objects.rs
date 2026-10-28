@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     PhpObject,
-    ast::{Argument, ClassDecl},
+    ast::{Argument, ClassDecl, Visibility},
     object::Class,
     runtime::functions::CallTarget,
 };
@@ -137,17 +137,18 @@ impl Runtime {
                     ));
                 }
             }
-            if decl
-                .properties
-                .iter()
-                .any(|p| parent.static_owner(&p.name).is_some())
-                || decl.static_properties.iter().any(|p| {
-                    parent
-                        .properties
-                        .iter()
-                        .any(|inherited| inherited.name == p.name)
+            if decl.properties.iter().any(|p| {
+                parent.static_owner(&p.name).is_some_and(|owner| {
+                    owner.declaration.static_properties.iter().any(|inherited| {
+                        inherited.name == p.name && inherited.visibility != Visibility::Private
+                    })
                 })
-            {
+            }) || decl.static_properties.iter().any(|p| {
+                parent
+                    .properties
+                    .iter()
+                    .any(|inherited| inherited.name == p.name)
+            }) {
                 return Err(Error::new(
                     ErrorKind::Error,
                     "Cannot change property staticness",
@@ -158,6 +159,7 @@ impl Runtime {
         let mut static_properties = parent
             .as_ref()
             .map_or_else(Vec::new, |p| p.static_properties.clone());
+        static_properties.retain(|p| !decl.properties.iter().any(|own| own.name == p.name));
         for property in &decl.static_properties {
             if let Some(slot) = static_properties
                 .iter_mut()
@@ -436,7 +438,7 @@ impl Runtime {
         self.method_target(function, object.class.clone(), Some(object), line)
     }
     fn warn_static_as_instance(&mut self, object: &PhpObject, name: &[u8], line: usize) {
-        if object.class.static_owner(name).is_some() {
+        if self.instance_static_owner(&object.class, name).is_some() {
             self.warnings.push(format!(
                 "Notice: Accessing static property {}::${} as non static on line {line}",
                 object.class_name,
@@ -451,6 +453,11 @@ impl Runtime {
         line: usize,
         silent: bool,
     ) -> Result<Value, Error> {
+        if let Some(owner) = self.instance_static_owner(&object.class, name)
+            && !self.check_static_property_access(&object.class, &owner, name, line, silent)?
+        {
+            return Ok(Value::Null);
+        }
         if !silent {
             validate_property_name(name, line)?;
             self.warn_static_as_instance(object, name, line);
@@ -493,6 +500,9 @@ impl Runtime {
                 "Cannot access property starting with \"\\0\"",
                 line,
             ));
+        }
+        if let Some(owner) = self.instance_static_owner(&object.class, name) {
+            self.check_static_property_access(&object.class, &owner, name, line, false)?;
         }
         self.warn_static_as_instance(object, name, line);
         let key = ArrayKey::String(name.to_vec());
@@ -556,6 +566,15 @@ impl Runtime {
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
                     validate_property_name(&name, expr.line)?;
+                    if let Some(owner) = self.instance_static_owner(&object.class, &name) {
+                        self.check_static_property_access(
+                            &object.class,
+                            &owner,
+                            &name,
+                            expr.line,
+                            false,
+                        )?;
+                    }
                     self.warn_static_as_instance(&object, &name, expr.line);
                     Some(Location {
                         static_class: None,

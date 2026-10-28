@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 49 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 50 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 13 | 9 | 13 |
@@ -23,10 +23,10 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
-| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 45 | 80 | 158 |
-| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 21 | 13 | 36 |
-| PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 6 | 8 | 11 |
-| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 29 | 27 | 39 |
+| PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 51 | 74 | 158 |
+| PHP 8.5.0 `Zend/tests/inheritance`, Rust and reference PHP for passing cases | 24 | 10 | 36 |
+| PHP 8.5.0 `Zend/tests/lsb`, Rust and reference PHP for passing cases | 11 | 3 | 11 |
+| PHP 8.5.0 `Zend/tests/constants`, Rust and reference PHP for passing cases | 31 | 25 | 39 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_class_constants*.phpt`, Rust and reference PHP for passing cases | 4 | 11 | 14 |
 | PHP 8.5.0 `Zend/tests/type_declarations/typed_properties*.phpt`, Rust and reference PHP for passing cases | 9 | 67 | 44 |
 | PHP 8.5.0 `Zend/tests/readonly_props`, Rust | 0 | 22 | 18 |
@@ -374,3 +374,21 @@ checked against PHP 8.5.0 probes, establish these rules. This supersedes the
 non-public constant limitations in earlier slice notes. Non-public properties,
 property promotion visibility, exact diagnostic parity, and the other previously
 documented gaps remain incomplete.
+
+
+The static-property visibility slice adds six class-suite passes, three inheritance
+passes, five late-static-binding passes, and two constant-suite passes, without
+losing previous passing fixtures. Nineteen project regressions and a
+reference-checked PHPT cover private/protected access, inherited shared storage,
+independent private redeclarations, visibility widening, invariant property types,
+object access, closures, and `property_exists`. A 1,289-case differential matrix
+matches PHP 8.5.0 stdout, exit status, and diagnostic presence. Inaccessible
+static-property probes return null/false without initializing class defaults;
+ordinary access checks visibility before using cached storage. Private static
+storage remains accessible through a child class from its declaring scope.
+Compound assignments now evaluate the right-hand side before reading the target
+value, including variables, array elements, and instance/static properties.
+The [PHP visibility manual](https://www.php.net/manual/en/language.oop5.visibility.php)
+and PHP 8.5.0 probes establish these rules. Non-public instance properties,
+asymmetric static-property visibility, property promotion visibility, and the
+other previously documented gaps remain incomplete.

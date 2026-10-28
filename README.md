@@ -80,13 +80,13 @@ new request. The CLI returns the low eight bits of the requested status.
   retain their declaring and called class contexts. `::class`, `get_called_class`,
   and `get_parent_class` expose class names. Static closure defaults use the
   declaring scope; property defaults are cached separately for each class.
-- Public static properties with inherited shared storage, redeclaration, dynamic
-  names, array mutation, and `isset`/`empty`/coalescing. Public, protected, and private
+- Public, protected, and private static properties with inherited shared storage,
+  scope checks, independent private redeclarations, dynamic names, array mutation, and `isset`/`empty`/coalescing. Public, protected, and private
   class constants support scope-aware access, inheritance, `final`, dynamic names,
   lazy dependency resolution, cycle errors, and lookup through `constant`/`defined`. `self`, `parent`, and
   `static` select the appropriate class for both kinds of member access.
-- Typed public instance and static properties, including uninitialized state,
-  strict defaults, weak/strict assignment checks, invariant inherited types,
+- Typed public instance properties and typed static properties of all visibility
+  levels, including uninitialized state, strict defaults, weak/strict assignment checks, invariant inherited types,
   typed array writes, integer increment limits, and reinitialization after `unset`.
   Object dumps show uninitialized slots; casts, iteration, and `get_object_vars`
   omit them until initialized.
@@ -155,7 +155,7 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, references, exceptions,
 generators, namespaces, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties, traits,
-non-public properties, property hooks,
+non-public instance properties, asymmetric static-property visibility, property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases

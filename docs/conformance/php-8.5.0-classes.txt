@@ -198,12 +198,12 @@ tests/classes/private_007b.phpt PASS
 tests/classes/private_members.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
 tests/classes/private_members_serialization.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/private_redeclare.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_privateStatic_private.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
-tests/classes/property_override_privateStatic_privateStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
-tests/classes/property_override_privateStatic_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
-tests/classes/property_override_privateStatic_protectedStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
-tests/classes/property_override_privateStatic_public.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
-tests/classes/property_override_privateStatic_publicStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_privateStatic_private.phpt FAIL: ParseError: Invalid non-public member declaration on line 13
+tests/classes/property_override_privateStatic_privateStatic.phpt PASS
+tests/classes/property_override_privateStatic_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 13
+tests/classes/property_override_privateStatic_protectedStatic.phpt PASS
+tests/classes/property_override_privateStatic_public.phpt PASS
+tests/classes/property_override_privateStatic_publicStatic.phpt PASS
 tests/classes/property_override_private_private.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_private_privateStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
 tests/classes/property_override_private_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
@@ -213,9 +213,9 @@ tests/classes/property_override_private_publicStatic.phpt FAIL: ParseError: Inva
 tests/classes/property_override_protectedStatic_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protectedStatic_privateStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protectedStatic_protected.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_protectedStatic_protectedStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_protectedStatic_protectedStatic.phpt PASS
 tests/classes/property_override_protectedStatic_public.phpt UNSUPPORTED: EXPECTF
-tests/classes/property_override_protectedStatic_publicStatic.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+tests/classes/property_override_protectedStatic_publicStatic.phpt PASS
 tests/classes/property_override_protected_private.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protected_privateStatic.phpt UNSUPPORTED: EXPECTF
 tests/classes/property_override_protected_protected.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
@@ -286,4 +286,4 @@ tests/classes/visibility_004a.phpt PASS
 tests/classes/visibility_004b.phpt PASS
 tests/classes/visibility_004c.phpt PASS
 tests/classes/visibility_005.phpt FAIL: ParseError: Invalid non-public member declaration on line 7
-45 passed, 80 failed, 158 unsupported
+51 passed, 74 failed, 158 unsupported

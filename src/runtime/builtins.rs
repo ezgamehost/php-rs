@@ -244,10 +244,14 @@ impl Runtime {
                     })
                 } else {
                     class.is_some_and(|c| {
-                        c.properties
-                            .iter()
-                            .chain(c.static_properties.iter())
-                            .any(|p| p.name == member)
+                        c.properties.iter().any(|p| p.name == member)
+                            || c.static_owner(&member).is_some_and(|owner| {
+                                owner.name == c.name
+                                    || owner.declaration.static_properties.iter().any(|p| {
+                                        p.name == member
+                                            && p.visibility != crate::ast::Visibility::Private
+                                    })
+                            })
                     }) || matches!(first, Value::Object(o) if o.properties.borrow().get(&ArrayKey::String(member)).is_some())
                 };
                 Ok(Value::Bool(exists))
