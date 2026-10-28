@@ -20,7 +20,7 @@ impl Runtime {
             let Value::String(bytes) = result else {
                 unreachable!("__toString has a string return type")
             };
-            return Ok(bytes);
+            return Ok(bytes.to_vec());
         }
         string_bytes(value, line, &mut self.warnings)
     }
@@ -35,7 +35,7 @@ impl Runtime {
         if op == "." {
             let mut bytes = self.string_bytes(&left, line)?;
             bytes.extend(self.string_bytes(&right, line)?);
-            return Ok(Value::String(bytes));
+            return Ok(Value::String(bytes.into()));
         }
         if matches!(op, "==" | "!=" | "<>" | "<" | "<=" | ">" | ">=" | "<=>") {
             let order = self.compare(&left, &right, line)?;

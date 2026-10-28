@@ -99,7 +99,7 @@ fn unhandled(value: &Value, line: usize) -> Error {
         Value::Object(object) => format!("of type {}", object.class_name),
         Value::String(value) => {
             let mut description = String::from("'");
-            for byte in value.iter().take(15) {
+            for byte in value.bytes().iter().take(15) {
                 match byte {
                     b'\n' => description.push_str("\\n"),
                     b'\r' => description.push_str("\\r"),

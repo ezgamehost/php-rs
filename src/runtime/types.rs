@@ -29,7 +29,7 @@ impl Runtime {
         if !strict && ty.contains("string") && self.can_stringify(&value) {
             return self
                 .string_bytes(&value, line)
-                .map(|s| Some(Value::String(s)));
+                .map(|s| Some(Value::String(s.into())));
         }
         Ok(self.coerce_scalar_type(value, ty, strict, line))
     }
@@ -57,7 +57,7 @@ impl Runtime {
         // A numeric string chooses int or float by its representation when both
         // are present; other weak scalar unions prefer int, float, string, bool.
         let number = match &value {
-            Value::String(bytes) => numeric_string(bytes),
+            Value::String(bytes) => numeric_string(&bytes.bytes()),
             Value::Bool(b) => Some(Value::Int(i64::from(*b))),
             Value::Int(_) | Value::Float(_) => Some(value.clone()),
             _ => None,
@@ -84,7 +84,7 @@ impl Runtime {
         }
         if ty.contains("string") {
             value.warn_nan("string", line, &mut self.warnings);
-            return Some(Value::String(value.to_bytes()));
+            return Some(Value::String(value.to_bytes().into()));
         }
         if ty.contains("bool") {
             return Some(Value::Bool(value.to_bool(line, &mut self.warnings)));
@@ -117,7 +117,7 @@ impl Runtime {
         {
             self.warnings.push(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)));
             return Ok(if ty.contains("string") {
-                Value::String(Vec::new())
+                Value::String(Vec::new().into())
             } else {
                 Value::Int(0)
             });

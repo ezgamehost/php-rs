@@ -26,7 +26,7 @@ pub(super) fn cast(
     Ok(match kind {
         CastKind::Void => Value::Null,
         CastKind::Bool => Value::Bool(value.to_bool(line, warnings)),
-        CastKind::String => Value::String(string_bytes(&value, line, warnings)?),
+        CastKind::String => Value::String(string_bytes(&value, line, warnings)?.into()),
         CastKind::Array => match value {
             Value::Array(_) => value,
             Value::Object(object) => {
@@ -57,11 +57,11 @@ pub(super) fn cast(
                     }
                     float_to_int(*number)
                 }
-                Value::String(bytes) => match numeric_prefix(bytes) {
+                Value::String(bytes) => match numeric_prefix(&bytes.bytes()) {
                     Some((Value::Int(number), _)) => number,
                     Some((Value::Float(number), _)) => {
                         if out_of_range(number) {
-                            warnings.push(format!("The float-string \"{}\" is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(bytes)));
+                            warnings.push(format!("The float-string \"{}\" is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(&bytes.bytes())));
                         }
                         if number.is_finite() { number as i64 } else { 0 }
                     }
@@ -73,11 +73,11 @@ pub(super) fn cast(
         CastKind::Float => Value::Float(match &value {
             Value::Float(number) => *number,
             Value::Int(number) => *number as f64,
-            Value::String(bytes) => match numeric_prefix(bytes) {
+            Value::String(bytes) => match numeric_prefix(&bytes.bytes()) {
                 Some((number, _)) => {
                     let number = number.as_float();
                     if number == 0.0
-                        && bytes.iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'-')
+                        && bytes.bytes().iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'-')
                     {
                         -0.0
                     } else {

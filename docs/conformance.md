@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 54 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 55 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
@@ -15,6 +15,8 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
 | PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 11 | 7 | 71 |
 | PHP 8.5.0 `Zend/tests/magic_methods`, Rust and reference PHP for passing cases | 16 | 70 | 71 |
+| PHP 8.5.0 `Zend/tests/offsets`, Rust | 0 | 10 | 10 |
+| PHP 8.5.0 `Zend/tests/numeric_strings`, Rust and reference PHP for passing cases | 1 | 3 | 4 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
@@ -495,3 +497,36 @@ in string-offset assignments (including reentrant writes), Throwable property
 layouts, complete built-in coverage, exact diagnostics, and the previously noted
 configuration/reflection/trait gaps remain incomplete. This supersedes earlier
 notes listing Throwable string conversion as unsupported.
+
+
+The string-offset conversion slice introduces shared PHP string buffers with
+independent value slots and copy-on-write separation. This allows `__toString()`
+to run between destination preparation and the final byte write without holding
+Rust borrows across PHP execution. Invalid offsets and access failures precede
+conversion; replacements, nested writes, exception side effects, copies created
+during conversion, and extension preserve the reference engine's buffer lifetime
+rules. In-bounds writes resume at the surviving destination slot, while extension
+restores the retained original buffer. Literal, constant, property-default, and
+array copies continue to separate for ordinary writes. The Rust embedding API
+now uses `Value::String(PhpString)`, constructed from byte vectors with `.into()`;
+`bytes()` and `to_vec()` return owned snapshots.
+Eleven regressions and one new PHPT pass, together with all **737 Rust tests** and
+**55 reference-checked project PHPT fixtures**. The reproducible
+[string-offset differential report](conformance/php-8.5.0-string-offset-conversion.txt)
+records **525 cases: 510 matched, zero mismatches, and 15 reference-process
+crashes**. The crashes reproduce in the local PHP 8.5.0 build, including cases
+that first bind a destination global during conversion; they are excluded from
+compatibility pass counts. Equivalent programs with pre-established global
+bindings are included separately. The Rust runtime does not crash in those
+cases. Run `python3 tools/check_string_offsets.py --reference /path/to/php` after
+building to regenerate the comparison. Prior Stringable, throwable-trace, and
+static-asymmetric-visibility matrices also pass (306, 220, and 827 cases).
+Refreshed tracked suites lose no passes. New [offset](conformance/php-8.5.0-offsets.txt)
+and [numeric-string](conformance/php-8.5.0-numeric_strings.txt) reports retain their
+unsupported sections and language gaps explicitly. The
+[PHP string manual](https://www.php.net/manual/en/language.types.string.php),
+PHP 8.5.0 `zend_assign_to_string_offset` implementation, and local probes establish
+the tested rules. Reference operations, error-handler reentrancy, and the other
+previously documented gaps remain incomplete; crashes or undefined behavior in
+the C reference engine are not compatibility targets. This supersedes the earlier
+string-offset object-conversion limitation.

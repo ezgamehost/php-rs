@@ -1,4 +1,4 @@
-PHP 8.5.0 Zend/tests/asymmetric_visibility baseline (2026-10-27)
+PHP 8.5.0 Zend/tests/asymmetric_visibility baseline (2026-10-28)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/asymmetric_visibility
 Reference checking enabled; no upstream fixture passed. Unsupported sections were not executed.
 

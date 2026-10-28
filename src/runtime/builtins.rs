@@ -177,7 +177,7 @@ impl Runtime {
             let mut paths = PhpArray::default();
             for path in &self.included_files {
                 paths.append(
-                    Value::String(path.as_os_str().as_encoded_bytes().to_vec()),
+                    Value::String(path.as_os_str().as_encoded_bytes().to_vec().into()),
                     line,
                 )?;
             }
@@ -221,7 +221,7 @@ impl Runtime {
                 let member = self.native_string(args[1].as_ref().unwrap(), &name, 2, line)?;
                 let class = match first {
                     Value::Object(object) => Some(object.class.clone()),
-                    Value::String(name) => self.find_class(name),
+                    Value::String(name) => self.find_class(&name.bytes()),
                     Value::Closure(_) => None,
                     _ => {
                         return Err(Error::new(
@@ -308,9 +308,12 @@ impl Runtime {
                     Value::Closure(_) | Value::Object(_) => "object",
                 }
                 .as_bytes()
-                .to_vec(),
+                .to_vec()
+                .into(),
             )),
-            Builtin::GetDebugType => Ok(Value::String(debug_type(first).as_bytes().to_vec())),
+            Builtin::GetDebugType => {
+                Ok(Value::String(debug_type(first).as_bytes().to_vec().into()))
+            }
             Builtin::Is(kind) => Ok(Value::Bool(
                 debug_type(first) == kind
                     || (kind == "object" && matches!(first, Value::Closure(_) | Value::Object(_))),
@@ -434,12 +437,12 @@ impl Runtime {
                 value,
                 Value::Array(_) | Value::Closure(_) | Value::Object(_)
             )
-            || matches!(value, Value::String(s) if crate::value::numeric_string(s).is_none())
+            || matches!(value, Value::String(s) if crate::value::numeric_string(&s.bytes()).is_none())
         {
             return Err(type_error(function, position, "int", line));
         }
         let number = match value {
-            Value::String(s) => crate::value::numeric_string(s).unwrap(),
+            Value::String(s) => crate::value::numeric_string(&s.bytes()).unwrap(),
             _ => value.clone(),
         };
         if let Value::Float(n) = number
@@ -603,7 +606,7 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
             let name = closure.function.as_ref().map_or(&closure.name, |f| &f.name);
             properties.insert(
                 ArrayKey::String(b"function".to_vec()),
-                Value::String(name.clone()),
+                Value::String(name.clone().into()),
             );
             if !parameters.is_empty() {
                 let mut entries = PhpArray::default();
@@ -613,9 +616,9 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
                     entries.insert(
                         ArrayKey::String(key),
                         Value::String(if param.default.is_some() || param.variadic {
-                            b"<optional>".to_vec()
+                            b"<optional>".to_vec().into()
                         } else {
-                            b"<required>".to_vec()
+                            b"<required>".to_vec().into()
                         }),
                     );
                 }
@@ -645,7 +648,7 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
         Value::Float(n) => out.extend_from_slice(format!("float({})\n", dump_float(*n)).as_bytes()),
         Value::String(s) => {
             out.extend_from_slice(format!("string({}) \"", s.len()).as_bytes());
-            out.extend(s);
+            out.extend_from_slice(&s.bytes());
             out.extend_from_slice(b"\"\n");
         }
         Value::Array(array) => {
@@ -656,7 +659,7 @@ fn dump_inner(value: &Value, depth: usize, out: &mut Vec<u8>, seen: &mut HashSet
                     ArrayKey::Int(n) => out.extend_from_slice(format!("[{n}]=>\n").as_bytes()),
                     ArrayKey::String(s) => {
                         out.extend_from_slice(b"[\"");
-                        out.extend(s);
+                        out.extend_from_slice(s);
                         out.extend_from_slice(b"\"]=>\n");
                     }
                 }

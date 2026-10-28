@@ -8,7 +8,7 @@ impl Runtime {
             return self.contextual_class_name(name, line);
         }
         match self.eval(class)? {
-            Value::String(name) => Ok(name),
+            Value::String(name) => Ok(name.to_vec()),
             Value::Object(object) => Ok(object.class.name.clone()),
             Value::Closure(_) => Ok(b"Closure".to_vec()),
             _ => Err(Error::new(
@@ -48,10 +48,10 @@ impl Runtime {
             ));
         };
         let class = self.require_member_class(&class_name, line)?;
-        if !self.in_constant_expression && name.eq_ignore_ascii_case(b"class") {
-            return Ok(Value::String(class.name.clone()));
+        if !self.in_constant_expression && name.bytes().eq_ignore_ascii_case(b"class") {
+            return Ok(Value::String(class.name.clone().into()));
         }
-        self.read_class_constant(&class, &name, line)
+        self.read_class_constant(&class, &name.bytes(), line)
     }
 
     pub(super) fn named_class_constant(

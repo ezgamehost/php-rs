@@ -14,18 +14,21 @@ pub(super) struct Offset {
     array_key: Option<ArrayKey>,
 }
 impl Offset {
+    pub(super) fn is_append(&self) -> bool {
+        self.value.is_none()
+    }
     pub(super) fn new(value: Option<Value>) -> Self {
         Self {
             value,
             array_key: None,
         }
     }
-    fn value(&self, line: usize) -> Result<&Value, Error> {
+    pub(super) fn value(&self, line: usize) -> Result<&Value, Error> {
         self.value
             .as_ref()
             .ok_or_else(|| Error::new(ErrorKind::Error, "Cannot use [] for reading", line))
     }
-    fn array_key(
+    pub(super) fn array_key(
         &mut self,
         line: usize,
         unsetting: bool,
@@ -76,19 +79,20 @@ pub(super) fn read_offset(
             Ok(Value::Null)
         }
         Value::String(bytes) => {
+            let bytes = bytes.bytes();
             let Some(index) = string_index(offset.value(line)?, line, access, warnings)? else {
                 return Ok(Value::Null);
             };
             if let Some(position) = position(index, bytes.len())
                 && let Some(byte) = bytes.get(position)
             {
-                return Ok(Value::String(vec![*byte]));
+                return Ok(Value::String(vec![*byte].into()));
             }
             if access == Access::Read {
                 warnings.push(format!(
                     "Uninitialized string offset {index} on line {line}"
                 ));
-                Ok(Value::String(Vec::new()))
+                Ok(Value::String(Vec::new().into()))
             } else {
                 Ok(Value::Null)
             }
@@ -129,7 +133,13 @@ pub(super) fn write_path(
                 line,
             ));
         }
-        return write_string(bytes, offset.value(line)?, new_value, line, warnings);
+        return write_string(
+            &mut bytes.make_mut(),
+            offset.value(line)?,
+            new_value,
+            line,
+            warnings,
+        );
     }
     if matches!(value, Value::Null | Value::Bool(false)) {
         if matches!(value, Value::Bool(false)) {
@@ -200,7 +210,7 @@ pub(super) fn unset_path(
         )),
     }
 }
-fn string_index(
+pub(super) fn string_index(
     key: &Value,
     line: usize,
     access: Access,
@@ -222,14 +232,15 @@ fn string_index(
             }));
         }
         Value::String(bytes) => {
-            if let Some((Value::Int(n), complete)) = crate::value::numeric_prefix(bytes) {
+            let bytes = bytes.bytes();
+            if let Some((Value::Int(n), complete)) = crate::value::numeric_prefix(&bytes) {
                 if !complete {
                     if access == Access::Probe {
                         return Ok(None);
                     }
                     warnings.push(format!(
                         "Illegal string offset \"{}\" on line {line}",
-                        String::from_utf8_lossy(bytes)
+                        String::from_utf8_lossy(&bytes)
                     ));
                 }
                 return Ok(Some(n));
@@ -247,7 +258,7 @@ fn string_index(
         ))
     }
 }
-fn position(index: i64, length: usize) -> Option<usize> {
+pub(super) fn position(index: i64, length: usize) -> Option<usize> {
     if index < 0 {
         length.checked_sub(index.unsigned_abs().try_into().ok()?)
     } else {
@@ -279,6 +290,16 @@ fn write_string(
             "Only the first byte will be assigned to the string offset on line {line}"
         ));
     }
+    assign_character(bytes, position, byte, line)?;
+    Ok(Value::String(vec![byte].into()))
+}
+
+pub(super) fn assign_character(
+    bytes: &mut Vec<u8>,
+    position: usize,
+    byte: u8,
+    line: usize,
+) -> Result<(), Error> {
     if position >= bytes.len() {
         let length = position
             .checked_add(1)
@@ -289,5 +310,5 @@ fn write_string(
         bytes.resize(length, b' ');
     }
     bytes[position] = byte;
-    Ok(Value::String(vec![byte]))
+    Ok(())
 }

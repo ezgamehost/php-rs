@@ -8,14 +8,16 @@ impl Runtime {
         line: usize,
     ) -> Result<functions::CallTarget, Error> {
         let class_method = match value {
-            Value::String(name) => name
-                .windows(2)
-                .position(|part| part == b"::")
-                .map(|index| (&name[..index], &name[index + 2..])),
+            Value::String(name) => {
+                let name = name.bytes();
+                name.windows(2)
+                    .position(|part| part == b"::")
+                    .map(|index| (name[..index].to_vec(), name[index + 2..].to_vec()))
+            }
             Value::Array(array) if array.len() == 2 => {
                 match (array.get(&ArrayKey::Int(0)), array.get(&ArrayKey::Int(1))) {
                     (Some(Value::String(class)), Some(Value::String(method))) => {
-                        Some((class.as_slice(), method.as_slice()))
+                        Some((class.to_vec(), method.to_vec()))
                     }
                     _ => None,
                 }
@@ -28,8 +30,8 @@ impl Runtime {
             let allow_this = self
                 .class_context
                 .as_ref()
-                .is_some_and(|context| context.scope.is_a(class));
-            self.resolve_class_method(class, method, false, allow_this, line)
+                .is_some_and(|context| context.scope.is_a(&class));
+            self.resolve_class_method(&class, &method, false, allow_this, line)
         } else {
             self.resolve_callable(value.clone(), line)
         }

@@ -86,7 +86,7 @@ impl Parser {
 
 fn literal_name(expr: &Expr) -> Option<Vec<u8>> {
     match &expr.kind {
-        ExprKind::Literal(Value::String(name)) => Some(name.clone()),
+        ExprKind::Literal(Value::String(name)) => Some(name.to_vec()),
         ExprKind::Group(inner) => literal_name(inner),
         ExprKind::Binary(op, left, right) if op == "." => {
             let mut name = literal_name(left)?;

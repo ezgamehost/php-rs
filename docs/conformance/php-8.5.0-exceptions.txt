@@ -72,7 +72,7 @@ Zend/tests/exceptions/exception_during_property_assign_op.phpt FAIL: Unexpected 
 Zend/tests/exceptions/exception_during_variance_autoload.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exceptions/exception_during_variance_autoload_2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exceptions/exception_fatal_uncaught_error_reference_tostring.phpt UNSUPPORTED: EXPECTF
-Zend/tests/exceptions/exception_from_toString.phpt FAIL: Error: Object of class BadStr could not be converted to string on line 79
+Zend/tests/exceptions/exception_from_toString.phpt FAIL: Error: Class "DateInterval" not found on line 83
 Zend/tests/exceptions/exception_getters_with_ref_props.phpt FAIL: ParseError: Expected parameter variable on line 4
 Zend/tests/exceptions/exception_handler/bug40815.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 9
 Zend/tests/exceptions/exception_handler/bug47714.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 10

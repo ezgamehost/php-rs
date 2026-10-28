@@ -88,7 +88,7 @@ impl Parser {
                             }),
                             Box::new(Expr {
                                 line,
-                                kind: ExprKind::Literal(Value::String(param.name.clone())),
+                                kind: ExprKind::Literal(Value::String(param.name.clone().into())),
                             }),
                         ),
                     }),

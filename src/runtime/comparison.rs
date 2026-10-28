@@ -21,8 +21,8 @@ impl Runtime {
         use Value::*;
         Ok(match (left, right) {
             (Bool(_), _) | (_, Bool(_)) => left.is_truthy().partial_cmp(&right.is_truthy()),
-            (Null, String(s)) => b"".as_slice().partial_cmp(s.as_slice()),
-            (String(s), Null) => s.as_slice().partial_cmp(b"".as_slice()),
+            (Null, String(s)) => b"".as_slice().partial_cmp(s.bytes().as_slice()),
+            (String(s), Null) => s.bytes().as_slice().partial_cmp(b"".as_slice()),
             (Null, _) | (_, Null) => left.is_truthy().partial_cmp(&right.is_truthy()),
             (Object(a), Object(b)) => {
                 if Rc::ptr_eq(a, b) {
@@ -44,11 +44,11 @@ impl Runtime {
                 result?
             }
             (Object(_), String(_)) if self.can_stringify(left) => {
-                let converted = String(self.string_bytes(left, line)?);
+                let converted = String(self.string_bytes(left, line)?.into());
                 self.compare_inner(&converted, right, line, seen)?
             }
             (String(_), Object(_)) if self.can_stringify(right) => {
-                let converted = String(self.string_bytes(right, line)?);
+                let converted = String(self.string_bytes(right, line)?.into());
                 self.compare_inner(left, &converted, line, seen)?
             }
             (Object(_) | Closure(_), Int(_) | Float(_)) => {
@@ -89,17 +89,19 @@ impl Runtime {
                 left.as_float().partial_cmp(&right.as_float())
             }
             (Float(n), String(_)) | (String(_), Float(n)) if n.is_nan() => None,
-            (String(a), String(b)) => match (numeric_string(a), numeric_string(b)) {
-                (Some(a), Some(b)) => self.compare_inner(&a, &b, line, seen)?,
-                _ => a.partial_cmp(b),
-            },
-            (String(a), _) => match numeric_string(a) {
+            (String(a), String(b)) => {
+                match (numeric_string(&a.bytes()), numeric_string(&b.bytes())) {
+                    (Some(a), Some(b)) => self.compare_inner(&a, &b, line, seen)?,
+                    _ => a.bytes().partial_cmp(&b.bytes()),
+                }
+            }
+            (String(a), _) => match numeric_string(&a.bytes()) {
                 Some(a) => self.compare_inner(&a, right, line, seen)?,
-                None => a.partial_cmp(&right.to_bytes()),
+                None => a.bytes().partial_cmp(&right.to_bytes()),
             },
-            (_, String(b)) => match numeric_string(b) {
+            (_, String(b)) => match numeric_string(&b.bytes()) {
                 Some(b) => self.compare_inner(left, &b, line, seen)?,
-                None => left.to_bytes().partial_cmp(b),
+                None => left.to_bytes().partial_cmp(&b.bytes()),
             },
         })
     }

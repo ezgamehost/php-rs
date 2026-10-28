@@ -302,7 +302,7 @@ impl Runtime {
             Some(self.contextual_class_name(name, line)?)
         } else {
             match self.eval(class)? {
-                Value::String(name) => Some(name),
+                Value::String(name) => Some(name.to_vec()),
                 Value::Object(object) => Some(object.class.name.clone()),
                 Value::Closure(_) => Some(b"Closure".to_vec()),
                 _ => None,
@@ -334,7 +334,7 @@ impl Runtime {
             self.contextual_class_name(name, line)?
         } else {
             match self.eval(class)? {
-                Value::String(name) => name,
+                Value::String(name) => name.to_vec(),
                 Value::Object(object) => object.class.name.clone(),
                 _ => {
                     return Err(Error::new(

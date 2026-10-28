@@ -197,7 +197,7 @@ impl Runtime {
         }
         let source = Rc::new(Source::file(&path));
         let mut arguments = PhpArray::default();
-        arguments.append(Value::String(source.name.clone()), line)?;
+        arguments.append(Value::String(source.name.clone().into()), line)?;
         let frame = traces::TraceFrame::unit(self, label.as_bytes(), Some(line), Some(arguments));
         self.execute_unit(&code, source, Value::Int(1), Some(frame))
     }

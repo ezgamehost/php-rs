@@ -133,7 +133,7 @@ impl Runtime {
             ));
         };
         if matches!(method, NativeMethod::ThrowableToString) {
-            return Ok(Value::String(stringable::throwable_string(&object)));
+            return Ok(Value::String(stringable::throwable_string(&object).into()));
         }
         let mut data = object.throwable.borrow_mut();
         let data = data.as_mut().expect("native throwable receiver");
@@ -147,7 +147,7 @@ impl Runtime {
                     unreachable!()
                 };
                 let previous = self.lookup(b"previous").unwrap();
-                data.message = message;
+                data.message = message.to_vec();
                 data.code = code;
                 data.previous = if let Value::Object(previous) = previous {
                     Some(previous)
@@ -157,10 +157,12 @@ impl Runtime {
                 Value::Null
             }
             NativeMethod::GetTrace => Value::Array(data.trace.clone()),
-            NativeMethod::GetTraceAsString => Value::String(traces::trace_string(&data.trace)),
-            NativeMethod::GetMessage => Value::String(data.message.clone()),
+            NativeMethod::GetTraceAsString => {
+                Value::String(traces::trace_string(&data.trace).into())
+            }
+            NativeMethod::GetMessage => Value::String(data.message.clone().into()),
             NativeMethod::GetCode => Value::Int(data.code),
-            NativeMethod::GetFile => Value::String(data.file.clone()),
+            NativeMethod::GetFile => Value::String(data.file.clone().into()),
             NativeMethod::GetLine => Value::Int(data.line as i64),
             NativeMethod::GetPrevious => data.previous.clone().map_or(Value::Null, Value::Object),
         })

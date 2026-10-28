@@ -101,7 +101,7 @@ fn unsupported_string_mutations_fail_without_changing_the_string() {
         assert_eq!(error.kind, ErrorKind::Error, "{operation}");
         assert_eq!(
             runtime.variables.get(b"s".as_slice()),
-            Some(&php_rs::Value::String(b"abc".to_vec()))
+            Some(&php_rs::Value::String(b"abc".to_vec().into()))
         );
     }
 }

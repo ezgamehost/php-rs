@@ -32,6 +32,7 @@ mod offsets;
 mod readonly;
 mod scope_slots;
 mod static_members;
+mod string_offsets;
 mod stringable;
 mod termination;
 mod throwables;
@@ -497,6 +498,9 @@ impl Runtime {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }
         self.check_readonly_write(location, false, line)?;
+        if let Some(result) = self.string_offset_assignment(location, &new_value, line)? {
+            return Ok(result);
+        }
         if let Some(object) = &location.object {
             let key = ArrayKey::String(location.name.clone());
             let mut value = object
@@ -597,7 +601,7 @@ impl Runtime {
             ExprKind::Cast(kind, operand) => {
                 let value = self.eval(operand)?;
                 if matches!(kind, crate::ast::CastKind::String) {
-                    Ok(Value::String(self.string_bytes(&value, line)?))
+                    Ok(Value::String(self.string_bytes(&value, line)?.into()))
                 } else {
                     casting::cast(*kind, value, line, &mut self.warnings)
                 }
@@ -643,7 +647,7 @@ impl Runtime {
                     let value = self.eval(part)?;
                     result.extend(self.string_bytes(&value, part.line)?);
                 }
-                Ok(Value::String(result))
+                Ok(Value::String(result.into()))
             }
             ExprKind::Group(inner) => self.eval(inner),
             ExprKind::Variable(_) if expr.is_globals() => Ok(self.globals_snapshot()),
@@ -731,7 +735,9 @@ impl Runtime {
                 match op.as_str() {
                     "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.warnings))),
                     "~" => match value {
-                        Value::String(s) => Ok(Value::String(s.into_iter().map(|b| !b).collect())),
+                        Value::String(s) => Ok(Value::String(
+                            s.bytes().iter().map(|b| !b).collect::<Vec<_>>().into(),
+                        )),
                         Value::Int(_) | Value::Float(_) => {
                             Ok(Value::Int(!value.integer(line, &mut self.warnings)?))
                         }
@@ -868,6 +874,8 @@ fn binary(
     }
     if matches!(op, "&" | "|" | "^") {
         if let (String(a), String(b)) = (&left, &right) {
+            let a = a.bytes();
+            let b = b.bytes();
             let len = if op == "|" {
                 a.len().max(b.len())
             } else {
@@ -979,7 +987,7 @@ fn increment(
             ));
             Ok(value.clone())
         }
-        String(s) if crate::value::numeric_string(s).is_none() => {
+        String(s) if crate::value::numeric_string(&s.bytes()).is_none() => {
             warnings.push(format!(
                 "Deprecated: {} on non-numeric string on line {line}",
                 if delta > 0 { "Increment" } else { "Decrement" }
@@ -988,15 +996,15 @@ fn increment(
                 return Ok(value.clone());
             }
             if s.is_empty() {
-                return Ok(String(b"1".to_vec()));
+                return Ok(String(b"1".to_vec().into()));
             }
-            let mut bytes = s.clone();
+            let mut bytes = s.to_vec();
             let mut carry = None;
             for byte in bytes.iter_mut().rev() {
                 carry = match *byte {
                     b'0'..=b'8' | b'a'..=b'y' | b'A'..=b'Y' => {
                         *byte += 1;
-                        return Ok(String(bytes));
+                        return Ok(String(bytes.into()));
                     }
                     b'9' => {
                         *byte = b'0';
@@ -1010,13 +1018,13 @@ fn increment(
                         *byte = b'A';
                         Some(b'A')
                     }
-                    _ => return Ok(String(bytes)),
+                    _ => return Ok(String(bytes.into())),
                 };
             }
             if let Some(carry) = carry {
                 bytes.insert(0, carry);
             }
-            Ok(String(bytes))
+            Ok(String(bytes.into()))
         }
         _ => binary("+", value.clone(), Int(delta), line, warnings),
     }

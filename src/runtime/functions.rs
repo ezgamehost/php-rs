@@ -157,11 +157,11 @@ impl Runtime {
                 let base = array.get(&ArrayKey::Int(0));
                 let method = array.get(&ArrayKey::Int(1));
                 if let (Some(Value::Object(object)), Some(Value::String(name))) = (base, method) {
-                    self.resolve_method(Value::Object(object.clone()), name, line)
+                    self.resolve_method(Value::Object(object.clone()), &name.bytes(), line)
                 } else if let (Some(Value::String(class)), Some(Value::String(name))) =
                     (base, method)
                 {
-                    self.resolve_class_method(class, name, false, false, line)
+                    self.resolve_class_method(&class.bytes(), &name.bytes(), false, false, line)
                 } else {
                     Err(Error::new(
                         ErrorKind::Error,
@@ -170,7 +170,7 @@ impl Runtime {
                     ))
                 }
             }
-            Value::String(name) => self.resolve_name(name, line),
+            Value::String(name) => self.resolve_name(name.to_vec(), line),
             Value::Closure(closure) => Ok(CallTarget {
                 this: closure.this.clone(),
                 context: closure.context.clone(),

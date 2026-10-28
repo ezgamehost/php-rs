@@ -56,12 +56,12 @@ fn predefined(name: &[u8]) -> Option<Value> {
         return Some(Value::Null);
     }
     Some(match name {
-        b"PHP_VERSION" => Value::String(b"8.5.0".to_vec()),
+        b"PHP_VERSION" => Value::String(b"8.5.0".to_vec().into()),
         b"PHP_VERSION_ID" => Value::Int(80500),
         b"PHP_MAJOR_VERSION" | b"PHP_INT_SIZE" => Value::Int(8),
         b"PHP_MINOR_VERSION" => Value::Int(5),
         b"PHP_RELEASE_VERSION" | b"COUNT_NORMAL" => Value::Int(0),
-        b"PHP_EXTRA_VERSION" => Value::String(Vec::new()),
+        b"PHP_EXTRA_VERSION" => Value::String(Vec::new().into()),
         b"PHP_INT_MAX" => Value::Int(i64::MAX),
         b"PHP_INT_MIN" => Value::Int(i64::MIN),
         b"PHP_FLOAT_DIG" => Value::Int(15),
@@ -71,15 +71,17 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"INF" => Value::Float(f64::INFINITY),
         b"NAN" => Value::Float(f64::NAN),
         b"PHP_EOL" => Value::String(if cfg!(windows) {
-            b"\r\n".to_vec()
+            b"\r\n".to_vec().into()
         } else {
-            b"\n".to_vec()
+            b"\n".to_vec().into()
         }),
-        b"DIRECTORY_SEPARATOR" => Value::String(std::path::MAIN_SEPARATOR.to_string().into_bytes()),
+        b"DIRECTORY_SEPARATOR" => {
+            Value::String(std::path::MAIN_SEPARATOR.to_string().into_bytes().into())
+        }
         b"PATH_SEPARATOR" => Value::String(if cfg!(windows) {
-            b";".to_vec()
+            b";".to_vec().into()
         } else {
-            b":".to_vec()
+            b":".to_vec().into()
         }),
         b"COUNT_RECURSIVE" | b"E_ERROR" | b"ARRAY_FILTER_USE_BOTH" => Value::Int(1),
         b"E_WARNING" | b"ARRAY_FILTER_USE_KEY" => Value::Int(2),

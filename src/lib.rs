@@ -8,6 +8,7 @@ mod parser;
 pub mod phpt;
 mod runtime;
 mod source;
+mod string;
 mod value;
 
 pub use array::{ArrayKey, PhpArray};
@@ -15,6 +16,7 @@ pub use closure::Closure;
 pub use error::{Error, ErrorKind};
 pub use object::PhpObject;
 pub use runtime::Runtime;
+pub use string::PhpString;
 pub use value::Value;
 
 /// Validate syntax without executing the document.

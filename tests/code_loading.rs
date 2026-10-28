@@ -323,6 +323,7 @@ fn included_files_are_unique_ordered_and_exclude_eval() {
                     .as_os_str()
                     .as_encoded_bytes()
                     .to_vec()
+                    .into()
             ),
             Value::String(
                 second
@@ -331,6 +332,7 @@ fn included_files_are_unique_ordered_and_exclude_eval() {
                     .as_os_str()
                     .as_encoded_bytes()
                     .to_vec()
+                    .into()
             )
         ]
     );

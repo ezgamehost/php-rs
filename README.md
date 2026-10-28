@@ -17,6 +17,10 @@ With no arguments, the executable reads a PHP document from stdin. File and stdi
 mode recognize `<?php` and `<?=` tags and preserve inline HTML. `-r` accepts code
 without an opening tag. Fatal errors return exit status 255; warnings go to stderr.
 
+`Value::String` stores a `PhpString`; Rust callers can construct it with
+`Value::String(bytes.into())` and read an owned snapshot with `bytes()` or
+`to_vec()`. Cloning shares byte storage until an ordinary write separates it.
+
 The library exposes `run`, `lint`, and a request-local `Runtime`. `Runtime` retains
 output and warnings when execution fails. Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
@@ -94,6 +98,9 @@ new request. The CLI returns the low eight bits of the requested status.
   arguments/returns/properties, native string parameters, and comparisons (including
   nested arrays/objects and switch matching). Strict string types reject objects;
   failed return conversions chain the original exception under a TypeError.
+- Object conversion in string-offset assignments, including negative offsets,
+  extension, typed properties, access checks, and reentrant replacement/unsetting.
+  Shared string buffers preserve copies created before or during conversion.
 - Public, protected, and private static properties with inherited shared storage,
   scope checks, independent private redeclarations, dynamic names, array mutation, and `isset`/`empty`/coalescing. Public, protected, and private
   class constants support scope-aware access, inheritance, `final`, dynamic names,
@@ -181,7 +188,7 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Closure reference captures work, but general references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
-Object conversion in string-offset assignments, Throwable property layouts, configurable trace settings, error/exception
+Throwable property layouts, configurable trace settings, error/exception
 handlers, ErrorException/SPL exception classes, and complete compile-time fatal
 error distinctions remain unfinished.
 Other `declare` directives are not implemented. Shutdown callbacks, output

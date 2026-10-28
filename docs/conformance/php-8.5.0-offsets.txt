@@ -1,0 +1,26 @@
+PHP 8.5.0 Zend/tests/offsets baseline (2026-10-28)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/offsets
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/offsets/ArrayAccess_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 132
+Zend/tests/offsets/ArrayObject_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 552
+Zend/tests/offsets/appending_containers.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/appending_containers_in_fetch.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/array_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 455
+Zend/tests/offsets/array_offset.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/array_offset_002.phpt FAIL: ParseError: Expected parameter variable on line 6
+Zend/tests/offsets/false_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 462
+Zend/tests/offsets/gh20194.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/internal_handlers.phpt UNSUPPORTED: EXPECTF, EXTENSIONS
+Zend/tests/offsets/internal_handlers_extended.phpt UNSUPPORTED: EXTENSIONS
+Zend/tests/offsets/invalid_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 82
+Zend/tests/offsets/null_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 450
+Zend/tests/offsets/null_offset_dep_promoted.phpt FAIL: Error: Call to undefined function set_error_handler() on line 3
+Zend/tests/offsets/null_offset_no_uaf.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/null_offset_unset_via_error_handler.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/object_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 64
+Zend/tests/offsets/reference_containers_appended.phpt UNSUPPORTED: EXPECTF
+Zend/tests/offsets/runtime_compile_time_offset_access.phpt UNSUPPORTED: CLEAN, INI, SKIPIF
+Zend/tests/offsets/string_container_offset_behaviour.phpt FAIL: ParseError: Expected expression on line 741
+0 passed, 10 failed, 10 unsupported

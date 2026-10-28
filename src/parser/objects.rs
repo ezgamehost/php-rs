@@ -615,7 +615,7 @@ impl Parser {
                 _ => Some(name.strip_prefix(b"\\").unwrap_or(name).to_vec()),
             };
             if let Some(name) = name {
-                return ExprKind::Literal(Value::String(name));
+                return ExprKind::Literal(Value::String(name.into()));
             }
         }
         ExprKind::ClassName(Box::new(value))
@@ -627,7 +627,7 @@ impl Parser {
         let mut name = self.property_name()?;
         if variable && !self.is("(") {
             name.kind = match name.kind {
-                ExprKind::Variable(name) => ExprKind::Literal(Value::String(name)),
+                ExprKind::Variable(name) => ExprKind::Literal(Value::String(name.into())),
                 ExprKind::DynamicVariable(inner) => {
                     return Ok(ExprKind::StaticProperty(Box::new(class), inner));
                 }
@@ -650,7 +650,7 @@ impl Parser {
         let token = self.token().clone();
         self.pos += 1;
         let kind = match token.kind {
-            Kind::Word(name) => ExprKind::Literal(Value::String(name)),
+            Kind::Word(name) => ExprKind::Literal(Value::String(name.into())),
             Kind::Variable(name) => ExprKind::Variable(name),
             Kind::Symbol(s) if s == "{" => {
                 let value = self.expr(0)?;

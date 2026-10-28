@@ -76,7 +76,7 @@ impl Runtime {
     pub(super) fn globals_snapshot(&self) -> Value {
         let mut array = PhpArray::default();
         for (name, value) in self.globals().iter() {
-            let key = ArrayKey::from_value(&Value::String(name.clone()), 0, &mut Vec::new())
+            let key = ArrayKey::from_value(&Value::String(name.clone().into()), 0, &mut Vec::new())
                 .expect("string keys are valid");
             array.insert(key, value.borrow().clone());
         }

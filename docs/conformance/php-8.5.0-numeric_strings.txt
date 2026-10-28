@@ -1,0 +1,14 @@
+PHP 8.5.0 Zend/tests/numeric_strings baseline (2026-10-28)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/numeric_strings
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/numeric_strings/array_offset.phpt UNSUPPORTED: EXPECTF
+Zend/tests/numeric_strings/explicit_cast_leading_numeric_must_work.phpt PASS
+Zend/tests/numeric_strings/invalid_numeric_string_must_generate_warning_assign.phpt UNSUPPORTED: EXPECTF
+Zend/tests/numeric_strings/invalid_numeric_strings_must_generate_warning.phpt UNSUPPORTED: EXPECTF
+Zend/tests/numeric_strings/neg_num_string.phpt FAIL: ParseError: Expected ']' in string interpolation on line 22
+Zend/tests/numeric_strings/oss_fuzz_427814456.phpt FAIL: Error: Call to undefined function set_error_handler() on line 2
+Zend/tests/numeric_strings/string_offset.phpt UNSUPPORTED: EXPECTF
+Zend/tests/numeric_strings/trailling_whitespaces.phpt FAIL: Error: Call to undefined function \assert() on line 35
+1 passed, 3 failed, 4 unsupported

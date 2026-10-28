@@ -8,7 +8,7 @@ pub enum Value {
     Bool(bool),
     Int(i64),
     Float(f64),
-    String(Vec<u8>),
+    String(crate::PhpString),
     Array(Rc<PhpArray>),
     Closure(Rc<crate::Closure>),
     Object(Rc<crate::PhpObject>),
@@ -36,7 +36,7 @@ impl Value {
             Self::Bool(b) => *b,
             Self::Int(n) => *n != 0,
             Self::Float(n) => *n != 0.0,
-            Self::String(s) => !s.is_empty() && s != b"0",
+            Self::String(s) => !s.is_empty() && s.bytes().as_slice() != b"0",
         }
     }
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -45,7 +45,7 @@ impl Value {
             Self::Bool(true) => b"1".to_vec(),
             Self::Int(n) => n.to_string().into_bytes(),
             Self::Float(n) => format_float(*n).into_bytes(),
-            Self::String(s) => s.clone(),
+            Self::String(s) => s.to_vec(),
             Self::Array(_) => b"Array".to_vec(),
             Self::Closure(_) | Self::Object(_) => b"Object".to_vec(),
         }
@@ -71,7 +71,8 @@ impl Value {
             Self::Bool(b) => Ok(Self::Int(i64::from(*b))),
             Self::Int(_) | Self::Float(_) => Ok(self.clone()),
             Self::String(s) => {
-                let (value, complete) = numeric_prefix(s).ok_or_else(|| {
+                let s = s.bytes();
+                let (value, complete) = numeric_prefix(&s).ok_or_else(|| {
                     Error::new(
                         ErrorKind::TypeError,
                         "Unsupported operand type: string",

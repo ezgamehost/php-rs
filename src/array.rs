@@ -21,13 +21,13 @@ impl ArrayKey {
                 Self::String(Vec::new())
             }
             Value::String(bytes) => {
-                if let Ok(text) = std::str::from_utf8(bytes)
+                if let Ok(text) = std::str::from_utf8(&bytes.bytes())
                     && let Ok(number) = text.parse::<i64>()
                     && number.to_string() == text
                 {
                     Self::Int(number)
                 } else {
-                    Self::String(bytes.clone())
+                    Self::String(bytes.to_vec())
                 }
             }
             Value::Array(_) | Value::Closure(_) | Value::Object(_) => {
@@ -42,7 +42,7 @@ impl ArrayKey {
     pub fn to_value(&self) -> Value {
         match self {
             Self::Int(n) => Value::Int(*n),
-            Self::String(s) => Value::String(s.clone()),
+            Self::String(s) => Value::String(s.clone().into()),
         }
     }
 }

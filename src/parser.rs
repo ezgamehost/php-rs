@@ -812,7 +812,7 @@ impl Parser {
                 for part in parts {
                     expressions.push(match part {
                         StringPart::Bytes(bytes) => Expr {
-                            kind: ExprKind::Literal(Value::String(bytes)),
+                            kind: ExprKind::Literal(Value::String(bytes.into())),
                             line,
                         },
                         StringPart::Expression(tokens) => {
@@ -881,13 +881,14 @@ impl Parser {
                     Vec::new(),
                 ),
                 b"__line__" => ExprKind::Literal(Value::Int(line as i64)),
-                b"__file__" => ExprKind::Literal(Value::String(self.source.name.clone())),
+                b"__file__" => ExprKind::Literal(Value::String(self.source.name.clone().into())),
                 b"__dir__" => ExprKind::Literal(Value::String(
                     self.source
                         .directory
                         .as_os_str()
                         .as_encoded_bytes()
-                        .to_vec(),
+                        .to_vec()
+                        .into(),
                 )),
                 b"__method__"
                     if !self.class_name.is_empty()
@@ -897,13 +898,15 @@ impl Parser {
                     let mut name = self.class_name.clone();
                     name.extend(b"::");
                     name.extend(&self.function_name);
-                    ExprKind::Literal(Value::String(name))
+                    ExprKind::Literal(Value::String(name.into()))
                 }
-                b"__class__" => ExprKind::Literal(Value::String(self.class_name.clone())),
+                b"__class__" => ExprKind::Literal(Value::String(self.class_name.clone().into())),
                 b"__function__" | b"__method__" => {
-                    ExprKind::Literal(Value::String(self.function_name.clone()))
+                    ExprKind::Literal(Value::String(self.function_name.clone().into()))
                 }
-                b"__namespace__" | b"__trait__" => ExprKind::Literal(Value::String(Vec::new())),
+                b"__namespace__" | b"__trait__" => {
+                    ExprKind::Literal(Value::String(Vec::new().into()))
+                }
                 b"eval" => {
                     self.expect("(")?;
                     let code = self.expr(0)?;

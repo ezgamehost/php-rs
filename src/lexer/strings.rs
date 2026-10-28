@@ -162,7 +162,7 @@ impl Lexer<'_> {
                 }
                 Kind::Variable(self.identifier())
             } else if self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
-                Kind::Value(Value::String(self.identifier()))
+                Kind::Value(Value::String(self.identifier().into()))
             } else {
                 let start = self.pos;
                 if self.starts(b"-") {
@@ -175,7 +175,7 @@ impl Lexer<'_> {
                 if self.pos == digit_start {
                     return Err(Error::parse("Invalid string interpolation offset", line));
                 }
-                Kind::Value(Value::String(self.source[start..self.pos].to_vec()))
+                Kind::Value(Value::String(self.source[start..self.pos].to_vec().into()))
             };
             tokens.push(Token { kind, line });
             if !self.starts(b"]") {
@@ -244,7 +244,7 @@ impl Lexer<'_> {
                 let body = dedent(body, indent, body_line)?;
                 self.pos += label.len();
                 if quote == Some(b'\'') {
-                    return Ok(Kind::Value(Value::String(body)));
+                    return Ok(Kind::Value(Value::String(body.into())));
                 }
                 return Lexer {
                     source: &body,
@@ -268,7 +268,7 @@ fn flush(parts: &mut Vec<StringPart>, out: &mut Vec<u8>) {
 }
 fn finish(mut parts: Vec<StringPart>, mut out: Vec<u8>) -> Kind {
     if parts.is_empty() {
-        Kind::Value(Value::String(out))
+        Kind::Value(Value::String(out.into()))
     } else {
         flush(&mut parts, &mut out);
         Kind::Interpolated(parts)

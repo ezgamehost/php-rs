@@ -39,17 +39,21 @@ impl TraceFrame {
             put(
                 &mut frame.fields,
                 b"function",
-                Value::String(function.to_vec()),
+                Value::String(function.to_vec().into()),
             );
             put(
                 &mut frame.fields,
                 b"class",
-                Value::String(context.scope.name.clone()),
+                Value::String(context.scope.name.clone().into()),
             );
             put(
                 &mut frame.fields,
                 b"type",
-                Value::String(if target.this.is_some() { b"->" } else { b"::" }.to_vec()),
+                Value::String(
+                    if target.this.is_some() { b"->" } else { b"::" }
+                        .to_vec()
+                        .into(),
+                ),
             );
         }
         let supplied = if extra
@@ -93,11 +97,15 @@ impl TraceFrame {
             put(
                 &mut fields,
                 b"file",
-                Value::String(runtime.source.name.clone()),
+                Value::String(runtime.source.name.clone().into()),
             );
             put(&mut fields, b"line", Value::Int(line as i64));
         }
-        put(&mut fields, b"function", Value::String(name.to_vec()));
+        put(
+            &mut fields,
+            b"function",
+            Value::String(name.to_vec().into()),
+        );
         Self {
             internal: false,
             fields,
@@ -159,7 +167,7 @@ pub(super) fn trace_string(trace: &PhpArray) -> Vec<u8> {
         output.extend_from_slice(format!("#{index} ").as_bytes());
         let get = |key: &[u8]| frame.get(&ArrayKey::String(key.to_vec()));
         if let Some(Value::String(file)) = get(b"file") {
-            output.extend_from_slice(file);
+            output.extend_from_slice(&file.bytes());
             output.push(b'(');
             output.extend_from_slice(&get(b"line").unwrap().to_bytes());
             output.extend_from_slice(b"): ");
@@ -168,7 +176,7 @@ pub(super) fn trace_string(trace: &PhpArray) -> Vec<u8> {
         }
         for key in [b"class".as_slice(), b"type", b"function"] {
             if let Some(Value::String(value)) = get(key) {
-                output.extend_from_slice(value);
+                output.extend_from_slice(&value.bytes());
             }
         }
         output.push(b'(');
@@ -201,7 +209,7 @@ fn format_argument(output: &mut Vec<u8>, value: &Value) {
         Value::Closure(_) => output.extend_from_slice(b"Object(Closure)"),
         Value::String(value) => {
             output.push(b'\'');
-            for byte in value.iter().take(15) {
+            for byte in value.bytes().iter().take(15) {
                 let escape: Option<&[u8]> = match byte {
                     b'\n' => Some(b"\\n"),
                     b'\r' => Some(b"\\r"),

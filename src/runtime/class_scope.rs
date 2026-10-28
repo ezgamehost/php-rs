@@ -58,7 +58,7 @@ impl Runtime {
                 }
             }
         };
-        Ok(Value::String(name))
+        Ok(Value::String(name.into()))
     }
 
     pub(super) fn resolve_scoped_call(
@@ -77,7 +77,7 @@ impl Runtime {
             )
         } else {
             let name = match self.eval(class)? {
-                Value::String(name) => name,
+                Value::String(name) => name.to_vec(),
                 Value::Object(object) => object.class.name.clone(),
                 Value::Closure(_) => b"Closure".to_vec(),
                 _ => {
@@ -223,7 +223,7 @@ impl Runtime {
             return self
                 .class_context
                 .as_ref()
-                .map(|c| Value::String(c.called.name.clone()))
+                .map(|c| Value::String(c.called.name.clone().into()))
                 .ok_or_else(|| {
                     Error::new(
                         ErrorKind::Error,
@@ -245,18 +245,19 @@ impl Runtime {
                     return Ok(if parent {
                         Value::Bool(false)
                     } else {
-                        Value::String(b"Closure".to_vec())
+                        Value::String(b"Closure".to_vec().into())
                     });
                 }
                 Value::String(class) if parent => {
+                    let class = class.bytes();
                     if class
                         .strip_prefix(b"\\")
-                        .unwrap_or(class)
+                        .unwrap_or(&class)
                         .eq_ignore_ascii_case(b"Closure")
                     {
                         return Ok(Value::Bool(false));
                     }
-                    Some(self.find_class(class).ok_or_else(|| Error::new(ErrorKind::TypeError, "get_parent_class(): Argument #1 must be an object or a valid class name", line))?)
+                    Some(self.find_class(&class).ok_or_else(|| Error::new(ErrorKind::TypeError, "get_parent_class(): Argument #1 must be an object or a valid class name", line))?)
                 }
                 _ => {
                     return Err(Error::new(
@@ -295,7 +296,7 @@ impl Runtime {
         } else {
             class
         };
-        Ok(class.map_or(Value::Bool(false), |c| Value::String(c.name.clone())))
+        Ok(class.map_or(Value::Bool(false), |c| Value::String(c.name.clone().into())))
     }
 }
 

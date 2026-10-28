@@ -1,0 +1,22 @@
+PHP 8.5.0 string-offset conversion differential baseline (2026-10-28)
+Command: python3 tools/check_string_offsets.py --reference <php-8.5.0>/sapi/cli/php
+Reference built from the PHP 8.5.0 release source. Comparison covers stdout,
+exit status, and diagnostic presence. Reference crashes are NOT passes;
+the Rust runtime completes those cases without a process crash.
+
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=$s;return 'Q';}}$s='abc';$before=$s;var_dump($s[0]=new A,$s,$before,$during);
+REFERENCE CRASH -11 $s="abc";class A{function __toString(){global $s;return "Q";}}try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s);
+REFERENCE CRASH -11 $s="abc";class A{function __toString(){global $s;return "YZ";}}try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=$s;return "Q";}}$s="abc";$during=null;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=[$s];return "Q";}}$s="abc";$during=null;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;unset($s);return "Q";}}$s="abc";$during=null;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;unset($s);$s="abc";return "Q";}}$s="abc";$during=null;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=$s;return "Q";}}$s="abc";$during=null;$before=$s;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=[$s];return "Q";}}$s="abc";$during=null;$before=$s;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;unset($s);return "Q";}}$s="abc";$during=null;$before=$s;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;unset($s);$s="abc";return "Q";}}$s="abc";$during=null;$before=$s;try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=$s;return "Q";}}$s="abc";$during=null;$before=[$s];try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;$during=[$s];return "Q";}}$s="abc";$during=null;$before=[$s];try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;unset($s);return "Q";}}$s="abc";$during=null;$before=[$s];try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+REFERENCE CRASH -11 class A{function __toString(){global $s,$during;unset($s);$s="abc";return "Q";}}$s="abc";$during=null;$before=[$s];try{var_dump($s[0]=new A);}catch(Throwable $e){echo get_class($e);}var_dump($s,$during);
+Cases: 525 Mismatches: 0 Reference crashes: 15
