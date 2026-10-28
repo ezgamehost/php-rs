@@ -48,6 +48,9 @@ impl Runtime {
                 | b"COUNT_RECURSIVE"
                 | b"ARRAY_FILTER_USE_BOTH"
                 | b"ARRAY_FILTER_USE_KEY"
+                | b"STR_PAD_LEFT"
+                | b"STR_PAD_RIGHT"
+                | b"STR_PAD_BOTH"
                 | b"DIRECTORY_SEPARATOR"
                 | b"PATH_SEPARATOR"
                 | b"INF"
@@ -159,7 +162,7 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"PHP_VERSION_ID" => Value::Int(80500),
         b"PHP_MAJOR_VERSION" | b"PHP_INT_SIZE" => Value::Int(8),
         b"PHP_MINOR_VERSION" => Value::Int(5),
-        b"PHP_RELEASE_VERSION" | b"COUNT_NORMAL" => Value::Int(0),
+        b"PHP_RELEASE_VERSION" | b"COUNT_NORMAL" | b"STR_PAD_LEFT" => Value::Int(0),
         b"PHP_EXTRA_VERSION" => Value::String(Vec::new().into()),
         b"PHP_INT_MAX" => Value::Int(i64::MAX),
         b"PHP_INT_MIN" => Value::Int(i64::MIN),
@@ -182,8 +185,10 @@ fn predefined(name: &[u8]) -> Option<Value> {
         } else {
             b":".to_vec().into()
         }),
-        b"COUNT_RECURSIVE" | b"E_ERROR" | b"ARRAY_FILTER_USE_BOTH" => Value::Int(1),
-        b"E_WARNING" | b"ARRAY_FILTER_USE_KEY" => Value::Int(2),
+        b"COUNT_RECURSIVE" | b"E_ERROR" | b"ARRAY_FILTER_USE_BOTH" | b"STR_PAD_RIGHT" => {
+            Value::Int(1)
+        }
+        b"E_WARNING" | b"ARRAY_FILTER_USE_KEY" | b"STR_PAD_BOTH" => Value::Int(2),
         b"E_PARSE" => Value::Int(4),
         b"E_NOTICE" => Value::Int(8),
         b"E_CORE_ERROR" => Value::Int(16),

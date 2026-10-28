@@ -827,6 +827,32 @@ and upstream fixtures establish these behaviors. Remaining related fixtures requ
 other APIs; native reflection metadata, INI configuration, streams, broader string APIs,
 and diagnostic matching remain incomplete.
 
+The [byte-string helper slice](conformance/php-8.5.0-byte-helpers-hillclimb.txt) adds
+**17 upstream passes**: 16 standard string fixtures and one Zend fixture, with no
+regressions across strings, Zend, reflection, and SPL. It implements `hex2bin`, `ucfirst`,
+`lcfirst`, `ucwords`, `nl2br`, `count_chars`, `strpbrk`, and `str_pad`, plus the three
+`STR_PAD_*` constants with standard-extension metadata. Hex decoding rejects odd lengths
+and invalid digits with warnings/false. Case conversion is ASCII-only; word separators
+use PHP character masks, and each separator check observes earlier capitalization.
+Newline insertion preserves original CR/LF bytes and treats opposite newline pairs as one.
+
+Character counts return ordered byte counts or byte sets according to mode; character-set
+search returns the first matching suffix. Padding supports repeated byte patterns on the
+left, right, or both sides, assigning an odd extra byte to the right and restarting the
+pattern on each side. Parameter conversion precedes the no-padding return; empty patterns
+and invalid pad modes are checked only when padding is needed.
+
+The full string suite reaches **299 / 279 / 152**, and Zend **1664 / 3184 / 408**.
+Reflection remains **244 / 211 / 37**, and SPL **18 / 666 / 94**. All 797 existing Rust
+tests and 57 reference-checked project fixtures pass; formatting and Clippy pass. The two
+upstream padding fixtures requesting `precision=14` also match PHP output/exit without
+diagnostics when executed directly; they remain unsupported in runner counts. Direct
+execution of the INI-bearing ucfirst/lcfirst fixtures remains blocked by deprecated
+interpolation syntax. No custom tests were added. PHP 8.5.0 string implementations,
+signatures, constants, and upstream fixtures establish these rules. Diagnostic matching,
+INI/memory settings, deprecated interpolation, other APIs, and complete native reflection
+metadata remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -834,11 +860,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1663 | 3185 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1664 | 3184 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 283 | 295 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 299 | 279 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

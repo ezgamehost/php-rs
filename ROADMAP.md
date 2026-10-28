@@ -220,6 +220,9 @@ definition of completion.
    escapes, and distinct trailing-backslash rules.
    Tag stripping follows PHP’s HTML/PHP/declaration/comment states, preserves allowed tags
    from string or array lists, and handles nested brackets, quotes, XML/doctype, and NUL.
+   Hex decoding, first-byte/word capitalization, newline insertion, character counts,
+   character-set suffix search, and left/right/both padding are implemented. Padding
+   constants retain standard-extension reflection metadata.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

@@ -337,6 +337,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `stripslashes`, `addcslashes`, and `stripcslashes` for binary escaping/unescaping.
 - `strip_tags` handles HTML/PHP/comment states and string or array allowed-tag lists,
   including PHP’s quoted-content, malformed-tag, whitespace, and NUL behavior.
+- `hex2bin`, `ucfirst`/`lcfirst`/`ucwords`, `nl2br`, `count_chars`, `strpbrk`, and
+  `str_pad` with all three padding constants and binary byte semantics.
 
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
 generators, complete attribute behavior, extensions, and most PHP 8.5 additions.

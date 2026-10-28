@@ -54,6 +54,7 @@ mod scope_slots;
 mod sensitive_parameters;
 mod static_members;
 mod string_builtins;
+mod string_bytes;
 mod string_measure;
 mod string_offsets;
 mod string_replace;

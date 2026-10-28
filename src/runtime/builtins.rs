@@ -26,6 +26,13 @@ pub(super) enum Builtin {
     StrTranslate,
     SlashEscape(bool, bool),
     StripTags,
+    Hex2Bin,
+    FirstCase(bool),
+    Ucwords,
+    Nl2Br,
+    CountChars,
+    StrPad,
+    StrPbrk,
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -129,6 +136,14 @@ impl Builtin {
             b"addcslashes" => Self::SlashEscape(true, true),
             b"stripcslashes" => Self::SlashEscape(false, true),
             b"strip_tags" => Self::StripTags,
+            b"hex2bin" => Self::Hex2Bin,
+            b"ucfirst" => Self::FirstCase(true),
+            b"lcfirst" => Self::FirstCase(false),
+            b"ucwords" => Self::Ucwords,
+            b"nl2br" => Self::Nl2Br,
+            b"count_chars" => Self::CountChars,
+            b"str_pad" => Self::StrPad,
+            b"strpbrk" => Self::StrPbrk,
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -249,6 +264,17 @@ impl Builtin {
             }
             Self::SlashEscape(..) => &[("string", false, false)],
             Self::StripTags => &[("string", false, false), ("allowed_tags", true, false)],
+            Self::Hex2Bin | Self::FirstCase(_) => &[("string", false, false)],
+            Self::Ucwords => &[("string", false, false), ("separators", true, false)],
+            Self::Nl2Br => &[("string", false, false), ("use_xhtml", true, false)],
+            Self::CountChars => &[("string", false, false), ("mode", true, false)],
+            Self::StrPad => &[
+                ("string", false, false),
+                ("length", false, false),
+                ("pad_string", true, false),
+                ("pad_type", true, false),
+            ],
+            Self::StrPbrk => &[("string", false, false), ("characters", false, false)],
             Self::StrTranslate => &[
                 ("string", false, false),
                 ("from", false, false),
@@ -370,6 +396,13 @@ impl Builtin {
                 implicit_nullable: false,
                 default: optional.then_some(Expr {
                     kind: ExprKind::Literal(match (self, *name) {
+                        (Self::Ucwords, "separators") => {
+                            Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
+                        }
+                        (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
+                        (Self::CountChars, "mode") => Value::Int(0),
+                        (Self::StrPad, "pad_string") => Value::String(b" ".to_vec().into()),
+                        (Self::StrPad, "pad_type") => Value::Int(1),
                         (Self::Explode, "limit") => Value::Int(i64::MAX),
                         (Self::StrSplit, "length") => Value::Int(1),
                         (Self::ChunkSplit, "length") => Value::Int(76),
@@ -495,6 +528,13 @@ impl Runtime {
             Builtin::StrTranslate => self.translate_string(&args, line),
             Builtin::SlashEscape(add, c_style) => self.escape_slashes(add, c_style, &args, line),
             Builtin::StripTags => self.strip_tags(&args, line),
+            Builtin::Hex2Bin
+            | Builtin::FirstCase(_)
+            | Builtin::Ucwords
+            | Builtin::Nl2Br
+            | Builtin::CountChars
+            | Builtin::StrPad
+            | Builtin::StrPbrk => self.byte_string_builtin(builtin, &args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
