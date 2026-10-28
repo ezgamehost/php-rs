@@ -33,6 +33,13 @@ impl Runtime {
             }
             let key = self.instance_property_key(object, &location.name);
             let existing = object.properties.borrow().get(&key).cloned();
+            if !location.keys.is_empty()
+                && let Some(value) = &existing
+                && matches!(value.dereferenced(), Value::Object(_) | Value::Closure(_))
+            {
+                self.check_instance_property_access(object, &location.name, false, line)?;
+                return Ok(cell(value.dereferenced()));
+            }
             // PHP permits fetching a restricted object property for indirect
             // object mutation, but the fetched handle cannot rebind its slot.
             if let Some(value) = &existing

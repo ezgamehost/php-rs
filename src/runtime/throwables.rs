@@ -4,6 +4,7 @@ use crate::object::{Class, ThrowableData};
 
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
+        b"arrayaccess" => ("ArrayAccess", None),
         b"unitenum" => ("UnitEnum", None),
         b"backedenum" => ("BackedEnum", None),
         b"stringable" => ("Stringable", None),
@@ -45,7 +46,15 @@ impl Runtime {
         }
         // Parse internal declarations with the same signature representation as
         // user methods; native bodies are dispatched explicitly, never as PHP.
-        let code = if canonical == "UnitEnum" {
+        let code = if canonical == "ArrayAccess" {
+            "<?php interface ArrayAccess {
+                public function offsetExists(mixed $offset): bool;
+                public function offsetGet(mixed $offset): mixed;
+                public function offsetSet(mixed $offset, mixed $value): void;
+                public function offsetUnset(mixed $offset): void;
+            }"
+            .to_owned()
+        } else if canonical == "UnitEnum" {
             "<?php interface UnitEnum { public static function cases(): array; }".to_owned()
         } else if canonical == "BackedEnum" {
             "<?php interface BackedEnum extends UnitEnum { public static function from(int|string $value): static; public static function tryFrom(int|string $value): ?static; }".to_owned()
@@ -85,6 +94,10 @@ impl Runtime {
         for function in &mut Rc::make_mut(&mut declaration).methods {
             let function = Rc::make_mut(function);
             if function.is_abstract {
+                function.native = Some(NativeMethod::Abstract);
+                if canonical == "ArrayAccess" {
+                    function.tentative_return_type = function.return_type.take();
+                }
                 continue;
             }
             function.native = Some(match function.name.rsplit(|b| *b == b':').next().unwrap() {
@@ -204,7 +217,8 @@ impl Runtime {
             | NativeMethod::AttributeConstruct
             | NativeMethod::SensitiveValue
             | NativeMethod::Reflection
-            | NativeMethod::Enum => unreachable!(),
+            | NativeMethod::Enum
+            | NativeMethod::Abstract => unreachable!(),
             NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {
                     unreachable!()

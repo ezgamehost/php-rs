@@ -8,6 +8,16 @@ pub(super) struct Scope {
     slots: HashSet<Vec<u8>>,
 }
 
+impl Drop for Scope {
+    fn drop(&mut self) {
+        // Zend releases compiled locals in slot order. HashMap's randomized
+        // drop order otherwise makes recycled object handles nondeterministic.
+        for name in &self.order {
+            self.values.remove(name);
+        }
+    }
+}
+
 impl Scope {
     pub(super) fn reserve(&mut self, name: &[u8]) {
         if self.slots.insert(name.to_vec()) && !self.values.contains_key(name) {

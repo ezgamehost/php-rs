@@ -362,30 +362,35 @@ impl Runtime {
         {
             return Ok(());
         }
-        let mut value = if let Some(object) = &location.object {
-            object
-                .properties
-                .borrow()
-                .get(&self.instance_property_key(object, &location.name))
-                .cloned()
-        } else if let Some(class) = &location.static_class {
-            self.static_cell(class, &location.name, line, false)?
-                .map(Value::Reference)
+        let reference = if let Some(reference) = &location.offset_reference {
+            reference.clone()
         } else {
-            self.location_scope(location)
-                .get(&location.name)
-                .cloned()
-                .map(Value::Reference)
-        };
-        for key in &mut location.keys {
-            let Some(Value::Array(array)) = value.map(|v| v.dereferenced()) else {
+            let mut value = if let Some(object) = &location.object {
+                object
+                    .properties
+                    .borrow()
+                    .get(&self.instance_property_key(object, &location.name))
+                    .cloned()
+            } else if let Some(class) = &location.static_class {
+                self.static_cell(class, &location.name, line, false)?
+                    .map(Value::Reference)
+            } else {
+                self.location_scope(location)
+                    .get(&location.name)
+                    .cloned()
+                    .map(Value::Reference)
+            };
+            for key in &mut location.keys {
+                let Some(Value::Array(array)) = value.map(|v| v.dereferenced()) else {
+                    return Ok(());
+                };
+                let key = key.array_key(line, false, &mut self.diagnostics)?;
+                value = array.get(&key).cloned();
+            }
+            let Some(Value::Reference(reference)) = value else {
                 return Ok(());
             };
-            let key = key.array_key(line, false, &mut self.diagnostics)?;
-            value = array.get(&key).cloned();
-        }
-        let Some(Value::Reference(reference)) = value else {
-            return Ok(());
+            reference
         };
         for source in self.reference_sources(&reference) {
             let ty = source.property.ty.as_ref().unwrap();

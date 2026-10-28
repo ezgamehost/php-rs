@@ -153,6 +153,7 @@ impl Runtime {
                 }
                 let value = value.dereferenced();
                 let mut location = Location {
+                    offset_reference: None,
                     overloaded: None,
                     object: Some(object.clone()),
                     static_class: None,

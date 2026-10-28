@@ -96,7 +96,7 @@ impl Runtime {
     ) -> Result<Value, Error> {
         match value {
             Value::Array(_) | Value::Object(_) | Value::Closure(_) => {
-                read_offset(value, offset, line, Access::Read, &mut self.diagnostics)
+                self.read_offset(value, offset, line, Access::Read)
             }
             Value::Null => Ok(Value::Null),
             other => {

@@ -121,6 +121,9 @@ impl Runtime {
             ));
         }
         self.check_instance_property_access(object, &location.name, false, line)?;
+        if indirect && !location.keys.is_empty() && self.object_offset_root(location) {
+            return Ok(());
+        }
         let Some(owner) = self.instance_property_owner(&object.class, &location.name) else {
             return Ok(());
         };

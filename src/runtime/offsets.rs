@@ -26,6 +26,9 @@ pub(super) struct Offset {
     array_key: Option<ArrayKey>,
 }
 impl Offset {
+    pub(super) fn argument(&self) -> Value {
+        self.value.clone().unwrap_or(Value::Null)
+    }
     pub(super) fn is_append(&self) -> bool {
         self.value.is_none()
     }

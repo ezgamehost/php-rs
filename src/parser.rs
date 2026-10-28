@@ -633,6 +633,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            tentative_return_type: None,
             end_line: self.tokens[self.pos - 1].line,
             attributes: Vec::new(),
             returns_reference,

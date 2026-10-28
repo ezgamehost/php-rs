@@ -124,6 +124,7 @@ impl Runtime {
         for name in names {
             let value = self.lookup(name).expect("bound constructor argument");
             let mut location = Location {
+                offset_reference: None,
                 object: Some(object.clone()),
                 static_class: None,
                 overloaded: None,

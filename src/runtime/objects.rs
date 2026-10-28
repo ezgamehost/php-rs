@@ -778,6 +778,7 @@ impl Runtime {
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
                     Some(Location {
+                        offset_reference: None,
                         overloaded: None,
                         static_class: None,
                         object: Some(object),

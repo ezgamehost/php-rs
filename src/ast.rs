@@ -134,6 +134,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
+    Abstract,
     Enum,
     Reflection,
     AttributeConstruct,
@@ -365,6 +366,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub tentative_return_type: Option<TypeDecl>,
     pub end_line: usize,
     pub attributes: Vec<Attribute>,
     pub returns_reference: bool,

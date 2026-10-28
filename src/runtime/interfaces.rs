@@ -31,7 +31,7 @@ impl Runtime {
         Ok(interfaces)
     }
 
-    pub(super) fn validate_interfaces(&self, class: &Class) -> Result<(), Error> {
+    pub(super) fn validate_interfaces(&mut self, class: &Class) -> Result<(), Error> {
         for interface in &class.interfaces {
             for required in &interface.methods {
                 let name = required.name.rsplit(|b| *b == b':').next().unwrap();
@@ -48,6 +48,28 @@ impl Runtime {
                             String::from_utf8_lossy(&required.name)
                         ),
                         class.declaration.line,
+                    ));
+                }
+            }
+            for required in &interface.methods {
+                let name = required.name.rsplit(|b| *b == b':').next().unwrap();
+                let implementation = objects::method(class, name).unwrap();
+                if let Some(tentative) = &required.tentative_return_type
+                    && implementation.native.is_none()
+                    && (implementation.return_type.is_none()
+                        || !self.type_subset(
+                            implementation.return_type.as_ref(),
+                            Some(tentative),
+                            class,
+                        ))
+                    && !implementation
+                        .attributes
+                        .iter()
+                        .any(|a| a.name.eq_ignore_ascii_case(b"ReturnTypeWillChange"))
+                {
+                    self.diagnostics.push(format!(
+                        "Deprecated: Return type of {} should either be compatible with {}: {tentative}, or the #[\\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice on line {}",
+                        method_signature(&implementation), method_signature(required), implementation.line
                     ));
                 }
             }
@@ -115,4 +137,49 @@ impl Runtime {
         }
         Ok(())
     }
+}
+
+fn method_signature(function: &FunctionDecl) -> String {
+    let parameters = function
+        .parameters
+        .iter()
+        .map(|p| {
+            let mut parameter = format!(
+                "{}{}{}${}",
+                p.ty.as_ref().map_or(String::new(), |ty| format!("{ty} ")),
+                if p.by_reference { "&" } else { "" },
+                if p.variadic { "..." } else { "" },
+                String::from_utf8_lossy(&p.name)
+            );
+            if let Some(Expr {
+                kind: ExprKind::Literal(value),
+                ..
+            }) = &p.default
+            {
+                parameter.push_str(" = ");
+                parameter.push_str(&match value {
+                    Value::Null => "null".to_owned(),
+                    Value::Bool(value) => value.to_string(),
+                    Value::String(value) => format!(
+                        "'{}'",
+                        String::from_utf8_lossy(&value.bytes())
+                            .replace('\\', "\\\\")
+                            .replace('\'', "\\'")
+                    ),
+                    _ => String::from_utf8_lossy(&value.to_bytes()).into_owned(),
+                });
+            }
+            parameter
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}{}({parameters}){}",
+        if function.returns_reference { "& " } else { "" },
+        String::from_utf8_lossy(&function.name),
+        function
+            .return_type
+            .as_ref()
+            .map_or(String::new(), |ty| format!(": {ty}"))
+    )
 }

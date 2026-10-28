@@ -515,13 +515,7 @@ impl Runtime {
                 (value, Some(reference))
             } else {
                 (
-                    read_offset(
-                        source.borrow().clone(),
-                        &mut offset,
-                        line,
-                        Access::Read,
-                        &mut self.diagnostics,
-                    )?,
+                    self.read_offset(source.borrow().clone(), &mut offset, line, Access::Read)?,
                     None,
                 )
             };

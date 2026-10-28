@@ -624,6 +624,33 @@ Passing a generator-containing fixture that fails during argument checking does 
 establish generator execution support. Uncaught fatal rendering, diagnostic output
 interleaving, and remaining type-system behavior are still incomplete.
 
+The [ArrayAccess slice](conformance/php-8.5.0-array-access-hillclimb.txt) adds
+**29 upstream passes**: 28 Zend and one SPL, with zero regressions across Zend,
+reflection, and SPL. Object offsets dispatch to offsetExists/Get/Set/Unset with the
+original, uncoerced offset values. Reads, isset/empty, coalescing, append, unset,
+assignment, and destructuring preserve their distinct dispatch rules. Nested writes
+and reference acquisition retain reference-returning getters; non-reference scalar
+and array results emit indirect-modification notices and mutate temporary storage.
+Compound assignment calls offsetSet, while increments mutate returned references and
+retain typed-property overflow checks. ArrayAccess access is rejected in constant
+expressions.
+
+Runtime callbacks execute after storage borrows are released. Object-valued property
+roots allow interior offset mutation without rebinding readonly/asymmetric slots or
+restoring a property replaced during a callback. The native interface carries tentative
+return types for reflection and compatibility warnings, with ReturnTypeWillChange
+suppression. Native abstract methods are marked internal. Full comparisons also exposed
+randomized scope-destruction order affecting recycled object IDs; local scopes now drop
+values in PHP variable-slot order, making the affected enum/reflection cases stable.
+
+The final Zend result is **1643 passed / 3205 failed / 408 unsupported**; reflection
+remains **244 / 211 / 37**, and SPL improves to **18 / 666 / 94**. All 797 existing Rust
+tests and 57 reference-checked project fixtures pass; formatting and Clippy pass. No
+custom tests were added. Behavior follows PHP 8.5.0 object dimension handlers, the
+ArrayAccess declaration, compiled-variable cleanup, and upstream fixtures. Complete
+nested compound-assignment caching, tentative-return inheritance/formatting, other
+container APIs, destructors/GC, and diagnostic output matching remain unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -631,9 +658,9 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1615 | 3233 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1643 | 3205 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 17 | 667 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |

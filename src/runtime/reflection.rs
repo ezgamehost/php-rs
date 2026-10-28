@@ -659,6 +659,7 @@ impl Runtime {
                     let strict = std::mem::replace(&mut self.strict_types, false);
                     let result = self.write_static_location(
                         &mut Location {
+                            offset_reference: None,
                             static_class: Some(class.clone()),
                             object: None,
                             overloaded: None,

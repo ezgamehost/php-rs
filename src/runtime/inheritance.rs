@@ -90,7 +90,7 @@ impl Runtime {
         false
     }
 
-    pub(super) fn validate_overrides(&self, class: &Class) -> Result<(), Error> {
+    pub(super) fn validate_overrides(&mut self, class: &Class) -> Result<(), Error> {
         if class.declaration.is_trait {
             return Ok(());
         }

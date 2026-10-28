@@ -379,6 +379,7 @@ impl Runtime {
                 };
                 self.write_location(
                     &mut Location {
+                        offset_reference: None,
                         static_class: property.is_static.then(|| property.scope.clone()),
                         object,
                         name: property.name.clone(),

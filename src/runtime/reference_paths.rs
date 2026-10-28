@@ -5,6 +5,7 @@ use variables::Cell;
 /// referent is borrowed, which also permits paths through recursive arrays.
 enum Step {
     Follow(Cell, usize),
+    Object(Rc<crate::PhpObject>, usize),
     Done(Value),
 }
 enum Mutation {
@@ -51,6 +52,9 @@ fn step(
     }
     if let Value::Reference(reference) = value {
         return Ok(Step::Follow(reference.clone(), 0));
+    }
+    if let Value::Object(object) = value {
+        return Ok(Step::Object(object.clone(), 0));
     }
     let (offset, rest) = keys.split_first_mut().expect("nonterminal array path");
     if matches!(mutation, Mutation::Unset) {
@@ -147,6 +151,7 @@ fn step(
 fn advance(result: Step) -> Result<Step, Error> {
     Ok(match result {
         Step::Follow(reference, consumed) => Step::Follow(reference, consumed + 1),
+        Step::Object(object, consumed) => Step::Object(object, consumed + 1),
         result => result,
     })
 }
@@ -161,6 +166,39 @@ fn finish(
     loop {
         match result {
             Step::Done(value) => return Ok(value),
+            Step::Object(object, consumed) => {
+                keys = &mut keys[consumed..];
+                runtime.check_array_access(&object, line)?;
+                let key = keys[0].argument();
+                if keys.len() == 1 {
+                    match mutation {
+                        Mutation::Write(value) => {
+                            runtime.array_access_call(
+                                &object,
+                                b"offsetSet",
+                                vec![key, value.clone()],
+                                line,
+                            )?;
+                            return Ok(value.clone());
+                        }
+                        Mutation::Unset => {
+                            runtime.array_access_call(&object, b"offsetUnset", vec![key], line)?;
+                            return Ok(Value::Null);
+                        }
+                        Mutation::Bind(_) => {
+                            return Err(Error::new(
+                                ErrorKind::Error,
+                                "Cannot assign by reference to an array dimension of an object",
+                                line,
+                            ));
+                        }
+                        Mutation::Acquire => {}
+                    }
+                }
+                let value = runtime.array_access_call(&object, b"offsetGet", vec![key], line)?;
+                runtime.warn_indirect_array_access(&object, &value, line);
+                result = Step::Follow(cell(value), 1);
+            }
             Step::Follow(reference, consumed) => {
                 keys = &mut keys[consumed..];
                 if keys.is_empty()

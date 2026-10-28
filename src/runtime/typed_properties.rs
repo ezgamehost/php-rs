@@ -140,7 +140,12 @@ impl Runtime {
             .expect("property owner");
         let mut value = stored.as_ref().map_or(Value::Null, |c| c.borrow().clone());
         self.check_property_array_init(location, &value, line)?;
+        let object_offset =
+            !location.keys.is_empty() && matches!(value.dereferenced(), Value::Object(_));
         let result = write_path(&mut value, &mut location.keys, new_value, line, self)?;
+        if object_offset {
+            return Ok(result);
+        }
         let value = self.check_property_value(&owner, property, value, self.strict_types, line)?;
         let value = if let Some(stored) = stored {
             self.write_reference_value(&stored, value, self.strict_types, line)?

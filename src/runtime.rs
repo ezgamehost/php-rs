@@ -11,6 +11,7 @@ use std::{
     rc::Rc,
 };
 
+mod array_access;
 mod array_callbacks;
 mod attributes;
 mod autoload;
@@ -62,7 +63,7 @@ mod traits;
 mod typed_properties;
 mod types;
 mod variables;
-use offsets::{Access, Offset, read_offset};
+use offsets::{Access, Offset};
 use reference_paths::{unset as unset_path, write as write_path};
 use variables::{Scope, cell};
 
@@ -105,12 +106,26 @@ pub struct Runtime {
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
 }
 struct Location {
+    offset_reference: Option<variables::Cell>,
     overloaded: Option<Value>,
     static_class: Option<Rc<crate::object::Class>>,
     object: Option<Rc<crate::PhpObject>>,
     name: Vec<u8>,
     global: bool,
     keys: Vec<Offset>,
+}
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ReadModify {
+    Assign,
+    Increment,
+}
+impl ReadModify {
+    fn string_error(self) -> &'static str {
+        match self {
+            Self::Assign => "Cannot use assign-op operators with string offsets",
+            Self::Increment => "Cannot increment/decrement string offsets",
+        }
+    }
 }
 enum Flow {
     Next,
@@ -355,8 +370,12 @@ impl Runtime {
                         } else {
                             let stored = object.properties.borrow().get(&key).cloned();
                             if let Some(mut value) = stored {
+                                let object_offset =
+                                    matches!(value.dereferenced(), Value::Object(_));
                                 unset_path(&mut value, &mut location.keys, target.line, self)?;
-                                object.properties.borrow_mut().insert(key, value);
+                                if !object_offset {
+                                    object.properties.borrow_mut().insert(key, value);
+                                }
                             }
                         }
                     } else if location.keys.is_empty() {
@@ -413,6 +432,7 @@ impl Runtime {
     fn location(&mut self, expr: &Expr) -> Result<Location, Error> {
         match &expr.kind {
             ExprKind::Variable(name) => Ok(Location {
+                offset_reference: None,
                 overloaded: None,
                 static_class: None,
                 object: None,
@@ -421,6 +441,7 @@ impl Runtime {
                 keys: Vec::new(),
             }),
             ExprKind::DynamicVariable(name) => Ok(Location {
+                offset_reference: None,
                 overloaded: None,
                 static_class: None,
                 object: None,
@@ -444,6 +465,7 @@ impl Runtime {
                     ));
                 };
                 Ok(Location {
+                    offset_reference: None,
                     overloaded: None,
                     static_class: None,
                     object: Some(object),
@@ -458,6 +480,7 @@ impl Runtime {
                     Error::new(ErrorKind::Error, "Cannot append to $GLOBALS", expr.line)
                 })?;
                 Ok(Location {
+                    offset_reference: None,
                     overloaded: None,
                     static_class: None,
                     object: None,
@@ -487,7 +510,7 @@ impl Runtime {
         location: &mut Location,
         line: usize,
         silent: bool,
-        string_error: Option<&str>,
+        modify: Option<ReadModify>,
     ) -> Result<Value, Error> {
         if let Some(object) = &location.object {
             let overloaded = !silent
@@ -508,32 +531,14 @@ impl Runtime {
                 location.overloaded = Some(value.clone());
             }
             value = value.dereferenced();
-            for key in &mut location.keys {
-                if matches!(value, Value::String(_))
-                    && let Some(message) = string_error
-                {
-                    return Err(Error::new(ErrorKind::Error, message, line));
-                }
-                value = read_offset(
-                    value,
-                    key,
-                    line,
-                    if silent {
-                        Access::Coalesce
-                    } else {
-                        Access::Read
-                    },
-                    &mut self.diagnostics,
-                )?;
-            }
-            return Ok(value);
+            return self.read_location_offsets(value, location, line, silent, modify);
         }
         let stored = if let Some(class) = &location.static_class {
             self.static_cell(class, &location.name, line, silent)?
         } else {
             self.location_scope(location).get(&location.name).cloned()
         };
-        let mut value = match stored {
+        let value = match stored {
             Some(value) => value.borrow().clone(),
             None => {
                 if !silent {
@@ -557,25 +562,7 @@ impl Runtime {
                 Value::Null
             }
         };
-        for key in &mut location.keys {
-            if matches!(value, Value::String(_))
-                && let Some(message) = string_error
-            {
-                return Err(Error::new(ErrorKind::Error, message, line));
-            }
-            value = read_offset(
-                value,
-                key,
-                line,
-                if silent {
-                    Access::Coalesce
-                } else {
-                    Access::Read
-                },
-                &mut self.diagnostics,
-            )?;
-        }
-        Ok(value)
+        self.read_location_offsets(value, location, line, silent, modify)
     }
     fn write_location(
         &mut self,
@@ -624,7 +611,11 @@ impl Runtime {
                 .cloned()
                 .unwrap_or(Value::Null);
             self.check_property_array_init(location, &value, line)?;
+            let object_offset = matches!(value.dereferenced(), Value::Object(_));
             let result = write_path(&mut value, &mut location.keys, new_value, line, self)?;
+            if object_offset {
+                return Ok(result);
+            }
             let value = self.write_property_value(object, &location.name, value, line)?;
             return Ok(if location.keys.is_empty() {
                 value
@@ -682,13 +673,7 @@ impl Runtime {
             ExprKind::Index(base, Some(key)) => {
                 let value = self.coalesce_read(base, access.intermediate())?;
                 let key = self.eval(key)?;
-                read_offset(
-                    value,
-                    &mut Offset::new(Some(key)),
-                    expr.line,
-                    access,
-                    &mut self.diagnostics,
-                )
+                self.read_offset(value, &mut Offset::new(Some(key)), expr.line, access)
             }
             _ => self.eval(expr),
         }
@@ -851,13 +836,7 @@ impl Runtime {
                     Error::new(ErrorKind::Error, "Cannot use [] for reading", line)
                 })?;
                 let key = self.eval(key)?;
-                read_offset(
-                    value,
-                    &mut Offset::new(Some(key)),
-                    line,
-                    Access::Read,
-                    &mut self.diagnostics,
-                )
+                self.read_offset(value, &mut Offset::new(Some(key)), line, Access::Read)
             }
             ExprKind::Isset(args) => {
                 for arg in args {
@@ -951,12 +930,8 @@ impl Runtime {
                 } else {
                     // The RHS may change the target's value before PHP reads it.
                     let rhs = self.eval(expr)?;
-                    let lhs = self.read_location(
-                        &mut location,
-                        line,
-                        false,
-                        Some("Cannot use assign-op operators with string offsets"),
-                    )?;
+                    let lhs =
+                        self.read_location(&mut location, line, false, Some(ReadModify::Assign))?;
                     self.check_static_set_access(&location, true, line)?;
                     self.binary(&op[..op.len() - 1], lhs, rhs, line)?
                 };
@@ -964,18 +939,18 @@ impl Runtime {
             }
             ExprKind::Increment(target, delta, prefix) => {
                 let mut location = self.location(target)?;
-                let old = self.read_location(
-                    &mut location,
-                    line,
-                    false,
-                    Some("Cannot increment/decrement string offsets"),
-                )?;
+                let old =
+                    self.read_location(&mut location, line, false, Some(ReadModify::Increment))?;
                 self.check_readonly_write(&location, false, line)?;
                 self.check_static_set_access(&location, true, line)?;
                 self.validate_property_increment(&location, &old, *delta, line)?;
                 self.validate_reference_increment(&mut location, &old, *delta, line)?;
                 let new = increment(&old, *delta, line, &mut self.diagnostics)?;
-                let new = self.write_location(&mut location, new, line)?;
+                let new = if let Some(reference) = &location.offset_reference {
+                    self.write_reference_value(reference, new, self.strict_types, line)?
+                } else {
+                    self.write_location(&mut location, new, line)?
+                };
                 Ok(if *prefix { new } else { old })
             }
             ExprKind::Conditional(cond, yes, no) => {

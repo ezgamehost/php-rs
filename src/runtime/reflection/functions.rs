@@ -288,8 +288,15 @@ impl Runtime {
                 Some(ty) => self.reflection_type(ty),
                 None => Value::Null,
             },
-            b"hastentativereturntype" => Value::Bool(false),
-            b"gettentativereturntype" => Value::Null,
+            b"hastentativereturntype" => {
+                Value::Bool(function.is_some_and(|f| f.tentative_return_type.is_some()))
+            }
+            b"gettentativereturntype" => {
+                match function.and_then(|f| f.tentative_return_type.clone()) {
+                    Some(ty) => self.reflection_type(ty),
+                    None => Value::Null,
+                }
+            }
             b"getattributes" => {
                 return self.reflected_attributes(
                     function.map_or(&[], |f| &f.attributes),

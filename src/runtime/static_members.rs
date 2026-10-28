@@ -285,6 +285,7 @@ impl Runtime {
         let name = self.variable_name(name)?;
         let class = self.require_member_class(&class_name, line)?;
         Ok(Location {
+            offset_reference: None,
             overloaded: None,
             object: None,
             static_class: Some(class),
@@ -385,6 +386,11 @@ impl Runtime {
         let Some(owner) = class.static_owner(&location.name) else {
             return Ok(());
         };
+        if indirect && !location.keys.is_empty() && self.object_offset_root(location) {
+            return self
+                .check_static_property_access(class, &owner, &location.name, line, false)
+                .map(|_| ());
+        }
         let property = owner
             .declaration
             .static_properties

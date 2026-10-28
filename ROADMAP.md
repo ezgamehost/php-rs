@@ -189,6 +189,13 @@ definition of completion.
    User-function argument-count/type diagnostics retain declaration locations,
    PHP calling locations, and the distinction between named gaps and positional
    omissions. Internal callback/reflection invocations omit PHP calling locations.
+   ArrayAccess dispatches object offsets through offsetExists/Get/Set/Unset, including
+   append, probes/coalescing, destructuring, nested reference mutations, and typed
+   increments through reference-returning getters. Object roots retain identity through
+   restricted properties and reentrant callbacks. Native abstract method metadata and
+   tentative return-type reflection/compatibility warnings are supported for this interface.
+   Complete nested compound-assignment caching and tentative-return inheritance/formatting
+   remain unfinished. Local scopes release values in PHP slot order for stable handle reuse.
    Trait composition installs aliases before the original method, matching Zend.
    Formatted printing/string construction supports printf,
    sprintf, vprintf, and vsprintf, including positional arguments, star width/precision,

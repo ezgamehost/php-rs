@@ -30,6 +30,9 @@ impl Runtime {
             return Ok(());
         }
         self.check_instance_set_access(location, unset, indirect, line)?;
+        if indirect && !location.keys.is_empty() && self.object_offset_root(location) {
+            return Ok(());
+        }
         let Some(object) = &location.object else {
             return Ok(());
         };
@@ -152,6 +155,7 @@ impl Runtime {
                     Ok((
                         value.dereferenced(),
                         Some(Location {
+                            offset_reference: None,
                             overloaded: cached,
                             object: Some(object),
                             static_class: None,
@@ -186,7 +190,7 @@ impl Runtime {
                         expr.line,
                     ));
                 }
-                let value = read_offset(
+                let value = self.read_offset(
                     value,
                     &mut Offset::new(Some(key)),
                     expr.line,
@@ -195,7 +199,6 @@ impl Runtime {
                     } else {
                         Access::Read
                     },
-                    &mut self.diagnostics,
                 )?;
                 Ok((value, None))
             }

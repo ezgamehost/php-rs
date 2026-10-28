@@ -44,6 +44,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
   writes, append, array union and comparison, `unset`, `isset`, and `empty`.
 - Array unpacking with integer-key reindexing and string-key overwrites.
+- `ArrayAccess` object offsets support reads, assignment, append, unset, isset,
+  empty, coalescing, and destructuring. Nested mutation preserves reference-returning
+  getters; increments update returned references with typed-property constraints.
+  The interface exposes tentative return types and honors ReturnTypeWillChange.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.
