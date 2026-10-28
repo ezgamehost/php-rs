@@ -259,12 +259,7 @@ impl Runtime {
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
             Builtin::GetObjectVars => match first {
-                Value::Object(_) => casting::cast(
-                    crate::ast::CastKind::Array,
-                    first.clone(),
-                    line,
-                    &mut self.diagnostics,
-                ),
+                Value::Object(object) => Ok(Value::Array(Rc::new(self.object_variables(object)))),
                 Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),
                 _ => Err(Error::new(
                     ErrorKind::TypeError,
@@ -322,7 +317,7 @@ impl Runtime {
                     })
                 } else {
                     class.is_some_and(|c| {
-                        c.properties.iter().any(|p| p.name == member)
+                        c.property_owner(&member).is_some()
                             || c.static_owner(&member).is_some_and(|owner| {
                                 owner.name == c.name
                                     || owner.declaration.static_properties.iter().any(|p| {
@@ -330,7 +325,7 @@ impl Runtime {
                                             && p.visibility != crate::ast::Visibility::Private
                                     })
                             })
-                    }) || matches!(first, Value::Object(o) if o.properties.borrow().get(&ArrayKey::String(member)).is_some())
+                    }) || matches!(first, Value::Object(o) if self.check_instance_property_access(o, &member, true, line)? && o.properties.borrow().get(&self.instance_property_key(o, &member)).is_some())
                 };
                 Ok(Value::Bool(exists))
             }
@@ -647,9 +642,12 @@ fn dump_inner(
                 .properties
                 .iter()
                 .filter(|p| {
-                    p.ty.is_some() || properties.get(&ArrayKey::String(p.name.clone())).is_some()
+                    p.ty.is_some()
+                        || properties
+                            .get(&ArrayKey::String(p.storage_name()))
+                            .is_some()
                 })
-                .map(|p| ArrayKey::String(p.name.clone()))
+                .map(|p| ArrayKey::String(p.storage_name()))
                 .collect();
             for (key, _) in properties.entries() {
                 if !keys.contains(key) {
@@ -685,18 +683,14 @@ fn dump_inner(
                 if let Some(value) = properties.get(key) {
                     dump_inner(value, depth + 2, out, seen, line, warnings);
                 } else {
-                    let name = key.to_value().to_bytes();
-                    let owner = object
+                    let property = object
                         .class
-                        .property_owner(&name)
-                        .expect("typed property owner");
-                    let ty = owner
-                        .declaration
                         .properties
                         .iter()
-                        .find(|p| p.name == name)
-                        .and_then(|p| p.ty.as_ref())
-                        .expect("uninitialized typed property");
+                        .find(|p| ArrayKey::String(p.storage_name()) == *key)
+                        .expect("typed property slot");
+                    let owner = object.class.property_slot_owner(property);
+                    let ty = property.ty.as_ref().expect("uninitialized typed property");
                     out.extend(
                         format!(
                             "uninitialized({})\n",

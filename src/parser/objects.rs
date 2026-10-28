@@ -147,17 +147,14 @@ impl Parser {
                 }
                 *flag = true;
             }
-            if set_visibility.is_some()
-                && (!static_method || self.is("function") || self.is("const") || is_interface)
+            if set_visibility.is_some() && (self.is("function") || self.is("const") || is_interface)
             {
                 return Err(Error::parse(
-                    "Set visibility requires a static property",
+                    "Set visibility requires a property",
                     self.token().line,
                 ));
             }
-            if visibility != Visibility::Public
-                && ((!self.is("function") && !self.is("const") && !static_method) || is_interface)
-            {
+            if visibility != Visibility::Public && is_interface {
                 return Err(Error::parse(
                     "Invalid non-public member declaration",
                     self.token().line,
@@ -401,8 +398,13 @@ impl Parser {
                     }
                 }
                 self.expect(";")?;
-            } else if (public || static_method || readonly_property)
-                && (!final_method || static_method)
+            } else if public
+                || static_method
+                || readonly_property
+                || final_method
+                || set_visibility.is_some()
+                || matches!(self.token().kind, Kind::Word(_))
+                || self.is("?")
             {
                 if final_method && visibility == Visibility::Private {
                     return Err(Error::parse(
@@ -428,7 +430,13 @@ impl Parser {
                         self.token().line,
                     ));
                 }
-                let set_visibility = set_visibility.unwrap_or(visibility);
+                let set_visibility = set_visibility.unwrap_or(
+                    if (is_readonly || readonly_property) && visibility == Visibility::Public {
+                        Visibility::Protected
+                    } else {
+                        visibility
+                    },
+                );
                 if set_visibility < visibility {
                     return Err(Error::parse(
                         "Set visibility must not be wider than read visibility",
@@ -473,6 +481,7 @@ impl Parser {
                         ));
                     }
                     let property = PropertyDecl {
+                        declaring_class: Vec::new(),
                         visibility,
                         set_visibility,
                         is_final: final_method

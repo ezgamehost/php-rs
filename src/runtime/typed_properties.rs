@@ -78,7 +78,7 @@ impl Runtime {
             return Ok(());
         }
         let owner = if let Some(object) = &location.object {
-            object.class.property_owner(&location.name)
+            self.instance_property_owner(&object.class, &location.name)
         } else {
             location
                 .static_class

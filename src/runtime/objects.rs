@@ -203,10 +203,9 @@ impl Runtime {
                     })
                 })
             }) || decl.static_properties.iter().any(|p| {
-                parent
-                    .properties
-                    .iter()
-                    .any(|inherited| inherited.name == p.name)
+                parent.properties.iter().any(|inherited| {
+                    inherited.name == p.name && inherited.visibility != Visibility::Private
+                })
             }) {
                 return Err(Error::new(
                     ErrorKind::Error,
@@ -233,7 +232,12 @@ impl Runtime {
             .as_ref()
             .map_or_else(Vec::new, |p| p.properties.clone());
         for property in &decl.properties {
-            if let Some(slot) = properties.iter_mut().find(|p| p.name == property.name) {
+            let mut property = property.clone();
+            property.declaring_class = decl.name.clone();
+            if let Some(slot) = properties
+                .iter_mut()
+                .find(|p| p.name == property.name && p.visibility != Visibility::Private)
+            {
                 *slot = property.clone();
             } else {
                 properties.push(property.clone());
@@ -538,6 +542,9 @@ impl Runtime {
         line: usize,
         silent: bool,
     ) -> Result<Value, Error> {
+        if !self.check_instance_property_access(object, name, silent, line)? {
+            return Ok(Value::Null);
+        }
         if let Some(owner) = self.instance_static_owner(&object.class, name)
             && !self.check_static_property_access(&object.class, &owner, name, line, silent)?
         {
@@ -550,12 +557,12 @@ impl Runtime {
         if let Some(value) = object
             .properties
             .borrow()
-            .get(&ArrayKey::String(name.to_vec()))
+            .get(&self.instance_property_key(object, name))
         {
             return Ok(value.clone());
         }
         if !silent {
-            if let Some(owner) = object.class.property_owner(name)
+            if let Some(owner) = self.instance_property_owner(&object.class, name)
                 && owner
                     .declaration
                     .properties
@@ -590,8 +597,10 @@ impl Runtime {
             self.check_static_property_access(&object.class, &owner, name, line, false)?;
         }
         self.warn_static_as_instance(object, name, line);
-        let key = ArrayKey::String(name.to_vec());
-        if object.class.declaration.is_readonly && object.class.property_owner(name).is_none() {
+        let key = self.instance_property_key(object, name);
+        if object.class.declaration.is_readonly
+            && self.instance_property_owner(&object.class, name).is_none()
+        {
             return Err(Error::new(
                 ErrorKind::Error,
                 format!(
@@ -604,7 +613,7 @@ impl Runtime {
         }
         if object.properties.borrow().get(&key).is_none()
             && !object.class.allow_dynamic
-            && !object.class.properties.iter().any(|p| p.name == name)
+            && self.instance_property_owner(&object.class, name).is_none()
         {
             self.diagnostics.push(format!(
                 "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
@@ -612,7 +621,7 @@ impl Runtime {
                 String::from_utf8_lossy(name)
             ));
         }
-        let value = if let Some(owner) = object.class.property_owner(name) {
+        let value = if let Some(owner) = self.instance_property_owner(&object.class, name) {
             let property = owner
                 .declaration
                 .properties
@@ -623,8 +632,10 @@ impl Runtime {
         } else {
             value
         };
+        if let ArrayKey::String(key) = &key {
+            object.reinitializable.borrow_mut().remove(key);
+        }
         object.properties.borrow_mut().insert(key, value.clone());
-        object.reinitializable.borrow_mut().remove(name);
         Ok(value)
     }
 }
@@ -701,7 +712,7 @@ impl Runtime {
             let Some((key, value)) = properties
                 .entries()
                 .iter()
-                .find(|(key, _)| !visited.contains(key))
+                .find(|(key, _)| !visited.contains(key) && self.property_key_visible(object, key))
             else {
                 break;
             };

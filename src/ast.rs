@@ -268,6 +268,7 @@ pub(crate) enum TraitAdaptation {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PropertyDecl {
+    pub declaring_class: Vec<u8>,
     pub visibility: Visibility,
     pub set_visibility: Visibility,
     pub is_final: bool,
@@ -275,6 +276,26 @@ pub(crate) struct PropertyDecl {
     pub name: Vec<u8>,
     pub default: Option<Expr>,
     pub ty: Option<TypeDecl>,
+}
+
+impl PropertyDecl {
+    pub fn storage_name(&self) -> Vec<u8> {
+        self.storage_name_for(&self.declaring_class)
+    }
+    pub fn storage_name_for(&self, owner: &[u8]) -> Vec<u8> {
+        let mut key = Vec::new();
+        if self.visibility != Visibility::Public {
+            key.push(0);
+            key.extend(if self.visibility == Visibility::Private {
+                owner
+            } else {
+                b"*"
+            });
+            key.push(0);
+        }
+        key.extend(&self.name);
+        key
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -288,6 +309,8 @@ pub(crate) struct ClassConstant {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Promotion {
+    pub visibility: Visibility,
+    pub set_visibility: Option<Visibility>,
     pub is_readonly: bool,
 }
 

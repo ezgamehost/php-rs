@@ -77,10 +77,10 @@ definition of completion.
    implemented. Public static properties share inherited storage unless redeclared;
    public class constants support inheritance, final restrictions, dynamic names,
    lazy dependency resolution, strict type validation, and covariant type overrides.
-   Typed public instance/static properties support uninitialized state, strict
+   Typed instance/static properties support uninitialized state, strict
    defaults, assignment coercion, and invariant inherited declarations. Readonly
    properties/classes enforce initialization scope and mutation restrictions.
-   Public and readonly constructor promotion initializes properties before the
+   Constructor promotion with visibility/readonly modifiers initializes properties before the
    constructor body, with separate parameter defaults and property storage.
    Shallow object/closure cloning, inherited `__clone()`, readonly reinitialization,
    and PHP 8.5 clone-with property updates are implemented.
@@ -90,13 +90,16 @@ definition of completion.
    constants, type checks, and interface_exists.
    Private/protected methods support access checks, lexical private dispatch,
    constructor/clone visibility, and saved method callables.
+   Instance properties support private storage per declaring class, protected
+   prototype access, separate read/set visibility, scoped iteration/inspection,
+   mangled cast keys, final inheritance checks, and clone-with access checks.
    Traits support nested composition before inheritance, method precedence,
    `insteadof`, aliases, visibility/final adaptations, abstract requirements,
    property/constant compatibility checks, and lexical magic constants.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   property/constant visibility, property hooks, remaining magic methods, reflection, attributes, enums,
+   complete property/constant diagnostics, property hooks, remaining magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function

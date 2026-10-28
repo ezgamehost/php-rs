@@ -1,0 +1,96 @@
+Before: 5256 cases; 972 passed, 3876 failed, 408 unsupported
+After: 5256 cases; 1031 passed, 3817 failed, 408 unsupported
+New passes: 59; regressions: 0
+NEW PASS: Zend/tests/asymmetric_visibility/bug003.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/bug004.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/cpp_private.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/cpp_protected.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/decrease_scope_private_private.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/decrease_scope_protected_protected.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/dim_add.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/nested_write.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/override_protected_public.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/private.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/protected.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/unset.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/unshared_rw_cache_slot.phpt
+NEW PASS: Zend/tests/attributes/override/properties_11.phpt
+NEW PASS: Zend/tests/attributes/override/properties_12.phpt
+NEW PASS: Zend/tests/bug21888.phpt
+NEW PASS: Zend/tests/bug26010.phpt
+NEW PASS: Zend/tests/bug27798.phpt
+NEW PASS: Zend/tests/bug64555.phpt
+NEW PASS: Zend/tests/bug70478.phpt
+NEW PASS: Zend/tests/bug73989.phpt
+NEW PASS: Zend/tests/bug77922.phpt
+NEW PASS: Zend/tests/clone/clone_with_008.phpt
+NEW PASS: Zend/tests/clone/clone_with_011.phpt
+NEW PASS: Zend/tests/closures/closure_007.phpt
+NEW PASS: Zend/tests/closures/closure_037.phpt
+NEW PASS: Zend/tests/closures/closure_const_expr/property_initializer_scope_001.phpt
+NEW PASS: Zend/tests/constants/class_constant_to_reference_cached.phpt
+NEW PASS: Zend/tests/foreach/bug33171.phpt
+NEW PASS: Zend/tests/foreach/bug41929.phpt
+NEW PASS: Zend/tests/foreach/foreach_shadowed_property.phpt
+NEW PASS: Zend/tests/gh19044.phpt
+NEW PASS: Zend/tests/gh20177.phpt
+NEW PASS: Zend/tests/inheritance/bug37212.phpt
+NEW PASS: Zend/tests/inheritance/bug50810.phpt
+NEW PASS: Zend/tests/inheritance/bug66286.phpt
+NEW PASS: Zend/tests/inheritance/update_consts_shadowed_private_prop.phpt
+NEW PASS: Zend/tests/isset/bug63982.phpt
+NEW PASS: Zend/tests/lsb/lsb_018.phpt
+NEW PASS: Zend/tests/magic_methods/bug26166.phpt
+NEW PASS: Zend/tests/property_access_errors_for_guarded_properties.phpt
+NEW PASS: Zend/tests/readonly_props/public_set_non_readonly.phpt
+NEW PASS: Zend/tests/readonly_props/visibility_change.phpt
+NEW PASS: Zend/tests/traits/bug60536_003.phpt
+NEW PASS: Zend/tests/traits/bug60536_004.phpt
+NEW PASS: Zend/tests/traits/bug60536_005.phpt
+NEW PASS: Zend/tests/traits/bug60809.phpt
+NEW PASS: Zend/tests/traits/bug76539.phpt
+NEW PASS: Zend/tests/traits/bug78787.phpt
+NEW PASS: Zend/tests/traits/flattening001.phpt
+NEW PASS: Zend/tests/traits/language006.phpt
+NEW PASS: Zend/tests/traits/property001.phpt
+NEW PASS: Zend/tests/traits/property002.phpt
+NEW PASS: Zend/tests/traits/property006.phpt
+NEW PASS: Zend/tests/traits/property007.phpt
+NEW PASS: Zend/tests/traits/property008.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_024.phpt
+NEW PASS: Zend/tests/type_declarations/union_types/inheritance.phpt
+NEW PASS: Zend/tests/unset/bug39346.phpt
+
+Most frequent remaining failure messages:
+579: ParseError: Expected ';'
+259: ParseError: Expected expression
+196: Error: Class "ReflectionClass" not found
+125: Error: Call to undefined function set_error_handler()
+114: ParseError: Expected parameter variable
+62: Error: Class "Fiber" not found
+51: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+40: ParseError: Expected function name
+38: ParseError: Expected ')'
+31: ParseError: Invalid interface member declaration
+31: Error: Call to undefined function fopen()
+27: ParseError: Invalid abstract method declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

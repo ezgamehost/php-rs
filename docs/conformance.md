@@ -62,13 +62,27 @@ do not change the runner's unsupported counts. Existing 797 Rust tests, 57
 reference-checked project fixtures, formatting, and Clippy pass. Inheritance
 variance autoloading, destructor callbacks, configurable include paths, and
 exact fatal diagnostics remain incomplete.
+The [instance-property visibility slice](conformance/php-8.5.0-property-visibility-hillclimb.txt)
+adds 59 Zend passes with zero regressions. Linked property slots retain their
+owning class, so private properties with the same name remain distinct across
+inheritance. Access uses lexical private scope and protected prototype scope;
+reads, writes, probes, unset, typed operations, readonly initialization, string
+offsets, and cloning resolve the same slot. Dumps and array casts preserve
+mangled names, while foreach and `get_object_vars` filter by scope and expose
+visible names. Constructor promotion accepts non-public and asymmetric visibility;
+instance declarations accept asymmetric setters and final properties. Behavior is
+based on the [PHP visibility rules](https://www.php.net/manual/en/language.oop5.visibility.php)
+and PHP 8.5.0 property handlers. All 797 existing Rust tests, 57 reference-checked
+project fixtures, formatting, and Clippy pass. Magic property methods, references,
+property hooks, reflection, and exact compile-fatal diagnostics remain incomplete.
+Passing attribute-containing fixtures do not establish attribute validation.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 972 | 3876 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1031 | 3817 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

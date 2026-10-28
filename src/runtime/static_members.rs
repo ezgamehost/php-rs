@@ -352,7 +352,11 @@ impl Runtime {
         ))
     }
 
-    fn can_access_static_visibility(&self, owner: &Class, visibility: Visibility) -> bool {
+    pub(super) fn can_access_static_visibility(
+        &self,
+        owner: &Class,
+        visibility: Visibility,
+    ) -> bool {
         visibility == Visibility::Public
             || self.class_context.as_ref().is_some_and(|context| {
                 context.scope.name.eq_ignore_ascii_case(&owner.name)
@@ -410,7 +414,7 @@ impl Runtime {
         class: &Rc<Class>,
         name: &[u8],
     ) -> Option<Rc<Class>> {
-        if class.property_owner(name).is_some() {
+        if self.instance_property_owner(class, name).is_some() {
             return None;
         }
         if let Some(context) = &self.class_context

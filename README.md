@@ -61,11 +61,15 @@ new request. The CLI returns the low eight bits of the requested status.
   named arguments, variadics, argument unpacking, and string-based function calls.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
   with live parameter values, default gaps, and separate variadic argument copies.
-- Public instance classes and `stdClass`, constructors, shared object handles,
+- Instance classes and `stdClass`, constructors, shared object handles,
   dynamic property names, nested property/array writes, and basic live property
   iteration. Instance methods bind `$this`, support named/typed arguments, and
   expose bound first-class callables. Non-static closures retain `$this`.
   Method-array callbacks and invokable objects work with pipes and array callbacks.
+- Public/protected/private instance properties and constructor promotion, with
+  separate private slots across inheritance, scoped iteration and `get_object_vars`,
+  mangled array-cast keys, and asymmetric setters. Final properties and readonly
+  initialization restrictions are checked across direct and indirect writes.
 - Public class inheritance with inherited constructors/properties/methods,
   virtual dispatch, shared inherited method statics, and `final` classes/methods.
   Overrides validate arity, variadic parameters, parameter contravariance, and

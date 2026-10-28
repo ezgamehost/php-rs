@@ -6,32 +6,56 @@ impl Parser {
         &mut self,
         allowed: bool,
     ) -> Result<Option<Promotion>, Error> {
-        let mut public = false;
+        let mut visibility = None;
+        let mut set_visibility = None;
         let mut readonly = false;
-        while self.is("public") || self.is("readonly") {
+        while self.is("public") || self.is("protected") || self.is("private") || self.is("readonly")
+        {
             if !allowed {
                 return Err(Error::parse(
                     "Cannot declare promoted property outside a constructor",
                     self.token().line,
                 ));
             }
-            let flag = if self.eat("public") {
-                &mut public
+            if self.eat("readonly") {
+                if readonly {
+                    return Err(Error::parse(
+                        "Duplicate promotion modifier",
+                        self.token().line,
+                    ));
+                }
+                readonly = true;
+                continue;
+            }
+            let access = if self.eat("public") {
+                Visibility::Public
+            } else if self.eat("protected") {
+                Visibility::Protected
             } else {
-                self.expect("readonly")?;
-                &mut readonly
+                self.expect("private")?;
+                Visibility::Private
             };
-            if *flag {
+            let slot = if self.eat("(") {
+                self.expect("set")?;
+                self.expect(")")?;
+                &mut set_visibility
+            } else {
+                &mut visibility
+            };
+            if slot.replace(access).is_some() {
                 return Err(Error::parse(
                     "Duplicate promotion modifier",
                     self.token().line,
                 ));
             }
-            *flag = true;
         }
-        Ok((public || readonly).then_some(Promotion {
-            is_readonly: readonly,
-        }))
+        Ok(
+            (visibility.is_some() || set_visibility.is_some() || readonly).then_some(Promotion {
+                visibility: visibility.unwrap_or(Visibility::Public),
+                set_visibility,
+                is_readonly: readonly,
+            }),
+        )
     }
 
     pub(super) fn promote_properties(
@@ -64,10 +88,27 @@ impl Parser {
                     function.line,
                 ));
             }
+            let set_visibility = promotion.set_visibility.unwrap_or(
+                if is_readonly && promotion.visibility == Visibility::Public {
+                    Visibility::Protected
+                } else {
+                    promotion.visibility
+                },
+            );
+            if set_visibility < promotion.visibility
+                || (promotion.set_visibility.is_some() && param.ty.is_none())
+            {
+                return Err(Error::parse(
+                    "Invalid promoted property set visibility",
+                    function.line,
+                ));
+            }
             properties.push(PropertyDecl {
-                visibility: Visibility::Public,
-                set_visibility: Visibility::Public,
-                is_final: false,
+                declaring_class: Vec::new(),
+                visibility: promotion.visibility,
+                set_visibility,
+                is_final: set_visibility == Visibility::Private
+                    && promotion.visibility != Visibility::Private,
                 name: param.name.clone(),
                 ty: param.ty.clone(),
                 is_readonly,

@@ -319,11 +319,9 @@ impl Runtime {
         }
         let mut defaults = PhpArray::default();
         for property in &class.properties {
-            let declaring = class
-                .property_owner(&property.name)
-                .expect("property owner");
+            let declaring = class.property_slot_owner(property);
             if let Some(value) = self.property_default(&declaring, property)? {
-                defaults.insert(ArrayKey::String(property.name.clone()), value);
+                defaults.insert(ArrayKey::String(property.storage_name()), value);
             }
         }
         *class.defaults.borrow_mut() = Some(defaults.clone());

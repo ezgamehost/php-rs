@@ -17,10 +17,11 @@ impl Runtime {
         indirect: bool,
         line: usize,
     ) -> Result<(), Error> {
+        self.check_instance_set_access(location, unset, indirect, line)?;
         let Some(object) = &location.object else {
             return Ok(());
         };
-        let Some(owner) = object.class.property_owner(&location.name) else {
+        let Some(owner) = self.instance_property_owner(&object.class, &location.name) else {
             return Ok(());
         };
         let property = owner
@@ -32,11 +33,11 @@ impl Runtime {
         if !property.is_readonly {
             return Ok(());
         }
-        let initialized = object
-            .properties
-            .borrow()
-            .get(&ArrayKey::String(location.name.clone()))
-            .is_some();
+        let key = self.instance_property_key(object, &location.name);
+        let ArrayKey::String(storage_name) = &key else {
+            unreachable!()
+        };
+        let initialized = object.properties.borrow().get(&key).is_some();
         let qualified = format!(
             "{}::${}",
             String::from_utf8_lossy(&owner.name),
@@ -55,18 +56,14 @@ impl Runtime {
             ));
         }
         let operation = if unset { "unset" } else { "modify" };
-        if initialized && !object.reinitializable.borrow().contains(&location.name) {
+        if initialized && !object.reinitializable.borrow().contains(storage_name) {
             return Err(Error::new(
                 ErrorKind::Error,
                 format!("Cannot {operation} readonly property {qualified}"),
                 line,
             ));
         }
-        if self
-            .class_context
-            .as_ref()
-            .is_some_and(|c| c.scope.is_a(&owner.name) || owner.is_a(&c.scope.name))
-        {
+        if self.can_access_instance_visibility(&owner, &location.name, property.set_visibility) {
             return Ok(());
         }
         let scope = self.class_context.as_ref().map_or_else(
@@ -75,7 +72,14 @@ impl Runtime {
         );
         Err(Error::new(
             ErrorKind::Error,
-            format!("Cannot {operation} protected(set) readonly property {qualified} from {scope}"),
+            format!(
+                "Cannot {operation} {}(set) readonly property {qualified} from {scope}",
+                if property.set_visibility == crate::ast::Visibility::Private {
+                    "private"
+                } else {
+                    "protected"
+                }
+            ),
             line,
         ))
     }

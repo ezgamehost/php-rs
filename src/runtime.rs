@@ -33,6 +33,7 @@ mod method_visibility;
 mod nullsafe;
 mod objects;
 mod offsets;
+mod property_visibility;
 mod readonly;
 mod scope_slots;
 mod static_members;
@@ -289,7 +290,7 @@ impl Runtime {
                             )?;
                         }
                     } else if let Some(object) = &location.object {
-                        let key = ArrayKey::String(location.name.clone());
+                        let key = self.instance_property_key(object, &location.name);
                         if location.keys.is_empty() {
                             object.properties.borrow_mut().remove(&key);
                         } else {
@@ -513,7 +514,7 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(object) = &location.object {
-            let key = ArrayKey::String(location.name.clone());
+            let key = self.instance_property_key(object, &location.name);
             let mut value = object
                 .properties
                 .borrow()

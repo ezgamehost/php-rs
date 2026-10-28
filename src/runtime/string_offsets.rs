@@ -85,7 +85,10 @@ impl Runtime {
             return Ok(None);
         }
         let storage = if let Some(object) = &location.object {
-            Storage::Property(object.clone(), ArrayKey::String(location.name.clone()))
+            Storage::Property(
+                object.clone(),
+                self.instance_property_key(object, &location.name),
+            )
         } else {
             let stored = if let Some(class) = &location.static_class {
                 let stored = self.static_cell(class, &location.name, line, false)?;

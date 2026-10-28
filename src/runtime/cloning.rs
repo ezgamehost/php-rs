@@ -143,7 +143,7 @@ fn unlock_readonly(object: &PhpObject) {
             .properties
             .iter()
             .filter(|p| p.is_readonly)
-            .map(|p| p.name.clone()),
+            .map(|p| p.storage_name()),
     );
 }
 

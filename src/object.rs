@@ -63,7 +63,7 @@ impl PhpObject {
         let properties = self.properties.borrow();
         let mut result = PhpArray::default();
         for property in &self.class.properties {
-            let key = crate::ArrayKey::String(property.name.clone());
+            let key = crate::ArrayKey::String(property.storage_name());
             if let Some(value) = properties.get(&key) {
                 result.insert(key, value.clone());
             }
@@ -166,7 +166,26 @@ impl Class {
         if self.declaration.properties.iter().any(|p| p.name == name) {
             Some(self.clone())
         } else {
-            self.parent.as_ref().and_then(|p| p.property_owner(name))
+            self.parent
+                .as_ref()
+                .and_then(|p| p.property_owner(name))
+                .filter(|owner| {
+                    owner
+                        .declaration
+                        .properties
+                        .iter()
+                        .any(|p| p.name == name && p.visibility != crate::ast::Visibility::Private)
+                })
+        }
+    }
+    pub fn property_slot_owner(self: &Rc<Self>, property: &PropertyDecl) -> Rc<Self> {
+        if property.declaring_class == self.name {
+            self.clone()
+        } else {
+            self.parent
+                .as_ref()
+                .expect("property ancestor")
+                .property_slot_owner(property)
         }
     }
     pub fn method_is_final(&self, name: &[u8]) -> bool {

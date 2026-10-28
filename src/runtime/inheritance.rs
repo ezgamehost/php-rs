@@ -18,8 +18,9 @@ impl Runtime {
             ),
         ] {
             for property in properties {
-                let Some(parent_property) = inherited.iter().find(|p| p.name == property.name)
-                else {
+                let Some(parent_property) = inherited.iter().find(|p| {
+                    p.name == property.name && p.visibility != crate::ast::Visibility::Private
+                }) else {
                     continue;
                 };
                 if parent_property.visibility == crate::ast::Visibility::Private {
@@ -120,8 +121,9 @@ impl Runtime {
             ),
         ] {
             for property in properties {
-                let Some(parent_property) = inherited.iter().find(|p| p.name == property.name)
-                else {
+                let Some(parent_property) = inherited.iter().find(|p| {
+                    p.name == property.name && p.visibility != crate::ast::Visibility::Private
+                }) else {
                     continue;
                 };
                 if parent_property.visibility == crate::ast::Visibility::Private {
