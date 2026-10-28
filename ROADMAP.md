@@ -218,6 +218,8 @@ definition of completion.
    Byte translation and longest-match replacement maps preserve PHP replacement conversion
    timing. Slash escaping/unescaping supports binary character masks, C controls, octal/hex
    escapes, and distinct trailing-backslash rules.
+   Tag stripping follows PHP’s HTML/PHP/declaration/comment states, preserves allowed tags
+   from string or array lists, and handles nested brackets, quotes, XML/doctype, and NUL.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

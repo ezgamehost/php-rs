@@ -61,6 +61,7 @@ mod string_search;
 mod string_split;
 mod string_transform;
 mod stringable;
+mod strip_tags;
 mod substrings;
 mod termination;
 mod throwables;

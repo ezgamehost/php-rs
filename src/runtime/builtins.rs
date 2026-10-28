@@ -25,6 +25,7 @@ pub(super) enum Builtin {
     ChunkSplit,
     StrTranslate,
     SlashEscape(bool, bool),
+    StripTags,
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -127,6 +128,7 @@ impl Builtin {
             b"stripslashes" => Self::SlashEscape(false, false),
             b"addcslashes" => Self::SlashEscape(true, true),
             b"stripcslashes" => Self::SlashEscape(false, true),
+            b"strip_tags" => Self::StripTags,
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -246,6 +248,7 @@ impl Builtin {
                 &[("string", false, false), ("characters", false, false)]
             }
             Self::SlashEscape(..) => &[("string", false, false)],
+            Self::StripTags => &[("string", false, false), ("allowed_tags", true, false)],
             Self::StrTranslate => &[
                 ("string", false, false),
                 ("from", false, false),
@@ -491,6 +494,7 @@ impl Runtime {
             Builtin::StrSplit | Builtin::ChunkSplit => self.split_chunks(builtin, &args, line),
             Builtin::StrTranslate => self.translate_string(&args, line),
             Builtin::SlashEscape(add, c_style) => self.escape_slashes(add, c_style, &args, line),
+            Builtin::StripTags => self.strip_tags(&args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
@@ -797,15 +801,26 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        self.native_array_or_string_type(value, function, position, line, "array|string")
+    }
+
+    pub(super) fn native_array_or_string_type(
+        &mut self,
+        value: &Value,
+        function: &str,
+        position: usize,
+        line: usize,
+        kind: &str,
+    ) -> Result<Value, Error> {
         if matches!(value, Value::Array(_) | Value::String(_)) {
             return Ok(value.clone());
         }
         if self.strict_types
             || (matches!(value, Value::Object(_) | Value::Closure(_)) && !self.can_stringify(value))
         {
-            return Err(type_error(value, function, position, "array|string", line));
+            return Err(type_error(value, function, position, kind, line));
         }
-        self.warn_null(value, function, position, "array|string", line);
+        self.warn_null(value, function, position, kind, line);
         Ok(Value::String(self.string_bytes(value, line)?.into()))
     }
     pub(super) fn native_int(

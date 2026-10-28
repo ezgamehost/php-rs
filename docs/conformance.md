@@ -806,6 +806,27 @@ were added. PHP 8.5.0 `ext/standard/string.c` and upstream fixtures establish th
 The remaining focused failures need streams or diagnostic-output matching; other string
 APIs, native reflection metadata, and INI configuration remain incomplete.
 
+The [tag-stripping slice](conformance/php-8.5.0-strip-tags-hillclimb.txt) adds
+**26 upstream passes**: 25 standard string fixtures and one Zend fixture, with no
+regressions across strings, Zend, reflection, and SPL. `strip_tags` follows PHP's text,
+HTML tag, PHP, declaration, and comment states, preserving its handling of nested angle
+brackets, quoted text, PHP parentheses, XML/doctype transitions, malformed tags, and NUL
+bytes. Whitespace recognition includes vertical tabs as required by PHP's C parser.
+
+Allowed tags accept null, a string, or an array whose values convert in insertion order.
+Matching normalizes tag names and closing/self-closing syntax, retains allowed tag text,
+and follows the allowed-list NUL boundary. Nullable union argument errors share the native
+coercion helper without changing its existing callers. Parsing begins only after allowed
+array elements have been converted, including when the input string is empty.
+
+The full string suite reaches **283 / 295 / 152**, and Zend **1663 / 3185 / 408**.
+Reflection remains **244 / 211 / 37**, and SPL **18 / 666 / 94**. All 797 existing Rust
+tests and 57 reference-checked project fixtures pass; formatting and Clippy pass. No
+custom tests were added. PHP 8.5.0 `php_strip_tags_ex`/`php_tag_find`, native signatures,
+and upstream fixtures establish these behaviors. Remaining related fixtures require
+other APIs; native reflection metadata, INI configuration, streams, broader string APIs,
+and diagnostic matching remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -813,11 +834,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1662 | 3186 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1663 | 3185 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 258 | 320 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 283 | 295 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
