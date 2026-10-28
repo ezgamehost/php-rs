@@ -55,6 +55,7 @@ mod sensitive_parameters;
 mod static_members;
 mod string_builtins;
 mod string_offsets;
+mod string_replace;
 mod stringable;
 mod termination;
 mod throwables;

@@ -204,7 +204,9 @@ definition of completion.
    include PHP 8.5 deprecations; common native argument diagnostics include parameter
    names, received types, and argument counts. ASCII case conversion, bin2hex, and the
    trim family support binary strings, default whitespace, custom character ranges, and
-   malformed-range warnings. Array map/filter/reduce support available callables,
+   malformed-range warnings. String replacement supports scalar/array inputs, ordered
+   searches, ASCII case-insensitive matching, and typed reference count output.
+   Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only
    checks, autoloading, scoped/abstract/magic methods, descriptive output names,

@@ -11,6 +11,7 @@ pub(super) enum Builtin {
     StrLower,
     StrUpper,
     Bin2Hex,
+    StrReplace(bool),
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -80,6 +81,8 @@ impl Builtin {
             b"strtolower" => Self::StrLower,
             b"strtoupper" => Self::StrUpper,
             b"bin2hex" => Self::Bin2Hex,
+            b"str_replace" => Self::StrReplace(false),
+            b"str_ireplace" => Self::StrReplace(true),
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -195,6 +198,12 @@ impl Builtin {
                 &[("string", false, false)]
             }
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
+            Self::StrReplace(_) => &[
+                ("search", false, false),
+                ("replace", false, false),
+                ("subject", false, false),
+                ("count", true, false),
+            ],
             Self::StrRepeat => &[("string", false, false), ("times", false, false)],
             Self::Chr => &[("codepoint", false, false)],
             Self::Ord => &[("character", false, false)],
@@ -248,7 +257,8 @@ impl Builtin {
             .iter()
             .map(|(name, optional, variadic)| Parameter {
                 attributes: Vec::new(),
-                by_reference: matches!(self, Self::IsCallable) && *name == "callable_name",
+                by_reference: (matches!(self, Self::IsCallable) && *name == "callable_name")
+                    || (matches!(self, Self::StrReplace(_)) && *name == "count"),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
                 ty: None,
@@ -353,6 +363,9 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::StrReplace(insensitive) => {
+                self.string_replace(insensitive, &args, &references, line)
+            }
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
@@ -650,6 +663,25 @@ impl Runtime {
         self.warn_null(value, function, position, "string", line);
         value.warn_nan("string", line, &mut self.diagnostics);
         Ok(value.to_bytes())
+    }
+
+    pub(super) fn native_array_or_string(
+        &mut self,
+        value: &Value,
+        function: &str,
+        position: usize,
+        line: usize,
+    ) -> Result<Value, Error> {
+        if matches!(value, Value::Array(_) | Value::String(_)) {
+            return Ok(value.clone());
+        }
+        if self.strict_types
+            || (matches!(value, Value::Object(_) | Value::Closure(_)) && !self.can_stringify(value))
+        {
+            return Err(type_error(value, function, position, "array|string", line));
+        }
+        self.warn_null(value, function, position, "array|string", line);
+        Ok(Value::String(self.string_bytes(value, line)?.into()))
     }
     pub(super) fn native_int(
         &mut self,

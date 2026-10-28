@@ -323,6 +323,8 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 - ASCII `strtolower`/`strtoupper`, lowercase `bin2hex` encoding, and
   `trim`/`ltrim`/`rtrim`/`chop` with binary character lists and inclusive ranges.
+- `str_replace`/`str_ireplace` support binary strings and arrays, sequential searches,
+  preserved subject keys, and a reference parameter for the replacement count.
 
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
 generators, complete attribute behavior, extensions, and most PHP 8.5 additions.

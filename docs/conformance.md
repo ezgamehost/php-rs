@@ -669,6 +669,30 @@ project fixtures pass, as do formatting and Clippy. No custom tests were added. 
 follows PHP 8.5.0 `ext/standard/string.c`, native signatures, and upstream fixtures.
 Complete native reflection metadata and diagnostic interleaving/rendering remain gaps.
 
+The [string replacement slice](conformance/php-8.5.0-string-replace-hillclimb.txt) adds
+**10 upstream passes**: eight standard string fixtures and two Zend fixtures, including
+enum `var_export`, with no regressions across Zend, reflection, and SPL. `str_replace`
+and `str_ireplace` accept scalar/string or array searches, replacements, and subjects.
+Search arrays apply sequentially; replacement arrays follow insertion order, with empty
+replacements after exhaustion. Subject arrays preserve their keys and produce string
+values. Matching is binary-safe and non-overlapping; insensitive matching folds ASCII.
+
+Array elements convert when reached, preserving references and Stringable callback order.
+The optional count reference receives the total after successful processing, through the
+existing typed-reference checks. Empty subjects avoid element conversion; empty searches
+consume their matching replacement entry without changing the subject. Scalar search with
+array replacement raises PHP's argument error after normal argument conversion.
+
+Full Zend now records **1649 / 3199 / 408**; reflection remains **244 / 211 / 37**, and SPL
+**18 / 666 / 94**. The related 27-fixture string replacement group records **8 / 14 / 5**.
+Two INI-bearing upstream fixtures (`str_replace_array_refs` and `str_replace_variation2`)
+were also executed directly and match reference output/exit without diagnostics; they
+remain unsupported in the runner's counts. Other related failures require substr/substring
+replacement, serialization, streams, INI handling, deprecated interpolation, or diagnostic
+matching. All 797 existing Rust tests and 57 reference-checked project fixtures pass;
+formatting and Clippy pass. No custom tests were added. PHP 8.5.0 `ext/standard/string.c`,
+reference assignment helpers, and upstream fixtures establish the implemented behavior.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -676,10 +700,11 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1647 | 3201 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1649 | 3199 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
+| PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
