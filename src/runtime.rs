@@ -40,6 +40,7 @@ mod property_references;
 mod property_visibility;
 mod readonly;
 mod reference_paths;
+mod reference_types;
 mod scope_slots;
 mod static_members;
 mod string_builtins;
@@ -68,6 +69,7 @@ pub struct Runtime {
     autoload_extensions: Option<Vec<u8>>,
     /// Global inputs before execute, and the global values after it returns.
     pub variables: HashMap<Vec<u8>, Value>,
+    reference_constraints: HashMap<usize, reference_types::Constraints>,
     scope: Scope,
     callers: Vec<Scope>,
     trace_frames: Vec<traces::TraceFrame>,
@@ -291,12 +293,7 @@ impl Runtime {
                                 Access::Read,
                             )?;
                             self.warn_indirect_magic(object, &location.name, &value, target.line);
-                            unset_path(
-                                &mut value,
-                                &mut location.keys,
-                                target.line,
-                                &mut self.diagnostics,
-                            )?;
+                            unset_path(&mut value, &mut location.keys, target.line, self)?;
                             continue;
                         }
                     }
@@ -324,7 +321,7 @@ impl Runtime {
                                 value,
                                 &mut location.keys,
                                 target.line,
-                                &mut self.diagnostics,
+                                self,
                             )?;
                         }
                     } else if let Some(object) = &location.object {
@@ -337,12 +334,7 @@ impl Runtime {
                         } else {
                             let stored = object.properties.borrow().get(&key).cloned();
                             if let Some(mut value) = stored {
-                                unset_path(
-                                    &mut value,
-                                    &mut location.keys,
-                                    target.line,
-                                    &mut self.diagnostics,
-                                )?;
+                                unset_path(&mut value, &mut location.keys, target.line, self)?;
                                 object.properties.borrow_mut().insert(key, value);
                             }
                         }
@@ -351,12 +343,7 @@ impl Runtime {
                     } else if let Some(value) =
                         self.location_scope(&location).get(&location.name).cloned()
                     {
-                        reference_paths::unset_cell(
-                            value,
-                            &mut location.keys,
-                            target.line,
-                            &mut self.diagnostics,
-                        )?;
+                        reference_paths::unset_cell(value, &mut location.keys, target.line, self)?;
                     }
                 }
             }
@@ -533,7 +520,12 @@ impl Runtime {
                         let owner = class
                             .static_owner(&location.name)
                             .expect("declared static property");
-                        return Err(Self::uninitialized_property(&owner, &location.name, line));
+                        let mut error = Self::uninitialized_property(&owner, &location.name, line);
+                        error.message =
+                            error
+                                .message
+                                .replacen("Typed property", "Typed static property", 1);
+                        return Err(error);
                     }
                     self.diagnostics.push(format!(
                         "Undefined {}variable ${} on line {line}",
@@ -600,6 +592,9 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(object) = &location.object {
+            if location.keys.is_empty() {
+                return self.write_property_value(object, &location.name, new_value, line);
+            }
             let key = self.instance_property_key(object, &location.name);
             let mut value = object
                 .properties
@@ -607,13 +602,8 @@ impl Runtime {
                 .get(&key)
                 .cloned()
                 .unwrap_or(Value::Null);
-            let result = write_path(
-                &mut value,
-                &mut location.keys,
-                new_value,
-                line,
-                &mut self.diagnostics,
-            )?;
+            self.check_property_array_init(location, &value, line)?;
+            let result = write_path(&mut value, &mut location.keys, new_value, line, self)?;
             let value = self.write_property_value(object, &location.name, value, line)?;
             return Ok(if location.keys.is_empty() {
                 value
@@ -627,13 +617,7 @@ impl Runtime {
         let value = self
             .location_scope(location)
             .get_or_insert(&location.name, Value::Null);
-        reference_paths::write_cell(
-            value,
-            &mut location.keys,
-            new_value,
-            line,
-            &mut self.diagnostics,
-        )
+        reference_paths::write_cell(value, &mut location.keys, new_value, line, self)
     }
     fn coalesce_read(&mut self, expr: &Expr, access: Access) -> Result<Value, Error> {
         if expr.has_nullsafe_chain() {
@@ -966,6 +950,7 @@ impl Runtime {
                 self.check_readonly_write(&location, false, line)?;
                 self.check_static_set_access(&location, true, line)?;
                 self.validate_property_increment(&location, &old, *delta, line)?;
+                self.validate_reference_increment(&mut location, &old, *delta, line)?;
                 let new = increment(&old, *delta, line, &mut self.diagnostics)?;
                 let new = self.write_location(&mut location, new, line)?;
                 Ok(if *prefix { new } else { old })

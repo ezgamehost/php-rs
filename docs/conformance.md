@@ -280,13 +280,31 @@ formatting, and Clippy pass; no new custom tests were added. Typed property refe
 constraints, object reference iteration, cycle collection, ArrayAccess, and exact
 diagnostic rendering remain unfinished.
 
+The [typed-reference slice](conformance/php-8.5.0-typed-references-hillclimb.txt)
+adds 41 Zend passes with zero regressions. Shared cells track live typed property
+sources through weak object/property identities. Writes through variables, array
+elements, other properties, parameters, and returned references validate all live
+constraints before committing a value. Weak conversion must agree across property
+types; incompatible bindings and inconsistent conversions report the applicable
+property types. Unset/rebound properties and destroyed objects release constraints,
+while clones inherit them. Nullable uninitialized properties initialize to null when
+referenced; array auto-initialization and integer increment limits respect property
+constraints. Constructor-promoted references work. Catch variables now assign through
+existing aliases with strict validation, including finally handling on failure.
+Static assignment expressions return the converted value, and uninitialized static
+property diagnostics include the static qualifier. All 797 existing Rust tests,
+57 reference-checked project fixtures, formatting, and Clippy pass; no new custom
+tests were added. Object reference iteration, internal by-reference builtins,
+complete parameter/return coercion diagnostics, destructor/reentrant edge cases,
+cycle collection, and exact diagnostic rendering remain unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1312 | 3536 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1353 | 3495 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

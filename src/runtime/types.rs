@@ -193,7 +193,7 @@ impl Runtime {
         let value = self.check_return_value(flow, function)?;
         if function.returns_reference {
             let reference = if let Some(reference) = reference {
-                *reference.borrow_mut() = value;
+                self.write_reference_value(&reference, value, true, line)?;
                 reference
             } else {
                 self.diagnostics.push(format!("Notice: Only variable references should be returned by reference on line {line}"));

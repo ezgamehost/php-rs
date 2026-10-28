@@ -124,7 +124,7 @@ impl Runtime {
         {
             return Ok(result);
         }
-        reference_paths::write_cell(temporary, keys, replacement, line, &mut self.diagnostics)
+        reference_paths::write_cell(temporary, keys, replacement, line, self)
     }
 
     fn assign_string_storage(

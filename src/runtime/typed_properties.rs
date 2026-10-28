@@ -139,28 +139,23 @@ impl Runtime {
             .find(|p| p.name == location.name)
             .expect("property owner");
         let mut value = stored.as_ref().map_or(Value::Null, |c| c.borrow().clone());
-        let result = write_path(
-            &mut value,
-            &mut location.keys,
-            new_value,
-            line,
-            &mut self.diagnostics,
-        )?;
+        self.check_property_array_init(location, &value, line)?;
+        let result = write_path(&mut value, &mut location.keys, new_value, line, self)?;
         let value = self.check_property_value(&owner, property, value, self.strict_types, line)?;
-        let result = if location.keys.is_empty() {
-            value.clone()
-        } else {
-            result
-        };
-        if let Some(stored) = stored {
-            *stored.borrow_mut() = value;
+        let value = if let Some(stored) = stored {
+            self.write_reference_value(&stored, value, self.strict_types, line)?
         } else {
             owner
                 .static_values
                 .borrow_mut()
-                .insert(location.name.clone(), cell(value));
-        }
-        Ok(result)
+                .insert(location.name.clone(), cell(value.clone()));
+            value
+        };
+        Ok(if location.keys.is_empty() {
+            value
+        } else {
+            result
+        })
     }
 }
 

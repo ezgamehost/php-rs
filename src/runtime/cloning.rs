@@ -105,6 +105,7 @@ impl Runtime {
             reinitializable: RefCell::new(original.reinitializable.borrow().clone()),
             object_id: self.next_object_id,
         });
+        self.inherit_reference_sources(&object);
         if let Some(method) = objects::method(&object.class, b"__clone") {
             unlock_readonly(&object);
             let result = self

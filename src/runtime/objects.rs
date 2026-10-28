@@ -666,7 +666,7 @@ impl Runtime {
             _ => None,
         };
         if let Some(reference) = reference {
-            *reference.borrow_mut() = value.clone();
+            return self.write_reference_value(&reference, value, self.strict_types, line);
         } else {
             object.properties.borrow_mut().insert(key, value.clone());
         }

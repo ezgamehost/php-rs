@@ -508,7 +508,7 @@ impl Runtime {
                     source.clone(),
                     std::slice::from_mut(&mut offset),
                     line,
-                    &mut self.diagnostics,
+                    self,
                 )?;
                 let value = reference.borrow().clone();
                 (value, Some(reference))
@@ -746,7 +746,7 @@ impl Runtime {
                             line,
                         )?;
                         let value = if let Value::Reference(reference) = stored {
-                            *reference.borrow_mut() = value;
+                            self.write_reference_value(reference, value, true, line)?;
                             Value::Reference(reference.clone())
                         } else {
                             value
@@ -787,7 +787,7 @@ impl Runtime {
                     self.check_argument(value, param, &function, index + 1, caller_strict, line)?
                 };
                 let reference = if let Some(reference) = bound.references[index].take() {
-                    *reference.borrow_mut() = value;
+                    self.write_reference_value(&reference, value, true, line)?;
                     reference
                 } else {
                     cell(value)

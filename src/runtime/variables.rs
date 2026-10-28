@@ -212,13 +212,7 @@ impl Runtime {
             let root = self
                 .location_scope(target)
                 .get_or_insert(&target.name, Value::Null);
-            reference_paths::bind(
-                root,
-                &mut target.keys,
-                reference,
-                line,
-                &mut self.diagnostics,
-            )?;
+            reference_paths::bind(root, &mut target.keys, reference, line, self)?;
         }
         Ok(())
     }
@@ -234,7 +228,7 @@ impl Runtime {
         let root = self
             .location_scope(location)
             .get_or_insert(&location.name, Value::Null);
-        reference_paths::acquire(root, &mut location.keys, line, &mut self.diagnostics)
+        reference_paths::acquire(root, &mut location.keys, line, self)
     }
 
     pub(super) fn globals(&self) -> &Scope {

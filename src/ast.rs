@@ -126,6 +126,7 @@ pub(crate) struct SwitchCase {
 
 #[derive(Debug, Clone)]
 pub(crate) struct CatchClause {
+    pub line: usize,
     pub types: Vec<Vec<u8>>,
     pub variable: Option<Vec<u8>>,
     pub body: Vec<Stmt>,

@@ -145,7 +145,7 @@ impl Runtime {
                 Error::new(ErrorKind::TypeError, format!("Value of type {given} returned from {}() must be compatible with unset property {}::${} of type {}", String::from_utf8_lossy(&getter.name), String::from_utf8_lossy(&owner.name), String::from_utf8_lossy(name), typed_properties::type_label(property.ty.as_ref().unwrap(), &owner)), line)
             })?;
             let value = if let Some(reference) = reference {
-                *reference.borrow_mut() = value;
+                self.write_reference_value(&reference, value, true, line)?;
                 Value::Reference(reference)
             } else {
                 value

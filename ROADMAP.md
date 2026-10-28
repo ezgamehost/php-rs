@@ -88,10 +88,14 @@ definition of completion.
    writes, rebinding, returns, arguments, destructuring, and array iteration.
    Magic getters retain references, and readonly/asymmetric access is checked.
    Object snapshots drop singleton reference wrappers and dumps detect cycles.
-   Remaining: typed property references, object reference iteration, cycle collection,
+   Typed property references retain live type sources across variables, arrays,
+   calls, returns, and clones, with coercion/conflict checks and increment bounds.
+   Unset/rebound properties release their constraints; catch assignment preserves
+   aliases. Nullable reference initialization and promoted references are supported.
+   Remaining: object reference iteration, complete reference coercion diagnostics, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
-   Traversable unpacking and typed promoted property references,
+   Traversable unpacking,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    complete namespace validation and error/exception behavior.

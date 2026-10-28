@@ -335,7 +335,16 @@ impl Runtime {
                         .position(|c| c.types.iter().any(|name| object.class.is_a(name)))
                     {
                         if let Some(name) = &catches[index].variable {
-                            self.scope.insert(name.clone(), cell(Value::Object(object)));
+                            let reference = self.scope.get_or_insert(name, Value::Null);
+                            if let Err(error) = self.write_reference_value(
+                                &reference,
+                                Value::Object(object),
+                                true,
+                                catches[index].line,
+                            ) {
+                                let error = self.materialize_error(error);
+                                return self.finish_finally(Err(error), finally);
+                            }
                         }
                         active_catch = Some(index);
                         continue;

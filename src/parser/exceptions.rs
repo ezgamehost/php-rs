@@ -38,6 +38,7 @@ impl Parser {
                     break;
                 }
             }
+            let line = self.token().line;
             let variable = if let Kind::Variable(name) = self.token().kind.clone() {
                 if name == b"this" || name == b"GLOBALS" {
                     return Err(Error::parse("Invalid catch variable", self.token().line));
@@ -49,6 +50,7 @@ impl Parser {
             };
             self.expect(")")?;
             catches.push(CatchClause {
+                line,
                 types,
                 variable,
                 body: self.exception_body()?,

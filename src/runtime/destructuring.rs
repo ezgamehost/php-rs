@@ -63,7 +63,7 @@ impl Runtime {
                         source.clone(),
                         std::slice::from_mut(&mut offset),
                         destination.line,
-                        &mut self.diagnostics,
+                        self,
                     )?
                 } else {
                     self.diagnostics.push(format!(

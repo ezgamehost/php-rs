@@ -156,14 +156,41 @@ fn finish(
     mut keys: &mut [Offset],
     mutation: &Mutation,
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<Value, Error> {
     loop {
         match result {
             Step::Done(value) => return Ok(value),
             Step::Follow(reference, consumed) => {
                 keys = &mut keys[consumed..];
-                result = step(&mut reference.borrow_mut(), keys, mutation, line, warnings)?;
+                if keys.is_empty()
+                    && !matches!(
+                        *reference.borrow(),
+                        Value::Reference(_) | Value::Indirect(_)
+                    )
+                    && let Mutation::Write(value) = mutation
+                {
+                    let value = runtime.write_reference_value(
+                        &reference,
+                        value.clone(),
+                        runtime.strict_types,
+                        line,
+                    )?;
+                    return Ok(value);
+                }
+                if !keys.is_empty()
+                    && !matches!(mutation, Mutation::Unset)
+                    && matches!(*reference.borrow(), Value::Null | Value::Bool(false))
+                {
+                    runtime.check_reference_array_init(&reference, line)?;
+                }
+                result = step(
+                    &mut reference.borrow_mut(),
+                    keys,
+                    mutation,
+                    line,
+                    &mut runtime.diagnostics,
+                )?;
             }
         }
     }
@@ -174,43 +201,49 @@ pub(super) fn write(
     keys: &mut [Offset],
     replacement: Value,
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<Value, Error> {
     let mutation = Mutation::Write(replacement);
-    let result = step(value, keys, &mutation, line, warnings)?;
-    finish(result, keys, &mutation, line, warnings)
+    let result = step(value, keys, &mutation, line, &mut runtime.diagnostics)?;
+    finish(result, keys, &mutation, line, runtime)
 }
 pub(super) fn write_cell(
     reference: Cell,
     keys: &mut [Offset],
     replacement: Value,
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<Value, Error> {
     let mutation = Mutation::Write(replacement);
-    finish(Step::Follow(reference, 0), keys, &mutation, line, warnings)
+    finish(Step::Follow(reference, 0), keys, &mutation, line, runtime)
 }
 pub(super) fn unset(
     value: &mut Value,
     keys: &mut [Offset],
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<(), Error> {
-    let result = step(value, keys, &Mutation::Unset, line, warnings)?;
-    finish(result, keys, &Mutation::Unset, line, warnings).map(|_| ())
+    let result = step(
+        value,
+        keys,
+        &Mutation::Unset,
+        line,
+        &mut runtime.diagnostics,
+    )?;
+    finish(result, keys, &Mutation::Unset, line, runtime).map(|_| ())
 }
 pub(super) fn unset_cell(
     reference: Cell,
     keys: &mut [Offset],
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<(), Error> {
     finish(
         Step::Follow(reference, 0),
         keys,
         &Mutation::Unset,
         line,
-        warnings,
+        runtime,
     )
     .map(|_| ())
 }
@@ -218,7 +251,7 @@ pub(super) fn acquire(
     reference: Cell,
     keys: &mut [Offset],
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<Cell, Error> {
     if keys.is_empty() {
         return Ok(reference);
@@ -228,7 +261,7 @@ pub(super) fn acquire(
         keys,
         &Mutation::Acquire,
         line,
-        warnings,
+        runtime,
     )?;
     let Value::Reference(reference) = result else {
         unreachable!()
@@ -240,14 +273,14 @@ pub(super) fn bind(
     keys: &mut [Offset],
     reference: Cell,
     line: usize,
-    warnings: &mut dyn WarningSink,
+    runtime: &mut Runtime,
 ) -> Result<(), Error> {
     finish(
         Step::Follow(root, 0),
         keys,
         &Mutation::Bind(reference),
         line,
-        warnings,
+        runtime,
     )
     .map(|_| ())
 }
