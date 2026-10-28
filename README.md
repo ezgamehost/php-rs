@@ -87,6 +87,13 @@ new request. The CLI returns the low eight bits of the requested status.
   `getTrace()`, and `getTraceAsString()`. Traces capture live arguments at creation,
   including method, closure, internal callback, eval, and include frames.
   Exceptions thrown from `finally` retain the pending exception as their previous.
+  Throwable string conversion includes saved traces and previous exceptions,
+  honors subclass overrides, and terminates cyclic previous-exception chains.
+- `Stringable` and `__toString()` support implicit interface membership, signature
+  validation, echo/print/interpolation, string casts and concatenation, weak string
+  arguments/returns/properties, native string parameters, and comparisons (including
+  nested arrays/objects and switch matching). Strict string types reject objects;
+  failed return conversions chain the original exception under a TypeError.
 - Public, protected, and private static properties with inherited shared storage,
   scope checks, independent private redeclarations, dynamic names, array mutation, and `isset`/`empty`/coalescing. Public, protected, and private
   class constants support scope-aware access, inheritance, `final`, dynamic names,
@@ -174,7 +181,7 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Closure reference captures work, but general references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
-Throwable string conversion and property layouts, configurable trace settings, error/exception
+Object conversion in string-offset assignments, Throwable property layouts, configurable trace settings, error/exception
 handlers, ErrorException/SPL exception classes, and complete compile-time fatal
 error distinctions remain unfinished.
 Other `declare` directives are not implemented. Shutdown callbacks, output

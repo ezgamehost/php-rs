@@ -4,7 +4,7 @@ Passing cases also checked with the PHP reference. Unsupported sections were not
 
 Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/exceptions/bug26698.phpt PASS
-Zend/tests/exceptions/bug30161.phpt FAIL: Error: Object of class hariCow could not be converted to string on line 28
+Zend/tests/exceptions/bug30161.phpt PASS
 Zend/tests/exceptions/bug30162.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exceptions/bug30707.phpt PASS
 Zend/tests/exceptions/bug30725.phpt FAIL: Error: Interface "IteratorAggregate" not found on line 3
@@ -72,7 +72,7 @@ Zend/tests/exceptions/exception_during_property_assign_op.phpt FAIL: Unexpected 
 Zend/tests/exceptions/exception_during_variance_autoload.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exceptions/exception_during_variance_autoload_2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exceptions/exception_fatal_uncaught_error_reference_tostring.phpt UNSUPPORTED: EXPECTF
-Zend/tests/exceptions/exception_from_toString.phpt FAIL: Error: Object of class BadStr could not be converted to string on line 13
+Zend/tests/exceptions/exception_from_toString.phpt FAIL: Error: Object of class BadStr could not be converted to string on line 79
 Zend/tests/exceptions/exception_getters_with_ref_props.phpt FAIL: ParseError: Expected parameter variable on line 4
 Zend/tests/exceptions/exception_handler/bug40815.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 9
 Zend/tests/exceptions/exception_handler/bug47714.phpt FAIL: Error: Call to undefined function spl_autoload_register() on line 10
@@ -97,4 +97,4 @@ Zend/tests/exceptions/gh13446_2.phpt FAIL: Error: Call to undefined function set
 Zend/tests/exceptions/gh13446_3.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 11
 Zend/tests/exceptions/gh13446_4.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 7
 Zend/tests/exceptions/gh16188.phpt UNSUPPORTED: EXPECTF
-7 passed, 33 failed, 54 unsupported
+8 passed, 32 failed, 54 unsupported

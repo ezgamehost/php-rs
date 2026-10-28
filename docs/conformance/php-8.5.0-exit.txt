@@ -1,14 +1,14 @@
 PHP 8.5.0 exit baseline
 Command: php-rs-phpt --cwd PHP_SRC --reference PHP_SRC/sapi/cli/php PHP_SRC/Zend/tests/exit
 
-Reference: PHP 8.5 (sapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/exit/ast_print_assert_die_const.phpt UNSUPPORTED: INI
 Zend/tests/exit/ast_print_assert_die_function.phpt UNSUPPORTED: INI
 Zend/tests/exit/ast_print_assert_exit_const.phpt UNSUPPORTED: INI
 Zend/tests/exit/ast_print_assert_exit_function.phpt UNSUPPORTED: INI
 Zend/tests/exit/bug60978.phpt FAIL: Error: Call to undefined function exec() on line 2
 Zend/tests/exit/bug79948.phpt UNSUPPORTED: INI
-Zend/tests/exit/define_class_members_exit_die.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/exit/define_class_members_exit_die.phpt PASS
 Zend/tests/exit/define_die_constant.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exit/define_die_constant_namespace.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exit/define_die_function.phpt UNSUPPORTED: EXPECTF
@@ -21,12 +21,12 @@ Zend/tests/exit/define_goto_label_die.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exit/define_goto_label_die_with_jump.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exit/define_goto_label_exit.phpt UNSUPPORTED: EXPECTF
 Zend/tests/exit/define_goto_label_exit_with_jump.phpt UNSUPPORTED: EXPECTF
-Zend/tests/exit/die_string_cast_exception.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/exit/die_string_cast_exception.phpt PASS
 Zend/tests/exit/disabling_die.phpt UNSUPPORTED: INI
 Zend/tests/exit/disabling_exit.phpt UNSUPPORTED: INI
 Zend/tests/exit/exit_as_function.phpt PASS
 Zend/tests/exit/exit_named_arg.phpt UNSUPPORTED: CLEAN
 Zend/tests/exit/exit_statements.phpt UNSUPPORTED: CLEAN
-Zend/tests/exit/exit_string_with_buffer_output.phpt FAIL: ParseError: Expected ';' on line 5
+Zend/tests/exit/exit_string_with_buffer_output.phpt FAIL: Error: Call to undefined function ob_start() on line 3
 Zend/tests/exit/exit_values.phpt UNSUPPORTED: CLEAN, EXPECTF
-1 passed, 4 failed, 22 unsupported
+3 passed, 2 failed, 22 unsupported

@@ -1,5 +1,5 @@
 use crate::{Error, ErrorKind, Value};
-use std::{cmp::Ordering, collections::HashMap};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ArrayKey {
@@ -112,26 +112,5 @@ impl PhpArray {
                 self.positions.insert(self.entries[i].0.clone(), i);
             }
         }
-    }
-    pub(crate) fn compare_inner(
-        &self,
-        other: &Self,
-        line: usize,
-        warnings: &mut Vec<String>,
-        seen: &mut std::collections::HashSet<(usize, usize)>,
-    ) -> Result<Option<Ordering>, Error> {
-        if self.len() != other.len() {
-            return Ok(self.len().partial_cmp(&other.len()));
-        }
-        for (key, left) in &self.entries {
-            let Some(right) = other.get(key) else {
-                return Ok(Some(Ordering::Greater));
-            };
-            let order = left.compare_inner(right, line, warnings, seen)?;
-            if order != Some(Ordering::Equal) {
-                return Ok(order);
-            }
-        }
-        Ok(Some(Ordering::Equal))
     }
 }

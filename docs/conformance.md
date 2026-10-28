@@ -7,17 +7,18 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 53 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 54 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
 | PHP 8.5.0 `Zend/tests/list`, Rust and reference PHP for passing cases | 12 | 16 | 30 |
 | PHP 8.5.0 `Zend/tests/array_unpack`, Rust and reference PHP for passing cases | 2 | 5 | 6 |
-| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 10 | 8 | 71 |
+| PHP 8.5.0 `Zend/tests/return_types`, Rust and reference PHP for passing cases | 11 | 7 | 71 |
+| PHP 8.5.0 `Zend/tests/magic_methods`, Rust and reference PHP for passing cases | 16 | 70 | 71 |
 | PHP 8.5.0 `Zend/tests/static_variables`, Rust and reference PHP for passing cases | 7 | 5 | 1 |
 | PHP 8.5.0 `Zend/tests/restrict_globals`, Rust and reference PHP for passing cases | 2 | 1 | 13 |
 | PHP 8.5.0 `Zend/tests/jump`, Rust and reference PHP for passing cases | 6 | 6 | 5 |
-| PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
+| PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 3 | 2 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
 | PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 7 | 14 | 44 |
 | PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 28 | 48 | 59 |
@@ -34,7 +35,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/ctor_promotion`, Rust and reference PHP for passing cases | 1 | 6 | 11 |
 | PHP 8.5.0 `Zend/tests/clone`, Rust and reference PHP for passing cases | 6 | 6 | 14 |
 | PHP 8.5.0 `Zend/tests/asymmetric_visibility`, Rust (no passing fixtures) | 0 | 21 | 18 |
-| PHP 8.5.0 `Zend/tests/exceptions`, Rust and reference PHP for passing cases | 7 | 33 | 54 |
+| PHP 8.5.0 `Zend/tests/exceptions`, Rust and reference PHP for passing cases | 8 | 32 | 54 |
 | PHP 8.5.0 `Zend/tests/throw`, Rust and reference PHP for passing cases | 2 | 2 | 1 |
 | PHP 8.5.0 `Zend/tests/try`, Rust and reference PHP for passing cases | 43 | 17 | 20 |
 
@@ -465,3 +466,32 @@ manuals, PHP 8.5.0 Zend source, and local reference probes establish the semanti
 Throwable `__toString()`, property layouts, configurable trace argument capture
 and truncation, sensitive-parameter redaction, and the other exception gaps above
 remain incomplete. This supersedes the earlier stack-trace limitation.
+
+
+The Stringable slice adds the native Stringable interface, automatic membership
+for `__toString()` declarations, magic signature/return validation, and runtime
+object-to-string conversion. Echo, print, interpolation, casts, concatenation,
+dynamic names, eval/include arguments, weak string arguments/returns/properties,
+native string parameters, and exit use the conversion path. Comparison now runs
+inside the runtime so nested arrays/objects, switch cases, and non-strict
+`array_keys` searches can invoke PHP methods. Accepted object/callable union
+members take precedence over string coercion; strict string parameters reject
+objects. Argument conversion preserves thrown exceptions, while return conversion
+raises a TypeError with the original exception as previous. Conversion traces
+retain user-declaration/return sites and internal-call distinctions.
+Native Exception/Error `__toString()` includes saved origins and traces, formats
+previous exceptions oldest first, supports subclass overrides and explicit parent
+calls, and terminates cycles without invoking previous objects' overrides.
+Seventeen regressions, one new PHPT, and a **306-case differential matrix** cover
+these behaviors. All **726 Rust tests** and **54 reference-checked project PHPTs**
+pass, along with the previous 220 trace and 286 exception differential cases.
+Refreshed tracked suites gain four passes and lose none; the new
+[magic-method report](conformance/php-8.5.0-magic_methods.txt) records 16 passes,
+70 failures, and 71 unsupported cases. Most magic methods remain unfinished.
+The [magic-method manual](https://www.php.net/manual/en/language.oop5.magic.php),
+[Exception string conversion](https://www.php.net/manual/en/exception.tostring.php),
+PHP 8.5.0 Zend source, and local probes establish these rules. Object conversion
+in string-offset assignments (including reentrant writes), Throwable property
+layouts, complete built-in coverage, exact diagnostics, and the previously noted
+configuration/reflection/trait gaps remain incomplete. This supersedes earlier
+notes listing Throwable string conversion as unsupported.

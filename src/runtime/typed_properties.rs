@@ -40,7 +40,7 @@ impl Runtime {
         };
         let ty = inheritance::class_type(ty, owner);
         let given = builtins::debug_type(&value).to_owned();
-        self.coerce_type(value, &ty, strict, line).ok_or_else(|| {
+        self.coerce_type(value, &ty, strict, line)?.ok_or_else(|| {
             Error::new(
                 ErrorKind::TypeError,
                 format!(

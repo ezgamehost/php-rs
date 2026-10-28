@@ -182,7 +182,7 @@ impl Runtime {
                 return Ok(value);
             };
             let given = builtins::debug_type(&value).to_owned();
-            self.coerce_type(value, ty, true, line).ok_or_else(|| {
+            self.coerce_type(value, ty, true, line)?.ok_or_else(|| {
                 Error::new(
                     ErrorKind::TypeError,
                     format!(

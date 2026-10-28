@@ -376,10 +376,7 @@ impl Runtime {
                     let selected = match &args[1] {
                         None => true,
                         Some(filter) if strict => value == filter,
-                        Some(filter) => {
-                            value.compare(filter, line, &mut self.warnings)?
-                                == Some(Ordering::Equal)
-                        }
+                        Some(filter) => self.compare(value, filter, line)? == Some(Ordering::Equal),
                     };
                     if selected {
                         result.append(key.to_value(), line)?;
@@ -411,6 +408,9 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<Vec<u8>, Error> {
+        if !self.strict_types && self.can_stringify(value) {
+            return self.string_bytes(value, line);
+        }
         if matches!(
             value,
             Value::Array(_) | Value::Closure(_) | Value::Object(_)

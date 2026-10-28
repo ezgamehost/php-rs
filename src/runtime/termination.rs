@@ -10,7 +10,7 @@ impl Runtime {
             let ty = TypeDecl {
                 members: vec!["string".into(), "int".into()],
             };
-            self.coerce_type(status.clone(), &ty, self.strict_types, line).ok_or_else(|| {
+            self.coerce_type(status.clone(), &ty, self.strict_types, line)?.ok_or_else(|| {
                 let given = match status {
                     Value::Bool(true) => "true",
                     Value::Bool(false) => "false",

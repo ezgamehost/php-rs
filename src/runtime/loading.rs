@@ -130,7 +130,7 @@ impl Runtime {
             self.static_variables.insert(None, statics);
         }
         match result? {
-            Flow::Return(value) => Ok(value),
+            Flow::Return(value, _) => Ok(value),
             _ => Ok(fallthrough),
         }
     }

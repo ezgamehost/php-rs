@@ -1,0 +1,128 @@
+use super::*;
+use crate::value::numeric_string;
+
+impl Runtime {
+    pub(super) fn compare(
+        &mut self,
+        left: &Value,
+        right: &Value,
+        line: usize,
+    ) -> Result<Option<Ordering>, Error> {
+        self.compare_inner(left, right, line, &mut HashSet::new())
+    }
+
+    fn compare_inner(
+        &mut self,
+        left: &Value,
+        right: &Value,
+        line: usize,
+        seen: &mut HashSet<(usize, usize)>,
+    ) -> Result<Option<Ordering>, Error> {
+        use Value::*;
+        Ok(match (left, right) {
+            (Bool(_), _) | (_, Bool(_)) => left.is_truthy().partial_cmp(&right.is_truthy()),
+            (Null, String(s)) => b"".as_slice().partial_cmp(s.as_slice()),
+            (String(s), Null) => s.as_slice().partial_cmp(b"".as_slice()),
+            (Null, _) | (_, Null) => left.is_truthy().partial_cmp(&right.is_truthy()),
+            (Object(a), Object(b)) => {
+                if Rc::ptr_eq(a, b) {
+                    return Ok(Some(Ordering::Equal));
+                }
+                if !a.class.name.eq_ignore_ascii_case(&b.class.name) {
+                    return Ok(None);
+                }
+                let pair = (Rc::as_ptr(a) as usize, Rc::as_ptr(b) as usize);
+                if !seen.insert(pair) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Nesting level too deep - recursive dependency?",
+                        line,
+                    ));
+                }
+                let result = self.compare_arrays(&a.snapshot(), &b.snapshot(), line, seen);
+                seen.remove(&pair);
+                result?
+            }
+            (Object(_), String(_)) if self.can_stringify(left) => {
+                let converted = String(self.string_bytes(left, line)?);
+                self.compare_inner(&converted, right, line, seen)?
+            }
+            (String(_), Object(_)) if self.can_stringify(right) => {
+                let converted = String(self.string_bytes(right, line)?);
+                self.compare_inner(left, &converted, line, seen)?
+            }
+            (Object(_) | Closure(_), Int(_) | Float(_)) => {
+                let kind = if matches!(right, Int(_)) {
+                    "int"
+                } else {
+                    "float"
+                };
+                self.warnings.push(format!(
+                    "Notice: Object of class {} could not be converted to {kind} on line {line}",
+                    builtins::debug_type(left)
+                ));
+                self.compare_inner(&Int(1), right, line, seen)?
+            }
+            (Int(_) | Float(_), Object(_) | Closure(_)) => {
+                let kind = if matches!(left, Int(_)) {
+                    "int"
+                } else {
+                    "float"
+                };
+                self.warnings.push(format!(
+                    "Notice: Object of class {} could not be converted to {kind} on line {line}",
+                    builtins::debug_type(right)
+                ));
+                self.compare_inner(left, &Int(1), line, seen)?
+            }
+            (Object(_), Closure(_)) | (Closure(_), Object(_)) => None,
+            (Object(_), _) => Some(Ordering::Greater),
+            (_, Object(_)) => Some(Ordering::Less),
+            (Closure(a), Closure(b)) => a.same_function(b).then_some(Ordering::Equal),
+            (Closure(_), _) => Some(Ordering::Greater),
+            (_, Closure(_)) => Some(Ordering::Less),
+            (Array(a), Array(b)) => self.compare_arrays(a, b, line, seen)?,
+            (Array(_), _) => Some(Ordering::Greater),
+            (_, Array(_)) => Some(Ordering::Less),
+            (Int(a), Int(b)) => a.partial_cmp(b),
+            (Int(_) | Float(_), Int(_) | Float(_)) => {
+                left.as_float().partial_cmp(&right.as_float())
+            }
+            (Float(n), String(_)) | (String(_), Float(n)) if n.is_nan() => None,
+            (String(a), String(b)) => match (numeric_string(a), numeric_string(b)) {
+                (Some(a), Some(b)) => self.compare_inner(&a, &b, line, seen)?,
+                _ => a.partial_cmp(b),
+            },
+            (String(a), _) => match numeric_string(a) {
+                Some(a) => self.compare_inner(&a, right, line, seen)?,
+                None => a.partial_cmp(&right.to_bytes()),
+            },
+            (_, String(b)) => match numeric_string(b) {
+                Some(b) => self.compare_inner(left, &b, line, seen)?,
+                None => left.to_bytes().partial_cmp(b),
+            },
+        })
+    }
+
+    fn compare_arrays(
+        &mut self,
+        left: &PhpArray,
+        right: &PhpArray,
+        line: usize,
+        seen: &mut HashSet<(usize, usize)>,
+    ) -> Result<Option<Ordering>, Error> {
+        if left.len() != right.len() {
+            return Ok(left.len().partial_cmp(&right.len()));
+        }
+        for (key, value) in left.entries() {
+            let Some(other) = right.get(key) else {
+                return Ok(Some(Ordering::Greater));
+            };
+            let order = self.compare_inner(value, other, line, seen)?;
+            if order != Some(Ordering::Equal) {
+                return Ok(order);
+            }
+        }
+        Ok(Some(Ordering::Equal))
+    }
+}

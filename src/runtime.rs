@@ -16,6 +16,7 @@ mod casting;
 mod class_scope;
 mod cloning;
 mod closures;
+mod comparison;
 mod constants;
 mod destructuring;
 mod function_arguments;
@@ -31,6 +32,7 @@ mod offsets;
 mod readonly;
 mod scope_slots;
 mod static_members;
+mod stringable;
 mod termination;
 mod throwables;
 mod traces;
@@ -80,7 +82,7 @@ enum Flow {
     Goto(Vec<u8>),
     Break(usize),
     Continue(usize),
-    Return(Value),
+    Return(Value, usize),
 }
 impl Flow {
     fn leave_level(self) -> Self {
@@ -136,8 +138,8 @@ impl Runtime {
             Stmt::Echo(values) => {
                 for value in values {
                     let v = self.eval(value)?;
-                    self.output
-                        .extend(string_bytes(&v, value.line, &mut self.warnings)?);
+                    let bytes = self.string_bytes(&v, value.line)?;
+                    self.output.extend(bytes);
                 }
             }
             Stmt::Expr(expr) => {
@@ -207,8 +209,7 @@ impl Runtime {
                             Some(value) => value.clone(),
                             None => self.eval(subject)?,
                         };
-                        if value.compare(&candidate, subject.line, &mut self.warnings)?
-                            == Some(Ordering::Equal)
+                        if self.compare(&value, &candidate, subject.line)? == Some(Ordering::Equal)
                         {
                             selected = Some(index);
                             break;
@@ -308,10 +309,13 @@ impl Runtime {
             Stmt::Break(level) => return Ok(Flow::Break(*level)),
             Stmt::Continue(level, _) => return Ok(Flow::Continue(*level)),
             Stmt::Return(value) => {
-                return Ok(Flow::Return(match value {
-                    Some(expr) => self.eval(expr)?,
-                    None => Value::Null,
-                }));
+                return Ok(Flow::Return(
+                    match value {
+                        Some(expr) => self.eval(expr)?,
+                        None => Value::Null,
+                    },
+                    value.as_ref().map_or(0, |expr| expr.line),
+                ));
             }
         }
         Ok(Flow::Next)
@@ -578,7 +582,7 @@ impl Runtime {
         match &expr.kind {
             ExprKind::Eval(code) => {
                 let value = self.eval(code)?;
-                let code = string_bytes(&value, line, &mut self.warnings)?;
+                let code = self.string_bytes(&value, line)?;
                 self.eval_code(&code, line)
             }
             ExprKind::Throw(value) => {
@@ -587,18 +591,22 @@ impl Runtime {
             }
             ExprKind::Include(kind, path) => {
                 let value = self.eval(path)?;
-                let path = string_bytes(&value, line, &mut self.warnings)?;
+                let path = self.string_bytes(&value, line)?;
                 self.include_file(*kind, &path, line)
             }
             ExprKind::Cast(kind, operand) => {
                 let value = self.eval(operand)?;
-                casting::cast(*kind, value, line, &mut self.warnings)
+                if matches!(kind, crate::ast::CastKind::String) {
+                    Ok(Value::String(self.string_bytes(&value, line)?))
+                } else {
+                    casting::cast(*kind, value, line, &mut self.warnings)
+                }
             }
             ExprKind::Match(subject, arms) => self.match_expression(subject, arms, line),
             ExprKind::Print(operand) => {
                 let value = self.eval(operand)?;
-                self.output
-                    .extend(string_bytes(&value, line, &mut self.warnings)?);
+                let bytes = self.string_bytes(&value, line)?;
+                self.output.extend(bytes);
                 Ok(Value::Int(1))
             }
             ExprKind::Binary(op, value, class) if op == "instanceof" => {
@@ -633,7 +641,7 @@ impl Runtime {
                 let mut result = Vec::new();
                 for part in parts {
                     let value = self.eval(part)?;
-                    result.extend(string_bytes(&value, part.line, &mut self.warnings)?);
+                    result.extend(self.string_bytes(&value, part.line)?);
                 }
                 Ok(Value::String(result))
             }
@@ -768,7 +776,7 @@ impl Runtime {
                         Some("Cannot use assign-op operators with string offsets"),
                     )?;
                     self.check_static_set_access(&location, true, line)?;
-                    binary(&op[..op.len() - 1], lhs, rhs, line, &mut self.warnings)?
+                    self.binary(&op[..op.len() - 1], lhs, rhs, line)?
                 };
                 self.write_location(&mut location, value, line)
             }
@@ -822,7 +830,7 @@ impl Runtime {
                     return Ok(Value::Bool(rhs.to_bool(line, &mut self.warnings)));
                 }
                 let rhs = self.eval(right)?;
-                binary(op, lhs, rhs, line, &mut self.warnings)
+                self.binary(op, lhs, rhs, line)
             }
         }
     }
@@ -836,11 +844,6 @@ fn binary(
 ) -> Result<Value, Error> {
     use Value::*;
     match op {
-        "." => {
-            let mut bytes = string_bytes(&left, line, warnings)?;
-            bytes.extend(string_bytes(&right, line, warnings)?);
-            return Ok(String(bytes));
-        }
         "&&" | "and" => return Ok(Bool(left.is_truthy() && right.is_truthy())),
         "||" | "or" => return Ok(Bool(left.is_truthy() || right.is_truthy())),
         "xor" => {
@@ -850,22 +853,6 @@ fn binary(
         }
         "===" => return Ok(Bool(left == right)),
         "!==" => return Ok(Bool(left != right)),
-        "==" | "!=" | "<>" | "<" | "<=" | ">" | ">=" | "<=>" => {
-            let order = left.compare(&right, line, warnings)?;
-            return Ok(match op {
-                "==" => Bool(order == Some(Ordering::Equal)),
-                "!=" | "<>" => Bool(order != Some(Ordering::Equal)),
-                "<" => Bool(order == Some(Ordering::Less)),
-                "<=" => Bool(matches!(order, Some(Ordering::Less | Ordering::Equal))),
-                ">" => Bool(order == Some(Ordering::Greater)),
-                ">=" => Bool(matches!(order, Some(Ordering::Greater | Ordering::Equal))),
-                _ => Int(match order {
-                    Some(Ordering::Less) => -1,
-                    Some(Ordering::Equal) => 0,
-                    _ => 1,
-                }),
-            });
-        }
         _ => {}
     }
     if op == "+"

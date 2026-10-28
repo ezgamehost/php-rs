@@ -240,7 +240,7 @@ impl Runtime {
         self.invoke_at(target, args, line, dynamic, false)
     }
 
-    fn invoke_at(
+    pub(super) fn invoke_at(
         &mut self,
         target: CallTarget,
         args: &[Argument],

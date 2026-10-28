@@ -103,7 +103,19 @@ impl Runtime {
                 decl.line,
             ));
         }
-        let interfaces = self.link_interfaces(&decl)?;
+        let mut interfaces = self.link_interfaces(&decl)?;
+        if decl
+            .methods
+            .iter()
+            .any(|m| method_name(m).eq_ignore_ascii_case(b"__tostring"))
+            && !interfaces.iter().any(|i| i.is_a(b"Stringable"))
+            && !parent.as_ref().is_some_and(|p| p.is_a(b"Stringable"))
+        {
+            interfaces.push(
+                self.find_class(b"Stringable")
+                    .expect("Stringable interface"),
+            );
+        }
         if !decl.is_interface
             && interfaces.iter().any(|i| i.is_a(b"Throwable"))
             && !parent.as_ref().is_some_and(|p| p.is_a(b"Throwable"))

@@ -494,11 +494,28 @@ impl Parser {
         let outer_function_name = std::mem::replace(&mut self.function_name, name.clone());
         let mut parameters =
             self.function_parameters(method && name.eq_ignore_ascii_case(b"__construct"))?;
-        let return_type = if self.eat(":") {
+        let mut return_type = if self.eat(":") {
             Some(self.type_declaration(true)?)
         } else {
             None
         };
+        if method && name.eq_ignore_ascii_case(b"__tostring") {
+            if parameters.iter().any(|p| !p.variadic)
+                || return_type.as_ref().is_some_and(|ty| {
+                    ty.members.len() != 1 || (!ty.contains("string") && !ty.contains("never"))
+                })
+            {
+                return Err(Error::parse(
+                    "Method __toString() has an invalid signature",
+                    line,
+                ));
+            }
+            if return_type.is_none() {
+                return_type = Some(TypeDecl {
+                    members: vec!["string".to_owned()],
+                });
+            }
+        }
         self.validate_defaults(&name, &mut parameters, line)?;
         self.expect(if is_abstract { ";" } else { "{" })?;
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());

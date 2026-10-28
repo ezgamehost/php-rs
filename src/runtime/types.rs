@@ -18,12 +18,29 @@ impl Runtime {
         ty: &TypeDecl,
         strict: bool,
         line: usize,
-    ) -> Option<Value> {
-        let resolved = self.resolve_context_type(ty)?;
+    ) -> Result<Option<Value>, Error> {
+        let Some(resolved) = self.resolve_context_type(ty) else {
+            return Ok(None);
+        };
         let ty = &resolved;
         if ty.accepts(&value) || (ty.contains("callable") && self.is_callable(&value)) {
-            return Some(value);
+            return Ok(Some(value));
         }
+        if !strict && ty.contains("string") && self.can_stringify(&value) {
+            return self
+                .string_bytes(&value, line)
+                .map(|s| Some(Value::String(s)));
+        }
+        Ok(self.coerce_scalar_type(value, ty, strict, line))
+    }
+
+    fn coerce_scalar_type(
+        &mut self,
+        value: Value,
+        ty: &TypeDecl,
+        strict: bool,
+        line: usize,
+    ) -> Option<Value> {
         if ty.contains("float")
             && let Value::Int(n) = value
         {
@@ -106,7 +123,20 @@ impl Runtime {
             });
         }
         let given = builtins::debug_type(&value).to_owned();
-        self.coerce_type(value, ty, strict, line).ok_or_else(|| {
+        let source = function
+            .native
+            .is_none()
+            .then(|| std::mem::replace(&mut self.source, function.source.clone()));
+        let conversion_line = if function.native.is_none() {
+            function.line
+        } else {
+            line
+        };
+        let converted = self.coerce_type(value, ty, strict, conversion_line);
+        if let Some(source) = source {
+            self.source = source;
+        }
+        converted?.ok_or_else(|| {
             Error::new(
                 ErrorKind::TypeError,
                 format!(
@@ -126,7 +156,7 @@ impl Runtime {
     ) -> Result<Value, Error> {
         let Some(ty) = &function.return_type else {
             return Ok(match flow {
-                Flow::Return(v) => v,
+                Flow::Return(v, _) => v,
                 _ => Value::Null,
             });
         };
@@ -141,21 +171,42 @@ impl Runtime {
                 function.line,
             ));
         }
-        let (value, given) = match flow {
-            Flow::Return(value) => {
+        let (value, given, line) = match flow {
+            Flow::Return(value, line) => {
                 let given = builtins::debug_type(&value).to_owned();
-                (Some(value), given)
+                (Some(value), given, line)
             }
-            _ => (None, "none".to_owned()),
+            _ => (None, "none".to_owned(), function.line),
         };
-        value
-            .and_then(|v| self.coerce_type(v, ty, function.strict_types, function.line))
-            .ok_or_else(|| {
-                Error::new(
-                    ErrorKind::TypeError,
-                    format!("{name}(): Return value must be of type {ty}, {given} returned"),
-                    function.line,
-                )
-            })
+        let error = || {
+            Error::new(
+                ErrorKind::TypeError,
+                format!("{name}(): Return value must be of type {ty}, {given} returned"),
+                line,
+            )
+        };
+        let converted = match value {
+            Some(value) => self.coerce_type(value, ty, function.strict_types, line),
+            None => Ok(None),
+        };
+        match converted {
+            Ok(value) => value.ok_or_else(error),
+            Err(previous) if previous.kind == ErrorKind::UnwindExit => Err(previous),
+            Err(previous) => {
+                // PHP's return verifier raises its own TypeError and retains
+                // a failed __toString conversion as the previous throwable.
+                let error = self.materialize_error(error());
+                error
+                    .throwable
+                    .as_ref()
+                    .unwrap()
+                    .throwable
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .previous = previous.throwable;
+                Err(error)
+            }
+        }
     }
 }

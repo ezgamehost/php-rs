@@ -1,4 +1,4 @@
-PHP 8.5.0 Zend/tests/return_types baseline (2026-10-27)
+PHP 8.5.0 Zend/tests/return_types baseline (2026-10-28)
 Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/return_types
 Passing cases also checked with the PHP reference. Unsupported sections were not executed.
 
@@ -80,7 +80,7 @@ Zend/tests/return_types/never_no_variance.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/never_parameter.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/never_reflected.phpt FAIL: Error: Class "ReflectionFunction" not found on line 5
 Zend/tests/return_types/never_return_throw.phpt UNSUPPORTED: EXPECTF
-Zend/tests/return_types/never_tostring.phpt FAIL: Error: Interface "Stringable" not found on line 3
+Zend/tests/return_types/never_tostring.phpt PASS
 Zend/tests/return_types/reflection001.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/return_reference_separation.phpt FAIL: ParseError: Expected parameter variable on line 2
 Zend/tests/return_types/rfc001.phpt UNSUPPORTED: EXPECTF
@@ -92,4 +92,4 @@ Zend/tests/return_types/void_disallowed1.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_disallowed2.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_disallowed3.phpt UNSUPPORTED: EXPECTF
 Zend/tests/return_types/void_parameter.phpt UNSUPPORTED: EXPECTF
-10 passed, 8 failed, 71 unsupported
+11 passed, 7 failed, 71 unsupported

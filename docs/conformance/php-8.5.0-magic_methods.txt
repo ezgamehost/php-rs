@@ -1,0 +1,163 @@
+PHP 8.5.0 Zend/tests/magic_methods baseline (2026-10-28)
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests/magic_methods
+Passing cases also checked with the PHP reference. Unsupported sections were not executed.
+
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
+Zend/tests/magic_methods/bug19859.phpt FAIL: Error: Call to undefined method test::fake() on line 10
+Zend/tests/magic_methods/bug24635.phpt PASS
+Zend/tests/magic_methods/bug26166.phpt FAIL: ParseError: Invalid non-public member declaration on line 13
+Zend/tests/magic_methods/bug28444.phpt FAIL: Unexpected diagnostics: Deprecated: Creation of dynamic property Overloaded::$y is deprecated on line 43; Deprecated: Creation of dynamic property Overloaded::$z is deprecated on line 45
+Zend/tests/magic_methods/bug29368.phpt PASS
+Zend/tests/magic_methods/bug29368_1.phpt PASS
+Zend/tests/magic_methods/bug29368_2.phpt FAIL: Expected "bomb!\nok\n", got "Class \"ReflectionMethod\" not found\nok\n"
+Zend/tests/magic_methods/bug29368_3.phpt FAIL: Expected "Foo::__construct\nBar::__construct\nFoo::__destruct\nCaught exception!\n", got "Foo::__construct\nBar::__construct\nCaught exception!\n"
+Zend/tests/magic_methods/bug30394.phpt FAIL: ParseError: Invalid non-public member declaration on line 14
+Zend/tests/magic_methods/bug30791.phpt FAIL: Error: Call to undefined function unserialize() on line 13
+Zend/tests/magic_methods/bug30889.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/magic_methods/bug31683.phpt FAIL: Error: Interface "ArrayAccess" not found on line 3
+Zend/tests/magic_methods/bug32429.phpt PASS
+Zend/tests/magic_methods/bug32596.phpt FAIL: Expected "BUG\nplease fix this thing, it wasted a nice part of my life!\nthis is still executed\n", got "this is still executed\n"
+Zend/tests/magic_methods/bug32660.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug34893.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+Zend/tests/magic_methods/bug36006.phpt PASS
+Zend/tests/magic_methods/bug36214.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug36268.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug36759.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+Zend/tests/magic_methods/bug37667.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug37707.phpt PASS
+Zend/tests/magic_methods/bug38146.phpt FAIL: Unexpected diagnostics: Undefined property: foo::$bar on line 10; foreach() argument must be of type array|object on line 10
+Zend/tests/magic_methods/bug38234.phpt PASS
+Zend/tests/magic_methods/bug38461.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug38624.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug39449.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+Zend/tests/magic_methods/bug39775.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug42937.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug43175.phpt FAIL: Error: Call to undefined method foobar::unknown() on line 15
+Zend/tests/magic_methods/bug43201.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug43450.phpt UNSUPPORTED: INI
+Zend/tests/magic_methods/bug44899.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug44899_2.phpt FAIL: ParseError: Invalid non-public member declaration on line 5
+Zend/tests/magic_methods/bug45186.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug45186_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug46238.phpt FAIL: Error: Call to undefined method a::() on line 13
+Zend/tests/magic_methods/bug46409.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+Zend/tests/magic_methods/bug47353.phpt FAIL: ParseError: Expected expression on line 12
+Zend/tests/magic_methods/bug47801.phpt FAIL: Error: Call to undefined method A::getFoo() on line 20
+Zend/tests/magic_methods/bug48248.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug48533.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug50394.phpt FAIL: ParseError: Expected parameter variable on line 2
+Zend/tests/magic_methods/bug51421.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug51822.phpt FAIL: Expected "bla\n1\n2\n", got "bla\n"
+Zend/tests/magic_methods/bug52361.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug52484.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug52484_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug52484_3.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug52879.phpt FAIL: ParseError: Expected expression on line 9
+Zend/tests/magic_methods/bug53826.phpt FAIL: Error: Call to undefined method A1::test() on line 15
+Zend/tests/magic_methods/bug54372.phpt FAIL: Error: Call to a member function b() on null on line 17
+Zend/tests/magic_methods/bug61025.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug61782.phpt FAIL: Error: Call to protected method MommasBoy::__clone() from scope LatchkeyKid on line 16
+Zend/tests/magic_methods/bug61970.phpt PASS
+Zend/tests/magic_methods/bug61970_1.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug61970_2.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug63462.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug66609.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug68412.phpt UNSUPPORTED: EXPECTF, SKIPIF
+Zend/tests/magic_methods/bug68652.phpt PASS
+Zend/tests/magic_methods/bug69025.phpt FAIL: Error: Call to undefined method A::init() on line 8
+Zend/tests/magic_methods/bug69212.phpt FAIL: Error: Call to undefined method Test::foo() on line 11
+Zend/tests/magic_methods/bug69427.phpt FAIL: Error: Call to private method BaseClass::foobar() from global scope on line 21
+Zend/tests/magic_methods/bug70215.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug70223.phpt FAIL: ParseError: Invalid non-public member declaration on line 8
+Zend/tests/magic_methods/bug70321.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug70967.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug71359.phpt FAIL: ParseError: Invalid non-public member declaration on line 3
+Zend/tests/magic_methods/bug71818.phpt UNSUPPORTED: INI
+Zend/tests/magic_methods/bug72177.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/magic_methods/bug72177_2.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/magic_methods/bug72813.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/magic_methods/bug72854.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/magic_methods/bug73288.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/magic_methods/bug74053.phpt FAIL: Expected "a::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\na::destruct\nb::destruct\n", got ""
+Zend/tests/magic_methods/bug74340.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug74862.phpt PASS
+Zend/tests/magic_methods/bug74862_2.phpt PASS
+Zend/tests/magic_methods/bug75420.1.phpt FAIL: Expected "string(3) \"foo\"\nint(42)\nint(24)\n", got "int(12)\nstring(3) \"foo\"\n"
+Zend/tests/magic_methods/bug75420.10.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.11.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.12.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.13.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.14.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.15.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.16.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.2.phpt FAIL: Error: Call to undefined function str_repeat() on line 9
+Zend/tests/magic_methods/bug75420.3.phpt FAIL: Expected "string(3) \"foo\"\nbool(false)\nint(24)\n", got "bool(true)\nstring(3) \"foo\"\n"
+Zend/tests/magic_methods/bug75420.4.phpt FAIL: Error: Call to undefined function str_repeat() on line 9
+Zend/tests/magic_methods/bug75420.5.phpt FAIL: Expected "object(Test)#1 (0) {\n}\nint(42)\nint(24)\n", got "int(12)\nobject(Test)#1 (0) {\n}\n"
+Zend/tests/magic_methods/bug75420.6.phpt FAIL: Expected "object(Test)#1 (0) {\n}\nbool(false)\nint(24)\n", got "bool(true)\nobject(Test)#1 (0) {\n}\n"
+Zend/tests/magic_methods/bug75420.7.phpt FAIL: Error: Call to undefined function str_repeat() on line 8
+Zend/tests/magic_methods/bug75420.8.phpt FAIL: Unexpected diagnostics: Deprecated: Creation of dynamic property Test::$foo is deprecated on line 8
+Zend/tests/magic_methods/bug75420.9.phpt FAIL: Error: Interface "ArrayAccess" not found on line 2
+Zend/tests/magic_methods/bug75420.phpt FAIL: Expected "string(3) \"foo\"\nint(42)\n", got "int(12)\n"
+Zend/tests/magic_methods/bug76667.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/bug77291.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/magic_methods/bug77339.phpt FAIL: Error: Call to undefined method Bar::someUndefinedStaticFunction() on line 27
+Zend/tests/magic_methods/bug77613.phpt PASS
+Zend/tests/magic_methods/bug78973.phpt UNSUPPORTED: EXPECTF, INI
+Zend/tests/magic_methods/bug80037.phpt FAIL: ParseError: Expected expression on line 10
+Zend/tests/magic_methods/bug80045.phpt FAIL: Error: Call to undefined function set_exception_handler() on line 5
+Zend/tests/magic_methods/call_static.phpt FAIL: Error: Call to undefined function call_user_func() on line 10
+Zend/tests/magic_methods/call_static_002.phpt FAIL: Error: Call to undefined function call_user_func() on line 15
+Zend/tests/magic_methods/call_static_003.phpt FAIL: Error: Call to undefined method Foo::fOoBaR() on line 13
+Zend/tests/magic_methods/call_static_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/call_static_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/call_static_007.phpt FAIL: Error: Call to undefined method a::Test() on line 19
+Zend/tests/magic_methods/class_toString_concat_non_interned_with_itself.phpt FAIL: Error: Call to undefined function str_repeat() on line 2
+Zend/tests/magic_methods/class_toString_concat_with_itself.phpt PASS
+Zend/tests/magic_methods/constructor_args.phpt PASS
+Zend/tests/magic_methods/dtor_scope.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/magic_methods/interface_with_tostring.phpt FAIL: Error: Class "ReflectionClass" not found on line 7
+Zend/tests/magic_methods/magic_by_ref_001.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_by_ref_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_by_ref_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_by_ref_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_by_ref_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_by_ref_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_by_ref_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_get_destroy_object.phpt FAIL: Unexpected diagnostics: Undefined property: Test::$prop on line 8
+Zend/tests/magic_methods/magic_methods_001.phpt FAIL: Error: Call to undefined method foo::sdfdsa() on line 28
+Zend/tests/magic_methods/magic_methods_002.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_003.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_004.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_005.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_006.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_007.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_008.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_009.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_010.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_011.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_012.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_013.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_014.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_015.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_016.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_017.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_018.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_019.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_020.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_021.phpt PASS
+Zend/tests/magic_methods/magic_methods_inheritance_rules.phpt PASS
+Zend/tests/magic_methods/magic_methods_inheritance_rules_non_trivial_01.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_inheritance_rules_non_trivial_02.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_serialize.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_set_state.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_sleep.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_unserialize.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/magic_methods_wakeup.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/overloaded_prop_assign_op_refs.phpt FAIL: ParseError: Invalid non-public member declaration on line 4
+Zend/tests/magic_methods/stringable_automatic_implementation.phpt FAIL: Error: Class "ReflectionClass" not found on line 10
+Zend/tests/magic_methods/stringable_internal_class.phpt UNSUPPORTED: EXTENSIONS
+Zend/tests/magic_methods/stringable_trait.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/magic_methods/stringable_trait_invalid.phpt UNSUPPORTED: EXPECTF
+Zend/tests/magic_methods/trampoline_closure_named_arguments.phpt FAIL: Error: Call to undefined method Test::test() on line 17
+16 passed, 70 failed, 71 unsupported

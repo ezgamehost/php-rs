@@ -6,6 +6,7 @@ use crate::ast::Parameter;
 /// unset. Captured traces own PHP array snapshots; object arguments stay handles.
 pub(super) struct TraceFrame {
     fields: PhpArray,
+    pub(super) internal: bool,
     arguments: Option<PhpArray>,
     fixed: Vec<Vec<u8>>,
     pub(super) bound: usize,
@@ -27,6 +28,8 @@ impl TraceFrame {
     ) -> Self {
         let name = target.function.as_ref().map_or(&target.name, |f| &f.name);
         let mut frame = Self::unit(runtime, name, site, Some(PhpArray::default()));
+        frame.internal = target.builtin.is_some()
+            || target.function.as_ref().is_some_and(|f| f.native.is_some());
         if let Some(context) = &target.context {
             let function = if name.starts_with(b"{closure:") {
                 name.as_slice()
@@ -96,6 +99,7 @@ impl TraceFrame {
         }
         put(&mut fields, b"function", Value::String(name.to_vec()));
         Self {
+            internal: false,
             fields,
             arguments,
             fixed: Vec::new(),

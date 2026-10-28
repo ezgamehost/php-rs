@@ -4,6 +4,7 @@ use crate::object::{Class, ThrowableData};
 
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
+        b"stringable" => ("Stringable", None),
         b"throwable" => ("Throwable", None),
         b"exception" => ("Exception", None),
         b"error" => ("Error", None),
@@ -27,8 +28,10 @@ impl Runtime {
         }
         // Parse internal declarations with the same signature representation as
         // user methods; native bodies are dispatched explicitly, never as PHP.
-        let code = if canonical == "Throwable" {
-            "<?php interface Throwable {}".to_owned()
+        let code = if canonical == "Stringable" {
+            "<?php interface Stringable { public function __toString():string; }".to_owned()
+        } else if canonical == "Throwable" {
+            "<?php interface Throwable extends Stringable {}".to_owned()
         } else if let Some(parent) = parent_name {
             format!("<?php class {canonical} extends {parent} {{}}")
         } else {
@@ -41,6 +44,7 @@ impl Runtime {
             final public function getPrevious():?Throwable {{}}
             final public function getTrace():array {{}}
             final public function getTraceAsString():string {{}}
+            public function __toString():string {{}}
         }}")
         };
         let (mut statements, _, _) =
@@ -51,7 +55,11 @@ impl Runtime {
         };
         for function in &mut Rc::make_mut(&mut declaration).methods {
             let function = Rc::make_mut(function);
+            if function.is_abstract {
+                continue;
+            }
             function.native = Some(match function.name.rsplit(|b| *b == b':').next().unwrap() {
+                b"__toString" => NativeMethod::ThrowableToString,
                 b"__construct" => NativeMethod::ThrowableConstruct,
                 b"getMessage" => NativeMethod::GetMessage,
                 b"getCode" => NativeMethod::GetCode,
@@ -66,10 +74,18 @@ impl Runtime {
         let parent = parent_name.and_then(|name| self.find_class(name.as_bytes()));
         let interfaces = if canonical == "Exception" || canonical == "Error" {
             vec![self.find_class(b"Throwable").expect("Throwable interface")]
+        } else if canonical == "Throwable" {
+            vec![
+                self.find_class(b"Stringable")
+                    .expect("Stringable interface"),
+            ]
         } else {
             Vec::new()
         };
         let mut methods = parent.as_ref().map_or_else(Vec::new, |p| p.methods.clone());
+        if canonical == "Throwable" {
+            methods.extend(interfaces[0].methods.iter().cloned());
+        }
         methods.extend(declaration.methods.iter().cloned());
         let class = Rc::new(Class {
             name: canonical.as_bytes().to_vec(),
@@ -116,9 +132,13 @@ impl Runtime {
                 line,
             ));
         };
+        if matches!(method, NativeMethod::ThrowableToString) {
+            return Ok(Value::String(stringable::throwable_string(&object)));
+        }
         let mut data = object.throwable.borrow_mut();
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
+            NativeMethod::ThrowableToString => unreachable!(),
             NativeMethod::ThrowableConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {
                     unreachable!()
