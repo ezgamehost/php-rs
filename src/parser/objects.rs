@@ -244,6 +244,41 @@ impl Parser {
                         method.line,
                     ));
                 }
+                if [b"__get".as_slice(), b"__set", b"__isset", b"__unset"]
+                    .iter()
+                    .any(|name| method.name.eq_ignore_ascii_case(name))
+                {
+                    let setter = method.name.eq_ignore_ascii_case(b"__set");
+                    let count = if setter { 2 } else { 1 };
+                    let invalid_name_type = method
+                        .parameters
+                        .first()
+                        .and_then(|p| p.ty.as_ref())
+                        .is_some_and(|ty| !ty.contains("string") && !ty.contains("mixed"));
+                    let invalid_return = method.return_type.as_ref().is_some_and(|ty| {
+                        if method.name.eq_ignore_ascii_case(b"__get") {
+                            false
+                        } else {
+                            ty.members.iter().any(|member| {
+                                member != "never"
+                                    && if method.name.eq_ignore_ascii_case(b"__isset") {
+                                        !matches!(member.as_str(), "bool" | "true" | "false")
+                                    } else {
+                                        member != "void"
+                                    }
+                            })
+                        }
+                    });
+                    if method.parameters.iter().filter(|p| !p.variadic).count() != count
+                        || invalid_name_type
+                        || invalid_return
+                    {
+                        return Err(Error::parse(
+                            "Invalid magic property method signature",
+                            method.line,
+                        ));
+                    }
+                }
                 if static_method
                     && [
                         b"__construct".as_slice(),

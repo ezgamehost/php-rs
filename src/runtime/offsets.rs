@@ -5,6 +5,18 @@ pub(super) enum Access {
     Read,
     Coalesce,
     Probe,
+    Empty,
+    ProbeValue,
+}
+
+impl Access {
+    pub(super) fn intermediate(self) -> Self {
+        if matches!(self, Self::Probe | Self::Empty | Self::ProbeValue) {
+            Self::ProbeValue
+        } else {
+            self
+        }
+    }
 }
 
 /// Keep the evaluated key and cache array coercion across read/modify/write.
@@ -222,7 +234,9 @@ pub(super) fn string_index(
             if access == Access::Read {
                 warnings.push(format!("String offset cast occurred on line {line}"));
             }
-            if access == Access::Probe && matches!(key, Value::Float(_)) {
+            if matches!(access, Access::Probe | Access::Empty | Access::ProbeValue)
+                && matches!(key, Value::Float(_))
+            {
                 return Ok(Some(key.integer(line, warnings)?));
             }
             return Ok(Some(match key {
@@ -235,7 +249,7 @@ pub(super) fn string_index(
             let bytes = bytes.bytes();
             if let Some((Value::Int(n), complete)) = crate::value::numeric_prefix(&bytes) {
                 if !complete {
-                    if access == Access::Probe {
+                    if matches!(access, Access::Probe | Access::Empty | Access::ProbeValue) {
                         return Ok(None);
                     }
                     warnings.push(format!(
@@ -248,7 +262,9 @@ pub(super) fn string_index(
         }
         _ => {}
     }
-    if access == Access::Probe || (access == Access::Coalesce && !matches!(key, Value::Array(_))) {
+    if matches!(access, Access::Probe | Access::Empty | Access::ProbeValue)
+        || (access == Access::Coalesce && !matches!(key, Value::Array(_)))
+    {
         Ok(None)
     } else {
         Err(Error::new(

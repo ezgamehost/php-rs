@@ -435,6 +435,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             object_id: self.next_object_id,
         });
@@ -535,7 +536,7 @@ impl Runtime {
             ));
         }
     }
-    pub(super) fn read_property_value(
+    pub(super) fn read_property_storage(
         &mut self,
         object: &PhpObject,
         name: &[u8],
@@ -634,6 +635,7 @@ impl Runtime {
         };
         if let ArrayKey::String(key) = &key {
             object.reinitializable.borrow_mut().remove(key);
+            object.unset_properties.borrow_mut().remove(key);
         }
         object.properties.borrow_mut().insert(key, value.clone());
         Ok(value)
@@ -654,6 +656,20 @@ pub(super) fn method(class: &Class, name: &[u8]) -> Option<Rc<FunctionDecl>> {
 }
 
 impl Runtime {
+    pub(super) fn prepare_property_unset(
+        &mut self,
+        object: &PhpObject,
+        name: &[u8],
+        line: usize,
+    ) -> Result<(), Error> {
+        validate_property_name(name, line)?;
+        if let Some(owner) = self.instance_static_owner(&object.class, name) {
+            self.check_static_property_access(&object.class, &owner, name, line, false)?;
+        }
+        self.warn_static_as_instance(object, name, line);
+        Ok(())
+    }
+
     pub(super) fn unset_location(&mut self, expr: &Expr) -> Result<Option<Location>, Error> {
         match &expr.kind {
             ExprKind::Group(inner) => self.unset_location(inner),
@@ -661,18 +677,8 @@ impl Runtime {
                 let value = self.property_write_base(base, true)?;
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
-                    validate_property_name(&name, expr.line)?;
-                    if let Some(owner) = self.instance_static_owner(&object.class, &name) {
-                        self.check_static_property_access(
-                            &object.class,
-                            &owner,
-                            &name,
-                            expr.line,
-                            false,
-                        )?;
-                    }
-                    self.warn_static_as_instance(&object, &name, expr.line);
                     Some(Location {
+                        overloaded: None,
                         static_class: None,
                         object: Some(object),
                         name,

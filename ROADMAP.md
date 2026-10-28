@@ -93,6 +93,9 @@ definition of completion.
    Instance properties support private storage per declaring class, protected
    prototype access, separate read/set visibility, scoped iteration/inspection,
    mangled cast keys, final inheritance checks, and clone-with access checks.
+   Magic property methods handle inaccessible/unset reads, writes, isset/empty,
+   and unset, with per-property guards, typed getter checks, temporary indirect
+   writes, caller trace locations, and restoration after exceptions.
    Traits support nested composition before inheritance, method precedence,
    `insteadof`, aliases, visibility/final adaptations, abstract requirements,
    property/constant compatibility checks, and lexical magic constants.

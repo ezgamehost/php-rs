@@ -241,6 +241,7 @@ impl Runtime {
             class,
             object_id: self.next_object_id,
             properties: RefCell::default(),
+            unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             throwable: RefCell::new(Some(ThrowableData {
                 trace: self.capture_trace(),

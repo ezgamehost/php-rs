@@ -17,6 +17,18 @@ impl Runtime {
         indirect: bool,
         line: usize,
     ) -> Result<(), Error> {
+        if location.overloaded.is_some() {
+            return Ok(());
+        }
+        if !unset
+            && !indirect
+            && location
+                .object
+                .as_ref()
+                .is_some_and(|object| self.magic_set_applicable(object, &location.name))
+        {
+            return Ok(());
+        }
         self.check_instance_set_access(location, unset, indirect, line)?;
         let Some(object) = &location.object else {
             return Ok(());
@@ -122,10 +134,25 @@ impl Runtime {
                 let (value, _) = self.write_base_value(base, silent)?;
                 let name = self.variable_name(name)?;
                 if let Value::Object(object) = value {
-                    let value = self.read_property_value(&object, &name, expr.line, silent)?;
+                    let overloaded = self.magic_get_applicable(&object, &name);
+                    let value = self.read_property_value(
+                        &object,
+                        &name,
+                        expr.line,
+                        if silent && !overloaded {
+                            Access::Coalesce
+                        } else {
+                            Access::Read
+                        },
+                    )?;
+                    if overloaded {
+                        self.warn_indirect_magic(&object, &name, &value, expr.line);
+                    }
+                    let cached = overloaded.then(|| value.clone());
                     Ok((
                         value,
                         Some(Location {
+                            overloaded: cached,
                             object: Some(object),
                             static_class: None,
                             name,
@@ -174,7 +201,7 @@ impl Runtime {
             }
             _ => Ok((
                 if silent {
-                    self.coalesce_read(expr, true)?
+                    self.coalesce_read(expr, Access::Coalesce)?
                 } else {
                     self.eval(expr)?
                 },

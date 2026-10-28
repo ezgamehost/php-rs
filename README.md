@@ -70,6 +70,9 @@ new request. The CLI returns the low eight bits of the requested status.
   separate private slots across inheritance, scoped iteration and `get_object_vars`,
   mangled array-cast keys, and asymmetric setters. Final properties and readonly
   initialization restrictions are checked across direct and indirect writes.
+- Magic property methods `__get`, `__set`, `__isset`, and `__unset`, with
+  recursion guards, distinct typed-uninitialized/unset states, quiet probes,
+  checked getter results, and temporary values for indirect modification.
 - Public class inheritance with inherited constructors/properties/methods,
   virtual dispatch, shared inherited method statics, and `final` classes/methods.
   Overrides validate arity, variadic parameters, parameter contravariance, and

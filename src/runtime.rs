@@ -28,6 +28,7 @@ mod inheritance;
 mod interfaces;
 mod jumps;
 mod loading;
+mod magic_properties;
 mod matching;
 mod method_visibility;
 mod nullsafe;
@@ -55,6 +56,7 @@ pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,
+    property_guards: HashSet<(usize, Vec<u8>, magic_properties::Magic)>,
     autoloaders: Vec<Option<autoload::Autoloader>>,
     autoloading: HashSet<Vec<u8>>,
     autoload_extensions: Option<Vec<u8>>,
@@ -84,6 +86,7 @@ pub struct Runtime {
     next_object_id: usize,
 }
 struct Location {
+    overloaded: Option<Value>,
     static_class: Option<Rc<crate::object::Class>>,
     object: Option<Rc<crate::PhpObject>>,
     name: Vec<u8>,
@@ -265,6 +268,31 @@ impl Runtime {
                     let Some(mut location) = self.unset_location(target)? else {
                         continue;
                     };
+                    if let Some(object) = &location.object {
+                        if location.keys.is_empty() {
+                            if self.magic_property_unset(object, &location.name, target.line)? {
+                                continue;
+                            }
+                        } else if self.magic_get_applicable(object, &location.name) {
+                            let mut value = self.read_property_value(
+                                object,
+                                &location.name,
+                                target.line,
+                                Access::Read,
+                            )?;
+                            self.warn_indirect_magic(object, &location.name, &value, target.line);
+                            unset_path(
+                                &mut value,
+                                &mut location.keys,
+                                target.line,
+                                &mut self.diagnostics,
+                            )?;
+                            continue;
+                        }
+                    }
+                    if let Some(object) = &location.object {
+                        self.prepare_property_unset(object, &location.name, target.line)?;
+                    }
                     self.check_readonly_write(&location, true, target.line)?;
                     if let Some(class) = &location.static_class {
                         if location.keys.is_empty() {
@@ -293,6 +321,9 @@ impl Runtime {
                         let key = self.instance_property_key(object, &location.name);
                         if location.keys.is_empty() {
                             object.properties.borrow_mut().remove(&key);
+                            if let ArrayKey::String(key) = &key {
+                                object.unset_properties.borrow_mut().insert(key.clone());
+                            }
                         } else {
                             let stored = object.properties.borrow().get(&key).cloned();
                             if let Some(mut value) = stored {
@@ -361,6 +392,7 @@ impl Runtime {
     fn location(&mut self, expr: &Expr) -> Result<Location, Error> {
         match &expr.kind {
             ExprKind::Variable(name) => Ok(Location {
+                overloaded: None,
                 static_class: None,
                 object: None,
                 name: name.clone(),
@@ -368,6 +400,7 @@ impl Runtime {
                 keys: Vec::new(),
             }),
             ExprKind::DynamicVariable(name) => Ok(Location {
+                overloaded: None,
                 static_class: None,
                 object: None,
                 name: self.variable_name(name)?,
@@ -390,6 +423,7 @@ impl Runtime {
                     ));
                 };
                 Ok(Location {
+                    overloaded: None,
                     static_class: None,
                     object: Some(object),
                     name,
@@ -403,6 +437,7 @@ impl Runtime {
                     Error::new(ErrorKind::Error, "Cannot append to $GLOBALS", expr.line)
                 })?;
                 Ok(Location {
+                    overloaded: None,
                     static_class: None,
                     object: None,
                     name: self.variable_name(key)?,
@@ -434,7 +469,23 @@ impl Runtime {
         string_error: Option<&str>,
     ) -> Result<Value, Error> {
         if let Some(object) = &location.object {
-            let mut value = self.read_property_value(object, &location.name, line, silent)?;
+            let overloaded = !silent
+                && !location.keys.is_empty()
+                && self.magic_get_applicable(object, &location.name);
+            let mut value = self.read_property_value(
+                object,
+                &location.name,
+                line,
+                if silent {
+                    Access::Coalesce
+                } else {
+                    Access::Read
+                },
+            )?;
+            if overloaded {
+                self.warn_indirect_magic(object, &location.name, &value, line);
+                location.overloaded = Some(value.clone());
+            }
             for key in &mut location.keys {
                 if matches!(value, Value::String(_))
                     && let Some(message) = string_error
@@ -509,6 +560,27 @@ impl Runtime {
         {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }
+        if let Some(object) = &location.object {
+            if location.keys.is_empty() {
+                if self.magic_property_write(object, &location.name, &new_value, line)? {
+                    return Ok(new_value);
+                }
+            } else {
+                let overloaded = if let Some(value) = location.overloaded.take() {
+                    Some(value)
+                } else if self.magic_get_applicable(object, &location.name) {
+                    let value =
+                        self.read_property_value(object, &location.name, line, Access::Read)?;
+                    self.warn_indirect_magic(object, &location.name, &value, line);
+                    Some(value)
+                } else {
+                    None
+                };
+                if let Some(value) = overloaded {
+                    return self.write_overloaded_path(value, &mut location.keys, new_value, line);
+                }
+            }
+        }
         self.check_readonly_write(location, false, line)?;
         if let Some(result) = self.string_offset_assignment(location, &new_value, line)? {
             return Ok(result);
@@ -549,15 +621,14 @@ impl Runtime {
             &mut self.diagnostics,
         )
     }
-    fn coalesce_read(&mut self, expr: &Expr, probe: bool) -> Result<Value, Error> {
+    fn coalesce_read(&mut self, expr: &Expr, access: Access) -> Result<Value, Error> {
         if expr.has_nullsafe_chain() {
-            let access = if probe && !expr.is_isset_target() {
-                Access::Read
-            } else if probe {
-                Access::Probe
-            } else {
-                Access::Coalesce
-            };
+            let access =
+                if matches!(access, Access::Probe | Access::Empty) && !expr.is_isset_target() {
+                    Access::Read
+                } else {
+                    access
+                };
             return self
                 .nullsafe_chain(expr, access)
                 .map(|value| value.unwrap_or(Value::Null));
@@ -574,31 +645,27 @@ impl Runtime {
                 self.read_location(&mut location, expr.line, true, None)
             }
             ExprKind::Property(base, name) => {
-                let value = self.coalesce_read(base, probe)?;
+                let value = self.coalesce_read(base, access.intermediate())?;
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
-                    self.read_property_value(&object, &name, expr.line, true)?
+                    self.read_property_value(&object, &name, expr.line, access)?
                 } else {
                     Value::Null
                 })
             }
-            ExprKind::Group(inner) => self.coalesce_read(inner, probe),
+            ExprKind::Group(inner) => self.coalesce_read(inner, access),
             ExprKind::Index(base, Some(_)) if base.is_globals() => {
                 let mut location = self.location(expr)?;
                 self.read_location(&mut location, expr.line, true, None)
             }
             ExprKind::Index(base, Some(key)) => {
-                let value = self.coalesce_read(base, probe)?;
+                let value = self.coalesce_read(base, access.intermediate())?;
                 let key = self.eval(key)?;
                 read_offset(
                     value,
                     &mut Offset::new(Some(key)),
                     expr.line,
-                    if probe {
-                        Access::Probe
-                    } else {
-                        Access::Coalesce
-                    },
+                    access,
                     &mut self.diagnostics,
                 )
             }
@@ -659,7 +726,7 @@ impl Runtime {
                 let value = self.eval(base)?;
                 let name = self.variable_name(name)?;
                 if let Value::Object(object) = value {
-                    self.read_property_value(&object, &name, line, false)
+                    self.read_property_value(&object, &name, line, Access::Read)
                 } else {
                     self.diagnostics.push(format!(
                         "Attempt to read property \"{}\" on {} on line {line}",
@@ -750,7 +817,7 @@ impl Runtime {
             }
             ExprKind::Isset(args) => {
                 for arg in args {
-                    if self.coalesce_read(arg, true)? == Value::Null {
+                    if self.coalesce_read(arg, Access::Probe)? == Value::Null {
                         return Ok(Value::Bool(false));
                     }
                 }
@@ -758,7 +825,7 @@ impl Runtime {
             }
             ExprKind::Empty(arg) => Ok(Value::Bool(
                 !self
-                    .coalesce_read(arg, true)?
+                    .coalesce_read(arg, Access::Empty)?
                     .to_bool(line, &mut self.diagnostics),
             )),
             ExprKind::Constant(name) => self.read_constant(name, line),
@@ -878,7 +945,7 @@ impl Runtime {
                     return self.pipe_call(callable, value, line);
                 }
                 if op == "??" {
-                    let lhs = self.coalesce_read(left, false)?;
+                    let lhs = self.coalesce_read(left, Access::Coalesce)?;
                     return if lhs == Value::Null {
                         self.eval(right)
                     } else {

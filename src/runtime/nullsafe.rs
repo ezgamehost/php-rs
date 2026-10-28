@@ -20,7 +20,7 @@ impl Runtime {
         let kind = match &expr.kind {
             ExprKind::Group(inner) => return self.nullsafe_chain(inner, access),
             ExprKind::Property(base, name) | ExprKind::NullsafeProperty(base, name) => {
-                let Some(value) = self.nullsafe_chain(base, access)? else {
+                let Some(value) = self.nullsafe_chain(base, access.intermediate())? else {
                     return Ok(None);
                 };
                 if matches!(expr.kind, ExprKind::NullsafeProperty(_, _)) && value == Value::Null {
@@ -29,7 +29,7 @@ impl Runtime {
                 ExprKind::Property(literal(value), name.clone())
             }
             ExprKind::Index(base, key) => {
-                let Some(value) = self.nullsafe_chain(base, access)? else {
+                let Some(value) = self.nullsafe_chain(base, access.intermediate())? else {
                     return Ok(None);
                 };
                 ExprKind::Index(literal(value), key.clone())
@@ -111,8 +111,9 @@ impl Runtime {
     fn chain_read(&mut self, expr: &Expr, access: Access) -> Result<Value, Error> {
         match access {
             Access::Read => self.eval(expr),
-            Access::Probe => self.coalesce_read(expr, true),
-            Access::Coalesce => self.coalesce_read(expr, false),
+            Access::Probe | Access::Empty | Access::ProbeValue | Access::Coalesce => {
+                self.coalesce_read(expr, access)
+            }
         }
     }
 }

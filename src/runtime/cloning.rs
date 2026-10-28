@@ -100,6 +100,7 @@ impl Runtime {
             class: original.class.clone(),
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),
+            unset_properties: RefCell::new(original.unset_properties.borrow().clone()),
             reinitializable: RefCell::new(original.reinitializable.borrow().clone()),
             object_id: self.next_object_id,
         });
@@ -118,6 +119,7 @@ impl Runtime {
             unlock_readonly(&object);
             for (key, value) in updates.entries() {
                 let mut location = Location {
+                    overloaded: None,
                     object: Some(object.clone()),
                     static_class: None,
                     name: property_name(key),

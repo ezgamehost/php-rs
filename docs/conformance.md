@@ -76,13 +76,29 @@ and PHP 8.5.0 property handlers. All 797 existing Rust tests, 57 reference-check
 project fixtures, formatting, and Clippy pass. Magic property methods, references,
 property hooks, reflection, and exact compile-fatal diagnostics remain incomplete.
 Passing attribute-containing fixtures do not establish attribute validation.
+The [magic-property slice](conformance/php-8.5.0-magic-properties-hillclimb.txt)
+adds 36 Zend passes without regressions. All 797 existing Rust tests, 57
+reference-checked project fixtures, formatting, and Clippy pass. No new custom
+tests or differential matrices were added. It implements `__get`, `__set`, `__isset`, and `__unset`
+using guards per object, property name, and operation. Guards survive nested
+calls and are cleared on exceptions. Typed properties that have never been
+initialized bypass handlers; explicitly unset slots can invoke them. Reads,
+isset, empty, coalescing, and intermediate chain fetches preserve their distinct
+handler order. Getter values are checked against unset property types where PHP
+requires it. Indirect writes use a temporary value and emit the PHP notice,
+while object handles returned by getters retain ordinary object identity.
+Variadic magic-method signatures and caller locations in exception traces follow
+PHP 8.5.0. The implementation is grounded in the
+[PHP overloading rules](https://www.php.net/manual/en/language.oop5.overloading.php)
+and `Zend/zend_object_handlers.c`. Reference-returning getters, method overloading,
+property hooks, destructors, and exact diagnostic rendering remain unfinished.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1031 | 3817 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1067 | 3781 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

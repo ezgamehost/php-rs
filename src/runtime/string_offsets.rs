@@ -102,7 +102,44 @@ impl Runtime {
             };
             Storage::Cell(Rc::downgrade(&stored))
         };
-        let pending = match storage.prepare(&mut location.keys, line, &mut self.diagnostics)? {
+        self.assign_string_storage(storage, &mut location.keys, replacement, line)
+    }
+
+    pub(super) fn write_overloaded_path(
+        &mut self,
+        value: Value,
+        keys: &mut [Offset],
+        replacement: Value,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let temporary = cell(value);
+        if self.can_stringify(&replacement)
+            && let Some(result) = self.assign_string_storage(
+                Storage::Cell(Rc::downgrade(&temporary)),
+                keys,
+                &replacement,
+                line,
+            )?
+        {
+            return Ok(result);
+        }
+        write_path(
+            &mut temporary.borrow_mut(),
+            keys,
+            replacement,
+            line,
+            &mut self.diagnostics,
+        )
+    }
+
+    fn assign_string_storage(
+        &mut self,
+        storage: Storage,
+        keys: &mut [Offset],
+        replacement: &Value,
+        line: usize,
+    ) -> Result<Option<Value>, Error> {
+        let pending = match storage.prepare(keys, line, &mut self.diagnostics)? {
             Preparation::Ordinary => return Ok(None),
             Preparation::Ignored => return Ok(Some(Value::Null)),
             Preparation::Character(pending) => pending,

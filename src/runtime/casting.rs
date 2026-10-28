@@ -121,6 +121,7 @@ impl Runtime {
             class: self.find_class(b"stdClass").expect("built-in stdClass"),
             class_name: "stdClass".to_owned(),
             properties: RefCell::new(properties),
+            unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             throwable: RefCell::new(None),
             object_id: self.next_object_id,

@@ -43,6 +43,7 @@ pub struct PhpObject {
     pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,
     pub(crate) properties: RefCell<PhpArray>,
+    pub(crate) unset_properties: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) object_id: usize,
 }

@@ -1,0 +1,73 @@
+Before: 5256 cases; 1031 passed, 3817 failed, 408 unsupported
+After: 5256 cases; 1067 passed, 3781 failed, 408 unsupported
+New passes: 36; regressions: 0
+NEW PASS: Zend/tests/asymmetric_visibility/__set.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/__unset.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/bug001.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/bug002.phpt
+NEW PASS: Zend/tests/bug46308.phpt
+NEW PASS: Zend/tests/exceptions/exception_during_property_assign_op.phpt
+NEW PASS: Zend/tests/foreach/bug34467.phpt
+NEW PASS: Zend/tests/foreach/bug39990.phpt
+NEW PASS: Zend/tests/ghsa-rwp7-7vc6-8477_001.phpt
+NEW PASS: Zend/tests/magic_methods/bug28444.phpt
+NEW PASS: Zend/tests/magic_methods/bug30889.phpt
+NEW PASS: Zend/tests/magic_methods/bug34893.phpt
+NEW PASS: Zend/tests/magic_methods/bug38146.phpt
+NEW PASS: Zend/tests/magic_methods/bug44899_2.phpt
+NEW PASS: Zend/tests/magic_methods/bug54372.phpt
+NEW PASS: Zend/tests/magic_methods/bug75420.1.phpt
+NEW PASS: Zend/tests/magic_methods/bug75420.3.phpt
+NEW PASS: Zend/tests/magic_methods/bug75420.5.phpt
+NEW PASS: Zend/tests/magic_methods/bug75420.6.phpt
+NEW PASS: Zend/tests/magic_methods/bug75420.8.phpt
+NEW PASS: Zend/tests/magic_methods/bug75420.phpt
+NEW PASS: Zend/tests/magic_methods/bug77291.phpt
+NEW PASS: Zend/tests/magic_methods/magic_get_destroy_object.phpt
+NEW PASS: Zend/tests/namespaces/ns_064.phpt
+NEW PASS: Zend/tests/objects/objects_024.phpt
+NEW PASS: Zend/tests/overloaded_assign_prop_return_value.phpt
+NEW PASS: Zend/tests/readonly_props/magic_get_set.phpt
+NEW PASS: Zend/tests/readonly_props/unset.phpt
+NEW PASS: Zend/tests/rope_with_exception.phpt
+NEW PASS: Zend/tests/temporary_cleaning/temporary_cleaning_002.phpt
+NEW PASS: Zend/tests/traits/methods_001.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_009.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_072.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_100.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_magic_set.phpt
+NEW PASS: Zend/tests/unset/bug33512.phpt
+
+Most frequent remaining failure messages:
+579: ParseError: Expected ';'
+259: ParseError: Expected expression
+196: Error: Class "ReflectionClass" not found
+125: Error: Call to undefined function set_error_handler()
+114: ParseError: Expected parameter variable
+62: Error: Class "Fiber" not found
+51: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+40: ParseError: Expected function name
+38: ParseError: Expected ')'
+31: ParseError: Invalid interface member declaration
+31: Error: Call to undefined function fopen()
+27: ParseError: Invalid abstract method declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

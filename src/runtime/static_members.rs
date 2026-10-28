@@ -279,6 +279,7 @@ impl Runtime {
         let name = self.variable_name(name)?;
         let class = self.require_member_class(&class_name, line)?;
         Ok(Location {
+            overloaded: None,
             object: None,
             static_class: Some(class),
             name,
