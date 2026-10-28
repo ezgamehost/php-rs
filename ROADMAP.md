@@ -208,6 +208,8 @@ definition of completion.
    searches, ASCII case-insensitive matching, and typed reference count output.
    Substring extraction/replacement supports negative/clamped byte bounds, integer
    limits, null lengths, and insertion-ordered array inputs with missing-entry defaults.
+   Position/suffix searches and contains/starts-with/ends-with predicates support binary
+   strings, ASCII case folding, positive/negative offsets, empty needles, and prefix results.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

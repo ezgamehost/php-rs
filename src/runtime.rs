@@ -56,6 +56,7 @@ mod static_members;
 mod string_builtins;
 mod string_offsets;
 mod string_replace;
+mod string_search;
 mod stringable;
 mod substrings;
 mod termination;

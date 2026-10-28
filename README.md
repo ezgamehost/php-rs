@@ -327,6 +327,8 @@ new request. The CLI returns the low eight bits of the requested status.
   preserved subject keys, and a reference parameter for the replacement count.
 - `substr` and `substr_replace` support byte offsets, negative/clamped bounds, nullable
   lengths, and ordered array replacements with preserved subject keys.
+- Binary string searches: `strpos`/`stripos`, `strrpos`/`strripos`, `strstr`/`strchr`/
+  `stristr`, `strrchr`, and the contains/starts-with/ends-with predicates.
 
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
 generators, complete attribute behavior, extensions, and most PHP 8.5 additions.

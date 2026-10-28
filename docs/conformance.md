@@ -716,6 +716,28 @@ were added. PHP 8.5.0 `ext/standard/string.c`, native signatures, and upstream f
 establish these rules. Other string APIs, complete native reflection metadata, INI
 support, and diagnostic matching remain unfinished.
 
+The [string search slice](conformance/php-8.5.0-string-search-hillclimb.txt) adds
+**61 upstream passes**: 58 standard string fixtures and three Zend fixtures, with no
+regressions across strings, Zend, reflection, and SPL. It implements `strpos`, `stripos`,
+`strrpos`, `strripos`, `strstr`, `strchr`, `stristr`, `strrchr`, `str_contains`,
+`str_starts_with`, and `str_ends_with`. Searches operate on bytes, preserve original
+substring contents, and use ASCII folding for insensitive matches. Position searches
+accept positive and negative offsets, validate integer limits, and retain distinct
+forward/reverse offset rules. A negative reverse offset bounds the match's starting
+position while allowing a multi-byte match to extend beyond it.
+
+Empty needles follow each API's rules; `strrchr` searches for the needle's first byte,
+including NUL for an empty needle. Suffix APIs support `before_needle`, and `strchr`
+retains its alias name for diagnostics. Parameter metadata carries offset zero and
+before-needle false defaults. Conversion and argument binding use existing native rules.
+
+The full string suite improves to **164 / 414 / 152** across 730 fixtures. Zend reaches
+**1656 / 3192 / 408**; reflection remains **244 / 211 / 37**, and SPL **18 / 666 / 94**.
+All 797 existing Rust tests and 57 reference-checked project fixtures pass; formatting
+and Clippy pass. No custom tests were added. PHP 8.5.0 `ext/standard/string.c`, native
+signatures, and upstream fixtures establish these behaviors. Other string APIs, complete
+native reflection metadata, INI support, and diagnostic matching remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -723,11 +745,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1653 | 3195 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1656 | 3192 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 106 | 472 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 164 | 414 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

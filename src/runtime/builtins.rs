@@ -14,6 +14,7 @@ pub(super) enum Builtin {
     StrReplace(bool),
     Substr,
     SubstrReplace,
+    StringSearch(string_search::SearchKind),
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -87,6 +88,17 @@ impl Builtin {
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
             b"substr_replace" => Self::SubstrReplace,
+            b"strpos" => Self::StringSearch(string_search::SearchKind::Position),
+            b"stripos" => Self::StringSearch(string_search::SearchKind::PositionInsensitive),
+            b"strrpos" => Self::StringSearch(string_search::SearchKind::LastPosition),
+            b"strripos" => Self::StringSearch(string_search::SearchKind::LastPositionInsensitive),
+            b"strstr" => Self::StringSearch(string_search::SearchKind::Suffix),
+            b"strchr" => Self::StringSearch(string_search::SearchKind::SuffixAlias),
+            b"stristr" => Self::StringSearch(string_search::SearchKind::SuffixInsensitive),
+            b"strrchr" => Self::StringSearch(string_search::SearchKind::LastCharacter),
+            b"str_contains" => Self::StringSearch(string_search::SearchKind::Contains),
+            b"str_starts_with" => Self::StringSearch(string_search::SearchKind::StartsWith),
+            b"str_ends_with" => Self::StringSearch(string_search::SearchKind::EndsWith),
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -202,6 +214,7 @@ impl Builtin {
                 &[("string", false, false)]
             }
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
+            Self::StringSearch(kind) => kind.parameters(),
             Self::StrReplace(_) => &[
                 ("search", false, false),
                 ("replace", false, false),
@@ -280,6 +293,8 @@ impl Builtin {
                 implicit_nullable: false,
                 default: optional.then_some(Expr {
                     kind: ExprKind::Literal(match (self, *name) {
+                        (Self::StringSearch(_), "offset") => Value::Int(0),
+                        (Self::StringSearch(_), "before_needle") => Value::Bool(false),
                         (Self::Trim(..), "characters") => {
                             Value::String(b" \n\r\t\x0b\0".to_vec().into())
                         }
@@ -383,6 +398,7 @@ impl Runtime {
             }
             Builtin::Substr => self.substring(&args, line),
             Builtin::SubstrReplace => self.substring_replace(&args, line),
+            Builtin::StringSearch(kind) => self.string_search(kind, &args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
