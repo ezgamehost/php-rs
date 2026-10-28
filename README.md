@@ -99,6 +99,10 @@ new request. The CLI returns the low eight bits of the requested status.
   Native UnitEnum/BackedEnum contracts, `enum_exists`, enum comparisons/dumps, and
   enum/case reflection are supported. Serialization and full reflection strings
   remain unfinished.
+- `var_export` prints or returns PHP expressions for scalars, arrays, objects,
+  closures, and enum cases. It preserves byte strings, floating-point fractions,
+  nested indentation, and detects circular references. Configurable serialization
+  precision and property hooks remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and
   permitted string sources, checking target names without autoloading them.

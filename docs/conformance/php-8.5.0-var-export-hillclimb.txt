@@ -1,0 +1,97 @@
+Zend suite
+
+Before: 5256 cases; 1572 passed, 3276 failed, 408 unsupported
+After: 5256 cases; 1574 passed, 3274 failed, 408 unsupported
+New passes: 2; regressions: 0
+NEW PASS: Zend/tests/bug66015.phpt
+NEW PASS: Zend/tests/enum/enum-in-var-export.phpt
+
+Most frequent remaining failure messages:
+372: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+49: Error: Interface "ArrayAccess" not found
+48: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+29: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 233 passed, 222 failed, 37 unsupported
+After: 492 cases; 235 passed, 220 failed, 37 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/reflection/tests/bug51905.phpt
+NEW PASS: ext/reflection/tests/bug51911.phpt
+
+Most frequent remaining failure messages:
+24: ParseError: Expected ';'
+22: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Standard var_export fixtures
+
+Before: 19 cases; 0 passed, 13 failed, 6 unsupported
+After: 19 cases; 11 passed, 2 failed, 6 unsupported
+New passes: 11; regressions: 0
+NEW PASS: ext/standard/tests/array/var_export.phpt
+NEW PASS: ext/standard/tests/array/var_export2.phpt
+NEW PASS: ext/standard/tests/array/var_export3.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_basic2.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_basic4.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_basic6.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_basic7.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_basic8.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_basic9.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_bug66179.phpt
+NEW PASS: ext/standard/tests/general_functions/var_export_bug71314.phpt
+
+Most frequent remaining failure messages:
+2: Unexpected diagnostics: Warning: var_export does not handle circular references
+
+Unsupported section combinations:
+2: INI, SKIPIF
+2: SKIPIF
+2: INI

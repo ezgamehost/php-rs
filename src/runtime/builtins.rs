@@ -13,6 +13,7 @@ pub(super) enum Builtin {
     Count,
     VarDump,
     PrintR,
+    VarExport,
     Printf,
     Sprintf,
     Vprintf,
@@ -75,6 +76,7 @@ impl Builtin {
             b"count" | b"sizeof" => Self::Count,
             b"var_dump" => Self::VarDump,
             b"print_r" => Self::PrintR,
+            b"var_export" => Self::VarExport,
             b"printf" => Self::Printf,
             b"sprintf" => Self::Sprintf,
             b"vprintf" => Self::Vprintf,
@@ -182,7 +184,7 @@ impl Builtin {
             Self::VarDump => &[("value", false, false), ("values", false, true)],
             Self::Printf | Self::Sprintf => &[("format", false, false), ("values", false, true)],
             Self::Vprintf | Self::Vsprintf => &[("format", false, false), ("values", false, false)],
-            Self::PrintR => &[("value", false, false), ("return", true, false)],
+            Self::PrintR | Self::VarExport => &[("value", false, false), ("return", true, false)],
             Self::GetType | Self::GetDebugType | Self::Is(_) => &[("value", false, false)],
             Self::ArrayKeys => &[
                 ("array", false, false),
@@ -492,6 +494,7 @@ impl Runtime {
                     || (kind == "object" && matches!(first, Value::Closure(_) | Value::Object(_))),
             )),
             Builtin::PrintR => self.print_r(&args, line),
+            Builtin::VarExport => self.var_export(&args, line),
             Builtin::IsCallable => self.inspect_callable(&args, &references, line),
             Builtin::DebugBacktrace | Builtin::DebugPrintBacktrace => unreachable!(),
             Builtin::Printf | Builtin::Sprintf | Builtin::Vprintf | Builtin::Vsprintf => {

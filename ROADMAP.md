@@ -178,9 +178,11 @@ definition of completion.
    full reflection strings,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
-   `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function
+   `var_dump`, `print_r`, `var_export`, `strlen`, array keys/values/key existence, counting, and function
    existence implemented. Class method/default-property inspection respects caller
    visibility, declaration/inheritance order, private ancestors, and name shadowing.
+   Exporting values supports escaped byte strings, shortest round-tripping floats,
+   arrays, ordinary object properties, enum cases, and circular-reference warnings.
    Trait composition installs aliases before the original method, matching Zend.
    Formatted printing/string construction supports printf,
    sprintf, vprintf, and vsprintf, including positional arguments, star width/precision,

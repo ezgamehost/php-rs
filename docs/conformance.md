@@ -571,6 +571,24 @@ reflection declaration strings, object-handle reuse, and dependencies on other m
 APIs. Exact fatal/diagnostic matching and unsupported PHPT sections remain incomplete;
 rejected declarations do not count as passing expected-fatal fixtures.
 
+The [var_export slice](conformance/php-8.5.0-var-export-hillclimb.txt) adds **15
+upstream passes**: two Zend, two reflection, and eleven standard-library fixtures,
+with zero regressions in all three comparisons. It prints or returns scalar, array,
+object, closure, and enum representations using PHP's indentation and qualified names.
+Strings and array keys escape quotes, backslashes, and embedded NULs; ordinary object
+properties retain their order and use unmangled names. Integer minima use a PHP-safe
+expression, and default float formatting preserves fractions, signed zero, non-finite
+values, and shortest round-tripping precision. Circular references emit warnings and
+render NULL; repeated non-recursive values remain exportable.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, with
+formatting and Clippy green. No custom tests were added. The standard var_export subset
+records **11 passed / 2 failed / 6 unsupported**. Its two failures emit the expected
+circular-reference warning but cannot pass until diagnostic matching is implemented.
+Configurable serialize_precision, property hooks, resources, and full native object
+property representations remain incomplete. The implementation follows PHP 8.5.0
+`ext/standard/var.c`, native float formatting rules, and the upstream fixtures.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -578,8 +596,9 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1572 | 3276 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 233 | 222 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1574 | 3274 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 235 | 220 | 37 |
+| PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |

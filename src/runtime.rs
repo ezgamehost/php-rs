@@ -27,6 +27,7 @@ mod comparison;
 mod constants;
 mod destructuring;
 mod enums;
+mod exporting;
 mod foreach;
 mod formatting;
 mod function_arguments;
