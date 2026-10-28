@@ -296,6 +296,9 @@ impl Runtime {
         if let Some(class) = self.builtin_classes.borrow().get(&name) {
             return Some(class.clone());
         }
+        if let Some(class) = self.builtin_reflection_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_attribute_class(&name) {
             return Some(class);
         }
@@ -320,6 +323,9 @@ impl Runtime {
                 initialized: std::cell::Cell::new(false),
                 initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
+                    source: Rc::default(),
+                    strict_types: false,
+                    end_line: 0,
                     attributes: Vec::new(),
                     is_trait: false,
                     trait_uses: Vec::new(),
@@ -413,6 +419,16 @@ impl Runtime {
                 line,
             )
         })?;
+        self.instantiate_class(class, args, true, line)
+    }
+
+    pub(super) fn instantiate_class(
+        &mut self,
+        class: Rc<Class>,
+        args: &[Argument],
+        call_constructor: bool,
+        line: usize,
+    ) -> Result<Value, Error> {
         if class.declaration.is_trait {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -443,13 +459,14 @@ impl Runtime {
                 line,
             ));
         }
-        if let Some(constructor) = method(&class, b"__construct") {
+        if call_constructor && let Some(constructor) = method(&class, b"__construct") {
             self.check_method_access(&constructor, line)?;
         }
         self.initialize_class(&class)?;
         let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;
         let object = Rc::new(PhpObject {
+            reflection: RefCell::default(),
             throwable: RefCell::new(self.throwable_data(&class, line)),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
@@ -458,6 +475,9 @@ impl Runtime {
             reinitializable: RefCell::default(),
             object_id: self.next_object_id,
         });
+        if !call_constructor {
+            return Ok(Value::Object(object));
+        }
         if let Some(constructor) = method(&object.class, b"__construct") {
             let target = self.method_target(
                 constructor,

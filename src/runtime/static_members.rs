@@ -163,7 +163,7 @@ impl Runtime {
             })
     }
 
-    fn evaluate_class_constant(
+    pub(super) fn evaluate_class_constant(
         &mut self,
         owner: &Rc<Class>,
         name: &[u8],

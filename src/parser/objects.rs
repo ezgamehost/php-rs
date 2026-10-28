@@ -611,6 +611,9 @@ impl Parser {
         self.class_parent = outer_parent;
         self.trait_name = outer_trait;
         Ok(Stmt::Class(Rc::new(ClassDecl {
+            source: self.source.clone(),
+            strict_types: self.strict_types,
+            end_line: self.tokens[self.pos - 1].line,
             attributes: Vec::new(),
             is_trait,
             trait_uses,

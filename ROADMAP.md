@@ -142,10 +142,15 @@ definition of completion.
    Traits support nested composition before inheritance, method precedence,
    `insteadof`, aliases, visibility/final adaptations, abstract requirements,
    property/constant compatibility checks, and lexical magic constants.
+   Class reflection supports names/source locations, flags, ancestry, interface/trait
+   metadata, constants, property defaults, static property access, and construction.
+   Class attribute reflection preserves deferred arguments and validates instantiation
+   in the declaration's source, scope, and strict-types mode.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   complete property/constant diagnostics, property hooks, remaining magic methods, reflection, attribute instantiation and runtime effects, enums,
+   complete property/constant diagnostics, property hooks, remaining magic methods, member/function/type reflection, lazy objects,
+   complete attribute instantiation and runtime effects, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function
@@ -166,7 +171,7 @@ definition of completion.
    validation, inherited AllowDynamicProperties, and core attribute constructors.
    NoDiscard checks void/never and magic method declaration restrictions.
    Remaining: other callable kinds, URI extension, new APIs and
-   attribute reflection/instantiation and runtime effects, and migration-guide compatibility changes.
+   complete attribute reflection/instantiation and runtime effects, and migration-guide compatibility changes.
 7. **Deployment and completion audit:** configuration, environment and SAPI
    behavior, resource limits, supported-platform validation, upstream unit and
    PHPT suites, diagnostic fidelity, real-application integration, performance,

@@ -36,6 +36,18 @@ impl Runtime {
             }
         };
         if let Value::Object(object) = original
+            && (object.class.is_a(b"ReflectionClass") || object.class.is_a(b"ReflectionAttribute"))
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Trying to clone an uncloneable object of class {}",
+                    object.class_name
+                ),
+                line,
+            ));
+        }
+        if let Value::Object(object) = original
             && let Some(method) = objects::method(&object.class, b"__clone")
         {
             self.check_method_access(&method, line)?;
@@ -97,6 +109,7 @@ impl Runtime {
             ));
         }
         let object = Rc::new(PhpObject {
+            reflection: RefCell::default(),
             throwable: RefCell::new(None),
             class: original.class.clone(),
             class_name: original.class_name.clone(),

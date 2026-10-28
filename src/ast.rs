@@ -134,6 +134,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
+    Reflection,
     AttributeConstruct,
     ThrowableConstruct,
     ErrorExceptionConstruct,
@@ -246,6 +247,9 @@ pub(crate) struct Attribute {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ClassDecl {
+    pub source: Rc<crate::source::Source>,
+    pub strict_types: bool,
+    pub end_line: usize,
     pub attributes: Vec<Attribute>,
     pub is_interface: bool,
     pub is_trait: bool,

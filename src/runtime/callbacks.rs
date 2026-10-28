@@ -176,7 +176,7 @@ fn callback_array(value: &Value, line: usize) -> Result<&PhpArray, Error> {
     }
 }
 
-fn callback_arguments(array: &PhpArray, line: usize) -> Result<Vec<Argument>, Error> {
+pub(super) fn callback_arguments(array: &PhpArray, line: usize) -> Result<Vec<Argument>, Error> {
     let mut named = false;
     array
         .entries()

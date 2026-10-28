@@ -39,6 +39,7 @@ pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str
 
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
+    pub(crate) reflection: RefCell<Option<crate::runtime::reflection::ReflectionData>>,
     pub(crate) throwable: RefCell<Option<ThrowableData>>,
     pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,

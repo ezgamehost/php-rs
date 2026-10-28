@@ -124,13 +124,8 @@ impl Runtime {
         let Some(ty) = &param.ty else {
             return Ok(value);
         };
-        if matches!(
-            function.native,
-            Some(
-                crate::ast::NativeMethod::ThrowableConstruct
-                    | crate::ast::NativeMethod::ErrorExceptionConstruct
-            )
-        ) && !strict
+        if function.native.is_some()
+            && !strict
             && value == Value::Null
             && !ty.contains("null")
             && (ty.contains("string") || ty.contains("int"))

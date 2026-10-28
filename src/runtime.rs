@@ -43,6 +43,7 @@ mod property_visibility;
 mod readonly;
 mod reference_paths;
 mod reference_types;
+pub(crate) mod reflection;
 mod scope_slots;
 mod static_members;
 mod string_builtins;

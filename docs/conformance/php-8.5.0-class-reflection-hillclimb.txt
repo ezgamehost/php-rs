@@ -1,0 +1,152 @@
+Zend suite
+
+Before: 5256 cases; 1381 passed, 3467 failed, 408 unsupported
+After: 5256 cases; 1393 passed, 3455 failed, 408 unsupported
+New passes: 12; regressions: 0
+NEW PASS: Zend/tests/attributes/002_rfcexample.phpt
+NEW PASS: Zend/tests/attributes/007_self_reflect_attribute.phpt
+NEW PASS: Zend/tests/attributes/021_attribute_flags_type_is_validated.phpt
+NEW PASS: Zend/tests/attributes/022_attribute_flags_value_is_validated.phpt
+NEW PASS: Zend/tests/attributes/023_ast_node_in_validation.phpt
+NEW PASS: Zend/tests/attributes/027_trailing_comma_args.phpt
+NEW PASS: Zend/tests/attributes/ossfuzz371445205.phpt
+NEW PASS: Zend/tests/magic_methods/interface_with_tostring.phpt
+NEW PASS: Zend/tests/magic_methods/stringable_automatic_implementation.phpt
+NEW PASS: Zend/tests/magic_methods/stringable_trait.phpt
+NEW PASS: Zend/tests/traits/bug62892.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_105.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+135: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+25: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection extension suite
+
+Before: 492 cases; 0 passed, 455 failed, 37 unsupported
+After: 492 cases; 72 passed, 383 failed, 37 unsupported
+New passes: 72; regressions: 0
+NEW PASS: ext/reflection/tests/006.phpt
+NEW PASS: ext/reflection/tests/012.phpt
+NEW PASS: ext/reflection/tests/020.phpt
+NEW PASS: ext/reflection/tests/021.phpt
+NEW PASS: ext/reflection/tests/023.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_CannotClone_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_FileInfo_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_constructor_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getConstants_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getDefaultProperties_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getInterfaceNames_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getInterfaces_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getModifiers_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getName_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getNamespaceName.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getParentClass.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getStaticPropertyValue_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasConstant_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasConstant_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasConstant_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasMethod_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasMethod_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasMethod_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasProperty_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasProperty_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_hasProperty_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isAbstract_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isAnonymous.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isCloneable_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isFinal_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isInstance_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isInstantiable_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isInstantiable_variation.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isInterface_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isSubclassOf_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_modifiers_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_setStaticPropertyValue_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_setStaticPropertyValue_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_FileInfo_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_constructor_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_double_construct.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_getConstants_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_getName_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isInstance_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isInstantiable_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isInstantiable_variation.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isSubclassOf_basic.phpt
+NEW PASS: ext/reflection/tests/bug26640.phpt
+NEW PASS: ext/reflection/tests/bug30856.phpt
+NEW PASS: ext/reflection/tests/bug30961.phpt
+NEW PASS: ext/reflection/tests/bug31651.phpt
+NEW PASS: ext/reflection/tests/bug38132.phpt
+NEW PASS: ext/reflection/tests/bug38194.phpt
+NEW PASS: ext/reflection/tests/bug41884.phpt
+NEW PASS: ext/reflection/tests/bug43926.phpt
+NEW PASS: ext/reflection/tests/bug46103.phpt
+NEW PASS: ext/reflection/tests/bug49074.phpt
+NEW PASS: ext/reflection/tests/bug52854.phpt
+NEW PASS: ext/reflection/tests/bug53915.phpt
+NEW PASS: ext/reflection/tests/bug63399.phpt
+NEW PASS: ext/reflection/tests/bug70982.phpt
+NEW PASS: ext/reflection/tests/bug77882.phpt
+NEW PASS: ext/reflection/tests/bug78697.phpt
+NEW PASS: ext/reflection/tests/bug79115.phpt
+NEW PASS: ext/reflection/tests/bug79487.phpt
+NEW PASS: ext/reflection/tests/gh8080.phpt
+NEW PASS: ext/reflection/tests/new_in_attributes.phpt
+NEW PASS: ext/reflection/tests/readonly_class.phpt
+NEW PASS: ext/reflection/tests/static_properties_002.phpt
+NEW PASS: ext/reflection/tests/static_properties_with_typed_class_constants1.phpt
+NEW PASS: ext/reflection/tests/traits003.phpt
+NEW PASS: ext/reflection/tests/traits005.phpt
+
+Most frequent remaining failure messages:
+50: Error: Class "ReflectionMethod" not found
+48: Error: Class "ReflectionFunction" not found
+47: ParseError: Expected ';'
+37: Error: Class "ReflectionProperty" not found
+18: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+13: Error: Call to undefined method ReflectionClass::getProperty()
+12: Error: Call to undefined method ReflectionClass::getMethod()
+10: Error: Call to undefined method ReflectionClass::getMethods()
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: Error: Class "ReflectionClassConstant" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+6: Error: Class "ReflectionParameter" not found
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI

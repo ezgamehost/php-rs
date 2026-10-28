@@ -6,6 +6,7 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
         b"stringable" => ("Stringable", None),
         b"throwable" => ("Throwable", None),
+        b"reflectionexception" => ("ReflectionException", Some("Exception")),
         b"exception" => ("Exception", None),
         b"errorexception" => ("ErrorException", Some("Exception")),
         b"logicexception" => ("LogicException", Some("Exception")),
@@ -166,6 +167,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::Reflection) {
+            return self.native_reflection_method(supplied, line);
+        }
         if matches!(method, NativeMethod::AttributeConstruct) {
             return self.native_attribute_constructor(line);
         }
@@ -182,7 +186,9 @@ impl Runtime {
         let mut data = object.throwable.borrow_mut();
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
-            NativeMethod::ThrowableToString | NativeMethod::AttributeConstruct => unreachable!(),
+            NativeMethod::ThrowableToString
+            | NativeMethod::AttributeConstruct
+            | NativeMethod::Reflection => unreachable!(),
             NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {
                     unreachable!()
@@ -248,6 +254,7 @@ impl Runtime {
             properties: RefCell::default(),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
+            reflection: RefCell::default(),
             throwable: RefCell::new(Some(ThrowableData {
                 trace: self.capture_trace(),
                 message: error.message.as_bytes().to_vec(),

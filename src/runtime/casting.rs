@@ -123,6 +123,7 @@ impl Runtime {
             properties: RefCell::new(properties),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
+            reflection: RefCell::default(),
             throwable: RefCell::new(None),
             object_id: self.next_object_id,
         }))

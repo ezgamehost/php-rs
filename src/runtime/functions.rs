@@ -669,7 +669,7 @@ impl Runtime {
             return self.call_builtin(builtin, &name, bound.fixed, bound.extra, line, dynamic);
         }
         let function = function.unwrap();
-        if function.native.is_some() && !bound.extra.is_empty() {
+        if function.native.is_some() && !bound.variadic && !bound.extra.is_empty() {
             return Err(Error::new(
                 ErrorKind::ArgumentCountError,
                 format!(

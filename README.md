@@ -101,7 +101,13 @@ new request. The CLI returns the low eight bits of the requested status.
   closures, arrows, and anonymous classes retain resolved names and constant arguments.
   Internal target/repetition checks support delayed target validation.
   `AllowDynamicProperties` is inherited; core attribute classes expose PHP 8.5 target
-  flags and constructors. Reflection and remaining attribute runtime effects are unfinished.
+  flags and constructors. Class attribute reflection supports deferred argument
+  evaluation, filtering, target/repetition validation, and instantiation using the
+  declaration's scope and strict-types setting. Other attribute runtime effects remain unfinished.
+- `ReflectionClass`/`ReflectionObject` class names, source locations, flags,
+  inheritance/interface/trait queries, constants, defaults, static property access,
+  and construction with or without constructors. Member/function/type reflection,
+  lazy objects, full reflector interfaces, and string representations remain unfinished.
 - Public/protected/private instance properties and constructor promotion, with
   separate private slots across inheritance, scoped iteration and `get_object_vars`,
   mangled array-cast keys, and asymmetric setters. Final properties and readonly
@@ -257,7 +263,7 @@ generators, complete attribute behavior, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties,
 property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
-remaining magic methods, inheritance-variance autoloading, and reflection remain unfinished. Closure methods,
+remaining magic methods, inheritance-variance autoloading, and complete reflection remain unfinished. Closure methods,
 direct static trait-access deprecations, complete trait conflict diagnostics,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.
