@@ -33,6 +33,7 @@ mod scope_slots;
 mod static_members;
 mod termination;
 mod throwables;
+mod traces;
 mod typed_properties;
 mod types;
 mod variables;
@@ -48,6 +49,7 @@ pub struct Runtime {
     pub variables: HashMap<Vec<u8>, Value>,
     scope: Scope,
     callers: Vec<Scope>,
+    trace_frames: Vec<traces::TraceFrame>,
     static_variables: HashMap<Option<Vec<u8>>, Scope>,
     current_function: Option<Vec<u8>>,
     class_context: Option<crate::object::ClassContext>,

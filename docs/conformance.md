@@ -1,13 +1,13 @@
 # Conformance baseline
 
-Measurements through 2026-10-27 with the PHP **8.5.0** release source and a locally built
+Measurements through 2026-10-28 with the PHP **8.5.0** release source and a locally built
 CLI reference. Upstream fixtures run as real files with the source checkout as
 their working directory. These are narrow measurements, not full PHP
 compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 52 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 53 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
@@ -20,7 +20,7 @@ compatibility claims.
 | PHP 8.5.0 `Zend/tests/exit`, Rust and reference PHP for passing cases | 1 | 4 | 22 |
 | PHP 8.5.0 `Zend/tests/pipe_operator`, Rust and reference PHP for passing cases | 10 | 9 | 12 |
 | PHP 8.5.0 `Zend/tests/first_class_callable`, Rust and reference PHP for passing cases | 7 | 14 | 44 |
-| PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 13 | 63 | 59 |
+| PHP 8.5.0 `Zend/tests/closures`, Rust and reference PHP for passing cases | 28 | 48 | 59 |
 | PHP 8.5.0 `Zend/tests/arrow_functions`, Rust and reference PHP for passing cases | 2 | 2 | 5 |
 | PHP 8.5.0 selected `ext/standard/tests/array` map/filter/reduce cases, Rust and reference PHP for passing cases | 12 | 21 | 6 |
 | PHP 8.5.0 `tests/classes`, Rust and reference PHP for passing cases | 56 | 69 | 158 |
@@ -439,3 +439,29 @@ conversion and property layouts, exception/error handlers, ErrorException and SP
 exception classes, complete compile-time fatal-error distinctions, destructor
 unwinding, and exact diagnostic parity remain incomplete. This supersedes earlier
 notes listing exception syntax and ordinary catch/finally execution as unsupported.
+
+
+The throwable-trace slice adds final `getTrace()` and `getTraceAsString()` methods
+for Exception, Error, and their subclasses. Traces capture at object creation or
+runtime-error materialization, retain live fixed-parameter values and coerced
+variadic arguments, preserve named extras, and expose copy-on-write array
+snapshots. Frames distinguish instance/static methods, nested lexical closures,
+internal callbacks, eval, and file inclusion. Rejected arguments remain visible;
+completed calls and rethrows do not add frames. Direct built-ins compiled as PHP
+opcodes omit their frames, while dynamic calls and unoptimized aliases retain
+them. String traces use PHP's default 15-byte string-argument truncation and
+escaping without invoking object conversion.
+Twelve regression tests and one new PHPT cover these behaviors. All **709 Rust
+tests** and **53 project PHPT fixtures** pass; the latter also match PHP 8.5.0.
+A 220-case trace differential matrix and the previous 286 exception cases match
+stdout, exit status, and diagnostic presence. Closure argument handles and trace
+strings are compared without claiming complete Closure var_dump metadata.
+Refreshed exception, throw, try/finally, closure, arrow-function, and first-class
+callable reports lose no passing fixtures; the closure report now records 28
+passes, including gains from the preceding exception work. The official
+[getTrace](https://www.php.net/manual/en/exception.gettrace.php) and
+[getTraceAsString](https://www.php.net/manual/en/exception.gettraceasstring.php)
+manuals, PHP 8.5.0 Zend source, and local reference probes establish the semantics.
+Throwable `__toString()`, property layouts, configurable trace argument capture
+and truncation, sensitive-parameter redaction, and the other exception gaps above
+remain incomplete. This supersedes the earlier stack-trace limitation.

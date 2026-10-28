@@ -16,6 +16,7 @@ pub struct PhpObject {
 
 #[derive(Clone)]
 pub(crate) struct ThrowableData {
+    pub trace: Rc<PhpArray>,
     pub message: Vec<u8>,
     pub code: i64,
     pub file: Vec<u8>,

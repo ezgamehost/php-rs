@@ -83,7 +83,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - Throw expressions and `try`/`catch`/`finally`, including union catches, rethrowing,
   saved exception identity, runtime-error catches, and unwinding of return/loop
   control. The built-in `Throwable` interface, `Exception`, `Error`, and core Error
-  subclasses support constructors and message/code/file/line/previous getters.
+  subclasses support constructors, message/code/file/line/previous getters,
+  `getTrace()`, and `getTraceAsString()`. Traces capture live arguments at creation,
+  including method, closure, internal callback, eval, and include frames.
   Exceptions thrown from `finally` retain the pending exception as their previous.
 - Public, protected, and private static properties with inherited shared storage,
   scope checks, independent private redeclarations, dynamic names, array mutation, and `isset`/`empty`/coalescing. Public, protected, and private
@@ -172,7 +174,7 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Closure reference captures work, but general references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
-Throwable stack traces, string conversion and property layouts, error/exception
+Throwable string conversion and property layouts, configurable trace settings, error/exception
 handlers, ErrorException/SPL exception classes, and complete compile-time fatal
 error distinctions remain unfinished.
 Other `declare` directives are not implemented. Shutdown callbacks, output

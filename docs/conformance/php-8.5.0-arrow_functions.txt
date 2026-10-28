@@ -2,12 +2,12 @@ PHP 8.5.0 Zend/tests/arrow_functions baseline, 2026-10-26
 Runner: php-rs-phpt --reference /path/to/php-8.5.0/sapi/cli/php --cwd /path/to/php-8.5.0 /path/to/php-8.5.0/Zend/tests/arrow_functions
 Unsupported cases were not executed. Exit status: 1.
 
-Reference: PHP 8.5 (sapi/cli/php)
+Reference: PHP 8.5 (<php-8.5.0>/sapi/cli/php)
 Zend/tests/arrow_functions/001.phpt PASS
 Zend/tests/arrow_functions/002.phpt UNSUPPORTED: EXPECTF
 Zend/tests/arrow_functions/003.phpt UNSUPPORTED: EXPECTF
 Zend/tests/arrow_functions/004.phpt PASS
-Zend/tests/arrow_functions/005.phpt FAIL: ParseError: Expected ';' on line 3
+Zend/tests/arrow_functions/005.phpt FAIL: Error: Class "ReflectionFunction" not found on line 7
 Zend/tests/arrow_functions/006.phpt UNSUPPORTED: EXPECTF
 Zend/tests/arrow_functions/007.phpt UNSUPPORTED: INI
 Zend/tests/arrow_functions/008.phpt FAIL: ParseError: Expected ';' on line 5

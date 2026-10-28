@@ -123,6 +123,8 @@ pub(crate) enum NativeMethod {
     GetFile,
     GetLine,
     GetPrevious,
+    GetTrace,
+    GetTraceAsString,
 }
 
 impl Expr {

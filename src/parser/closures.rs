@@ -8,11 +8,20 @@ impl Parser {
         is_static: bool,
         line: usize,
     ) -> Result<ExprKind, Error> {
-        let name = format!(
-            "{{closure:{}:{line}}}",
-            String::from_utf8_lossy(&self.source.name)
-        )
-        .into_bytes();
+        let context = if self.function_name.is_empty() {
+            String::from_utf8_lossy(&self.source.name).into_owned()
+        } else if self.function_name.starts_with(b"{closure:") {
+            String::from_utf8_lossy(&self.function_name).into_owned()
+        } else if self.class_name.is_empty() {
+            format!("{}()", String::from_utf8_lossy(&self.function_name))
+        } else {
+            format!(
+                "{}::{}()",
+                String::from_utf8_lossy(&self.class_name),
+                String::from_utf8_lossy(&self.function_name)
+            )
+        };
+        let name = format!("{{closure:{context}:{line}}}").into_bytes();
         let outer_name = std::mem::replace(&mut self.function_name, name.clone());
         let mut parameters = self.function_parameters(false)?;
         let mut captures = Vec::<Capture>::new();

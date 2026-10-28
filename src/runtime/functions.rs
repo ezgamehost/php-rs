@@ -139,7 +139,7 @@ impl Runtime {
         // Internal callbacks use weak argument coercion. The common invocation
         // path still installs the function's own strictness for its body/return.
         let caller_strict = std::mem::replace(&mut self.strict_types, false);
-        let result = self.invoke(target.clone(), &arguments, line, true);
+        let result = self.invoke_at(target.clone(), &arguments, line, true, true);
         self.strict_types = caller_strict;
         result
     }
@@ -237,14 +237,20 @@ impl Runtime {
         line: usize,
         dynamic: bool,
     ) -> Result<Value, Error> {
-        let CallTarget {
-            name,
-            function,
-            builtin,
-            closure,
-            this,
-            context,
-        } = target;
+        self.invoke_at(target, args, line, dynamic, false)
+    }
+
+    fn invoke_at(
+        &mut self,
+        target: CallTarget,
+        args: &[Argument],
+        line: usize,
+        dynamic: bool,
+        internal: bool,
+    ) -> Result<Value, Error> {
+        let function = &target.function;
+        let builtin = target.builtin;
+
         let parameters = if let Some(function) = &function {
             function.parameters.clone()
         } else {
@@ -279,6 +285,43 @@ impl Runtime {
                 }
             }
         }
+        let optimized = !dynamic
+            && target.name != b"key_exists"
+            && optimized_trace_call(builtin, args, self.current_function.is_some());
+        if !optimized {
+            self.trace_frames.push(traces::TraceFrame::call(
+                self,
+                &target,
+                &parameters,
+                &bound.fixed,
+                &bound.extra,
+                if internal { None } else { Some(line) },
+            ));
+        }
+        let result = self.invoke_bound(target, parameters, bound, line, dynamic);
+        let result = result.map_err(|error| self.materialize_error(error));
+        if !optimized {
+            self.trace_frames.pop();
+        }
+        result
+    }
+
+    fn invoke_bound(
+        &mut self,
+        target: CallTarget,
+        parameters: Vec<Parameter>,
+        mut bound: BoundArguments,
+        line: usize,
+        dynamic: bool,
+    ) -> Result<Value, Error> {
+        let CallTarget {
+            name,
+            function,
+            builtin,
+            closure,
+            this,
+            context,
+        } = target;
         if let Some(builtin) = builtin {
             for (index, param) in parameters.iter().enumerate() {
                 if !param.variadic && param.default.is_none() && bound.fixed[index].is_none() {
@@ -343,6 +386,10 @@ impl Runtime {
             extra,
         };
         self.callers.push(std::mem::take(&mut self.scope));
+        self.trace_frames
+            .last_mut()
+            .unwrap()
+            .enter_scope(self.callers.len());
         let caller_context = std::mem::replace(&mut self.class_context, context);
         let caller_arguments = self.current_arguments.take();
         let caller_closure = std::mem::replace(&mut self.current_closure, closure.clone());
@@ -372,6 +419,10 @@ impl Runtime {
                         if matches!(key, ArrayKey::Int(_)) {
                             arguments.extra.push(value.clone());
                         }
+                        self.trace_frames
+                            .last_mut()
+                            .unwrap()
+                            .set_extra(key, value.clone());
                         values.insert(key.clone(), value);
                     }
                     Value::Array(Rc::new(values))
@@ -399,6 +450,7 @@ impl Runtime {
                     self.check_argument(value, param, &function, index + 1, caller_strict, line)?
                 };
                 self.scope.insert(param.name.clone(), cell(value));
+                self.trace_frames.last_mut().unwrap().bound = index + 1;
             }
             if let Some(native) = function.native {
                 if let Some(object) = this {
@@ -622,4 +674,24 @@ pub(super) struct CallTarget {
     pub(super) closure: Option<Rc<crate::Closure>>,
     pub(super) this: Option<Rc<crate::PhpObject>>,
     pub(super) context: Option<crate::object::ClassContext>,
+}
+
+// These direct calls compile to specialized PHP opcodes and have no call frame.
+fn optimized_trace_call(builtin: Option<Builtin>, args: &[Argument], in_function: bool) -> bool {
+    if args
+        .iter()
+        .any(|arg| !matches!(arg, Argument::Positional(_)))
+    {
+        return false;
+    }
+    match builtin {
+        Some(
+            Builtin::Strlen | Builtin::Count | Builtin::GetType | Builtin::Is(_) | Builtin::Clone,
+        ) => args.len() == 1,
+        Some(Builtin::GetClass) => args.len() <= 1,
+        Some(Builtin::GetCalledClass) => args.is_empty(),
+        Some(Builtin::FuncNumArgs | Builtin::FuncGetArgs) => in_function && args.is_empty(),
+        Some(Builtin::ArrayKeyExists) => args.len() == 2,
+        _ => false,
+    }
 }

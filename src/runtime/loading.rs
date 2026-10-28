@@ -78,7 +78,7 @@ impl Runtime {
         }
         self.scope.reconcile(std::mem::take(&mut self.variables));
         self.static_variables.remove(&None);
-        let result = self.execute_unit(code, source, Value::Null);
+        let result = self.execute_unit(code, source, Value::Null, None);
         self.variables = self
             .scope
             .iter()
@@ -95,6 +95,7 @@ impl Runtime {
         code: &[u8],
         source: Rc<Source>,
         fallthrough: Value,
+        frame: Option<traces::TraceFrame>,
     ) -> Result<Value, Error> {
         let (mut statements, warnings, strict) = lexer::lex(code)
             .and_then(|tokens| parser::parse_source(tokens, source.clone()))
@@ -111,7 +112,14 @@ impl Runtime {
         let previous_closure = self.current_closure.take();
         let previous_arguments = self.current_arguments.take();
         let previous_statics = self.static_variables.remove(&None);
+        let has_frame = frame.is_some();
+        if let Some(frame) = frame {
+            self.trace_frames.push(frame);
+        }
         let result = self.block(&statements);
+        if has_frame {
+            self.trace_frames.pop();
+        }
         self.source = previous_source;
         self.strict_types = previous_strict;
         self.current_function = previous_function;
@@ -132,7 +140,12 @@ impl Runtime {
             return Ok(Value::Bool(false));
         }
         let source = Rc::new(self.source.evaluated(line));
-        self.execute_unit(&code_document(code), source, Value::Null)
+        self.execute_unit(
+            &code_document(code),
+            source,
+            Value::Null,
+            Some(traces::TraceFrame::unit(self, b"eval", Some(line), None)),
+        )
     }
 
     pub(super) fn include_file(
@@ -182,7 +195,11 @@ impl Runtime {
         if once {
             self.record_include(path.clone());
         }
-        self.execute_unit(&code, Rc::new(Source::file(&path)), Value::Int(1))
+        let source = Rc::new(Source::file(&path));
+        let mut arguments = PhpArray::default();
+        arguments.append(Value::String(source.name.clone()), line)?;
+        let frame = traces::TraceFrame::unit(self, label.as_bytes(), Some(line), Some(arguments));
+        self.execute_unit(&code, source, Value::Int(1), Some(frame))
     }
 
     fn include_failure(

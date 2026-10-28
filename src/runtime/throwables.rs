@@ -39,6 +39,8 @@ impl Runtime {
             final public function getFile():string {{}}
             final public function getLine():int {{}}
             final public function getPrevious():?Throwable {{}}
+            final public function getTrace():array {{}}
+            final public function getTraceAsString():string {{}}
         }}")
         };
         let (mut statements, _, _) =
@@ -56,6 +58,8 @@ impl Runtime {
                 b"getFile" => NativeMethod::GetFile,
                 b"getLine" => NativeMethod::GetLine,
                 b"getPrevious" => NativeMethod::GetPrevious,
+                b"getTrace" => NativeMethod::GetTrace,
+                b"getTraceAsString" => NativeMethod::GetTraceAsString,
                 _ => unreachable!(),
             });
         }
@@ -91,6 +95,7 @@ impl Runtime {
 
     pub(super) fn throwable_data(&self, class: &Class, line: usize) -> Option<ThrowableData> {
         class.is_a(b"Throwable").then(|| ThrowableData {
+            trace: self.capture_trace(),
             message: Vec::new(),
             code: 0,
             file: self.source.name.clone(),
@@ -131,6 +136,8 @@ impl Runtime {
                 };
                 Value::Null
             }
+            NativeMethod::GetTrace => Value::Array(data.trace.clone()),
+            NativeMethod::GetTraceAsString => Value::String(traces::trace_string(&data.trace)),
             NativeMethod::GetMessage => Value::String(data.message.clone()),
             NativeMethod::GetCode => Value::Int(data.code),
             NativeMethod::GetFile => Value::String(data.file.clone()),
@@ -157,6 +164,7 @@ impl Runtime {
             properties: RefCell::default(),
             reinitializable: RefCell::default(),
             throwable: RefCell::new(Some(ThrowableData {
+                trace: self.capture_trace(),
                 message: error.message.as_bytes().to_vec(),
                 code: 0,
                 file: file.to_vec(),
