@@ -1,0 +1,61 @@
+Before: 5256 cases; 1193 passed, 3655 failed, 408 unsupported
+After: 5256 cases; 1217 passed, 3631 failed, 408 unsupported
+New passes: 24; regressions: 0
+NEW PASS: Zend/tests/array_append_by_reference.phpt
+NEW PASS: Zend/tests/array_unpack/ref1.phpt
+NEW PASS: Zend/tests/array_with_refs_identical.phpt
+NEW PASS: Zend/tests/bug33282.phpt
+NEW PASS: Zend/tests/bug34137.phpt
+NEW PASS: Zend/tests/bug35163.phpt
+NEW PASS: Zend/tests/bug35163_2.phpt
+NEW PASS: Zend/tests/bug71529.phpt
+NEW PASS: Zend/tests/bug71539.phpt
+NEW PASS: Zend/tests/bug71539_2.phpt
+NEW PASS: Zend/tests/bug71539_3.phpt
+NEW PASS: Zend/tests/bug71539_4.phpt
+NEW PASS: Zend/tests/bug71539_5.phpt
+NEW PASS: Zend/tests/bug72543.phpt
+NEW PASS: Zend/tests/bug72543_1.phpt
+NEW PASS: Zend/tests/bug72543_4.phpt
+NEW PASS: Zend/tests/bug76383.phpt
+NEW PASS: Zend/tests/bug78335.phpt
+NEW PASS: Zend/tests/clone/clone_with_013.phpt
+NEW PASS: Zend/tests/dynamic_call/bug52940.phpt
+NEW PASS: Zend/tests/gh10168/assign_dim_ref.phpt
+NEW PASS: Zend/tests/named_params/references.phpt
+NEW PASS: Zend/tests/switch/bug71756.phpt
+NEW PASS: Zend/tests/switch/bug72508.phpt
+
+Most frequent remaining failure messages:
+524: ParseError: Expected ';'
+207: Error: Class "ReflectionClass" not found
+133: Error: Call to undefined function set_error_handler()
+82: Error: References to properties are not supported yet
+72: ParseError: Expected expression
+65: Error: Class "Fiber" not found
+57: ParseError: Expected '('
+49: Error: Undefined constant "yield"
+46: ParseError: Expected function name
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+37: Error: Interface "ArrayAccess" not found
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+27: ParseError: Invalid abstract method declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

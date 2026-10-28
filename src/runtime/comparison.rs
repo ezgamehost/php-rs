@@ -19,7 +19,11 @@ impl Runtime {
         seen: &mut HashSet<(usize, usize)>,
     ) -> Result<Option<Ordering>, Error> {
         use Value::*;
+        if matches!(left, Value::Reference(_)) || matches!(right, Value::Reference(_)) {
+            return self.compare_inner(&left.dereferenced(), &right.dereferenced(), line, seen);
+        }
         Ok(match (left, right) {
+            (Reference(_), _) | (_, Reference(_)) => unreachable!(),
             (Bool(_), _) | (_, Bool(_)) => left.is_truthy().partial_cmp(&right.is_truthy()),
             (Null, String(s)) => b"".as_slice().partial_cmp(s.bytes().as_slice()),
             (String(s), Null) => s.bytes().as_slice().partial_cmp(b"".as_slice()),
@@ -81,7 +85,22 @@ impl Runtime {
             (Closure(a), Closure(b)) => a.same_function(b).then_some(Ordering::Equal),
             (Closure(_), _) => Some(Ordering::Greater),
             (_, Closure(_)) => Some(Ordering::Less),
-            (Array(a), Array(b)) => self.compare_arrays(a, b, line, seen)?,
+            (Array(a), Array(b)) => {
+                if Rc::ptr_eq(a, b) {
+                    return Ok(Some(Ordering::Equal));
+                }
+                let pair = (Rc::as_ptr(a) as usize, 0);
+                if !seen.insert(pair) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Nesting level too deep - recursive dependency?",
+                        line,
+                    ));
+                }
+                let result = self.compare_arrays(a, b, line, seen);
+                seen.remove(&pair);
+                result?
+            }
             (Array(_), _) => Some(Ordering::Greater),
             (_, Array(_)) => Some(Ordering::Less),
             (Int(a), Int(b)) => a.partial_cmp(b),

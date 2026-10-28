@@ -248,6 +248,18 @@ impl Validator {
                             }
                             self.expression(value, pattern)?;
                         }
+                        ArrayElement::Reference(key, value) => {
+                            if let Some(key) = key {
+                                self.expression(key, false)?;
+                            }
+                            if !value.is_writable() || matches!(value.kind, ExprKind::Group(_)) {
+                                return Err(Error::parse(
+                                    "Cannot create reference to a non-variable",
+                                    value.line,
+                                ));
+                            }
+                            self.expression(value, true)?;
+                        }
                         ArrayElement::Unpack(value) => self.expression(value, false)?,
                         ArrayElement::Hole if pattern => {}
                         ArrayElement::Hole => {

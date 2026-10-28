@@ -81,11 +81,11 @@ impl Runtime {
     }
 
     pub(super) fn argument_reference(&mut self, source: &Expr, line: usize) -> Result<Cell, Error> {
-        let source = self.location(source)?;
-        if source.object.is_some() || source.static_class.is_some() || !source.keys.is_empty() {
+        let mut source = self.location(source)?;
+        if source.object.is_some() || source.static_class.is_some() {
             return Err(Error::new(
                 ErrorKind::Error,
-                "References to array elements and properties are not supported yet",
+                "References to properties are not supported yet",
                 line,
             ));
         }
@@ -99,9 +99,7 @@ impl Runtime {
                 line,
             ));
         }
-        Ok(self
-            .location_scope(&source)
-            .get_or_insert(&source.name, Value::Null))
+        self.location_reference(&mut source, line)
     }
 
     pub(super) fn reference_assignment(
@@ -110,8 +108,8 @@ impl Runtime {
         source: &Expr,
         line: usize,
     ) -> Result<Cell, Error> {
-        let target = self.location(target)?;
-        let source = self.location(source)?;
+        let mut target = self.location(target)?;
+        let mut source = self.location(source)?;
         if target.name == b"GLOBALS"
             && !target.global
             && target.object.is_none()
@@ -135,13 +133,10 @@ impl Runtime {
             ));
         }
         for location in [&target, &source] {
-            if location.object.is_some()
-                || location.static_class.is_some()
-                || !location.keys.is_empty()
-            {
+            if location.object.is_some() || location.static_class.is_some() {
                 return Err(Error::new(
                     ErrorKind::Error,
-                    "References to array elements and properties are not supported yet",
+                    "References to properties are not supported yet",
                     line,
                 ));
             }
@@ -149,12 +144,30 @@ impl Runtime {
                 return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
             }
         }
-        let reference = self
-            .location_scope(&source)
-            .get_or_insert(&source.name, Value::Null);
-        self.location_scope(&target)
-            .insert(target.name, reference.clone());
+        let reference = self.location_reference(&mut source, line)?;
+        if target.keys.is_empty() {
+            self.location_scope(&target)
+                .insert(target.name, reference.clone());
+        } else {
+            let root = self
+                .location_scope(&target)
+                .get_or_insert(&target.name, Value::Null);
+            reference_paths::bind(
+                root,
+                &mut target.keys,
+                reference.clone(),
+                line,
+                &mut self.diagnostics,
+            )?;
+        }
         Ok(reference)
+    }
+
+    fn location_reference(&mut self, location: &mut Location, line: usize) -> Result<Cell, Error> {
+        let root = self
+            .location_scope(location)
+            .get_or_insert(&location.name, Value::Null);
+        reference_paths::acquire(root, &mut location.keys, line, &mut self.diagnostics)
     }
 
     pub(super) fn globals(&self) -> &Scope {
@@ -166,7 +179,12 @@ impl Runtime {
         for (name, value) in self.globals().iter() {
             let key = ArrayKey::from_value(&Value::String(name.clone().into()), 0, &mut Vec::new())
                 .expect("string keys are valid");
-            array.insert(key, value.borrow().clone());
+            let value = if Rc::strong_count(value) > 1 {
+                Value::Reference(value.clone())
+            } else {
+                value.borrow().clone()
+            };
+            array.insert(key, value);
         }
         Value::Array(Rc::new(array))
     }

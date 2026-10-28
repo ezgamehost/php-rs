@@ -13,7 +13,9 @@ impl Runtime {
                 else {
                     return "array callback has to contain indices 0 and 1".into();
                 };
-                let class = match base {
+                let base = base.dereferenced();
+                let method = method.dereferenced();
+                let class = match &base {
                     Value::String(name) => name.to_vec(),
                     Value::Object(object) => object.class.name.clone(),
                     Value::Closure(_) => b"Closure".to_vec(),

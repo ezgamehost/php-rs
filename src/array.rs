@@ -13,6 +13,7 @@ impl ArrayKey {
         warnings: &mut dyn crate::diagnostics::WarningSink,
     ) -> Result<Self, Error> {
         Ok(match value {
+            Value::Reference(value) => return Self::from_value(&value.borrow(), line, warnings),
             Value::Int(n) => Self::Int(*n),
             Value::Float(_) => Self::Int(value.integer(line, warnings)?),
             Value::Bool(b) => Self::Int(i64::from(*b)),
@@ -49,11 +50,24 @@ impl ArrayKey {
 
 /// Insertion-ordered PHP map. The next append index survives removal, and is
 /// deliberately excluded from value equality.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct PhpArray {
     entries: Vec<(ArrayKey, Value)>,
     positions: HashMap<ArrayKey, usize>,
     next_index: Option<i64>,
+}
+impl Clone for PhpArray {
+    fn clone(&self) -> Self {
+        Self {
+            entries: self
+                .entries
+                .iter()
+                .map(|(key, value)| (key.clone(), value.copy_array_entry()))
+                .collect(),
+            positions: self.positions.clone(),
+            next_index: self.next_index,
+        }
+    }
 }
 impl PartialEq for PhpArray {
     fn eq(&self, other: &Self) -> bool {

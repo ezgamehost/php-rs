@@ -67,7 +67,11 @@ definition of completion.
    Fixed by-reference parameters retain source cells across argument evaluation,
    apply entry coercion to the caller, and distinguish callback value warnings
    from ordinary by-reference argument errors. Signatures preserve reference mode.
-   Remaining: array/property references,
+   Array elements and reference literals share the variable-cell representation.
+   Copy-on-write drops unshared reference containers; recursive array writes and
+   unset release owners before following aliases. Fixed reference parameters and
+   internal callback array entries retain existing reference bindings.
+   Remaining: property references, reference iteration/destructuring, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
    by-reference returns, variadics/unpacking and promoted property references,

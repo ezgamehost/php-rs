@@ -197,7 +197,7 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
         | ExprKind::Destructure(elements) => {
             for element in elements {
                 match element {
-                    ArrayElement::Entry(key, value) => {
+                    ArrayElement::Entry(key, value) | ArrayElement::Reference(key, value) => {
                         if let Some(key) = key {
                             collect_captures(key, captures);
                         }

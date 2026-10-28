@@ -771,10 +771,16 @@ impl Parser {
             }
             let element = if self.eat("...") {
                 ArrayElement::Unpack(self.expr(0)?)
+            } else if self.eat("&") {
+                ArrayElement::Reference(None, self.expr_inner(23, false)?)
             } else {
                 let first = self.expr(0)?;
                 if self.eat("=>") {
-                    ArrayElement::Entry(Some(first), self.expr(0)?)
+                    if self.eat("&") {
+                        ArrayElement::Reference(Some(first), self.expr_inner(23, false)?)
+                    } else {
+                        ArrayElement::Entry(Some(first), self.expr(0)?)
+                    }
                 } else {
                     ArrayElement::Entry(None, first)
                 }

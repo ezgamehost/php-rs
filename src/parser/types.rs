@@ -327,7 +327,7 @@ fn compile_time_value(expr: &Expr) -> Option<Value> {
                         && compile_time_value(v).is_some()
                 }
                 ArrayElement::Unpack(v) => compile_time_value(v).is_some(),
-                ArrayElement::Hole => false,
+                ArrayElement::Reference(_, _) | ArrayElement::Hole => false,
             })
         }
         _ => false,

@@ -15,6 +15,7 @@ struct PendingWrite {
     path: Vec<(usize, ArrayKey)>,
 }
 enum Preparation {
+    Reference(variables::Cell, usize),
     Ordinary,
     Ignored,
     Character(PendingWrite),
@@ -123,26 +124,26 @@ impl Runtime {
         {
             return Ok(result);
         }
-        write_path(
-            &mut temporary.borrow_mut(),
-            keys,
-            replacement,
-            line,
-            &mut self.diagnostics,
-        )
+        reference_paths::write_cell(temporary, keys, replacement, line, &mut self.diagnostics)
     }
 
     fn assign_string_storage(
         &mut self,
-        storage: Storage,
-        keys: &mut [Offset],
+        mut storage: Storage,
+        mut keys: &mut [Offset],
         replacement: &Value,
         line: usize,
     ) -> Result<Option<Value>, Error> {
-        let pending = match storage.prepare(keys, line, &mut self.diagnostics)? {
-            Preparation::Ordinary => return Ok(None),
-            Preparation::Ignored => return Ok(Some(Value::Null)),
-            Preparation::Character(pending) => pending,
+        let pending = loop {
+            match storage.prepare(keys, line, &mut self.diagnostics)? {
+                Preparation::Ordinary => return Ok(None),
+                Preparation::Ignored => return Ok(Some(Value::Null)),
+                Preparation::Character(pending) => break pending,
+                Preparation::Reference(reference, consumed) => {
+                    storage = Storage::Cell(Rc::downgrade(&reference));
+                    keys = &mut keys[consumed..];
+                }
+            }
         };
         // No variable, property, array, or string is borrowed across this call.
         let bytes = self.string_bytes(replacement, line)?;
@@ -200,6 +201,7 @@ fn prepare(
         return Ok(Preparation::Ordinary);
     };
     match value {
+        Value::Reference(reference) => Ok(Preparation::Reference(reference.clone(), 0)),
         Value::String(buffer) => {
             if !rest.is_empty() {
                 return Err(Error::new(
@@ -245,7 +247,12 @@ fn prepare(
                 path,
             );
             path.pop();
-            result
+            result.map(|result| match result {
+                Preparation::Reference(reference, consumed) => {
+                    Preparation::Reference(reference, consumed + 1)
+                }
+                result => result,
+            })
         }
         _ => Ok(Preparation::Ordinary),
     }

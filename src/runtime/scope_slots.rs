@@ -148,7 +148,7 @@ impl Scope {
             | ExprKind::Destructure(elements) => {
                 for element in elements {
                     match element {
-                        ArrayElement::Entry(key, value) => {
+                        ArrayElement::Entry(key, value) | ArrayElement::Reference(key, value) => {
                             if let Some(key) = key {
                                 self.reserve_expression(key);
                             }

@@ -1,9 +1,10 @@
 use crate::{Error, ErrorKind, PhpArray};
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 /// PHP strings are byte sequences, not necessarily UTF-8.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Value {
+    Reference(Rc<RefCell<Value>>),
     Null,
     Bool(bool),
     Int(i64),
@@ -14,7 +15,79 @@ pub enum Value {
     Object(Rc<crate::PhpObject>),
 }
 
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        self.identical(other, 0).unwrap_or(false)
+    }
+}
+
 impl Value {
+    pub(crate) fn identical(&self, other: &Self, line: usize) -> Result<bool, Error> {
+        self.identical_inner(other, line, &mut HashSet::new())
+    }
+
+    fn identical_inner(
+        &self,
+        other: &Self,
+        line: usize,
+        seen: &mut HashSet<usize>,
+    ) -> Result<bool, Error> {
+        Ok(match (self, other) {
+            (Self::Reference(value), other) => value.borrow().identical_inner(other, line, seen)?,
+            (value, Self::Reference(other)) => {
+                value.identical_inner(&other.borrow(), line, seen)?
+            }
+            (Self::Null, Self::Null) => true,
+            (Self::Bool(a), Self::Bool(b)) => a == b,
+            (Self::Int(a), Self::Int(b)) => a == b,
+            (Self::Float(a), Self::Float(b)) => a == b,
+            (Self::String(a), Self::String(b)) => a == b,
+            (Self::Object(a), Self::Object(b)) => a == b,
+            (Self::Closure(a), Self::Closure(b)) => a == b,
+            (Self::Array(a), Self::Array(b)) => {
+                if Rc::ptr_eq(a, b) {
+                    return Ok(true);
+                }
+                let identity = Rc::as_ptr(a) as usize;
+                if !seen.insert(identity) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Nesting level too deep - recursive dependency?",
+                        line,
+                    ));
+                }
+                let mut equal = a.len() == b.len();
+                if equal {
+                    for ((ka, va), (kb, vb)) in a.entries().iter().zip(b.entries()) {
+                        if ka != kb || !va.identical_inner(vb, line, seen)? {
+                            equal = false;
+                            break;
+                        }
+                    }
+                }
+                seen.remove(&identity);
+                equal
+            }
+            _ => false,
+        })
+    }
+
+    /// Read a PHP value without carrying an array slot's reference binding.
+    pub(crate) fn dereferenced(&self) -> Self {
+        match self {
+            Self::Reference(value) => value.borrow().dereferenced(),
+            value => value.clone(),
+        }
+    }
+
+    /// Array duplication drops reference containers that have no other owner.
+    pub(crate) fn copy_array_entry(&self) -> Self {
+        match self {
+            Self::Reference(value) if Rc::strong_count(value) == 1 => value.borrow().clone(),
+            value => value.clone(),
+        }
+    }
+
     pub(crate) fn warn_nan(
         &self,
         kind: &str,
@@ -39,6 +112,7 @@ impl Value {
 
     pub fn is_truthy(&self) -> bool {
         match self {
+            Self::Reference(value) => value.borrow().is_truthy(),
             Self::Closure(_) | Self::Object(_) => true,
             Self::Null => false,
             Self::Array(a) => !a.is_empty(),
@@ -50,6 +124,7 @@ impl Value {
     }
     pub fn to_bytes(&self) -> Vec<u8> {
         match self {
+            Self::Reference(value) => value.borrow().to_bytes(),
             Self::Null | Self::Bool(false) => Vec::new(),
             Self::Bool(true) => b"1".to_vec(),
             Self::Int(n) => n.to_string().into_bytes(),
@@ -65,6 +140,7 @@ impl Value {
         warnings: &mut dyn crate::diagnostics::WarningSink,
     ) -> Result<Self, Error> {
         match self {
+            Self::Reference(value) => value.borrow().number(line, warnings),
             Self::Object(object) => Err(Error::new(
                 ErrorKind::TypeError,
                 format!("Unsupported operand type: {}", object.class_name),

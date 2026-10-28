@@ -37,6 +37,7 @@ mod objects;
 mod offsets;
 mod property_visibility;
 mod readonly;
+mod reference_paths;
 mod scope_slots;
 mod static_members;
 mod string_builtins;
@@ -49,7 +50,8 @@ mod traits;
 mod typed_properties;
 mod types;
 mod variables;
-use offsets::{Access, Offset, read_offset, unset_path, write_path};
+use offsets::{Access, Offset, read_offset};
+use reference_paths::{unset as unset_path, write as write_path};
 use variables::{Scope, cell};
 
 /// One request's variable scope, output, and diagnostics. Output survives errors.
@@ -247,7 +249,7 @@ impl Runtime {
                 }
                 if let Value::Array(array) = value {
                     for (key, value) in array.entries() {
-                        self.assign_target(value_target, value.clone())?;
+                        self.assign_target(value_target, value.dereferenced())?;
                         if let Some(target) = key_target {
                             let mut location = self.location(target)?;
                             self.write_location(&mut location, key.to_value(), target.line)?;
@@ -312,8 +314,8 @@ impl Runtime {
                             self.static_cell(class, &location.name, target.line, false)?
                         {
                             self.check_static_set_access(&location, true, target.line)?;
-                            unset_path(
-                                &mut value.borrow_mut(),
+                            reference_paths::unset_cell(
+                                value,
                                 &mut location.keys,
                                 target.line,
                                 &mut self.diagnostics,
@@ -343,8 +345,8 @@ impl Runtime {
                     } else if let Some(value) =
                         self.location_scope(&location).get(&location.name).cloned()
                     {
-                        unset_path(
-                            &mut value.borrow_mut(),
+                        reference_paths::unset_cell(
+                            value,
                             &mut location.keys,
                             target.line,
                             &mut self.diagnostics,
@@ -615,8 +617,8 @@ impl Runtime {
         let value = self
             .location_scope(location)
             .get_or_insert(&location.name, Value::Null);
-        write_path(
-            &mut value.borrow_mut(),
+        reference_paths::write_cell(
+            value,
             &mut location.keys,
             new_value,
             line,
@@ -675,6 +677,9 @@ impl Runtime {
         }
     }
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
+        self.eval_inner(expr).map(|value| value.dereferenced())
+    }
+    fn eval_inner(&mut self, expr: &Expr) -> Result<Value, Error> {
         if expr.has_nullsafe_chain() {
             return self
                 .nullsafe_chain(expr, Access::Read)
@@ -769,24 +774,32 @@ impl Runtime {
             ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 let mut array = PhpArray::default();
                 for element in elements {
-                    let ArrayElement::Entry(key, expr) = element else {
-                        let ArrayElement::Unpack(expr) = element else {
-                            unreachable!()
-                        };
-                        let Value::Array(source) = self.eval(expr)? else {
-                            return Err(Error::new(
-                                ErrorKind::Error,
-                                "Only arrays and Traversables can be unpacked",
-                                expr.line,
-                            ));
-                        };
-                        for (key, value) in source.entries() {
-                            match key {
-                                ArrayKey::Int(_) => array.append(value.clone(), expr.line)?,
-                                ArrayKey::String(_) => array.insert(key.clone(), value.clone()),
+                    let (key, expr, by_reference) = match element {
+                        ArrayElement::Entry(key, expr) => (key, expr, false),
+                        ArrayElement::Reference(key, expr) => (key, expr, true),
+                        _ => {
+                            let ArrayElement::Unpack(expr) = element else {
+                                unreachable!()
+                            };
+                            let Value::Array(source) = self.eval(expr)? else {
+                                return Err(Error::new(
+                                    ErrorKind::Error,
+                                    "Only arrays and Traversables can be unpacked",
+                                    expr.line,
+                                ));
+                            };
+                            for (key, value) in source.entries() {
+                                match key {
+                                    ArrayKey::Int(_) => {
+                                        array.append(value.copy_array_entry(), expr.line)?
+                                    }
+                                    ArrayKey::String(_) => {
+                                        array.insert(key.clone(), value.copy_array_entry())
+                                    }
+                                }
                             }
+                            continue;
                         }
-                        continue;
                     };
                     let key = match key {
                         Some(key) => Some(ArrayKey::from_value(
@@ -796,7 +809,11 @@ impl Runtime {
                         )?),
                         None => None,
                     };
-                    let value = self.eval(expr)?;
+                    let value = if by_reference {
+                        Value::Reference(self.argument_reference(expr, line)?)
+                    } else {
+                        self.eval(expr)?
+                    };
                     if let Some(key) = key {
                         array.insert(key, value);
                     } else {
@@ -994,8 +1011,8 @@ fn binary(
                 left.to_bool(line, warnings) ^ right.to_bool(line, warnings),
             ));
         }
-        "===" => return Ok(Bool(left == right)),
-        "!==" => return Ok(Bool(left != right)),
+        "===" => return Ok(Bool(left.identical(&right, line)?)),
+        "!==" => return Ok(Bool(!left.identical(&right, line)?)),
         _ => {}
     }
     if op == "+"

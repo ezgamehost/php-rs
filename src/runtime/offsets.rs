@@ -66,7 +66,7 @@ pub(super) fn read_offset(
     access: Access,
     warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
-    match value {
+    match value.dereferenced() {
         Value::Object(object) => Err(Error::new(
             ErrorKind::Error,
             format!("Cannot use object of type {} as array", object.class_name),
@@ -80,7 +80,7 @@ pub(super) fn read_offset(
         Value::Array(array) => {
             let key = offset.array_key(line, false, warnings)?;
             if let Some(value) = array.get(&key) {
-                return Ok(value.clone());
+                return Ok(value.dereferenced());
             }
             if access == Access::Read {
                 warnings.push(format!(
@@ -117,109 +117,6 @@ pub(super) fn read_offset(
             }
             Ok(Value::Null)
         }
-    }
-}
-pub(super) fn write_path(
-    value: &mut Value,
-    keys: &mut [Offset],
-    new_value: Value,
-    line: usize,
-    warnings: &mut dyn WarningSink,
-) -> Result<Value, Error> {
-    let Some((offset, rest)) = keys.split_first_mut() else {
-        *value = new_value.clone();
-        return Ok(new_value);
-    };
-    if let Value::String(bytes) = value {
-        if !rest.is_empty() {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "Cannot use string offset as an array",
-                line,
-            ));
-        }
-        if offset.value.is_none() {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "[] operator not supported for strings",
-                line,
-            ));
-        }
-        return write_string(
-            &mut bytes.make_mut(),
-            offset.value(line)?,
-            new_value,
-            line,
-            warnings,
-        );
-    }
-    if matches!(value, Value::Null | Value::Bool(false)) {
-        if matches!(value, Value::Bool(false)) {
-            warnings.push(format!(
-                "Deprecated: Automatic conversion of false to array on line {line}"
-            ));
-        }
-        *value = Value::Array(Rc::new(PhpArray::default()));
-    }
-    let Value::Array(array) = value else {
-        return Err(Error::new(
-            ErrorKind::Error,
-            "Cannot use a scalar value as an array",
-            line,
-        ));
-    };
-    let array = Rc::make_mut(array);
-    let key = if offset.value.is_none() {
-        array.append_key(line)?
-    } else {
-        offset.array_key(line, false, warnings)?
-    };
-    if rest.is_empty() {
-        array.insert(key, new_value.clone());
-        return Ok(new_value);
-    }
-    if array.get(&key).is_none() {
-        array.insert(key.clone(), Value::Null);
-    }
-    write_path(
-        array.get_mut(&key).unwrap(),
-        rest,
-        new_value,
-        line,
-        warnings,
-    )
-}
-pub(super) fn unset_path(
-    value: &mut Value,
-    keys: &mut [Offset],
-    line: usize,
-    warnings: &mut dyn WarningSink,
-) -> Result<(), Error> {
-    let Some((offset, rest)) = keys.split_first_mut() else {
-        return Ok(());
-    };
-    match value {
-        Value::Array(array) => {
-            let key = offset.array_key(line, true, warnings)?;
-            let array = Rc::make_mut(array);
-            if rest.is_empty() {
-                array.remove(&key);
-            } else if let Some(value) = array.get_mut(&key) {
-                unset_path(value, rest, line, warnings)?;
-            }
-            Ok(())
-        }
-        Value::Null => Ok(()),
-        Value::String(_) => Err(Error::new(
-            ErrorKind::Error,
-            "Cannot unset string offsets",
-            line,
-        )),
-        _ => Err(Error::new(
-            ErrorKind::Error,
-            "Cannot unset offset in a non-array variable",
-            line,
-        )),
     }
 }
 pub(super) fn string_index(
@@ -281,7 +178,7 @@ pub(super) fn position(index: i64, length: usize) -> Option<usize> {
         index.try_into().ok()
     }
 }
-fn write_string(
+pub(super) fn write_string(
     bytes: &mut Vec<u8>,
     key: &Value,
     new_value: Value,

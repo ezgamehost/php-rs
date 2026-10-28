@@ -200,6 +200,7 @@ pub(super) fn trace_string(trace: &PhpArray) -> Vec<u8> {
 
 fn format_argument(output: &mut Vec<u8>, value: &Value) {
     match value {
+        Value::Reference(reference) => format_argument(output, &reference.borrow()),
         Value::Null => output.extend_from_slice(b"NULL"),
         Value::Bool(value) => output.extend_from_slice(if *value { b"true" } else { b"false" }),
         Value::Array(_) => output.extend_from_slice(b"Array"),

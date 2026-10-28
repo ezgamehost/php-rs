@@ -209,16 +209,18 @@ impl Runtime {
                 }
             }
             Value::Array(array) if array.len() == 2 => {
-                let base = array.get(&ArrayKey::Int(0));
-                let method = array.get(&ArrayKey::Int(1));
-                if let (Some(Value::Object(object)), Some(Value::String(name))) = (base, method) {
+                let base = array.get(&ArrayKey::Int(0)).map(Value::dereferenced);
+                let method = array.get(&ArrayKey::Int(1)).map(Value::dereferenced);
+                if let (Some(Value::Object(object)), Some(Value::String(name))) =
+                    (base.as_ref(), method.as_ref())
+                {
                     self.resolve_method(Value::Object(object.clone()), &name.bytes(), line)
                 } else if let (Some(Value::Closure(closure)), Some(Value::String(name))) =
-                    (base, method)
+                    (base.as_ref(), method.as_ref())
                 {
                     self.resolve_method(Value::Closure(closure.clone()), &name.bytes(), line)
                 } else if let (Some(Value::String(class)), Some(Value::String(name))) =
-                    (base, method)
+                    (base.as_ref(), method.as_ref())
                 {
                     self.resolve_class_method(&class.bytes(), &name.bytes(), false, false, line)
                 } else {
@@ -413,7 +415,7 @@ impl Runtime {
                                 line,
                             ));
                         }
-                        bound.push(name, value.clone(), None, parameters, line)?;
+                        bound.push(name, value.dereferenced(), None, parameters, line)?;
                     }
                 }
             }
@@ -445,6 +447,9 @@ impl Runtime {
             ));
         }
         if target.reference_values {
+            if let ExprKind::Literal(Value::Reference(reference)) = &expr.kind {
+                return Ok((reference.borrow().clone(), Some(reference.clone())));
+            }
             let value = self.eval(expr)?;
             self.diagnostics.push(format!(
                 "{}(): Argument #{} (${}) must be passed by reference, value given on line {line}",

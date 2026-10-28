@@ -195,7 +195,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         | ExprKind::Destructure(elements) => {
             for element in elements {
                 match element {
-                    ArrayElement::Entry(key, value) => {
+                    ArrayElement::Entry(key, value) | ArrayElement::Reference(key, value) => {
                         if let Some(key) = key {
                             expression(key, warnings);
                         }
@@ -272,7 +272,7 @@ pub(super) fn constant(expr: &Expr) -> Option<Value> {
             }
             ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
                 elements.iter().all(|element| match element {
-                    ArrayElement::Entry(key, value) => {
+                    ArrayElement::Entry(key, value) | ArrayElement::Reference(key, value) => {
                         key.as_ref().is_none_or(eligible) && eligible(value)
                     }
                     _ => false,
@@ -354,7 +354,7 @@ pub(super) fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
         ExprKind::Array(elements) | ExprKind::LongArray(elements) => {
             for element in elements {
                 match element {
-                    ArrayElement::Entry(key, value) => {
+                    ArrayElement::Entry(key, value) | ArrayElement::Reference(key, value) => {
                         initializer(value, warnings);
                         if let Some(key) = key {
                             initializer(key, warnings);

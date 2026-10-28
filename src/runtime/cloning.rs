@@ -119,6 +119,14 @@ impl Runtime {
             // flags for untouched slots after clone-with (also after errors).
             unlock_readonly(&object);
             for (key, value) in updates.entries() {
+                if matches!(value, Value::Reference(reference) if Rc::strong_count(reference) > 1) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "Cannot assign by reference when cloning with updated properties",
+                        line,
+                    ));
+                }
+                let value = value.dereferenced();
                 let mut location = Location {
                     overloaded: None,
                     object: Some(object.clone()),

@@ -408,6 +408,7 @@ impl Runtime {
             )),
             Builtin::GetType => Ok(Value::String(
                 match first {
+                    Value::Reference(_) => unreachable!("arguments are dereferenced"),
                     Value::Null => "NULL",
                     Value::Bool(_) => "boolean",
                     Value::Int(_) => "integer",
@@ -460,7 +461,13 @@ impl Runtime {
                         line,
                     ));
                 }
-                Ok(Value::Int(count(array, mode == 1)))
+                Ok(Value::Int(count(
+                    array,
+                    mode == 1,
+                    &mut HashSet::new(),
+                    line,
+                    &mut self.diagnostics,
+                )))
             }
             Builtin::ArrayValues => {
                 let array = require_array(first, &name, 1, line)?;
@@ -487,7 +494,7 @@ impl Runtime {
                 for (key, value) in array.entries() {
                     let selected = match &args[1] {
                         None => true,
-                        Some(filter) if strict => value == filter,
+                        Some(filter) if strict => value.identical(filter, line)?,
                         Some(filter) => self.compare(value, filter, line)? == Some(Ordering::Equal),
                     };
                     if selected {
@@ -627,6 +634,7 @@ pub(super) fn require_array<'a>(
 }
 pub(super) fn debug_type(value: &Value) -> &str {
     match value {
+        Value::Reference(_) => unreachable!("values are dereferenced before type checks"),
         Value::Null => "null",
         Value::Bool(_) => "bool",
         Value::Int(_) => "int",
@@ -637,20 +645,29 @@ pub(super) fn debug_type(value: &Value) -> &str {
         Value::Object(object) => object.class_name.split('\0').next().unwrap(),
     }
 }
-fn count(array: &PhpArray, recursive: bool) -> i64 {
-    array.len() as i64
-        + if recursive {
-            array
-                .entries()
-                .iter()
-                .map(|(_, value)| match value {
-                    Value::Array(a) => count(a, true),
-                    _ => 0,
-                })
-                .sum::<i64>()
-        } else {
-            0
+fn count(
+    array: &PhpArray,
+    recursive: bool,
+    seen: &mut HashSet<usize>,
+    line: usize,
+    warnings: &mut dyn WarningSink,
+) -> i64 {
+    if !recursive {
+        return array.len() as i64;
+    }
+    let identity = array as *const PhpArray as usize;
+    if !seen.insert(identity) {
+        warnings.push(format!("count(): Recursion detected on line {line}"));
+        return 0;
+    }
+    let mut result = array.len() as i64;
+    for (_, value) in array.entries() {
+        if let Value::Array(array) = value.dereferenced() {
+            result += count(&array, true, seen, line, warnings);
         }
+    }
+    seen.remove(&identity);
+    result
 }
 fn dump(
     value: &Value,
@@ -670,6 +687,14 @@ fn dump_inner(
     warnings: &mut dyn WarningSink,
 ) {
     match value {
+        Value::Reference(reference) => {
+            let value = reference.borrow();
+            let recursive = matches!(&*value, Value::Array(array) if seen.contains(&(Rc::as_ptr(array) as usize)));
+            if Rc::strong_count(reference) > 1 && !recursive {
+                out.push(b'&');
+            }
+            dump_inner(&value, depth, out, seen, line, warnings);
+        }
         Value::Object(object) => {
             if !seen.insert(object.object_id) {
                 out.extend_from_slice(b"*RECURSION*\n");
@@ -828,6 +853,11 @@ fn dump_inner(
             out.extend_from_slice(b"\"\n");
         }
         Value::Array(array) => {
+            let identity = Rc::as_ptr(array) as usize;
+            if !seen.insert(identity) {
+                out.extend_from_slice(b"*RECURSION*\n");
+                return;
+            }
             out.extend_from_slice(format!("array({}) {{\n", array.len()).as_bytes());
             for (key, value) in array.entries() {
                 out.extend(std::iter::repeat_n(b' ', depth + 2));
@@ -844,6 +874,7 @@ fn dump_inner(
             }
             out.extend(std::iter::repeat_n(b' ', depth));
             out.extend_from_slice(b"}\n");
+            seen.remove(&identity);
         }
     }
 }

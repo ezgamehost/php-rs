@@ -78,6 +78,7 @@ pub(crate) enum IncludeKind {
 
 #[derive(Debug, Clone)]
 pub(crate) enum ArrayElement {
+    Reference(Option<Expr>, Expr),
     Entry(Option<Expr>, Expr),
     Unpack(Expr),
     Hole,
@@ -484,7 +485,7 @@ impl Expr {
                             && v.constant_expression(allow_object_cast)
                     }
                     ArrayElement::Unpack(v) => v.constant_expression(allow_object_cast),
-                    ArrayElement::Hole => false,
+                    ArrayElement::Reference(_, _) | ArrayElement::Hole => false,
                 })
             }
             _ => false,

@@ -583,7 +583,7 @@ impl Runtime {
             .borrow()
             .get(&self.instance_property_key(object, name))
         {
-            return Ok(value.clone());
+            return Ok(value.dereferenced());
         }
         if !silent {
             if let Some(owner) = self.instance_property_owner(&object.class, name)
@@ -610,6 +610,7 @@ impl Runtime {
         value: Value,
         line: usize,
     ) -> Result<Value, Error> {
+        let value = value.dereferenced();
         if name.first() == Some(&0) {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -660,7 +661,15 @@ impl Runtime {
             object.reinitializable.borrow_mut().remove(key);
             object.unset_properties.borrow_mut().remove(key);
         }
-        object.properties.borrow_mut().insert(key, value.clone());
+        let reference = match object.properties.borrow().get(&key) {
+            Some(Value::Reference(reference)) => Some(reference.clone()),
+            _ => None,
+        };
+        if let Some(reference) = reference {
+            *reference.borrow_mut() = value.clone();
+        } else {
+            object.properties.borrow_mut().insert(key, value.clone());
+        }
         Ok(value)
     }
 }
@@ -746,7 +755,7 @@ impl Runtime {
                 break;
             };
             visited.insert(key.clone());
-            self.assign_target(value_target, value.clone())?;
+            self.assign_target(value_target, value.dereferenced())?;
             if let Some(target) = key_target {
                 let raw = key.to_value().to_bytes();
                 let name = match crate::object::property_name(&raw) {
