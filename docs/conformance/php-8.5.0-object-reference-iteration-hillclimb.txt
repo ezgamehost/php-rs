@@ -1,0 +1,40 @@
+Before: 5256 cases; 1353 passed, 3495 failed, 408 unsupported
+After: 5256 cases; 1356 passed, 3492 failed, 408 unsupported
+New passes: 3; regressions: 0
+NEW PASS: Zend/tests/readonly_props/by_ref_foreach.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_012.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_045.phpt
+
+Most frequent remaining failure messages:
+539: ParseError: Expected ';'
+209: Error: Class "ReflectionClass" not found
+133: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+32: Error: Call to undefined function print_r()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

@@ -41,12 +41,8 @@ impl Runtime {
         if matches!(value, Value::Closure(_)) {
             return Ok(Flow::Next);
         }
-        if matches!(value, Value::Object(_)) {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "Foreach by reference over objects is not supported yet",
-                expression.line,
-            ));
+        if let Value::Object(object) = &value {
+            return self.foreach_object(object, key_target, value_target, true, body);
         }
         if !matches!(value, Value::Array(_)) {
             self.diagnostics.push(format!(

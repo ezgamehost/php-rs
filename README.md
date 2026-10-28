@@ -86,7 +86,9 @@ new request. The CLI returns the low eight bits of the requested status.
   unsetting/rebinding properties releases their constraints from old references.
 - Instance classes and `stdClass`, constructors, shared object handles,
   dynamic property names, nested property/array writes, and basic live property
-  iteration. Instance methods bind `$this`, support named/typed arguments, and
+  iteration by value or reference. Reference iteration keeps property aliases and
+  typed constraints, skips uninitialized properties, and rejects readonly slots.
+  Instance methods bind `$this`, support named/typed arguments, and
   expose bound first-class callables. Non-static closures retain `$this`.
   Method-array callbacks and invokable objects work with pipes and array callbacks.
 - Anonymous classes, including readonly declarations, constructor arguments,
@@ -255,8 +257,8 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
 reference captures, reference parameters/returns, and reference destructuring work.
-Object reference iteration, Traversable unpacking, complete reference coercion
-compatibility and diagnostics, and cycle collection remain unfinished.
+Traversable unpacking, complete reference coercion compatibility and diagnostics,
+and cycle collection remain unfinished.
 Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception
 handlers, protected exception-property access (including severity), and complete compile-time fatal

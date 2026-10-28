@@ -298,13 +298,25 @@ tests were added. Object reference iteration, internal by-reference builtins,
 complete parameter/return coercion diagnostics, destructor/reentrant edge cases,
 cycle collection, and exact diagnostic rendering remain unfinished.
 
+The [object reference iteration slice](conformance/php-8.5.0-object-reference-iteration-hillclimb.txt)
+adds 3 Zend passes with zero regressions. Foreach by reference over ordinary objects
+binds visible property cells and registers their typed constraints, including private
+properties in the declaring scope. Uninitialized properties are skipped; initialized
+readonly properties report PHP's reference-acquisition error. Property snapshots are
+released before executing loop bodies so they do not artificially retain reference
+sharing. Existing object handles, reference destructuring, and property loop targets
+use the same binding path. All 797 existing Rust tests, 57 reference-checked project
+fixtures, formatting, and Clippy pass; no new custom tests were added. Iterator and
+ArrayAccess objects, deletion/reinsertion cursor edge cases, object destructors, and
+cycle collection remain unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1353 | 3495 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1356 | 3492 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

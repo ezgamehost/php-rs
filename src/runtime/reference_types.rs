@@ -51,6 +51,58 @@ pub(super) struct Constraints {
 }
 
 impl Runtime {
+    pub(super) fn iterated_property_reference(
+        &mut self,
+        object: &Rc<PhpObject>,
+        key: &ArrayKey,
+        line: usize,
+    ) -> Result<Cell, Error> {
+        let property = object
+            .class
+            .properties
+            .iter()
+            .find(|property| ArrayKey::String(property.storage_name()) == *key);
+        if let Some(property) = property
+            && property.is_readonly
+        {
+            let owner = object.class.property_slot_owner(property);
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot acquire reference to readonly property {}::${}",
+                    owner.display_name(),
+                    String::from_utf8_lossy(&property.name)
+                ),
+                line,
+            ));
+        }
+        let reference = {
+            let mut properties = object.properties.borrow_mut();
+            let value = properties.get_mut(key).expect("iterated property exists");
+            match value {
+                Value::Reference(reference) => reference.clone(),
+                _ => {
+                    let reference = cell(std::mem::replace(value, Value::Null));
+                    *value = Value::Reference(reference.clone());
+                    reference
+                }
+            }
+        };
+        if let Some(property) = property
+            && property.ty.is_some()
+        {
+            self.register_reference_source(
+                &reference,
+                Source {
+                    holder: Holder::Instance(Rc::downgrade(object), key.clone()),
+                    owner: object.class.property_slot_owner(property),
+                    property: property.clone(),
+                },
+            );
+        }
+        Ok(reference)
+    }
+
     pub(super) fn check_property_array_init(
         &mut self,
         location: &Location,

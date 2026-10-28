@@ -739,9 +739,10 @@ impl Runtime {
 
     pub(super) fn foreach_object(
         &mut self,
-        object: &PhpObject,
+        object: &Rc<PhpObject>,
         key_target: Option<&Expr>,
         value_target: &Expr,
+        by_reference: bool,
         body: &Stmt,
     ) -> Result<Flow, Error> {
         let mut visited = HashSet::new();
@@ -754,8 +755,24 @@ impl Runtime {
             else {
                 break;
             };
+            let key = key.clone();
+            let value = value.dereferenced();
+            // Iteration retains the object handle, not a copy of its property
+            // table: temporary snapshots must not prolong reference sharing.
+            drop(properties);
             visited.insert(key.clone());
-            self.assign_target(value_target, value.dereferenced())?;
+            if by_reference {
+                let reference =
+                    self.iterated_property_reference(object, &key, value_target.line)?;
+                if matches!(value_target.kind, ExprKind::Destructure(_)) {
+                    self.destructure_reference(value_target, reference)?;
+                } else {
+                    let mut target = self.location(value_target)?;
+                    self.bind_reference_location(&mut target, reference, value_target.line)?;
+                }
+            } else {
+                self.assign_target(value_target, value)?;
+            }
             if let Some(target) = key_target {
                 let raw = key.to_value().to_bytes();
                 let name = match crate::object::property_name(&raw) {

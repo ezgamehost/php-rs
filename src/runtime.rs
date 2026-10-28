@@ -253,7 +253,13 @@ impl Runtime {
                 }
                 let value = self.eval(iter)?;
                 if let Value::Object(object) = &value {
-                    return self.foreach_object(object, key_target.as_ref(), value_target, body);
+                    return self.foreach_object(
+                        object,
+                        key_target.as_ref(),
+                        value_target,
+                        false,
+                        body,
+                    );
                 }
                 if let Value::Array(array) = value {
                     for (key, value) in array.entries() {

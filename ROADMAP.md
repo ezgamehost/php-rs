@@ -92,7 +92,9 @@ definition of completion.
    calls, returns, and clones, with coercion/conflict checks and increment bounds.
    Unset/rebound properties release their constraints; catch assignment preserves
    aliases. Nullable reference initialization and promoted references are supported.
-   Remaining: object reference iteration, complete reference coercion diagnostics, cycle collection,
+   Object foreach by reference binds visible property cells with typed constraints,
+   skips uninitialized slots, and rejects initialized readonly properties.
+   Remaining: complete reference coercion diagnostics, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
    Traversable unpacking,
