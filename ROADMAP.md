@@ -158,7 +158,10 @@ definition of completion.
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function
-   existence implemented. Formatted printing/string construction supports printf,
+   existence implemented. Class method/default-property inspection respects caller
+   visibility, declaration/inheritance order, private ancestors, and name shadowing.
+   Trait composition installs aliases before the original method, matching Zend.
+   Formatted printing/string construction supports printf,
    sprintf, vprintf, and vsprintf, including positional arguments, star width/precision,
    byte padding, integer/float conversions, and validation errors. Locale configuration
    and resource formatting remain incomplete. Byte-string repetition/reversal and chr/ord conversion

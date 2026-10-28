@@ -6,6 +6,8 @@ use crate::{
 
 #[derive(Clone)]
 struct Candidate {
+    order: usize,
+    is_alias: bool,
     source: Vec<u8>,
     name: Vec<u8>,
     function: Rc<FunctionDecl>,
@@ -113,10 +115,12 @@ impl Runtime {
                 ));
             }
         }
-        let originals: Vec<_> = traits
+        let mut originals: Vec<_> = traits
             .iter()
             .flat_map(|class| {
                 class.methods.iter().map(|function| Candidate {
+                    order: 0,
+                    is_alias: false,
                     source: class.name.clone(),
                     name: method_name(function).to_vec(),
                     function: function.clone(),
@@ -128,6 +132,9 @@ impl Runtime {
                 })
             })
             .collect();
+        for (order, original) in originals.iter_mut().enumerate() {
+            original.order = order;
+        }
         let mut candidates: Vec<_> = originals
             .iter()
             .filter(|method| {
@@ -178,6 +185,7 @@ impl Runtime {
             if let Some(alias) = alias {
                 let mut candidate = original.clone();
                 candidate.name = alias.clone();
+                candidate.is_alias = true;
                 if let Some(visibility) = visibility {
                     Rc::make_mut(&mut candidate.function).visibility = *visibility;
                 }
@@ -196,6 +204,9 @@ impl Runtime {
                 }
             }
         }
+        // Zend installs each method's aliases in adaptation order before the
+        // original method, including aliases of excluded originals.
+        candidates.sort_by_key(|candidate| (candidate.order, !candidate.is_alias));
         let own_names: HashSet<_> = decl
             .methods
             .iter()

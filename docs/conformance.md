@@ -405,6 +405,24 @@ All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
 and Clippy pass. No new custom tests were added. Locale configuration, resource
 arguments, error handlers, and matching expected diagnostics remain unfinished.
 
+The [class inspection slice](conformance/php-8.5.0-class-inspection-hillclimb.txt)
+adds 18 Zend passes, 5 standard class/object passes, and 1 reflection pass, with
+zero regressions. `get_class_methods` accepts class names or objects, autoloads
+classes, filters by caller visibility, and preserves declaration/inheritance order.
+`get_class_vars` converts and validates its class-name argument, returns visible
+instance defaults before static declaration defaults, includes null for uninitialized
+typed properties, and respects name shadowing across storage kinds. Private inherited
+declarations are available in their declaring scope. Mutable static values are not
+substituted for declaration defaults.
+
+Trait composition now inserts each method's aliases before its original, in adaptation
+order, including aliases of excluded methods. This fixes both ordinary method lists
+and reflection ordering. All 797 existing Rust tests and 57 reference-checked project
+fixtures pass, as do formatting and Clippy; no new custom tests were added. Expected
+diagnostic matching and error handlers still block two targeted fixtures. Closure
+method names are inspectable; their binding/call APIs remain unimplemented. Property
+hooks and native-class metadata remain incomplete.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -412,9 +430,10 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1411 | 3437 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 140 | 315 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1429 | 3419 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 141 | 314 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
+| PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

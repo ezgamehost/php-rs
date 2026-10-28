@@ -18,6 +18,7 @@ mod builtins;
 mod callbacks;
 mod casting;
 mod class_aliases;
+mod class_inspection;
 mod class_scope;
 mod cloning;
 mod closures;

@@ -237,6 +237,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - `print_r` writes or returns binary-safe formatted values, detects array/object
   reference cycles, labels private/protected property keys, and invokes
   `__debugInfo` for custom object output.
+- `get_class_methods` lists methods in declaration/inheritance order with caller-scope
+  visibility. Trait aliases precede their original method. `get_class_vars` returns
+  visible instance and static declaration defaults, including null for uninitialized
+  typed declarations, with class-name conversion and autoloading.
 - Core builtins: `var_dump`, `print_r`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,

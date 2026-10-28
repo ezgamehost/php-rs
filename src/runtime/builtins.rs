@@ -31,6 +31,8 @@ pub(super) enum Builtin {
     MethodExists,
     PropertyExists,
     GetObjectVars,
+    GetClassVars,
+    GetClassMethods,
     Is(&'static str),
     ArrayKeys,
     ArrayValues,
@@ -87,6 +89,8 @@ impl Builtin {
             b"method_exists" => Self::MethodExists,
             b"property_exists" => Self::PropertyExists,
             b"get_object_vars" => Self::GetObjectVars,
+            b"get_class_vars" => Self::GetClassVars,
+            b"get_class_methods" => Self::GetClassMethods,
             b"is_int" | b"is_integer" | b"is_long" => Self::Is("int"),
             b"is_float" | b"is_double" => Self::Is("float"),
             b"is_bool" => Self::Is("bool"),
@@ -126,6 +130,8 @@ impl Builtin {
             Self::Clone => &[("object", false, false), ("withProperties", true, false)],
             Self::GetParentClass => &[("object_or_class", true, false)],
             Self::GetCalledClass => &[],
+            Self::GetClassVars => &[("class", false, false)],
+            Self::GetClassMethods => &[("object_or_class", false, false)],
             Self::GetObjectVars => &[("object", false, false)],
             Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
             Self::ClassAlias => &[
@@ -305,6 +311,9 @@ impl Runtime {
             Builtin::ClassAlias => self.class_alias(&args, line),
             Builtin::IsA | Builtin::IsSubclassOf => self.inspect_inheritance(builtin, &args, line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
+            Builtin::GetClassVars | Builtin::GetClassMethods => {
+                self.class_inspection(builtin, first, line)
+            }
             Builtin::GetObjectVars => match first {
                 Value::Object(object) => Ok(Value::Array(Rc::new(self.object_variables(object)))),
                 Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),

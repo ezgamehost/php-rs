@@ -1,0 +1,107 @@
+Zend suite
+
+Before: 5256 cases; 1411 passed, 3437 failed, 408 unsupported
+After: 5256 cases; 1429 passed, 3419 failed, 408 unsupported
+New passes: 18; regressions: 0
+NEW PASS: Zend/tests/bug72594.phpt
+NEW PASS: Zend/tests/constants/bug41640.phpt
+NEW PASS: Zend/tests/get_class_methods/bug32296.phpt
+NEW PASS: Zend/tests/get_class_methods/bug43483.phpt
+NEW PASS: Zend/tests/get_class_methods/bug64239_1.phpt
+NEW PASS: Zend/tests/get_class_methods/get_class_methods_001.phpt
+NEW PASS: Zend/tests/get_class_methods/get_class_methods_002.phpt
+NEW PASS: Zend/tests/get_class_methods/get_class_methods_003.phpt
+NEW PASS: Zend/tests/get_class_vars/bug29505.phpt
+NEW PASS: Zend/tests/get_class_vars/bug45862.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_001.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_003.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_004.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_005.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_006.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_007.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_typed_props.phpt
+NEW PASS: Zend/tests/traits/bug65579.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 140 passed, 315 failed, 37 unsupported
+After: 492 cases; 141 passed, 314 failed, 37 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/reflection/tests/bug64239.phpt
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+38: Error: Class "ReflectionProperty" not found
+18: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+14: Error: Call to undefined method ReflectionClass::getProperty()
+9: ReflectionException: Class "Object" does not exist
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: Error: Class "ReflectionClassConstant" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Object of class ReflectionObject could not be converted to string
+5: ReflectionException: Class "ReflectionProperty" does not exist
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Class "Reflection" not found
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Standard class/object inspection fixtures
+
+Before: 6 cases; 0 passed, 6 failed, 0 unsupported
+After: 6 cases; 5 passed, 1 failed, 0 unsupported
+New passes: 5; regressions: 0
+NEW PASS: ext/standard/tests/class_object/get_class_methods_basic_001.phpt
+NEW PASS: ext/standard/tests/class_object/get_class_methods_basic_002.phpt
+NEW PASS: ext/standard/tests/class_object/get_class_methods_basic_003.phpt
+NEW PASS: ext/standard/tests/class_object/get_class_methods_variation_002.phpt
+NEW PASS: ext/standard/tests/class_object/get_class_vars_variation2.phpt
+
+Most frequent remaining failure messages:
+1: Error: Call to undefined function set_error_handler()
+
+Unsupported section combinations:
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: expected diagnostic matching, error handlers, property hooks, complete native-class metadata, and Closure binding/call APIs remain unfinished. Unsupported sections are not counted as passing.
