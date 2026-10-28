@@ -23,6 +23,7 @@ mod closures;
 mod comparison;
 mod constants;
 mod destructuring;
+mod foreach;
 mod function_arguments;
 mod functions;
 mod inheritance;
@@ -242,7 +243,10 @@ impl Runtime {
                     return self.switch_cases(cases, start);
                 }
             }
-            Stmt::Foreach(iter, key_target, value_target, body) => {
+            Stmt::Foreach(iter, key_target, value_target, by_reference, body) => {
+                if *by_reference {
+                    return self.foreach_reference(iter, key_target.as_ref(), value_target, body);
+                }
                 let value = self.eval(iter)?;
                 if let Value::Object(object) = &value {
                     return self.foreach_object(object, key_target.as_ref(), value_target, body);

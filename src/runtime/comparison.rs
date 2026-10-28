@@ -19,11 +19,13 @@ impl Runtime {
         seen: &mut HashSet<(usize, usize)>,
     ) -> Result<Option<Ordering>, Error> {
         use Value::*;
-        if matches!(left, Value::Reference(_)) || matches!(right, Value::Reference(_)) {
+        if matches!(left, Value::Reference(_) | Value::Indirect(_))
+            || matches!(right, Value::Reference(_) | Value::Indirect(_))
+        {
             return self.compare_inner(&left.dereferenced(), &right.dereferenced(), line, seen);
         }
         Ok(match (left, right) {
-            (Reference(_), _) | (_, Reference(_)) => unreachable!(),
+            (Reference(_) | Indirect(_), _) | (_, Reference(_) | Indirect(_)) => unreachable!(),
             (Bool(_), _) | (_, Bool(_)) => left.is_truthy().partial_cmp(&right.is_truthy()),
             (Null, String(s)) => b"".as_slice().partial_cmp(s.bytes().as_slice()),
             (String(s), Null) => s.bytes().as_slice().partial_cmp(b"".as_slice()),

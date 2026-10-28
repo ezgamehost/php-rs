@@ -87,7 +87,7 @@ impl Scope {
                         self.reserve_variables(&case.body);
                     }
                 }
-                Stmt::Foreach(iter, key, value, body) => {
+                Stmt::Foreach(iter, key, value, _, body) => {
                     self.reserve_expression(iter);
                     self.reserve_expression(value);
                     if let Some(key) = key {

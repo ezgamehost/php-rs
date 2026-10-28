@@ -202,13 +202,31 @@ All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
 and Clippy pass; no new custom tests were added. Property references, reference
 iteration/destructuring, variadics/unpacking, reference returns, cycle collection,
 and complete recursive comparison/diagnostic behavior remain unfinished.
+The [array reference-iteration slice](conformance/php-8.5.0-reference-iteration-hillclimb.txt)
+adds 21 Zend passes with zero regressions. `foreach ($array as &$value)` binds
+each live element and leaves the final alias intact. Iterator tokens retain
+independent positions across array copies, update positions after removals, and
+observe appended entries. Mutable bucket storage lets iteration establish an
+element reference without prematurely separating an array copied inside the
+loop; ordinary writes still perform copy-on-write separation. Bucket indirection
+is distinct from a PHP reference and is transparent to value reads and dumps.
+Nested loops, source replacement/rebinding, temporary
+arrays containing references, and reference-assignment expressions use the same
+storage. Tokens are weakly retained by arrays and expire when loops exit.
+Behavior is grounded in PHP 8.5.0 `Zend/zend_hash.c` and `Zend/zend_vm_def.h`
+and the upstream foreach fixtures. The focused foreach suite records 27 passes,
+30 failures, and one unsupported fixture. All 797 existing Rust tests, 57
+reference-checked project fixtures, formatting, and Clippy pass; no new custom
+tests were added. Object/property reference iteration, reference destructuring,
+internal array-pointer APIs, mutating array builtins, and diagnostic formatting
+remain incomplete.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1217 | 3631 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1238 | 3610 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

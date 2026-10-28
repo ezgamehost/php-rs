@@ -85,7 +85,9 @@ fn constant_keys(arms: &[MatchArm]) -> Option<Vec<(Value, &MatchArm)>> {
 
 fn unhandled(value: &Value, line: usize) -> Error {
     let description = match value {
-        Value::Reference(reference) => return unhandled(&reference.borrow(), line),
+        Value::Reference(reference) | Value::Indirect(reference) => {
+            return unhandled(&reference.borrow(), line);
+        }
         Value::Null => "NULL".into(),
         Value::Bool(value) => value.to_string(),
         Value::Int(value) => value.to_string(),

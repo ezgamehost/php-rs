@@ -145,25 +145,56 @@ impl Runtime {
             }
         }
         let reference = self.location_reference(&mut source, line)?;
+        self.bind_reference_location(&mut target, reference.clone(), line)?;
+        Ok(reference)
+    }
+
+    pub(super) fn bind_reference_location(
+        &mut self,
+        target: &mut Location,
+        reference: Cell,
+        line: usize,
+    ) -> Result<(), Error> {
+        if target.object.is_some() || target.static_class.is_some() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "References to properties are not supported yet",
+                line,
+            ));
+        }
+        if target.name == b"this" {
+            return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
+        }
+        if target.name == b"GLOBALS" && !target.global {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "$GLOBALS can only be modified using the $GLOBALS[$name] = $value syntax",
+                line,
+            ));
+        }
         if target.keys.is_empty() {
-            self.location_scope(&target)
-                .insert(target.name, reference.clone());
+            self.location_scope(target)
+                .insert(target.name.clone(), reference);
         } else {
             let root = self
-                .location_scope(&target)
+                .location_scope(target)
                 .get_or_insert(&target.name, Value::Null);
             reference_paths::bind(
                 root,
                 &mut target.keys,
-                reference.clone(),
+                reference,
                 line,
                 &mut self.diagnostics,
             )?;
         }
-        Ok(reference)
+        Ok(())
     }
 
-    fn location_reference(&mut self, location: &mut Location, line: usize) -> Result<Cell, Error> {
+    pub(super) fn location_reference(
+        &mut self,
+        location: &mut Location,
+        line: usize,
+    ) -> Result<Cell, Error> {
         let root = self
             .location_scope(location)
             .get_or_insert(&location.name, Value::Null);

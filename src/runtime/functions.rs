@@ -888,7 +888,7 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut dyn WarningSink, switches:
             Stmt::While(_, body)
             | Stmt::DoWhile(body, _)
             | Stmt::For(_, _, _, body)
-            | Stmt::Foreach(_, _, _, body) => {
+            | Stmt::Foreach(_, _, _, _, body) => {
                 switches.push(false);
                 diagnose_statements(std::slice::from_ref(body), warnings, switches);
                 switches.pop();

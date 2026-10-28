@@ -317,8 +317,16 @@ impl Parser {
             self.expect("(")?;
             let iter = self.expr(0)?;
             self.expect("as")?;
+            let mut by_reference = self.eat("&");
             let first = self.expr(0)?;
             let (key, value) = if self.eat("=>") {
+                if by_reference {
+                    return Err(Error::parse(
+                        "Key element cannot be a reference",
+                        first.line,
+                    ));
+                }
+                by_reference = self.eat("&");
                 (Some(first), self.expr(0)?)
             } else {
                 (None, first)
@@ -332,7 +340,13 @@ impl Parser {
             }
             self.expect(")")?;
             let body = self.loop_body(Some("endforeach"))?;
-            return Ok(Stmt::Foreach(iter, key, value, Box::new(body)));
+            return Ok(Stmt::Foreach(
+                iter,
+                key,
+                value,
+                by_reference,
+                Box::new(body),
+            ));
         }
         if self.eat("unset") {
             self.expect("(")?;

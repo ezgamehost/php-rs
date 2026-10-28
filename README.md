@@ -57,6 +57,9 @@ new request. The CLI returns the low eight bits of the requested status.
   unshared reference containers. Rebinding detaches only the destination slot.
   Ordinary reads copy values, and recursive array paths release their containing
   storage before following a reference.
+- Array `foreach` by reference binds each live element, retaining the final alias.
+  Nested cursors track append/removal and copy-on-write changes; temporary arrays
+  and reference-assignment expressions are supported as iteration sources.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
 - SPL autoloader registration, removal, inspection, and explicit dispatch, with
   default extension-based file loading, recursion guards, and loader exceptions.
@@ -239,7 +242,7 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
 reference captures, and fixed reference parameters work. Property references,
-reference iteration/destructuring, variadics/unpacking, promoted property
+object reference iteration, reference destructuring, variadics/unpacking, promoted property
 references, by-reference returns, and cycle collection remain unfinished.
 Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception

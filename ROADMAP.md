@@ -71,7 +71,10 @@ definition of completion.
    Copy-on-write drops unshared reference containers; recursive array writes and
    unset release owners before following aliases. Fixed reference parameters and
    internal callback array entries retain existing reference bindings.
-   Remaining: property references, reference iteration/destructuring, cycle collection,
+   Array foreach by reference retains live source cells and element aliases.
+   Weak iterator tokens keep independent positions in array copies; insertion,
+   deletion, nested loops, source replacement, and final aliases are supported.
+   Remaining: property references, object reference iteration, reference destructuring, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
    by-reference returns, variadics/unpacking and promoted property references,

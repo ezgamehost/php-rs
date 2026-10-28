@@ -82,7 +82,7 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
                     expression(value, warnings);
                 }
             }
-            Stmt::Foreach(iter, key, value, body) => {
+            Stmt::Foreach(iter, key, value, _, body) => {
                 expression(iter, warnings);
                 expression(value, warnings);
                 if let Some(key) = key {

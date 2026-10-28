@@ -110,7 +110,7 @@ pub(crate) enum Stmt {
     DoWhile(Box<Stmt>, Expr),
     For(Vec<Expr>, Vec<Expr>, Vec<Expr>, Box<Stmt>),
     Switch(Expr, Vec<SwitchCase>),
-    Foreach(Expr, Option<Expr>, Expr, Box<Stmt>),
+    Foreach(Expr, Option<Expr>, Expr, bool, Box<Stmt>),
     Unset(Vec<Expr>),
     Break(usize),
     Continue(usize, usize),

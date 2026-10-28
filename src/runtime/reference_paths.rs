@@ -21,6 +21,9 @@ fn step(
     line: usize,
     warnings: &mut dyn WarningSink,
 ) -> Result<Step, Error> {
+    if let Value::Indirect(slot) = value {
+        return Ok(Step::Follow(slot.clone(), 0));
+    }
     if keys.is_empty() {
         match mutation {
             Mutation::Bind(reference) => {

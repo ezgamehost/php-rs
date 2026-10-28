@@ -201,7 +201,9 @@ fn prepare(
         return Ok(Preparation::Ordinary);
     };
     match value {
-        Value::Reference(reference) => Ok(Preparation::Reference(reference.clone(), 0)),
+        Value::Reference(reference) | Value::Indirect(reference) => {
+            Ok(Preparation::Reference(reference.clone(), 0))
+        }
         Value::String(buffer) => {
             if !rest.is_empty() {
                 return Err(Error::new(

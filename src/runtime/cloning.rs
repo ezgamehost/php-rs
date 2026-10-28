@@ -119,7 +119,7 @@ impl Runtime {
             // flags for untouched slots after clone-with (also after errors).
             unlock_readonly(&object);
             for (key, value) in updates.entries() {
-                if matches!(value, Value::Reference(reference) if Rc::strong_count(reference) > 1) {
+                if value.is_shared_reference() {
                     return Err(Error::new(
                         ErrorKind::Error,
                         "Cannot assign by reference when cloning with updated properties",

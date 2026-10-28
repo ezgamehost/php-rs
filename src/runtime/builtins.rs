@@ -408,7 +408,9 @@ impl Runtime {
             )),
             Builtin::GetType => Ok(Value::String(
                 match first {
-                    Value::Reference(_) => unreachable!("arguments are dereferenced"),
+                    Value::Reference(_) | Value::Indirect(_) => {
+                        unreachable!("arguments are dereferenced")
+                    }
                     Value::Null => "NULL",
                     Value::Bool(_) => "boolean",
                     Value::Int(_) => "integer",
@@ -634,7 +636,9 @@ pub(super) fn require_array<'a>(
 }
 pub(super) fn debug_type(value: &Value) -> &str {
     match value {
-        Value::Reference(_) => unreachable!("values are dereferenced before type checks"),
+        Value::Reference(_) | Value::Indirect(_) => {
+            unreachable!("values are dereferenced before type checks")
+        }
         Value::Null => "null",
         Value::Bool(_) => "bool",
         Value::Int(_) => "int",
@@ -687,6 +691,7 @@ fn dump_inner(
     warnings: &mut dyn WarningSink,
 ) {
     match value {
+        Value::Indirect(slot) => dump_inner(&slot.borrow(), depth, out, seen, line, warnings),
         Value::Reference(reference) => {
             let value = reference.borrow();
             let recursive = matches!(&*value, Value::Array(array) if seen.contains(&(Rc::as_ptr(array) as usize)));

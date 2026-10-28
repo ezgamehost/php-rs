@@ -2,8 +2,10 @@ use crate::{Error, ErrorKind, PhpArray};
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 /// PHP strings are byte sequences, not necessarily UTF-8.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Value {
+    /// Mutable array bucket used during reference iteration; not a PHP reference.
+    Indirect(Rc<RefCell<Value>>),
     Reference(Rc<RefCell<Value>>),
     Null,
     Bool(bool),
@@ -13,6 +15,23 @@ pub enum Value {
     Array(Rc<PhpArray>),
     Closure(Rc<crate::Closure>),
     Object(Rc<crate::PhpObject>),
+}
+
+impl Clone for Value {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Indirect(value) => value.borrow().clone(),
+            Self::Reference(value) => Self::Reference(value.clone()),
+            Self::Null => Self::Null,
+            Self::Bool(value) => Self::Bool(*value),
+            Self::Int(value) => Self::Int(*value),
+            Self::Float(value) => Self::Float(*value),
+            Self::String(value) => Self::String(value.clone()),
+            Self::Array(value) => Self::Array(value.clone()),
+            Self::Object(value) => Self::Object(value.clone()),
+            Self::Closure(value) => Self::Closure(value.clone()),
+        }
+    }
 }
 
 impl PartialEq for Value {
@@ -33,8 +52,10 @@ impl Value {
         seen: &mut HashSet<usize>,
     ) -> Result<bool, Error> {
         Ok(match (self, other) {
-            (Self::Reference(value), other) => value.borrow().identical_inner(other, line, seen)?,
-            (value, Self::Reference(other)) => {
+            (Self::Reference(value) | Self::Indirect(value), other) => {
+                value.borrow().identical_inner(other, line, seen)?
+            }
+            (value, Self::Reference(other) | Self::Indirect(other)) => {
                 value.identical_inner(&other.borrow(), line, seen)?
             }
             (Self::Null, Self::Null) => true,
@@ -75,7 +96,7 @@ impl Value {
     /// Read a PHP value without carrying an array slot's reference binding.
     pub(crate) fn dereferenced(&self) -> Self {
         match self {
-            Self::Reference(value) => value.borrow().dereferenced(),
+            Self::Reference(value) | Self::Indirect(value) => value.borrow().dereferenced(),
             value => value.clone(),
         }
     }
@@ -83,8 +104,17 @@ impl Value {
     /// Array duplication drops reference containers that have no other owner.
     pub(crate) fn copy_array_entry(&self) -> Self {
         match self {
+            Self::Indirect(value) => value.borrow().copy_array_entry(),
             Self::Reference(value) if Rc::strong_count(value) == 1 => value.borrow().clone(),
             value => value.clone(),
+        }
+    }
+
+    pub(crate) fn is_shared_reference(&self) -> bool {
+        match self {
+            Self::Indirect(slot) => slot.borrow().is_shared_reference(),
+            Self::Reference(reference) => Rc::strong_count(reference) > 1,
+            _ => false,
         }
     }
 
@@ -94,6 +124,10 @@ impl Value {
         line: usize,
         warnings: &mut dyn crate::diagnostics::WarningSink,
     ) {
+        if let Self::Indirect(value) | Self::Reference(value) = self {
+            value.borrow().warn_nan(kind, line, warnings);
+            return;
+        }
         if matches!(self, Self::Float(n) if n.is_nan()) {
             warnings.push(format!(
                 "unexpected NAN value was coerced to {kind} on line {line}"
@@ -112,7 +146,7 @@ impl Value {
 
     pub fn is_truthy(&self) -> bool {
         match self {
-            Self::Reference(value) => value.borrow().is_truthy(),
+            Self::Reference(value) | Self::Indirect(value) => value.borrow().is_truthy(),
             Self::Closure(_) | Self::Object(_) => true,
             Self::Null => false,
             Self::Array(a) => !a.is_empty(),
@@ -124,7 +158,7 @@ impl Value {
     }
     pub fn to_bytes(&self) -> Vec<u8> {
         match self {
-            Self::Reference(value) => value.borrow().to_bytes(),
+            Self::Reference(value) | Self::Indirect(value) => value.borrow().to_bytes(),
             Self::Null | Self::Bool(false) => Vec::new(),
             Self::Bool(true) => b"1".to_vec(),
             Self::Int(n) => n.to_string().into_bytes(),
@@ -140,7 +174,7 @@ impl Value {
         warnings: &mut dyn crate::diagnostics::WarningSink,
     ) -> Result<Self, Error> {
         match self {
-            Self::Reference(value) => value.borrow().number(line, warnings),
+            Self::Reference(value) | Self::Indirect(value) => value.borrow().number(line, warnings),
             Self::Object(object) => Err(Error::new(
                 ErrorKind::TypeError,
                 format!("Unsupported operand type: {}", object.class_name),

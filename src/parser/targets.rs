@@ -175,7 +175,7 @@ impl Validator {
                         self.validate(&case.body)?;
                     }
                 }
-                Stmt::Foreach(iter, key, value, body) => {
+                Stmt::Foreach(iter, key, value, _, body) => {
                     self.expression(iter, false)?;
                     if let Some(key) = key {
                         self.expression(key, true)?;

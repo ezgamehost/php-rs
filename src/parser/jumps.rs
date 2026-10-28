@@ -168,7 +168,7 @@ impl JumpScope {
                 Stmt::While(_, body)
                 | Stmt::DoWhile(body, _)
                 | Stmt::For(_, _, _, body)
-                | Stmt::Foreach(_, _, _, body) => {
+                | Stmt::Foreach(_, _, _, _, body) => {
                     self.next_region += 1;
                     regions.push(self.next_region);
                     self.collect(std::slice::from_ref(body), regions)?;
