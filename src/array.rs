@@ -101,6 +101,25 @@ impl PartialEq for PhpArray {
     }
 }
 impl PhpArray {
+    pub(crate) fn with_capacity(capacity: usize, line: usize) -> Result<Self, Error> {
+        // PHP's 64-bit HashTable cannot round a larger requested capacity to
+        // a valid table size. Reject it before asking the host allocator.
+        if capacity > 0x40000000 {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Possible integer overflow in memory allocation",
+                line,
+            ));
+        }
+        let mut array = Self::default();
+        array
+            .entries
+            .try_reserve_exact(capacity)
+            .and_then(|()| array.positions.try_reserve(capacity))
+            .map_err(|_| Error::new(ErrorKind::Error, "Unable to allocate array storage", line))?;
+        Ok(array)
+    }
+
     pub(crate) fn start_reference_iteration(&mut self, token: &Rc<()>) {
         self.iterators
             .get_mut()

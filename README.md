@@ -54,6 +54,10 @@ new request. The CLI returns the low eight bits of the requested status.
   empty, coalescing, and destructuring. Nested mutation preserves reference-returning
   getters; increments update returned references with typed-property constraints.
   The interface exposes tentative return types and honors ReturnTypeWillChange.
+- `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
+  numeric-key reindexing, clamped slices, and reference-aware element copying.
+  `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted
+  keys, signed padding, and native size validation.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.

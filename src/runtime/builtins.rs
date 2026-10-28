@@ -64,6 +64,12 @@ pub(super) enum Builtin {
     GetClassVars,
     GetClassMethods,
     Is(&'static str),
+    ArraySlice,
+    ArrayReverse,
+    ArrayChunk,
+    ArrayFill,
+    ArrayFillKeys,
+    ArrayPad,
     ArrayKeys,
     ArrayValues,
     ArrayKeyExists,
@@ -184,6 +190,12 @@ impl Builtin {
             b"is_string" => Self::Is("string"),
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
+            b"array_slice" => Self::ArraySlice,
+            b"array_reverse" => Self::ArrayReverse,
+            b"array_chunk" => Self::ArrayChunk,
+            b"array_fill" => Self::ArrayFill,
+            b"array_fill_keys" => Self::ArrayFillKeys,
+            b"array_pad" => Self::ArrayPad,
             b"array_keys" => Self::ArrayKeys,
             b"array_values" => Self::ArrayValues,
             b"array_map" => Self::ArrayMap,
@@ -350,6 +362,29 @@ impl Builtin {
                 ("strict", true, false),
             ],
             Self::ArrayValues => &[("array", false, false)],
+            Self::ArraySlice => &[
+                ("array", false, false),
+                ("offset", false, false),
+                ("length", true, false),
+                ("preserve_keys", true, false),
+            ],
+            Self::ArrayReverse => &[("array", false, false), ("preserve_keys", true, false)],
+            Self::ArrayChunk => &[
+                ("array", false, false),
+                ("length", false, false),
+                ("preserve_keys", true, false),
+            ],
+            Self::ArrayFill => &[
+                ("start_index", false, false),
+                ("count", false, false),
+                ("value", false, false),
+            ],
+            Self::ArrayFillKeys => &[("keys", false, false), ("value", false, false)],
+            Self::ArrayPad => &[
+                ("array", false, false),
+                ("length", false, false),
+                ("value", false, false),
+            ],
             Self::ArrayMap => &[
                 ("callback", false, false),
                 ("array", false, false),
@@ -400,6 +435,10 @@ impl Builtin {
                             Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
                         }
                         (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
+                        (
+                            Self::ArraySlice | Self::ArrayReverse | Self::ArrayChunk,
+                            "preserve_keys",
+                        ) => Value::Bool(false),
                         (Self::CountChars, "mode") => Value::Int(0),
                         (Self::StrPad, "pad_string") => Value::String(b" ".to_vec().into()),
                         (Self::StrPad, "pad_type") => Value::Int(1),
@@ -633,6 +672,12 @@ impl Runtime {
                 };
                 Ok(Value::Bool(exists))
             }
+            Builtin::ArraySlice
+            | Builtin::ArrayReverse
+            | Builtin::ArrayChunk
+            | Builtin::ArrayFill
+            | Builtin::ArrayFillKeys
+            | Builtin::ArrayPad => self.array_segments(builtin, &name, &args, line),
             Builtin::ArrayMap => self.array_map(&args, &extra, line),
             Builtin::CallUserFunc | Builtin::CallUserFuncArray => {
                 self.call_user_function(builtin, &args, &extra, line)

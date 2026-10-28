@@ -942,6 +942,39 @@ establish these behaviors. Octal-escape overflow warnings, full string-expressio
 ordering, some diagnostic ordering/location edge cases, INI settings, and error handlers
 remain incomplete.
 
+The [array slicing/construction slice](conformance/php-8.5.0-array-segments-hillclimb.txt)
+adds **67 upstream passes**: 61 standard array fixtures and six Zend fixtures, with no
+regressions across arrays, Zend, reflection, SPL, and standard strings. The newly measured
+full array suite starts at **75 / 713 / 52** and reaches **136 / 652 / 52**.
+
+`array_slice` clamps positive/negative offsets and nullable lengths by insertion order,
+retaining string keys and optionally integer keys. `array_reverse` reverses insertion
+order with the same key-preservation choice. `array_chunk` validates positive lengths,
+splits in insertion order, and either preserves every key or renumbers every chunk.
+These copies preserve shared references while dropping wrappers with no other owner,
+matching PHP's copy helper. Existing argument coercion and named-parameter metadata
+apply before empty/no-op returns.
+
+`array_fill` validates count and index overflow and creates consecutive keys, including
+negative starting indexes. `array_fill_keys` converts non-integer keys through ordinary
+PHP string conversion, including Stringable objects and array-conversion warnings, then
+applies numeric-string key rules. Duplicate keys retain insertion position. `array_pad`
+returns the original array value when no padding is needed; otherwise it pads left or
+right, preserves string keys, renumbers integer keys, and retains element references.
+Repeated arrays retain copy-on-write behavior and repeated objects retain handles.
+Array construction reserves capacity fallibly and rejects capacities beyond PHP's
+64-bit hash-table limit before requesting storage.
+
+Zend reaches **2036 / 2812 / 408**. Reflection remains **274 / 181 / 37**, SPL
+**22 / 662 / 94**, and standard strings **316 / 262 / 152**. All 797 existing Rust tests
+and 57 reference-checked project fixtures pass; formatting and Clippy pass. No new custom
+tests or generated matrices were added. PHP 8.5.0 array implementations and copy helpers,
+upstream fixtures, and short reference probes establish these behaviors. Remaining
+related failures require streams, range, and internal array-pointer functions. Exact
+allocation-fatal formatting/catchability, configurable memory limits, complete native
+reflection metadata, and further array APIs remain unfinished. Unsupported fixture
+counts are unchanged.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -949,10 +982,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2030 | 2818 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2036 | 2812 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 136 | 652 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 316 | 262 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |

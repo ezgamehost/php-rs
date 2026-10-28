@@ -232,6 +232,9 @@ definition of completion.
    Hex decoding, first-byte/word capitalization, newline insertion, character counts,
    character-set suffix search, and left/right/both padding are implemented. Padding
    constants retain standard-extension reflection metadata.
+   Array slice/reverse/chunk preserve or renumber keys and copy element references.
+   Fill/fill_keys/pad implement repeated values, key conversion, signed padding,
+   and size validation. Exact allocation-fatal reporting and memory limits remain.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only
