@@ -99,6 +99,8 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"E_DEPRECATED" => Value::Int(8192),
         b"E_USER_DEPRECATED" => Value::Int(16384),
         b"E_ALL" => Value::Int(30719),
+        b"DEBUG_BACKTRACE_PROVIDE_OBJECT" => Value::Int(1),
+        b"DEBUG_BACKTRACE_IGNORE_ARGS" => Value::Int(2),
         _ => return None,
     })
 }

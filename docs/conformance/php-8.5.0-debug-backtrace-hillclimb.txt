@@ -1,0 +1,86 @@
+Zend suite
+
+Before: 5256 cases; 1445 passed, 3403 failed, 408 unsupported
+After: 5256 cases; 1463 passed, 3385 failed, 408 unsupported
+New passes: 18; regressions: 0
+NEW PASS: Zend/tests/backtrace/bug28377.phpt
+NEW PASS: Zend/tests/backtrace/bug30828.phpt
+NEW PASS: Zend/tests/backtrace/bug64239_2.phpt
+NEW PASS: Zend/tests/backtrace/bug64239_3.phpt
+NEW PASS: Zend/tests/backtrace/bug64239_4.phpt
+NEW PASS: Zend/tests/backtrace/bug69180-backtrace.phpt
+NEW PASS: Zend/tests/backtrace/bug70547.phpt
+NEW PASS: Zend/tests/backtrace/bug_debug_backtrace.phpt
+NEW PASS: Zend/tests/backtrace/debug_backtrace_limit.phpt
+NEW PASS: Zend/tests/backtrace/debug_backtrace_options.phpt
+NEW PASS: Zend/tests/backtrace/debug_print_backtrace_from_main.phpt
+NEW PASS: Zend/tests/backtrace/debug_print_backtrace_limit.phpt
+NEW PASS: Zend/tests/bug64720.phpt
+NEW PASS: Zend/tests/bug73156.phpt
+NEW PASS: Zend/tests/bug73916.phpt
+NEW PASS: Zend/tests/dynamic_call/bug47880.phpt
+NEW PASS: Zend/tests/named_params/backtrace.phpt
+NEW PASS: Zend/tests/traits/bug70156.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Targeted backtrace fixtures
+
+Reference: PHP 8.5 (/private/tmp/php-rs-reference/php-8.5.0/sapi/cli/php)
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug28377.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug30828.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug39445.phpt FAIL: Error: Call to undefined function strtoupper() on line 10
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug64239_2.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug64239_3.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug64239_4.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug69180-backtrace.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug70547.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug76047.phpt FAIL: Error: Call to undefined function str_shuffle() on line 13
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug79108.phpt FAIL: ParseError: Cannot assign to expression on line 11
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug_debug_backtrace.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/bug_debug_backtrace_replace_zend_execute_ex.phpt UNSUPPORTED: EXTENSIONS, INI
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/debug_backtrace_limit.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/debug_backtrace_options.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/debug_backtrace_with_include_and_this.phpt FAIL: Error: Call to undefined function stream_wrapper_register() on line 17
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/debug_print_backtrace_from_main.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/debug_print_backtrace_limit.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/fatal_error_backtraces_001.phpt UNSUPPORTED: INI
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/fatal_error_backtraces_002.phpt UNSUPPORTED: INI
+/tmp/php-rs-reference/php-8.5.0/Zend/tests/backtrace/fatal_error_backtraces_003.phpt UNSUPPORTED: INI
+12 passed, 4 failed, 4 unsupported
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: SensitiveParameter redaction, complete closure debug properties, attribute construction trace details, generators/fibers, configurable exception trace settings, and stream wrappers remain unfinished. Unsupported sections are not counted as passes.

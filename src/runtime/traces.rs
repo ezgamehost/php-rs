@@ -6,6 +6,7 @@ use crate::ast::Parameter;
 /// unset. Captured traces own PHP array snapshots; object arguments stay handles.
 pub(super) struct TraceFrame {
     fields: PhpArray,
+    object: Option<Rc<crate::PhpObject>>,
     pub(super) internal: bool,
     arguments: Option<PhpArray>,
     fixed: Vec<Vec<u8>>,
@@ -28,6 +29,7 @@ impl TraceFrame {
     ) -> Self {
         let name = target.function.as_ref().map_or(&target.name, |f| &f.name);
         let mut frame = Self::unit(runtime, name, site, Some(PhpArray::default()));
+        frame.object = target.this.clone();
         frame.internal = target.builtin.is_some()
             || target.function.as_ref().is_some_and(|f| f.native.is_some());
         if let Some(context) = &target.context {
@@ -108,6 +110,7 @@ impl TraceFrame {
         );
         Self {
             internal: false,
+            object: None,
             fields,
             arguments,
             fixed: Vec::new(),
@@ -128,9 +131,20 @@ impl TraceFrame {
         self.arguments.as_mut().unwrap().insert(key, value);
     }
 
-    fn capture(&self, runtime: &Runtime) -> Value {
-        let mut fields = self.fields.clone();
-        if let Some(stored) = &self.arguments {
+    fn capture(&self, runtime: &Runtime, options: i32) -> Value {
+        let mut fields = PhpArray::default();
+        for (key, value) in self.fields.entries() {
+            if matches!(key, ArrayKey::String(name) if name == b"type")
+                && options & 1 != 0
+                && let Some(object) = &self.object
+            {
+                put(&mut fields, b"object", Value::Object(object.clone()));
+            }
+            fields.insert(key.clone(), value.clone());
+        }
+        if options & 2 == 0
+            && let Some(stored) = &self.arguments
+        {
             let mut arguments = PhpArray::default();
             for (key, value) in stored.entries() {
                 arguments.insert(key.clone(), value.dereferenced());
@@ -153,16 +167,59 @@ impl TraceFrame {
 }
 
 impl Runtime {
+    pub(super) fn debug_backtrace(
+        &mut self,
+        builtin: builtins::Builtin,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let print = matches!(builtin, builtins::Builtin::DebugPrintBacktrace);
+        let name = if print {
+            "debug_print_backtrace"
+        } else {
+            "debug_backtrace"
+        };
+        let options = args[0]
+            .as_ref()
+            .map(|value| self.native_int(value, name, 1, line))
+            .transpose()?
+            .unwrap_or(i64::from(!print)) as i32;
+        let limit = args[1]
+            .as_ref()
+            .map(|value| self.native_int(value, name, 2, line))
+            .transpose()?
+            .unwrap_or(0) as i32;
+        let mut trace = PhpArray::default();
+        // The builtin's own frame is present for argument errors, but is not
+        // part of the requested backtrace. A zero limit means all frames.
+        for frame in self.trace_frames.iter().rev().skip(1) {
+            if limit != 0 && trace.len() as i64 >= i64::from(limit) {
+                break;
+            }
+            trace.append(frame.capture(self, options), line)?;
+        }
+        if print {
+            self.output.extend(format_trace(&trace, false));
+            Ok(Value::Null)
+        } else {
+            Ok(Value::Array(Rc::new(trace)))
+        }
+    }
+
     pub(super) fn capture_trace(&self) -> Rc<PhpArray> {
         let mut trace = PhpArray::default();
         for frame in self.trace_frames.iter().rev() {
-            trace.append(frame.capture(self), 0).expect("trace size");
+            trace.append(frame.capture(self, 0), 0).expect("trace size");
         }
         Rc::new(trace)
     }
 }
 
 pub(super) fn trace_string(trace: &PhpArray) -> Vec<u8> {
+    format_trace(trace, true)
+}
+
+fn format_trace(trace: &PhpArray, include_main: bool) -> Vec<u8> {
     let mut output = Vec::new();
     for (index, (_, value)) in trace.entries().iter().enumerate() {
         let Value::Array(frame) = value else {
@@ -198,7 +255,9 @@ pub(super) fn trace_string(trace: &PhpArray) -> Vec<u8> {
         }
         output.extend_from_slice(b")\n");
     }
-    output.extend_from_slice(format!("#{} {{main}}", trace.len()).as_bytes());
+    if include_main {
+        output.extend_from_slice(format!("#{} {{main}}", trace.len()).as_bytes());
+    }
     output
 }
 

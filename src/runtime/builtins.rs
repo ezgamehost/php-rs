@@ -44,6 +44,8 @@ pub(super) enum Builtin {
     CallUserFuncArray,
     FunctionExists,
     IsCallable,
+    DebugBacktrace,
+    DebugPrintBacktrace,
     Define,
     Defined,
     Constant,
@@ -109,6 +111,8 @@ impl Builtin {
             b"array_key_exists" | b"key_exists" => Self::ArrayKeyExists,
             b"function_exists" => Self::FunctionExists,
             b"is_callable" => Self::IsCallable,
+            b"debug_backtrace" => Self::DebugBacktrace,
+            b"debug_print_backtrace" => Self::DebugPrintBacktrace,
             b"define" => Self::Define,
             b"defined" => Self::Defined,
             b"constant" => Self::Constant,
@@ -201,6 +205,9 @@ impl Builtin {
             Self::ArrayKeyExists => &[("key", false, false), ("array", false, false)],
             Self::CallUserFunc => &[("callback", false, false), ("args", false, true)],
             Self::CallUserFuncArray => &[("callback", false, false), ("args", false, false)],
+            Self::DebugBacktrace | Self::DebugPrintBacktrace => {
+                &[("options", true, false), ("limit", true, false)]
+            }
             Self::IsCallable => &[
                 ("value", false, false),
                 ("syntax_only", true, false),
@@ -224,13 +231,12 @@ impl Builtin {
                 ty: None,
                 implicit_nullable: false,
                 default: optional.then_some(Expr {
-                    kind: ExprKind::Literal(
-                        if matches!(self, Self::IsCallable) && *name == "syntax_only" {
-                            Value::Bool(false)
-                        } else {
-                            Value::Null
-                        },
-                    ),
+                    kind: ExprKind::Literal(match (self, *name) {
+                        (Self::IsCallable, "syntax_only") => Value::Bool(false),
+                        (Self::DebugBacktrace, "options") => Value::Int(1),
+                        (Self::DebugBacktrace | Self::DebugPrintBacktrace, _) => Value::Int(0),
+                        _ => Value::Null,
+                    }),
                     line: 0,
                 }),
                 variadic: *variadic,
@@ -311,6 +317,12 @@ impl Runtime {
                 )?;
             }
             return Ok(Value::Array(Rc::new(paths)));
+        }
+        if matches!(
+            builtin,
+            Builtin::DebugBacktrace | Builtin::DebugPrintBacktrace
+        ) {
+            return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
@@ -473,6 +485,7 @@ impl Runtime {
             )),
             Builtin::PrintR => self.print_r(&args, line),
             Builtin::IsCallable => self.inspect_callable(&args, &references, line),
+            Builtin::DebugBacktrace | Builtin::DebugPrintBacktrace => unreachable!(),
             Builtin::Printf | Builtin::Sprintf | Builtin::Vprintf | Builtin::Vsprintf => {
                 self.formatted_print(builtin, &name, &args, &extra, line)
             }

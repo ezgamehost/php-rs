@@ -171,7 +171,10 @@ definition of completion.
    internal callback argument coercion. Callable inspection supports syntax-only
    checks, autoloading, scoped/abstract/magic methods, descriptive output names,
    and typed reference output assignments. Native dispatch retains argument cells.
-   Protected method access follows the original non-private prototype.
+   Protected method access follows the original non-private prototype. Debug backtrace
+   capture/printing shares exception trace machinery, with live arguments, optional
+   receiver objects, omission flags, frame limits, and both backtrace constants.
+   SensitiveParameter redaction and configurable trace settings remain incomplete.
    SPL autoload queues support callback
    identity, prepend/removal, recursive lookup guards, exceptions, default file
    extensions, and runtime class/interface/trait/member resolution. Remaining:

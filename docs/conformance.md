@@ -444,6 +444,23 @@ formatting and Clippy. No new custom tests were added. Three standard fixtures r
 blocked by expected diagnostic matching, JSON, and file/resource functions. Remaining
 native callable APIs and complete callable compatibility remain unfinished.
 
+The [debug backtrace slice](conformance/php-8.5.0-debug-backtrace-hillclimb.txt)
+adds 18 Zend passes with zero regressions. All 12 runnable backtrace-cluster cases
+that reach the implemented functionality pass; four others fail on missing string
+functions, stream wrappers, or expression assignment, and four have unsupported sections.
+
+`debug_backtrace` and `debug_print_backtrace` share existing exception trace capture
+and rendering. They exclude their own frame, support argument omission, optional
+receiver objects, and zero/unlimited or positive frame limits. Both option constants
+are available. Receiver objects appear in PHP's field order; argument snapshots retain
+live fixed parameter values and positional/named extra arguments. Printed backtraces
+omit the exception formatter's main-script terminator and are empty at top level.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, as do
+formatting and Clippy. No new custom tests were added. SensitiveParameter redaction,
+complete closure debug properties, attribute construction trace details, generators,
+fibers, stream wrappers, and configurable exception trace settings remain unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -451,11 +468,12 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1445 | 3403 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1463 | 3385 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 141 | 314 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |
+| PHP 8.5.0 `Zend/tests/backtrace`, Rust and reference PHP for passing cases | 12 | 4 | 4 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

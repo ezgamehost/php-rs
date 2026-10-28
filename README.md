@@ -246,6 +246,10 @@ new request. The CLI returns the low eight bits of the requested status.
   names through its reference output parameter. Scoped, abstract, and magic method
   checks use caller visibility; deprecated callback forms emit diagnostics.
   Protected overrides retain access through their non-private ancestor prototype.
+- `debug_backtrace` returns active frames with live argument snapshots, optional
+  receiver objects, argument omission, and frame limits. `debug_print_backtrace`
+  shares exception trace formatting and omits the main-script terminator.
+  Sensitive-parameter redaction and configurable trace settings remain unfinished.
 - Core builtins: `var_dump`, `print_r`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
