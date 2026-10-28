@@ -229,7 +229,12 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
                 collect_captures(e, captures);
             }
         }
-        ExprKind::Interpolated(values) | ExprKind::Isset(values) => {
+        ExprKind::Interpolated(values) => {
+            for value in values {
+                collect_captures(&value.expression, captures);
+            }
+        }
+        ExprKind::Isset(values) => {
             for value in values {
                 collect_captures(value, captures);
             }

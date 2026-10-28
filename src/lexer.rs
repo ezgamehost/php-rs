@@ -1,4 +1,4 @@
-use crate::{Error, Value};
+use crate::{Error, Value, ast::InterpolationStyle};
 mod strings;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -21,8 +21,12 @@ pub(crate) struct Token {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum StringPart {
-    Bytes(Vec<u8>),
-    Expression(Vec<Token>),
+    Bytes(Vec<u8>, usize),
+    Expression {
+        tokens: Vec<Token>,
+        style: InterpolationStyle,
+        line: usize,
+    },
 }
 
 pub(crate) fn lex(source: &[u8]) -> Result<Vec<Token>, Error> {

@@ -221,7 +221,27 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
                 expression(value, warnings);
             }
         }
-        ExprKind::Interpolated(values) | ExprKind::Isset(values) => {
+        ExprKind::Interpolated(values) => {
+            let mut warning_line = values.first().map_or(line, |part| part.expression.line);
+            for part in values {
+                let message = match part.style {
+                    InterpolationStyle::Ordinary => None,
+                    InterpolationStyle::DollarVariable => {
+                        Some("Using ${var} in strings is deprecated, use {$var} instead")
+                    }
+                    InterpolationStyle::DollarExpression => Some(
+                        "Using ${expr} (variable variables) in strings is deprecated, use {${expr}} instead",
+                    ),
+                };
+                if let Some(message) = message {
+                    warnings.push(format!("Deprecated: {message} on line {warning_line}"));
+                    part.style = InterpolationStyle::Ordinary;
+                }
+                expression(&mut part.expression, warnings);
+                warning_line = part.expression.line;
+            }
+        }
+        ExprKind::Isset(values) => {
             for value in values {
                 expression(value, warnings);
             }

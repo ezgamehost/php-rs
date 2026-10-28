@@ -38,7 +38,10 @@ definition of completion.
    captures, and per-instance closure statics implemented. Static anonymous
    functions support PHP 8.5 constant/default initializers.
    Basic string interpolation, Unicode escapes, heredoc/nowdoc, and byte string
-   offset reads/writes implemented.
+   offset reads/writes implemented. Deprecated ${...} interpolation supports
+   named variables, single array offsets, and expression-selected variable names.
+   Deprecations follow compilation and constant short-circuit pruning; heredoc
+   scanning handles nested interpolations with repeated delimiter names.
    All loop forms, alternative loop syntax, and numbered break/continue implemented.
    Switch selection/fall-through, alternative syntax, and control-flow diagnostics implemented.
    Exit/die support PHP 8.5 callable syntax, scalar coercion, and request-local

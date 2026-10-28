@@ -9,13 +9,15 @@ impl Lexer<'_> {
         let line = self.line;
         let mut out = Vec::new();
         let mut parts = Vec::new();
+        let mut text_line = self.line;
         while self.pos < self.source.len() {
             if quote == Some(self.source[self.pos]) {
                 self.bump();
-                return Ok(finish(parts, out));
+                return Ok(finish(parts, out, text_line));
             }
             if interpolate && self.starts(b"{$") {
-                flush(&mut parts, &mut out);
+                flush(&mut parts, &mut out, text_line);
+                let part_line = self.line;
                 self.bump();
                 let mut nested = Lexer {
                     source: self.source,
@@ -29,7 +31,12 @@ impl Lexer<'_> {
                 let tokens = nested.scan()?;
                 self.pos = nested.pos;
                 self.line = nested.line;
-                parts.push(StringPart::Expression(tokens));
+                parts.push(StringPart::Expression {
+                    tokens,
+                    style: InterpolationStyle::Ordinary,
+                    line: part_line,
+                });
+                text_line = self.line;
                 continue;
             }
             if interpolate
@@ -39,15 +46,70 @@ impl Lexer<'_> {
                     .get(self.pos + 1)
                     .is_some_and(|c| ident_start(*c))
             {
-                flush(&mut parts, &mut out);
-                parts.push(StringPart::Expression(self.simple_variable()?));
+                flush(&mut parts, &mut out, text_line);
+                let part_line = self.line;
+                parts.push(StringPart::Expression {
+                    tokens: self.simple_variable()?,
+                    style: InterpolationStyle::Ordinary,
+                    line: part_line,
+                });
+                text_line = self.line;
                 continue;
             }
             if interpolate && self.starts(b"${") {
-                return Err(Error::parse(
-                    "Deprecated ${...} interpolation is not implemented",
-                    self.line,
-                ));
+                flush(&mut parts, &mut out, text_line);
+                let part_line = self.line;
+                self.pos += 2;
+                let start = self.pos;
+                let name = if self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
+                    let name = self.identifier();
+                    if matches!(self.source.get(self.pos), Some(b'[' | b'}')) {
+                        Some(name)
+                    } else {
+                        self.pos = start;
+                        None
+                    }
+                } else {
+                    None
+                };
+                let mut nested = Lexer {
+                    source: self.source,
+                    pos: self.pos,
+                    line: self.line,
+                    php: true,
+                    interpolation: true,
+                    tokens: Vec::new(),
+                    doc_comment: None,
+                };
+                let mut tokens = nested.scan()?;
+                self.pos = nested.pos;
+                self.line = nested.line;
+                let style = if let Some(name) = name {
+                    tokens.insert(
+                        0,
+                        Token {
+                            kind: Kind::Variable(name),
+                            line: part_line,
+                            doc_comment: None,
+                        },
+                    );
+                    InterpolationStyle::DollarVariable
+                } else {
+                    // Parse the expression as the name of a dynamic variable,
+                    // reusing the ordinary ${expression} syntax outside strings.
+                    let end = tokens.len() - 1;
+                    tokens.insert(end, symbol("}", self.line));
+                    tokens.insert(0, symbol("{", part_line));
+                    tokens.insert(0, symbol("$", part_line));
+                    InterpolationStyle::DollarExpression
+                };
+                parts.push(StringPart::Expression {
+                    tokens,
+                    style,
+                    line: part_line,
+                });
+                text_line = self.line;
+                continue;
             }
             let c = self.bump();
             if c != b'\\' {
@@ -141,7 +203,7 @@ impl Lexer<'_> {
             }
         }
         if quote.is_none() {
-            Ok(finish(parts, out))
+            Ok(finish(parts, out, text_line))
         } else {
             Err(Error::parse("Unterminated string", line))
         }
@@ -246,6 +308,7 @@ impl Lexer<'_> {
         }
         let body_start = self.pos;
         let body_line = self.line;
+        let mut interpolations = Vec::new();
         while self.pos < self.source.len() {
             let line_start = self.pos;
             while matches!(self.source.get(self.pos), Some(b' ' | b'\t')) {
@@ -264,7 +327,7 @@ impl Lexer<'_> {
                 } else if let Some(b) = body.strip_suffix(b"\n") {
                     body = b;
                 }
-                let body = dedent(body, indent, body_line)?;
+                let body = dedent(body, indent, body_line, &interpolations)?;
                 self.pos += label.len();
                 if quote == Some(b'\'') {
                     return Ok(Kind::Value(Value::String(body.into())));
@@ -280,21 +343,50 @@ impl Lexer<'_> {
                 }
                 .string_body(None, true);
             }
-            while self.pos < self.source.len() && self.bump() != b'\n' {}
+            while self.pos < self.source.len() {
+                if quote != Some(b'\'') && (self.starts(b"${") || self.starts(b"{$")) {
+                    let start = self.pos;
+                    self.pos += if self.starts(b"${") { 2 } else { 1 };
+                    let mut nested = Lexer {
+                        source: self.source,
+                        pos: self.pos,
+                        line: self.line,
+                        php: true,
+                        interpolation: true,
+                        tokens: Vec::new(),
+                        doc_comment: None,
+                    };
+                    nested.scan()?;
+                    self.pos = nested.pos;
+                    self.line = nested.line;
+                    interpolations.push(start - body_start..self.pos - body_start);
+                    continue;
+                }
+                let byte = self.bump();
+                if byte == b'\n' {
+                    break;
+                }
+                if quote != Some(b'\'') && byte == b'\\' && self.pos < self.source.len() {
+                    // An escaped dollar/brace cannot begin an interpolation.
+                    if self.bump() == b'\n' {
+                        break;
+                    }
+                }
+            }
         }
         Err(Error::parse("Unterminated heredoc", start_line))
     }
 }
-fn flush(parts: &mut Vec<StringPart>, out: &mut Vec<u8>) {
+fn flush(parts: &mut Vec<StringPart>, out: &mut Vec<u8>, line: usize) {
     if !out.is_empty() {
-        parts.push(StringPart::Bytes(std::mem::take(out)));
+        parts.push(StringPart::Bytes(std::mem::take(out), line));
     }
 }
-fn finish(mut parts: Vec<StringPart>, mut out: Vec<u8>) -> Kind {
+fn finish(mut parts: Vec<StringPart>, mut out: Vec<u8>, line: usize) -> Kind {
     if parts.is_empty() {
         Kind::Value(Value::String(out.into()))
     } else {
-        flush(&mut parts, &mut out);
+        flush(&mut parts, &mut out, line);
         Kind::Interpolated(parts)
     }
 }
@@ -305,7 +397,12 @@ fn symbol(text: &str, line: usize) -> Token {
         line,
     }
 }
-fn dedent(body: &[u8], indent: &[u8], line: usize) -> Result<Vec<u8>, Error> {
+fn dedent(
+    body: &[u8],
+    indent: &[u8],
+    line: usize,
+    interpolations: &[std::ops::Range<usize>],
+) -> Result<Vec<u8>, Error> {
     if indent.is_empty() {
         return Ok(body.to_vec());
     }
@@ -316,7 +413,18 @@ fn dedent(body: &[u8], indent: &[u8], line: usize) -> Result<Vec<u8>, Error> {
         ));
     }
     let mut out = Vec::new();
+    let mut position = 0;
     for (offset, bytes) in body.split_inclusive(|c| *c == b'\n').enumerate() {
+        let in_expression = interpolations
+            .iter()
+            .any(|span| span.start < position && position < span.end);
+        position += bytes.len();
+        if in_expression {
+            // PHP source inside an interpolation keeps its own indentation,
+            // including nested heredoc bodies and delimiters.
+            out.extend_from_slice(bytes);
+            continue;
+        }
         let whitespace = bytes
             .iter()
             .take_while(|c| **c == b' ' || **c == b'\t')

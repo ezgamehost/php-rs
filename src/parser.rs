@@ -1,8 +1,9 @@
 use crate::{
     Error, Value,
     ast::{
-        Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, IncludeKind, MatchArm,
-        Parameter, Stmt, SwitchCase, TypeDecl, Visibility,
+        Argument, ArrayElement, CastKind, Expr, ExprKind, FunctionDecl, IncludeKind,
+        InterpolationPart, InterpolationStyle, MatchArm, Parameter, Stmt, SwitchCase, TypeDecl,
+        Visibility,
     },
     lexer::{Kind, StringPart, Token},
 };
@@ -929,11 +930,11 @@ impl Parser {
                 let mut expressions = Vec::new();
                 for part in parts {
                     expressions.push(match part {
-                        StringPart::Bytes(bytes) => Expr {
-                            kind: ExprKind::Literal(Value::String(bytes.into())),
-                            line,
+                        StringPart::Bytes(bytes, line) => InterpolationPart {
+                            expression: Expr { kind: ExprKind::Literal(Value::String(bytes.into())), line },
+                            style: InterpolationStyle::Ordinary,
                         },
-                        StringPart::Expression(tokens) => {
+                        StringPart::Expression {tokens, style, line: part_line} => {
                             let mut parser = Parser {
                                 tokens,
                                 pos: 0,
@@ -969,7 +970,13 @@ impl Parser {
                                     expr.line,
                                 ));
                             }
-                            expr
+                            if style == InterpolationStyle::DollarVariable
+                                && !matches!(&expr.kind, ExprKind::Variable(_))
+                                && !matches!(&expr.kind, ExprKind::Index(base, Some(_)) if matches!(base.kind, ExprKind::Variable(_)))
+                            {
+                                return Err(Error::parse("Invalid deprecated string interpolation", part_line));
+                            }
+                            InterpolationPart { expression: expr, style }
                         }
                     });
                 }

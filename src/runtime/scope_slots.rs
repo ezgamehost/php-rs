@@ -165,7 +165,12 @@ impl Scope {
                     self.reserve_expression(key);
                 }
             }
-            ExprKind::Interpolated(values) | ExprKind::Isset(values) => {
+            ExprKind::Interpolated(values) => {
+                for value in values {
+                    self.reserve_expression(&value.expression);
+                }
+            }
+            ExprKind::Isset(values) => {
                 for value in values {
                     self.reserve_expression(value);
                 }

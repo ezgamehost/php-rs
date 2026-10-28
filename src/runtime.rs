@@ -814,6 +814,7 @@ impl Runtime {
             ExprKind::Interpolated(parts) => {
                 let mut result = Vec::new();
                 for part in parts {
+                    let part = &part.expression;
                     let value = self.eval(part)?;
                     result.extend(self.string_bytes(&value, part.line)?);
                 }

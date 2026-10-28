@@ -283,7 +283,12 @@ impl Validator {
                     }
                 }
             }
-            ExprKind::Interpolated(values) | ExprKind::Isset(values) => {
+            ExprKind::Interpolated(values) => {
+                for value in values {
+                    self.expression(&value.expression, false)?;
+                }
+            }
+            ExprKind::Isset(values) => {
                 for value in values {
                     self.expression(value, false)?;
                 }

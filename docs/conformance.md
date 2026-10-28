@@ -910,6 +910,38 @@ short reference probes establish the behavior. Remaining gaps include compile-fa
 classification/catchability, parser wording, Throwable property synchronization,
 exception/error handlers, shutdown/destructor behavior, and configurable diagnostics.
 
+The [deprecated interpolation slice](conformance/php-8.5.0-interpolation-hillclimb.txt)
+adds **six upstream Zend passes** with no regressions across Zend, reflection, SPL,
+and standard strings. `${name}` and `${name[index]}` use named variables, while
+`${expression}` evaluates the expression to select a variable name. Immediate lexical
+boundaries distinguish the forms, including whitespace and constants. Named-array syntax
+retains PHP's single-offset restriction. Expression forms reuse ordinary dynamic-variable
+parsing, preserving namespace resolution, constant names, calls, and nested strings.
+
+Interpolation parts retain their syntax category and source lines until compilation.
+The compiler emits PHP's two distinct deprecations before compiling each affected part,
+including uncalled function bodies, while constant short-circuit pruning suppresses
+warnings from discarded expressions. Scope reservation, capture analysis, validation,
+and runtime evaluation traverse the revised interpolation representation.
+
+Heredoc scanning skips interpolated PHP expressions when searching for the closing label.
+Indentation is removed from string text while PHP source inside expressions retains its
+own indentation. This supports nested heredocs sharing the same delimiter and delimiter
+names used as constants inside multiline interpolation; all four upstream complex
+flexible-heredoc fixtures now pass. Escaped interpolation markers and nowdocs retain
+literal scanning.
+
+Zend reaches **2030 / 2818 / 408**; reflection remains **274 / 181 / 37**, SPL
+**22 / 662 / 94**, and standard strings **316 / 262 / 152**. All 797 existing Rust tests
+and 57 reference-checked project fixtures pass; formatting and Clippy pass. No custom
+tests or generated matrices were added. The upstream ucfirst/lcfirst FILE programs also
+match reference output, diagnostics, and exit status with PHP precision=14; their INI
+sections remain unsupported and those results are not counted as runner passes.
+PHP 8.5.0 scanner/parser/compiler code, upstream fixtures, and short reference probes
+establish these behaviors. Octal-escape overflow warnings, full string-expression
+ordering, some diagnostic ordering/location edge cases, INI settings, and error handlers
+remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -917,7 +949,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2024 | 2824 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2030 | 2818 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

@@ -10,7 +10,7 @@ pub(crate) struct Expr {
 #[derive(Debug, Clone)]
 pub(crate) enum ExprKind {
     Literal(Value),
-    Interpolated(Vec<Expr>),
+    Interpolated(Vec<InterpolationPart>),
     Group(Box<Expr>),
     Variable(Vec<u8>),
     DynamicVariable(Box<Expr>),
@@ -44,6 +44,19 @@ pub(crate) enum ExprKind {
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
     Match(Box<Expr>, Vec<MatchArm>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum InterpolationStyle {
+    Ordinary,
+    DollarVariable,
+    DollarExpression,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct InterpolationPart {
+    pub expression: Expr,
+    pub style: InterpolationStyle,
 }
 
 /// Static source names resolve separately for classes, functions, and constants.

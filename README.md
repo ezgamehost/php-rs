@@ -318,7 +318,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - Decimal, binary, octal, hexadecimal, and floating-point literals with separators;
   quoted string escapes and PHP comments.
 - Variable/array interpolation, braced variable calls, Unicode escapes, binary
-  string prefixes, and indented heredoc/nowdoc strings.
+  string prefixes, and indented heredoc/nowdoc strings. Deprecated `${name}`,
+  `${name[index]}`, and `${expression}` forms execute with compile-time deprecations.
+  Heredoc delimiters and indentation respect nested interpolated PHP expressions.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
 - `printf`, `sprintf`, `vprintf`, and `vsprintf` share byte-oriented formatting,
@@ -372,7 +374,7 @@ implemented; `$GLOBALS` currently exposes the variables created by PHP code or
 provided through `Runtime::variables`. File loading currently
 uses the working directory and the executing source directory; configurable
 `include_path`, stream wrappers, and PHP configuration are not implemented.
-Deprecated `${...}` and complete object interpolation,
+Complete object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP
