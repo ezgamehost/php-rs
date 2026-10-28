@@ -58,12 +58,12 @@ impl Case {
             return (Outcome::Failed(format!("Working directory: {error}")), 255);
         }
         let result = runtime.execute_file(path);
-        let status = if result.is_err() {
-            255
-        } else {
-            runtime.exit_status().unwrap_or(0) as u8
-        };
-        (self.runtime_outcome(&runtime, result), status)
+        let failed = result.is_err();
+        let outcome = self.runtime_outcome(&mut runtime, result);
+        let status = runtime
+            .exit_status()
+            .unwrap_or(if failed { 255 } else { 0 }) as u8;
+        (outcome, status)
     }
 }
 
@@ -184,16 +184,16 @@ impl Case {
         }
         let mut runtime = Runtime::default();
         let result = runtime.execute(&self.source);
-        self.runtime_outcome(&runtime, result)
+        self.runtime_outcome(&mut runtime, result)
     }
 
     fn runtime_outcome(
         &self,
-        runtime: &Runtime,
+        runtime: &mut Runtime,
         result: Result<crate::Value, crate::Error>,
     ) -> Outcome {
         if let Err(error) = result {
-            return Outcome::Failed(error.to_string());
+            runtime.report_uncaught(&error);
         }
         self.check_output(&runtime.output_with_diagnostics())
     }

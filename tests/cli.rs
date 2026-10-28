@@ -54,7 +54,7 @@ fn parse_error_prevents_all_execution() {
     let result = cli(&["-r", "echo 'before'; echo ;"], b"");
     assert_eq!(result.status.code(), Some(255));
     assert!(result.stdout.is_empty());
-    assert!(String::from_utf8_lossy(&result.stderr).contains("ParseError"));
+    assert!(String::from_utf8_lossy(&result.stderr).contains("Parse error:"));
 }
 
 #[test]

@@ -35,6 +35,21 @@ impl Default for Diagnostics {
 }
 
 impl Diagnostics {
+    pub fn display(&mut self, level: i64, label: &str, message: &[u8], file: &[u8], line: i64) {
+        if self.reporting & level == 0 {
+            return;
+        }
+        let mut rendered = format!("{label}: ").into_bytes();
+        rendered.extend_from_slice(message);
+        rendered.extend_from_slice(b" in ");
+        rendered.extend_from_slice(file);
+        rendered.extend_from_slice(format!(" on line {line}\n").as_bytes());
+        self.events.push(Diagnostic {
+            position: self.output_position,
+            rendered,
+        });
+    }
+
     pub fn is_empty(&self) -> bool {
         self.messages.is_empty()
     }
@@ -71,13 +86,13 @@ impl WarningSink for Diagnostics {
                 .rsplit_once(" on line ")
                 .and_then(|(text, line)| line.parse::<usize>().ok().map(|line| (text, line)))
                 .unwrap_or((text, 0));
-            let mut rendered = format!("{label}: {text} in ").into_bytes();
-            rendered.extend_from_slice(&self.source.name);
-            rendered.extend_from_slice(format!(" on line {line}\n").as_bytes());
-            self.events.push(Diagnostic {
-                position: self.output_position,
-                rendered,
-            });
+            self.display(
+                level,
+                label,
+                text.as_bytes(),
+                &self.source.name.clone(),
+                line as i64,
+            );
             self.messages.push(message);
         }
     }

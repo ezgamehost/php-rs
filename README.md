@@ -26,6 +26,8 @@ output and warnings when execution fails. `output_with_diagnostics()` interleave
 displayed nonfatal diagnostics with ordinary output; `write_output()` writes separate
 output/error streams in emission order. Source filenames and diagnostic levels are
 retained while the existing `output` and `warnings` fields remain separate.
+`report_uncaught(&error)` renders an execution error at the request boundary,
+including a user-defined exception `__toString()` and any output or exit it causes.
 Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
@@ -384,10 +386,12 @@ the PHP matcher receives only patterns and output as byte strings. Other section
 as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
 fail a test. `--reference` checks the PHP major/minor version and validates passing
 fixtures against both interpreters, including process exit status. Intentional
-nonzero exits can pass when output and reference status match. Nonfatal diagnostics
-are interleaved and compared with expected output, using `display_errors=1` and
-`log_errors=0` for the PHP reference. Uncaught/fatal errors still fail the fixture;
-their display formatting remains incomplete.
+nonzero exits and expected fatal errors can pass when output and reference status
+match. Diagnostics are interleaved and compared with expected output, using
+`display_errors=1` and `log_errors=0` for the PHP reference. Uncaught errors include
+exception text, stack traces, and source locations. Exact ParseError/CompileError
+classes use PHP's distinct display forms. Some parser and compile-error messages
+and classifications remain incomplete.
 The runner writes each supported `FILE` section to a temporary `.php` sibling
 of the `.phpt` fixture and runs both interpreters against that filename. It
 refuses to overwrite an existing file and removes generated files after the run.

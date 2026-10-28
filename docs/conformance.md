@@ -880,6 +880,36 @@ language features. Fatal/uncaught diagnostic rendering, error handlers, configur
 and some diagnostic text/ordering edge cases remain incomplete; fatal errors still
 fail in the harness. Unsupported fixture counts are unchanged.
 
+The [uncaught-error display slice](conformance/php-8.5.0-fatal-hillclimb.txt) adds
+**238 upstream passes**: 226 Zend, nine reflection, and three SPL fixtures, with no
+regressions across the four full suites. The CLI and PHPT harness explicitly report
+execution errors at the request boundary. Ordinary execution APIs continue returning
+errors without implicitly reporting them. Uncaught errors render exception text,
+previous-exception chains, captured stack traces, and the final thrown location.
+Exact internal ParseError and CompileError classes use PHP's separate parse/fatal forms;
+subclasses follow normal throwable rendering. Preparation failures retain file identity.
+
+Reporting invokes custom exception `__toString()` methods through an internal call
+frame. Their output precedes fatal display, a nested throw becomes the new uncaught
+error, and `exit()` preserves its requested status and stops reporting. Display filtering
+uses the request's error-reporting mask after conversion; suppressing the fatal display
+does not suppress the method's side effects. Diagnostic formatting preserves byte data,
+and the public warning vector continues to contain nonfatal messages only.
+
+Expected fatal fixtures can pass when rendered output matches EXPECT/EXPECTF/EXPECTREGEX
+and PHP's process status agrees. Two class-alias fixtures that matched Rust's output
+still fail reference validation because PHP 8.5.0 emits additional stack traces absent
+from their expectations. Unsupported cases remain uncounted as passes.
+
+Full suites reach **2024 / 2824 / 408** for Zend, **274 / 181 / 37** for reflection,
+**22 / 662 / 94** for SPL, and **316 / 262 / 152** for standard strings. All 797 existing
+Rust tests and 57 reference-checked project fixtures pass; formatting and Clippy pass.
+No new tests or generated matrices were added. One existing CLI assertion now expects
+PHP's `Parse error:` label. Upstream fixtures, PHP 8.5.0 exception-reporting code, and
+short reference probes establish the behavior. Remaining gaps include compile-fatal
+classification/catchability, parser wording, Throwable property synchronization,
+exception/error handlers, shutdown/destructor behavior, and configurable diagnostics.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -887,9 +917,9 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1798 | 3050 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 265 | 190 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 19 | 665 | 94 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2024 | 2824 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 316 | 262 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

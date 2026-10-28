@@ -110,7 +110,9 @@ impl Runtime {
         let diagnostic_source = std::mem::replace(&mut self.diagnostics.source, source.clone());
         self.diagnostics.extend(warnings);
         self.scope.reserve_variables(&statements);
-        let prepared = self.prepare_functions(&mut statements);
+        let prepared = self
+            .prepare_functions(&mut statements)
+            .map_err(|error| self.materialize_error_from(error, &source.name));
         self.diagnostics.compiling = previous_compiling;
         self.diagnostics.source = diagnostic_source;
         prepared?;

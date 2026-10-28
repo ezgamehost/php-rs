@@ -1,0 +1,372 @@
+Zend suite
+
+Before: 5256 cases; 1798 passed, 3050 failed, 408 unsupported
+After: 5256 cases; 2024 passed, 2824 failed, 408 unsupported
+New passes: 226; regressions: 0
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_010.phpt
+NEW PASS: Zend/tests/anon/gh13097_b.phpt
+NEW PASS: Zend/tests/assign_ref_to_overloaded_prop.phpt
+NEW PASS: Zend/tests/attributes/030_strict_types.phpt
+NEW PASS: Zend/tests/attributes/constants/constant_listed_as_target-userland.phpt
+NEW PASS: Zend/tests/attributes/constants/must_target_const-userland.phpt
+NEW PASS: Zend/tests/attributes/constants/not_repeatable-userland.phpt
+NEW PASS: Zend/tests/attributes/deprecated/property_readonly_001.phpt
+NEW PASS: Zend/tests/attributes/deprecated/property_readonly_002.phpt
+NEW PASS: Zend/tests/attributes/deprecated/property_readonly_003.phpt
+NEW PASS: Zend/tests/attributes/nodiscard/property_readonly_001.phpt
+NEW PASS: Zend/tests/attributes/nodiscard/property_readonly_002.phpt
+NEW PASS: Zend/tests/autoload/bug39003.phpt
+NEW PASS: Zend/tests/bug29015.phpt
+NEW PASS: Zend/tests/bug30922.phpt
+NEW PASS: Zend/tests/bug34064.phpt
+NEW PASS: Zend/tests/bug40621.phpt
+NEW PASS: Zend/tests/bug49866.phpt
+NEW PASS: Zend/tests/bug55705.phpt
+NEW PASS: Zend/tests/bug63111.phpt
+NEW PASS: Zend/tests/bug64966.phpt
+NEW PASS: Zend/tests/bug65784.phpt
+NEW PASS: Zend/tests/bug65911.phpt
+NEW PASS: Zend/tests/bug69640.phpt
+NEW PASS: Zend/tests/bug69755.phpt
+NEW PASS: Zend/tests/bug69788.phpt
+NEW PASS: Zend/tests/bug74546.phpt
+NEW PASS: Zend/tests/bug79818.phpt
+NEW PASS: Zend/tests/bug79828.phpt
+NEW PASS: Zend/tests/class_alias/class_alias_008.phpt
+NEW PASS: Zend/tests/class_alias/class_alias_016.phpt
+NEW PASS: Zend/tests/class_alias/class_alias_020.phpt
+NEW PASS: Zend/tests/clone/clone_004.phpt
+NEW PASS: Zend/tests/closures/closure_019.phpt
+NEW PASS: Zend/tests/closures/closure_027.phpt
+NEW PASS: Zend/tests/closures/closure_033.phpt
+NEW PASS: Zend/tests/closures/closure_064.phpt
+NEW PASS: Zend/tests/closures/closure_const_expr/property_initializer_scope_002.phpt
+NEW PASS: Zend/tests/closures/gh19653_2.phpt
+NEW PASS: Zend/tests/constants/bug46304.phpt
+NEW PASS: Zend/tests/constants/class_constants_001.phpt
+NEW PASS: Zend/tests/constants/class_constants_002.phpt
+NEW PASS: Zend/tests/constants/halt_compiler/bug77738.phpt
+NEW PASS: Zend/tests/constants/halt_compiler/halt_compiler5.phpt
+NEW PASS: Zend/tests/div_by_zero_in_static.phpt
+NEW PASS: Zend/tests/dynamic_call/dynamic_call_002.phpt
+NEW PASS: Zend/tests/dynamic_call/dynamic_call_003.phpt
+NEW PASS: Zend/tests/dynamic_call/dynamic_call_004.phpt
+NEW PASS: Zend/tests/enum/update-class-constant-failure.phpt
+NEW PASS: Zend/tests/errmsg/bug30519.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_10.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_11.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_12.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_13.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_2.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_3.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_4.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_5.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_6.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_7.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_8.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_9.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_022.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_044.phpt
+NEW PASS: Zend/tests/exceptions/bug31102.phpt
+NEW PASS: Zend/tests/exceptions/bug48228.phpt
+NEW PASS: Zend/tests/exceptions/bug48408.phpt
+NEW PASS: Zend/tests/exceptions/exception_001.phpt
+NEW PASS: Zend/tests/exceptions/exception_003.phpt
+NEW PASS: Zend/tests/exceptions/exception_004.phpt
+NEW PASS: Zend/tests/exceptions/exception_005.phpt
+NEW PASS: Zend/tests/exceptions/exception_006.phpt
+NEW PASS: Zend/tests/exceptions/exception_007.phpt
+NEW PASS: Zend/tests/exceptions/exception_013.phpt
+NEW PASS: Zend/tests/exceptions/exception_014.phpt
+NEW PASS: Zend/tests/exceptions/exception_015.phpt
+NEW PASS: Zend/tests/exceptions/exception_016.phpt
+NEW PASS: Zend/tests/exceptions/exception_017.phpt
+NEW PASS: Zend/tests/exceptions/exception_018.phpt
+NEW PASS: Zend/tests/exceptions/exception_019.phpt
+NEW PASS: Zend/tests/exceptions/exception_020.phpt
+NEW PASS: Zend/tests/exceptions/exception_021.phpt
+NEW PASS: Zend/tests/exceptions/exception_022.phpt
+NEW PASS: Zend/tests/exceptions/exception_fatal_uncaught_error_reference_tostring.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_abstract.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_magic_callStatic.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_namespace_no_fallback_001.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_namespace_no_fallback_002.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_static_call_instance_method.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_unknown_class.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_unknown_function.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/error_unknown_method.phpt
+NEW PASS: Zend/tests/function_arguments/sensitive_parameter_value_no_dynamic_property.phpt
+NEW PASS: Zend/tests/function_arguments/sensitive_parameter_value_to_string.phpt
+NEW PASS: Zend/tests/function_call_array_item.phpt
+NEW PASS: Zend/tests/generators/generator_throwing_in_foreach.phpt
+NEW PASS: Zend/tests/generators/generator_with_type_check.phpt
+NEW PASS: Zend/tests/gh10486_2.phpt
+NEW PASS: Zend/tests/heredoc_nowdoc/heredoc_005.phpt
+NEW PASS: Zend/tests/heredoc_nowdoc/heredoc_013.phpt
+NEW PASS: Zend/tests/heredoc_nowdoc/heredoc_014.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_array_001.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_array_002.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_array_005.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_string_003.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_method_call_002.phpt
+NEW PASS: Zend/tests/inheritance/bug29674.phpt
+NEW PASS: Zend/tests/inheritance/bug48215_2.phpt
+NEW PASS: Zend/tests/inheritance/bug70873.phpt
+NEW PASS: Zend/tests/inheritance/bug78344.phpt
+NEW PASS: Zend/tests/isset/bug80030.phpt
+NEW PASS: Zend/tests/line_numbers/gh8810_1.phpt
+NEW PASS: Zend/tests/line_numbers/gh8810_3.phpt
+NEW PASS: Zend/tests/list/bug73663_2.phpt
+NEW PASS: Zend/tests/list/destruct_object_not_ArrayAccess.phpt
+NEW PASS: Zend/tests/list/list_007.phpt
+NEW PASS: Zend/tests/list/list_assign_ref_string_offset_error.phpt
+NEW PASS: Zend/tests/lsb/bug47699.phpt
+NEW PASS: Zend/tests/magic_methods/bug32660.phpt
+NEW PASS: Zend/tests/magic_methods/bug38461.phpt
+NEW PASS: Zend/tests/magic_methods/bug38624.phpt
+NEW PASS: Zend/tests/magic_methods/bug42937.phpt
+NEW PASS: Zend/tests/magic_methods/bug48248.phpt
+NEW PASS: Zend/tests/magic_methods/bug48533.phpt
+NEW PASS: Zend/tests/magic_methods/bug52484.phpt
+NEW PASS: Zend/tests/magic_methods/bug52484_2.phpt
+NEW PASS: Zend/tests/magic_methods/bug52484_3.phpt
+NEW PASS: Zend/tests/magic_methods/bug61025.phpt
+NEW PASS: Zend/tests/magic_methods/bug70967.phpt
+NEW PASS: Zend/tests/magic_methods/call_static_004.phpt
+NEW PASS: Zend/tests/magic_methods/call_static_006.phpt
+NEW PASS: Zend/tests/match/006.phpt
+NEW PASS: Zend/tests/match/007.phpt
+NEW PASS: Zend/tests/match/027.phpt
+NEW PASS: Zend/tests/match/match_of_phi_optimization.phpt
+NEW PASS: Zend/tests/match/match_scdf_cleanup.phpt
+NEW PASS: Zend/tests/methods-on-non-objects.phpt
+NEW PASS: Zend/tests/named_params/attributes_named_flags.phpt
+NEW PASS: Zend/tests/named_params/attributes_named_flags_incorrect.phpt
+NEW PASS: Zend/tests/named_params/defaults.phpt
+NEW PASS: Zend/tests/namespaces/bug42802.phpt
+NEW PASS: Zend/tests/namespaces/bug77376.phpt
+NEW PASS: Zend/tests/namespaces/ns_004.phpt
+NEW PASS: Zend/tests/namespaces/ns_038.phpt
+NEW PASS: Zend/tests/namespaces/ns_041.phpt
+NEW PASS: Zend/tests/namespaces/ns_057.phpt
+NEW PASS: Zend/tests/namespaces/ns_058.phpt
+NEW PASS: Zend/tests/namespaces/ns_071.phpt
+NEW PASS: Zend/tests/namespaces/ns_072.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_1.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_2.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_3.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_4.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_5.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_7.phpt
+NEW PASS: Zend/tests/namespaces/ns_077_8.phpt
+NEW PASS: Zend/tests/namespaces/ns_092.phpt
+NEW PASS: Zend/tests/nullable_types/nullable_type_parameters_do_not_have_default_value.phpt
+NEW PASS: Zend/tests/nullsafe_operator/019.phpt
+NEW PASS: Zend/tests/object_types/return_type_in_function.phpt
+NEW PASS: Zend/tests/object_types/type_hint_in_class_method.phpt
+NEW PASS: Zend/tests/object_types/type_hint_in_function.phpt
+NEW PASS: Zend/tests/objects/objects_017.phpt
+NEW PASS: Zend/tests/objects/objects_025.phpt
+NEW PASS: Zend/tests/objects/objects_026.phpt
+NEW PASS: Zend/tests/objects/objects_029.phpt
+NEW PASS: Zend/tests/objects/objects_030.phpt
+NEW PASS: Zend/tests/offset_object.phpt
+NEW PASS: Zend/tests/parameter_default_values/bug68446.phpt
+NEW PASS: Zend/tests/pipe_operator/prec_007.phpt
+NEW PASS: Zend/tests/return_types/001.phpt
+NEW PASS: Zend/tests/return_types/002.phpt
+NEW PASS: Zend/tests/return_types/003.phpt
+NEW PASS: Zend/tests/return_types/004.phpt
+NEW PASS: Zend/tests/return_types/005.phpt
+NEW PASS: Zend/tests/return_types/010.phpt
+NEW PASS: Zend/tests/return_types/020.phpt
+NEW PASS: Zend/tests/return_types/030.phpt
+NEW PASS: Zend/tests/return_types/bug71092.phpt
+NEW PASS: Zend/tests/return_types/never_disallowed3.phpt
+NEW PASS: Zend/tests/return_types/rfc001.phpt
+NEW PASS: Zend/tests/return_types/rfc003.phpt
+NEW PASS: Zend/tests/str_offset_002.phpt
+NEW PASS: Zend/tests/string_offset_optimization.phpt
+NEW PASS: Zend/tests/this-reserved/this_reassign.phpt
+NEW PASS: Zend/tests/throw/bug33318.phpt
+NEW PASS: Zend/tests/throw_reference.phpt
+NEW PASS: Zend/tests/throwable_001.phpt
+NEW PASS: Zend/tests/throwable_002.phpt
+NEW PASS: Zend/tests/traits/bug60173.phpt
+NEW PASS: Zend/tests/traits/bugs/alias01.phpt
+NEW PASS: Zend/tests/traits/bugs/missing-trait.phpt
+NEW PASS: Zend/tests/traits/constant_004.phpt
+NEW PASS: Zend/tests/traits/constant_018.phpt
+NEW PASS: Zend/tests/traits/error_002.phpt
+NEW PASS: Zend/tests/traits/error_007.phpt
+NEW PASS: Zend/tests/traits/error_012.phpt
+NEW PASS: Zend/tests/traits/language008a.phpt
+NEW PASS: Zend/tests/traits/language008b.phpt
+NEW PASS: Zend/tests/try/try_finally_001.phpt
+NEW PASS: Zend/tests/try/try_finally_003.phpt
+NEW PASS: Zend/tests/try/try_finally_recursive_previous.phpt
+NEW PASS: Zend/tests/type_declarations/array_001.phpt
+NEW PASS: Zend/tests/type_declarations/explicit_weak_include_strict.phpt
+NEW PASS: Zend/tests/type_declarations/inexistent_class_hint_with_scalar_arg.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_constant_defaults_error.phpt
+NEW PASS: Zend/tests/type_declarations/strict_call_weak.phpt
+NEW PASS: Zend/tests/type_declarations/strict_call_weak_explicit.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_002.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_003.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_026.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_029.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_030.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_039.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_040.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_055.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_060.phpt
+NEW PASS: Zend/tests/type_declarations/weak_include_strict.phpt
+NEW PASS: Zend/tests/uncaught_exception_error_supression.phpt
+NEW PASS: Zend/tests/unset/bug24773.phpt
+NEW PASS: Zend/tests/use_const/no_global_fallback.phpt
+NEW PASS: Zend/tests/use_function/no_global_fallback.phpt
+NEW PASS: Zend/tests/use_function/no_global_fallback2.phpt
+NEW PASS: Zend/tests/varSyntax/method_call_on_string_literal.phpt
+NEW PASS: Zend/tests/varSyntax/static_prop_on_int_expr_class.phpt
+NEW PASS: Zend/tests/variadic/by_ref_error.phpt
+
+Most frequent remaining failure messages:
+9: Expected "Fatal error: __debuginfo() must return an array in %s
+4: Expected "Parse error: syntax error, unexpected token \"exit\", expecting identifier in %s
+4: Expected "object(Test)#3 (0) {\n}\nobject(Test)#3 (0) {\n}\n", got "object(Test)#3 (0) {\n}\nobject(Test)#2 (0) {\n}\n"
+4: Expected "NULL\n", got "object(Test)#2 (0) {\n}\n"
+4: Expected "Fatal error: Duplicate type Foo is redundant in %s
+3: Expected "Deprecated: Trait DemoTraitA used by DemoClass is deprecated in %s on line %d\n\nDeprecated: Trait DemoTraitB used by DemoClass is deprecated in %s
+2: Expected "Fatal error: C::c() has #[\\Override] attribute, but no matching parent method exists in %s
+2: Expected "Fatal error: P::i() has #[\\Override] attribute, but no matching parent method exists in %s
+2: Expected "Fatal error: C::p() has #[\\Override] attribute, but no matching parent method exists in %s
+2: Expected "Fatal error: C::$c has #[\\Override] attribute, but no matching parent property exists in %s
+2: Expected "Fatal error: C::$p has #[\\Override] attribute, but no matching parent property exists in %s
+2: Expected "Array\n(\n    [0] => 123\n)\nArray\n(\n    [0] => 123\n)\n", got "Array\n(\n    [0] => Array\n *RECURSION*\n)\nArray\n(\n    [0] => 123\n)\n"
+2: Expected "Cannot access offset of type Closure on array\n", got "Illegal offset type\n"
+2: Expected "Warning: Constant __COMPILER_HALT_OFFSET__ already defined, this will be an error in PHP 9 in %s
+2: Expected "Parse error: syntax error, unexpected token \"exit\", expecting \"(\" in %s
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 265 passed, 190 failed, 37 unsupported
+After: 492 cases; 274 passed, 181 failed, 37 unsupported
+New passes: 9; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionAttribute_newInstance_exception.phpt
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_basic1.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getName_error1.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isSubclassOf_error1.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_newInstanceArgs_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_invokeArgs_error1.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_invoke_error2.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_getName_error1.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isSubclassOf_error.phpt
+
+Most frequent remaining failure messages:
+1: Expected "array(0) {\n}\narray(2) {\n  [0]=>\n  string(3) \"bla\"\n  [1]=>\n  string(4) \"name\"\n}\nstring(17) \"ReflectionClassEx\"\n", got "\nFatal error: Uncaught Error: Call t
+1: Expected "Method [ <user, overwrites Foo, prototype Foo> public method func ] {\n  @@ %s010.php 7 - 8\n}\n", got "\nFatal error: Uncaught Error: Object of class ReflectionMethod co
+1: Expected "ReflectionException\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getClasses() in /private/tmp/php-rs-reference/php-8.5.0/ext/refl
+1: Expected "sleep\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getFunctions() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests
+1: Expected "int(0)\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getConstants() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/test
+1: Expected "Class [ <user> class Foo ] {\n  @@ %s017.php 2-4\n\n  - Constants [1] {\n    Constant [ public string test ] { ok }\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static
+1: Expected "array(2) {\n  [0]=>\n  string(5) \"final\"\n  [1]=>\n  string(9) \"protected\"\n}\n", got "\nFatal error: Uncaught Error: Class \"Reflection\" not found in /private/tmp/p
+1: Expected "string(8) \"standard\"\n", got "\nFatal error: Uncaught ReflectionException: Function sleep() does not exist in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tes
+1: Expected "Object of class [ <user> class C1 ] {\n  @@ %s\n\n  - Constants [0] {\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static methods [0] {\n  }\n\n  - Properties [3] {\n 
+1: Expected "Reflection\n\nReflection => enabled\n\ndate\n\ndate/time support => enabled\ntimelib version => %s\n\"Olson\" Timezone Database Version => %s\nTimezone Database => %s\nDe
+1: Expected "Cannot fetch information from a closed Generator\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/027.php
+1: Expected "object(ReflectionGenerator)#%d (0) {\n}\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/028.php
+1: Expected "Cannot directly instantiate ReflectionAttribute\n", got "\nFatal error: Uncaught ArgumentCountError: ReflectionAttribute::__construct() expects exactly 0 arguments, 3 giv
+1: Expected "Attribute [ Foo ]\nAttribute [ Bar ] {\n  - Arguments [2] {\n    Argument #0 [ a = 'foo' ]\n    Argument #1 [ b = 1234 ]\n  }\n}\nAttribute [ Baz ] {\n  - Arguments [2] {
+1: Expected "int(2)\nConstant [ public int X ] { 2 }\nClass [ <user> class C ] {\n  @@ %s 12-15\n\n  - Constants [2] {\n    Constant [ public int X ] { 2 }\n    Constant [ public int 
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Spl suite
+
+Before: 778 cases; 19 passed, 665 failed, 94 unsupported
+After: 778 cases; 22 passed, 662 failed, 94 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/spl/tests/bug38325.phpt
+NEW PASS: ext/spl/tests/bug48023.phpt
+NEW PASS: ext/spl/tests/spl_autoload_012.phpt
+
+Most frequent remaining failure messages:
+1: Expected "Fatal error: Uncaught ArgumentCountError: AppendIterator::__construct() expects exactly 0 arguments, 1 given in %s:%d\nStack trace:\n#0 %s(%d): AppendIterator->__construc
+1: Expected "MyArrayIterator\n", got "\nFatal error: Uncaught Error: Class \"ArrayIterator\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayObject
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "object(ArrayObject)#1 (1) {\n  [\"storage\":\"ArrayObject\":private]=>\n  array(3) {\n    [0]=>\n    int(1)\n    [1]=>\n    int(2)\n    [2]=>\n    int(3)\n  }\n}\n", got 
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Modification of ArrayObject during sorting is prohibited\nobject(ArrayObject)#1 (1) {\n  [\"storage\":\"ArrayObject\":private]=>\n  array(3) {\n    [0]=>\n    int(1)\n   
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Cannot access offset of type array on ArrayObject\nCannot access offset of type array on ArrayObject\nCannot access offset of type array on ArrayObject\nCannot access off
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: Creation of dynamic property ArrayObject::$prop is deprecated in %s on line %d\n\nDeprecated: ArrayObject::__construct(): Using an object as a backing array f
+1: Expected "Done\n", got "\nFatal error: Uncaught Error: Class \"ArrayObject\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayObject_unserialize_
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+Standard suite
+
+Before: 730 cases; 316 passed, 262 failed, 152 unsupported
+After: 730 cases; 316 passed, 262 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "shuffle\n1234: [34][0-9][0-9][0-9]: 0.0[3-4][0-9]\n1243: [34][0-9][0-9][0-9]: 0.0[3-4][0-9]\n1324: [34][0-9][0-9][0-9]: 0.0[3-4][0-9]\n1342: [34][0-9][0-9][0-9]: 0.0[3-4]
+1: Expected "Warning: highlight_file(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+1: Expected "string(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\
+1: Expected "*** Testing basic operations ***\n\n--Iteration 1--\nstring(3) \"bar\"\n\n--Iteration 2--\nstring(3) \"bar\"\n\n--Iteration 3--\nstring(3) \"bar\"\n\n--Iteration 4--\nstr
+1: Expected "*** Testing possible variations in path and suffix ***\n\n--Iteration 1--\nstring(3) \"bar\"\n\n--Iteration 2--\nstring(3) \"bar\"\n\n--Iteration 3--\nstring(3) \"bar\"\n
+1: Expected "delimiter: |\ndelimiter: |\n", got "\nFatal error: Uncaught Error: Call to undefined function set_time_limit() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tes
+1: Expected "1: boo\n2: boo\n3: \n1: boo\n2: boo\n3: obb\n", got "1: boo\n2: boo\n3: \n\nFatal error: Uncaught Error: Call to undefined function str_rot13() in /private/tmp/php-rs-ref
+1: Expected "Length of original string:  130\nLength of break string:     352\nstring(6799) \"1234567890a-very-long-break-string-to-clobber-the-heapa-very-long-break-string-to-clobber
+1: Expected "c3a0c3a1\nc3a0c3a1\n", got "c3a0c3a1\n\nFatal error: Uncaught Error: Call to undefined function htmlspecialchars() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard
+1: Expected "string(0) \"\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strin
+1: Expected "array(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2]=>\n  int(9)\n}\narray(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2
+1: Expected "string(3) \"0.0\"\nstring(1) \"0\"\n", got "\nFatal error: Uncaught Error: Call to undefined function number_format() in /private/tmp/php-rs-reference/php-8.5.0/ext/stand
+1: Expected "array(4) {\n  [\"dirname\"]=>\n  string(1) \"%e\"\n  [\"basename\"]=>\n  string(8) \"dsds.asa\"\n  [\"extension\"]=>\n  string(3) \"asa\"\n  [\"filename\"]=>\n  string(4)
+1: Expected "string(100) \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\nstring(100) \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+1: Expected "Warning: Array to string conversion in %s on line %d\na:4:{i:0;s:19:\"This is strung one.\";i:1;s:19:\"This is strung two.\";i:2;s:5:\"Array\";i:3;s:22:\"This is a last s
+
+Unsupported section combinations:
+84: SKIPIF
+40: INI
+11: INI, SKIPIF
+7: EXTENSIONS, INI
+5: CLEAN, INI
+3: EXTENSIONS
+2: ENV, SKIPIF

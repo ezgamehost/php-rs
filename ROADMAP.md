@@ -16,10 +16,14 @@ definition of completion.
    a selectable suite working directory and generated-file cleanup. Reference
    comparisons include process exit status, including intentional nonzero exits.
    Remaining: full upstream sections, reproducible reference provisioning in CI,
-   fatal diagnostic comparison, and process-tree resource limits. Per-fixture workers
+   complete diagnostic fidelity, and process-tree resource limits. Per-fixture workers
    isolate crashes and enforce configurable process timeouts. Nonfatal warnings,
    notices, and deprecations retain source filenames and output positions, and
-   the harness compares their display text in emission order.
+   the harness compares their display text in emission order. Uncaught errors
+   render exception chains/traces and run custom __toString methods; expected
+   fatal output and reference exit status can now pass. ParseError/CompileError
+   have distinct display forms, but complete compile-error classification,
+   parser wording, and exception-property integration remain unfinished.
    Never count skipped tests as passing.
 3. **Core language (arrays started):** ordered arrays, key coercion, copy-on-write
    assignment, nested indexed writes, array union/comparison, `foreach` by value,

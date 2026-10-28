@@ -27,6 +27,7 @@ mod closures;
 mod comparison;
 mod constants;
 mod destructuring;
+mod diagnostic_display;
 mod enums;
 mod exporting;
 mod foreach;
