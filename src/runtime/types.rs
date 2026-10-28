@@ -3,11 +3,19 @@ use crate::{ast::TypeDecl, value::numeric_string};
 
 impl Runtime {
     pub(crate) fn constant_default(expr: &Expr) -> Option<Value> {
-        Self::default().eval(expr).ok()
+        Self {
+            folding_constants: true,
+            ..Self::default()
+        }
+        .eval(expr)
+        .ok()
     }
 
     pub(crate) fn constant_without_diagnostics(expr: &Expr) -> Option<Value> {
-        let mut runtime = Self::default();
+        let mut runtime = Self {
+            folding_constants: true,
+            ..Self::default()
+        };
         let value = runtime.eval(expr).ok()?;
         runtime.warnings.is_empty().then_some(value)
     }

@@ -112,7 +112,10 @@ impl Scope {
                 }
             }
             ExprKind::Variable(name) if !expr.is_globals() => self.reserve(name),
-            ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
+            ExprKind::Literal(_)
+            | ExprKind::Variable(_)
+            | ExprKind::Constant(_)
+            | ExprKind::NamespacedName(_) => {}
             ExprKind::ClassName(inner)
             | ExprKind::Group(inner)
             | ExprKind::Callable(inner)

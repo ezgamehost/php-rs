@@ -206,6 +206,10 @@ impl Lexer<'_> {
                 let start = self.pos;
                 if c == b'\\' {
                     self.bump();
+                    if !self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
+                        self.emit(Kind::Symbol("\\".into()), line);
+                        continue;
+                    }
                 }
                 loop {
                     if !self.source.get(self.pos).is_some_and(|c| ident_start(*c)) {
@@ -213,6 +217,13 @@ impl Lexer<'_> {
                     }
                     self.identifier();
                     if self.source.get(self.pos) != Some(&b'\\') {
+                        break;
+                    }
+                    if !self
+                        .source
+                        .get(self.pos + 1)
+                        .is_some_and(|c| ident_start(*c))
+                    {
                         break;
                     }
                     self.bump();

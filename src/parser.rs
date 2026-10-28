@@ -13,6 +13,7 @@ mod closures;
 mod exceptions;
 mod jumps;
 mod logical_constants;
+mod namespaces;
 mod objects;
 mod promotion;
 mod targets;
@@ -40,6 +41,7 @@ pub(crate) fn parse_source(
         function_name: Vec::new(),
         class_name: Vec::new(),
         class_parent: None,
+        namespace: namespaces::Namespace::default(),
     };
     let mut statements = parser.program()?;
     targets::validate(&statements)?;
@@ -61,6 +63,7 @@ struct Parser {
     function_name: Vec<u8>,
     class_name: Vec<u8>,
     class_parent: Option<Vec<u8>>,
+    namespace: namespaces::Namespace,
 }
 impl Parser {
     fn token(&self) -> &Token {
@@ -91,6 +94,7 @@ impl Parser {
     fn program(&mut self) -> Result<Vec<Stmt>, Error> {
         let mut result = Vec::new();
         let mut first = true;
+        let mut bracketed = None;
         while self.token().kind != Kind::End {
             if self.eat("declare") {
                 self.strict_declaration(first)?;
@@ -99,12 +103,33 @@ impl Parser {
             if self.eat(";") {
                 continue;
             }
+            if self.eat("namespace") {
+                if bracketed.is_none() && !first {
+                    return Err(Error::parse(
+                        "Namespace declaration statement has to be the very first statement or after any declare call in the script",
+                        self.token().line,
+                    ));
+                }
+                let (body, braces) = self.namespace_declaration()?;
+                if bracketed.is_some_and(|previous| previous != braces) {
+                    return Err(Error::parse(
+                        "Cannot mix bracketed namespace declarations with unbracketed namespace declarations",
+                        self.token().line,
+                    ));
+                }
+                bracketed = Some(braces);
+                result.extend(body);
+                first = false;
+                continue;
+            }
+            if bracketed == Some(true) {
+                return Err(Error::parse(
+                    "No code may exist outside of namespace {}",
+                    self.token().line,
+                ));
+            }
             first = false;
-            result.push(if self.eat("const") {
-                self.constant_declaration()?
-            } else {
-                self.statement()?
-            });
+            result.push(self.top_level_statement()?);
         }
         Ok(result)
     }
@@ -132,6 +157,7 @@ impl Parser {
                     line,
                 ));
             }
+            let name = self.declared_name(&name, namespaces::Symbol::Constant, line)?;
             constants.push((name, value));
             if !self.eat(",") {
                 break;
@@ -492,6 +518,11 @@ impl Parser {
             ));
         }
         self.pos += 1;
+        let name = if method {
+            name
+        } else {
+            self.declared_name(&name, namespaces::Symbol::Function, line)?
+        };
         let outer_function_name = std::mem::replace(&mut self.function_name, name.clone());
         let mut parameters =
             self.function_parameters(method && name.eq_ignore_ascii_case(b"__construct"))?;
@@ -831,6 +862,7 @@ impl Parser {
                                 function_name: self.function_name.clone(),
                                 class_name: self.class_name.clone(),
                                 class_parent: self.class_parent.clone(),
+                                namespace: self.namespace.clone(),
                             };
                             let expr = parser.expr(0)?;
                             self.warnings.append(&mut parser.warnings);
@@ -907,9 +939,10 @@ impl Parser {
                 b"__function__" | b"__method__" => {
                     ExprKind::Literal(Value::String(self.function_name.clone().into()))
                 }
-                b"__namespace__" | b"__trait__" => {
-                    ExprKind::Literal(Value::String(Vec::new().into()))
+                b"__namespace__" => {
+                    ExprKind::Literal(Value::String(self.namespace.name.clone().into()))
                 }
+                b"__trait__" => ExprKind::Literal(Value::String(Vec::new().into())),
                 b"eval" => {
                     self.expect("(")?;
                     let code = self.expr(0)?;
@@ -956,7 +989,7 @@ impl Parser {
                 b"true" => ExprKind::Literal(Value::Bool(true)),
                 b"false" => ExprKind::Literal(Value::Bool(false)),
                 b"null" => ExprKind::Literal(Value::Null),
-                _ => ExprKind::Constant(name),
+                _ => self.resolve_identifier(name),
             },
             Kind::Symbol(op) if op == "[" => ExprKind::Array(self.array_elements("]")?),
             Kind::Symbol(op) if op == "(" => {

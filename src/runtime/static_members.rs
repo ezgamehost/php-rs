@@ -4,7 +4,7 @@ use crate::object::{Class, ClassContext};
 
 impl Runtime {
     fn member_class_name(&mut self, class: &Expr, line: usize) -> Result<Vec<u8>, Error> {
-        if let ExprKind::Constant(name) = &class.kind {
+        if let Some(name) = class.static_class_name() {
             return self.contextual_class_name(name, line);
         }
         match self.eval(class)? {

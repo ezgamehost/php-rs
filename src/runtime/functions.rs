@@ -44,7 +44,10 @@ impl Runtime {
             target,
             args,
             line,
-            !matches!(callee.kind, ExprKind::Constant(_)),
+            !matches!(
+                callee.kind,
+                ExprKind::Constant(_) | ExprKind::NamespacedName(_)
+            ),
         )
     }
 
@@ -95,6 +98,23 @@ impl Runtime {
                 self.resolve_method(value, &name, line)
             }
             ExprKind::Constant(name) => self.resolve_name(name.clone(), line),
+            ExprKind::NamespacedName(name) => {
+                let key = name.function.to_ascii_lowercase();
+                let resolved =
+                    if self.functions.contains_key(&key) || Builtin::lookup(&key).is_some() {
+                        &name.function
+                    } else if let Some(fallback) = &name.function_fallback {
+                        let key = fallback.to_ascii_lowercase();
+                        if self.functions.contains_key(&key) || Builtin::lookup(&key).is_some() {
+                            fallback
+                        } else {
+                            &name.function
+                        }
+                    } else {
+                        &name.function
+                    };
+                self.resolve_name(resolved.clone(), line)
+            }
             _ => {
                 let value = self.eval(callee)?;
                 self.resolve_callable(value, line)

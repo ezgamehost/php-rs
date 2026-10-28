@@ -1,0 +1,144 @@
+PHP 8.5.0 full Zend suite: namespace implementation (2026-10-28)
+Before: 78ec068
+After: lexical namespaces, imports, grouped imports, and name resolution
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests
+Every passing fixture also matches reference PHP output and exit status.
+Existing Rust tests: 797 passed. Project PHPT: 57 passed. No new custom tests.
+
+Before: 5256 cases; 713 passed, 4135 failed, 408 unsupported
+After: 5256 cases; 813 passed, 4035 failed, 408 unsupported
+New passes: 100; regressions: 0
+NEW PASS: Zend/tests/bug43183.phpt
+NEW PASS: Zend/tests/bug44653.phpt
+NEW PASS: Zend/tests/class_name/class_name_as_scalar.phpt
+NEW PASS: Zend/tests/class_name/class_name_as_scalar_error_004.phpt
+NEW PASS: Zend/tests/constants/bug42820.phpt
+NEW PASS: Zend/tests/constants/class_constants_004.phpt
+NEW PASS: Zend/tests/constants/constants_003.phpt
+NEW PASS: Zend/tests/constants/constants_006.phpt
+NEW PASS: Zend/tests/constants/constants_009.phpt
+NEW PASS: Zend/tests/constants/defined_fn_no_ns_fallback.phpt
+NEW PASS: Zend/tests/enum/enum-reserved-non-modifiers.phpt
+NEW PASS: Zend/tests/errmsg/bug43344_1.phpt
+NEW PASS: Zend/tests/eval_constant_resolution.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/namespace_003.phpt
+NEW PASS: Zend/tests/frameless_jmp_002.phpt
+NEW PASS: Zend/tests/frameless_jmp_004.phpt
+NEW PASS: Zend/tests/grammar/regression_009.phpt
+NEW PASS: Zend/tests/group_use/ns_trailing_comma_01.phpt
+NEW PASS: Zend/tests/group_use/ns_trailing_comma_02.phpt
+NEW PASS: Zend/tests/interface_exists_002.phpt
+NEW PASS: Zend/tests/namespaces/bug46813.phpt
+NEW PASS: Zend/tests/namespaces/bug47593.phpt
+NEW PASS: Zend/tests/namespaces/gh11152.phpt
+NEW PASS: Zend/tests/namespaces/namespace_first_stmt_nop.phpt
+NEW PASS: Zend/tests/namespaces/namespace_name_reserved_keywords.phpt
+NEW PASS: Zend/tests/namespaces/ns_001.phpt
+NEW PASS: Zend/tests/namespaces/ns_002.phpt
+NEW PASS: Zend/tests/namespaces/ns_003.phpt
+NEW PASS: Zend/tests/namespaces/ns_005.phpt
+NEW PASS: Zend/tests/namespaces/ns_006.phpt
+NEW PASS: Zend/tests/namespaces/ns_007.phpt
+NEW PASS: Zend/tests/namespaces/ns_008.phpt
+NEW PASS: Zend/tests/namespaces/ns_010.phpt
+NEW PASS: Zend/tests/namespaces/ns_011.phpt
+NEW PASS: Zend/tests/namespaces/ns_012.phpt
+NEW PASS: Zend/tests/namespaces/ns_013.phpt
+NEW PASS: Zend/tests/namespaces/ns_014.phpt
+NEW PASS: Zend/tests/namespaces/ns_015.phpt
+NEW PASS: Zend/tests/namespaces/ns_016.phpt
+NEW PASS: Zend/tests/namespaces/ns_017.phpt
+NEW PASS: Zend/tests/namespaces/ns_018.phpt
+NEW PASS: Zend/tests/namespaces/ns_020.phpt
+NEW PASS: Zend/tests/namespaces/ns_021.phpt
+NEW PASS: Zend/tests/namespaces/ns_022.phpt
+NEW PASS: Zend/tests/namespaces/ns_023.phpt
+NEW PASS: Zend/tests/namespaces/ns_025.phpt
+NEW PASS: Zend/tests/namespaces/ns_027.phpt
+NEW PASS: Zend/tests/namespaces/ns_028.phpt
+NEW PASS: Zend/tests/namespaces/ns_034.phpt
+NEW PASS: Zend/tests/namespaces/ns_037.phpt
+NEW PASS: Zend/tests/namespaces/ns_040.phpt
+NEW PASS: Zend/tests/namespaces/ns_042.phpt
+NEW PASS: Zend/tests/namespaces/ns_043.phpt
+NEW PASS: Zend/tests/namespaces/ns_046.phpt
+NEW PASS: Zend/tests/namespaces/ns_048.phpt
+NEW PASS: Zend/tests/namespaces/ns_050.phpt
+NEW PASS: Zend/tests/namespaces/ns_055.phpt
+NEW PASS: Zend/tests/namespaces/ns_060.phpt
+NEW PASS: Zend/tests/namespaces/ns_061.phpt
+NEW PASS: Zend/tests/namespaces/ns_062.phpt
+NEW PASS: Zend/tests/namespaces/ns_063.phpt
+NEW PASS: Zend/tests/namespaces/ns_065.phpt
+NEW PASS: Zend/tests/namespaces/ns_066.phpt
+NEW PASS: Zend/tests/namespaces/ns_067.phpt
+NEW PASS: Zend/tests/namespaces/ns_069.phpt
+NEW PASS: Zend/tests/namespaces/ns_070.phpt
+NEW PASS: Zend/tests/namespaces/ns_074.phpt
+NEW PASS: Zend/tests/namespaces/ns_076.phpt
+NEW PASS: Zend/tests/namespaces/ns_078.phpt
+NEW PASS: Zend/tests/namespaces/ns_082.phpt
+NEW PASS: Zend/tests/namespaces/ns_085.phpt
+NEW PASS: Zend/tests/namespaces/ns_089.phpt
+NEW PASS: Zend/tests/namespaces/ns_090.phpt
+NEW PASS: Zend/tests/namespaces/ns_091.phpt
+NEW PASS: Zend/tests/namespaces/ns_093.phpt
+NEW PASS: Zend/tests/namespaces/ns_095.phpt
+NEW PASS: Zend/tests/nested_method_and_function.phpt
+NEW PASS: Zend/tests/pipe_operator/namespaced_functions.phpt
+NEW PASS: Zend/tests/return_types/015.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_strict_declaration_placement_004.phpt
+NEW PASS: Zend/tests/type_declarations/scalar_strict_declaration_placement_005.phpt
+NEW PASS: Zend/tests/typehints/fq_nullable.phpt
+NEW PASS: Zend/tests/use_const/alias.phpt
+NEW PASS: Zend/tests/use_const/basic.phpt
+NEW PASS: Zend/tests/use_const/case_sensivity.phpt
+NEW PASS: Zend/tests/use_const/conflicting_use_alias.phpt
+NEW PASS: Zend/tests/use_const/self_parent.phpt
+NEW PASS: Zend/tests/use_const/shadow_core.phpt
+NEW PASS: Zend/tests/use_const/shadow_global.phpt
+NEW PASS: Zend/tests/use_function/alias.phpt
+NEW PASS: Zend/tests/use_function/basic.phpt
+NEW PASS: Zend/tests/use_function/conflicting_use_alias.phpt
+NEW PASS: Zend/tests/use_function/conflicting_use_const_alias.phpt
+NEW PASS: Zend/tests/use_function/ignore_constants.phpt
+NEW PASS: Zend/tests/use_function/no_conflict_with_classes.phpt
+NEW PASS: Zend/tests/use_function/self_parent.phpt
+NEW PASS: Zend/tests/use_function/shadow_core.phpt
+NEW PASS: Zend/tests/use_function/shadow_global.phpt
+NEW PASS: Zend/tests/use_no_eval_conflict.phpt
+NEW PASS: Zend/tests/use_no_file_conflict.phpt
+
+Most frequent remaining failure messages:
+821: ParseError: Expected ';'
+249: ParseError: Expected expression
+173: ParseError: Invalid non-public member declaration
+168: Error: Class "ReflectionClass" not found
+120: ParseError: Expected parameter variable
+120: Error: Call to undefined function set_error_handler()
+59: Error: Class "Fiber" not found
+56: Error: Call to undefined function spl_autoload_register()
+50: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+42: ParseError: Constant expression contains invalid operations
+37: ParseError: Expected ')'
+37: ParseError: Unexpected byte 0x40
+37: ParseError: Expected '{'
+34: ParseError: Expected public property or method
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

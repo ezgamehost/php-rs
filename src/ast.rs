@@ -15,6 +15,7 @@ pub(crate) enum ExprKind {
     Variable(Vec<u8>),
     DynamicVariable(Box<Expr>),
     Constant(Vec<u8>),
+    NamespacedName(Box<ResolvedName>),
     Unary(String, Box<Expr>),
     Cast(CastKind, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
@@ -42,6 +43,17 @@ pub(crate) enum ExprKind {
     Increment(Box<Expr>, i64, bool),
     Conditional(Box<Expr>, Option<Box<Expr>>, Box<Expr>),
     Match(Box<Expr>, Vec<MatchArm>),
+}
+
+/// Static source names resolve separately for classes, functions, and constants.
+/// Dynamic strings deliberately do not carry this lexical namespace context.
+#[derive(Debug, Clone)]
+pub(crate) struct ResolvedName {
+    pub class: Vec<u8>,
+    pub function: Vec<u8>,
+    pub constant: Vec<u8>,
+    pub function_fallback: Option<Vec<u8>>,
+    pub constant_fallback: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -133,6 +145,14 @@ pub(crate) enum NativeMethod {
 }
 
 impl Expr {
+    pub fn static_class_name(&self) -> Option<&[u8]> {
+        match &self.kind {
+            ExprKind::Constant(name) => Some(name),
+            ExprKind::NamespacedName(name) => Some(&name.class),
+            _ => None,
+        }
+    }
+
     pub fn is_globals(&self) -> bool {
         match &self.kind {
             ExprKind::Variable(name) => name == b"GLOBALS",
@@ -364,21 +384,25 @@ impl Expr {
                 lambda.is_static && !lambda.arrow && lambda.captures.is_empty()
             }
             ExprKind::Callable(callee) => match &callee.kind {
-                ExprKind::Constant(_) => true,
+                ExprKind::Constant(_) | ExprKind::NamespacedName(_) => true,
                 ExprKind::ScopedMember(class, name) => {
-                    matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
+                    class
+                        .static_class_name()
+                        .is_some_and(|name| !name.eq_ignore_ascii_case(b"static"))
                         && matches!(name.kind, ExprKind::Literal(Value::String(_)))
                 }
                 _ => false,
             },
             ExprKind::ScopedMember(class, name) => {
-                matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
+                class
+                    .static_class_name()
+                    .is_some_and(|name| !name.eq_ignore_ascii_case(b"static"))
                     && name.constant_expression(allow_object_cast)
             }
-            ExprKind::Literal(_) | ExprKind::Constant(_) => true,
-            ExprKind::ClassName(class) => {
-                matches!(&class.kind, ExprKind::Constant(name) if !name.eq_ignore_ascii_case(b"static"))
-            }
+            ExprKind::Literal(_) | ExprKind::Constant(_) | ExprKind::NamespacedName(_) => true,
+            ExprKind::ClassName(class) => class
+                .static_class_name()
+                .is_some_and(|name| !name.eq_ignore_ascii_case(b"static")),
             ExprKind::Group(e) | ExprKind::Unary(_, e) => e.constant_expression(allow_object_cast),
             ExprKind::Cast(kind, e) => {
                 *kind != CastKind::Void

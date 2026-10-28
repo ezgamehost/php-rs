@@ -33,7 +33,7 @@ impl Parser {
                     ));
                 }
                 self.pos += 1;
-                types.push(name);
+                types.push(self.resolve_class_name(&name));
                 if !self.eat("|") {
                     break;
                 }

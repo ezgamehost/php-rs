@@ -13,13 +13,19 @@ executes 2,354 additional cases and verifies 44 additional passes, with no
 regressions. This measures existing runtime behavior; it is not a runtime feature
 gain. All 7,777 upstream EXPECTF patterns translate identically to PHP 8.5.0
 `run-tests.php`. Workers isolate crashes and enforce per-process timeouts.
-The full Zend row below uses this expanded runner; subset rows remain historical
-measurements made before EXPECTF support.
+The [namespace implementation](conformance/php-8.5.0-namespaces-hillclimb.txt)
+then adds 100 passing Zend cases with zero regressions. It supports lexical
+namespace declarations, class/function/constant imports and grouped imports,
+qualified and relative names, and global fallback for unqualified functions and
+constants. Dynamic strings remain literal. Resolution follows the
+[PHP namespace rules](https://www.php.net/manual/en/language.namespaces.rules.php).
+The full Zend row below includes these changes; other subset rows remain
+historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 713 | 4135 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 813 | 4035 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

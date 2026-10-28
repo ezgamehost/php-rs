@@ -40,7 +40,7 @@ impl Runtime {
         class: &Expr,
         line: usize,
     ) -> Result<Value, Error> {
-        let name = if let ExprKind::Constant(name) = &class.kind {
+        let name = if let Some(name) = class.static_class_name() {
             self.contextual_class_name(name, line)?
         } else {
             match self.eval(class)? {
@@ -67,7 +67,7 @@ impl Runtime {
         name: &Expr,
         line: usize,
     ) -> Result<CallTarget, Error> {
-        let (class, forwarding) = if let ExprKind::Constant(name) = &class.kind {
+        let (class, forwarding) = if let Some(name) = class.static_class_name() {
             (
                 self.contextual_class_name(name, line)?,
                 matches!(

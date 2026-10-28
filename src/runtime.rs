@@ -58,6 +58,7 @@ pub struct Runtime {
     current_function: Option<Vec<u8>>,
     class_context: Option<crate::object::ClassContext>,
     in_constant_expression: bool,
+    folding_constants: bool,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
@@ -751,6 +752,22 @@ impl Runtime {
                     .to_bool(line, &mut self.warnings),
             )),
             ExprKind::Constant(name) => self.read_constant(name, line),
+            ExprKind::NamespacedName(name) => {
+                let resolved = if self.lookup_constant(&name.constant).is_some() {
+                    &name.constant
+                } else if let Some(fallback) = &name.constant_fallback
+                    && !self.folding_constants
+                {
+                    if self.lookup_constant(fallback).is_some() {
+                        fallback
+                    } else {
+                        &name.constant
+                    }
+                } else {
+                    &name.constant
+                };
+                self.read_constant(resolved, line)
+            }
             ExprKind::Unary(op, expr) => {
                 let value = self.eval(expr)?;
                 match op.as_str() {

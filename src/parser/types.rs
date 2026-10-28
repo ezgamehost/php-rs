@@ -109,7 +109,7 @@ impl Parser {
             let member = if builtin || matches!(bare, "self" | "parent" | "static") {
                 lower
             } else {
-                original.trim_start_matches('\\').to_owned()
+                String::from_utf8_lossy(&self.resolve_class_name(&name)).into_owned()
             };
             if members
                 .iter()

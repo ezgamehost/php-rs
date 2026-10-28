@@ -221,6 +221,7 @@ impl Validator {
             ExprKind::Literal(_)
             | ExprKind::Variable(_)
             | ExprKind::Constant(_)
+            | ExprKind::NamespacedName(_)
             | ExprKind::Lambda(_) => {}
             ExprKind::List(_) => {
                 return Err(Error::parse(

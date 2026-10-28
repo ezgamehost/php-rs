@@ -298,7 +298,7 @@ impl Runtime {
             return Ok(Value::Bool(false));
         }
 
-        let name = if let ExprKind::Constant(name) = &class.kind {
+        let name = if let Some(name) = class.static_class_name() {
             Some(self.contextual_class_name(name, line)?)
         } else {
             match self.eval(class)? {
@@ -330,7 +330,7 @@ impl Runtime {
         args: &[Argument],
         line: usize,
     ) -> Result<Value, Error> {
-        let name = if let ExprKind::Constant(name) = &class.kind {
+        let name = if let Some(name) = class.static_class_name() {
             self.contextual_class_name(name, line)?
         } else {
             match self.eval(class)? {

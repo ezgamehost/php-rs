@@ -35,6 +35,7 @@ impl Parser {
                 r#"Deprecated: Using "_" as a class name is deprecated on line {line}"#
             ));
         }
+        let name = self.declared_name(&name, namespaces::Symbol::Class, line)?;
         let parent = if !is_interface && self.eat("extends") {
             let Kind::Word(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
@@ -43,7 +44,7 @@ impl Parser {
                 ));
             };
             self.pos += 1;
-            Some(name)
+            Some(self.resolve_class_name(&name))
         } else {
             None
         };
@@ -57,7 +58,7 @@ impl Parser {
                 let Kind::Word(name) = self.token().kind.clone() else {
                     return Err(Error::parse("Expected interface name", self.token().line));
                 };
-                interfaces.push(name);
+                interfaces.push(self.resolve_class_name(&name));
                 self.pos += 1;
                 if !self.eat(",") {
                     break;
@@ -508,7 +509,7 @@ impl Parser {
         let class = if let Kind::Word(name) = self.token().kind.clone() {
             self.pos += 1;
             Expr {
-                kind: ExprKind::Constant(name),
+                kind: ExprKind::Constant(self.resolve_class_name(&name)),
                 line,
             }
         } else {
@@ -559,7 +560,7 @@ impl Parser {
             {
                 self.pos += 1;
                 Expr {
-                    kind: ExprKind::Constant(name),
+                    kind: ExprKind::Constant(self.resolve_class_name(&name)),
                     line,
                 }
             }
@@ -617,7 +618,7 @@ impl Parser {
     }
 
     pub(super) fn class_name_expression(&self, value: Expr) -> ExprKind {
-        if let ExprKind::Constant(name) = &value.kind {
+        if let Some(name) = value.static_class_name() {
             let name = match name.to_ascii_lowercase().as_slice() {
                 b"self" if !self.class_name.is_empty() => Some(self.class_name.clone()),
                 b"parent" => self

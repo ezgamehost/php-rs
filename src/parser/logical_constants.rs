@@ -157,7 +157,10 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
                 ));
             }
         }
-        ExprKind::Literal(_) | ExprKind::Variable(_) | ExprKind::Constant(_) => {}
+        ExprKind::Literal(_)
+        | ExprKind::Variable(_)
+        | ExprKind::Constant(_)
+        | ExprKind::NamespacedName(_) => {}
         ExprKind::ClassName(value)
         | ExprKind::Group(value)
         | ExprKind::Callable(value)

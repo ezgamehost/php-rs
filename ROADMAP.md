@@ -9,13 +9,15 @@ definition of completion.
    values, source locations, parsing, variables, expression evaluation, basic
    control flow, CLI, and regression tests. Continue tightening scalar and syntax
    edge cases with the reference interpreter.
-2. **Conformance infrastructure (initial harness implemented):** exact-output PHPT
-   runner, thirty-six differential fixtures, explicit unsupported reports, and CI.
+2. **Conformance infrastructure (initial harness implemented):** PHPT runner with
+   exact output, EXPECTF/EXPECTREGEX through reference PCRE, explicit unsupported
+   reports, before/after upstream comparisons, and CI.
    Local reference is PHP 8.5.0. Supported fixtures execute as real files with
    a selectable suite working directory and generated-file cleanup. Reference
    comparisons include process exit status, including intentional nonzero exits.
    Remaining: full upstream sections, reproducible reference provisioning in CI,
-   diagnostic comparison, isolation, and timeouts.
+   diagnostic comparison, and process-tree resource limits. Per-fixture workers
+   isolate crashes and enforce configurable process timeouts.
    Never count skipped tests as passing.
 3. **Core language (arrays started):** ordered arrays, key coercion, copy-on-write
    assignment, nested indexed writes, array union/comparison, `foreach` by value,
@@ -53,13 +55,16 @@ definition of completion.
    and variable variables implemented.
    `$GLOBALS` element access, mutation, snapshots, and symbol ordering implemented.
    Eval, local-file include/require and once-only variants, source/line/function
-   magic constants, and included-file tracking implemented.
+   magic constants, and included-file tracking implemented. Bracketed and
+   unbracketed namespaces, separate class/function/constant imports, aliases,
+   grouped imports, and static name resolution with function/constant fallback
+   are implemented. Namespace context is lexical and does not rewrite dynamic strings.
    Remaining: references,
-   advanced interpolation, object casts beyond implemented array casts, complete
+   advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals, by-reference functions,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
-   namespaces, and error/exception behavior.
+   complete namespace validation and error/exception behavior.
 4. **Objects and execution semantics (instance foundation started):** public
    classes, constructors, instance properties and methods, bound `$this` and
    method callables, invokable objects, basic property iteration, comparisons,
