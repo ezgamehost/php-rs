@@ -45,7 +45,13 @@ impl fmt::Display for Error {
             write!(
                 f,
                 "{}: {} on line {}",
-                object.class_name, self.message, self.line
+                object.class_name,
+                self.message,
+                object
+                    .throwable
+                    .borrow()
+                    .as_ref()
+                    .map_or(self.line as i64, |data| data.line)
             )
         } else {
             write!(f, "{:?}: {} on line {}", self.kind, self.message, self.line)

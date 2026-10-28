@@ -93,6 +93,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Exceptions thrown from `finally` retain the pending exception as their previous.
   Throwable string conversion includes saved traces and previous exceptions,
   honors subclass overrides, and terminates cyclic previous-exception chains.
+- `ErrorException` supports severity, custom filenames and signed line numbers,
+  named arguments, and the final `getSeverity()` method. The 13 SPL exception
+  classes support their native inheritance and constructors. Repeated native
+  constructor calls preserve omitted messages, zero codes, and null previous
+  exceptions according to PHP behavior.
 - `Stringable` and `__toString()` support implicit interface membership, signature
   validation, echo/print/interpolation, string casts and concatenation, weak string
   arguments/returns/properties, native string parameters, and comparisons (including
@@ -189,7 +194,7 @@ and invokable instances of implemented classes.
 Closure reference captures work, but general references and by-reference
 parameters/returns remain unfinished. Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception
-handlers, ErrorException/SPL exception classes, and complete compile-time fatal
+handlers, protected exception-property access (including severity), and complete compile-time fatal
 error distinctions remain unfinished.
 Other `declare` directives are not implemented. Shutdown callbacks, output
 handlers, and object destructor execution remain unimplemented.

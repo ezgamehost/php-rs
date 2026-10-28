@@ -1,0 +1,11 @@
+PHP 8.5.0 native exception comparison (2026-10-28)
+Command: python3 tools/check_native_exceptions.py --reference <php-8.5.0>/sapi/cli/php
+Runtime: target/debug/php-rs (cargo build)
+Reference: PHP 8.5.0, -n -d display_errors=stderr
+Comparison: stdout (including caught diagnostic text), exit status, stderr presence.
+This does not assert byte-for-byte agreement of uncaught diagnostics or warnings.
+Scopes: ErrorException arguments/severity/location, repeated constructors,
+SPL inheritance, native getters, weak/strict coercion, and constructor failures.
+Protected property layout, hooks, serialization, and error handlers are not covered.
+
+Cases: 440 Mismatches: 0

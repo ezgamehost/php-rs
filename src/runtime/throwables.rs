@@ -7,6 +7,20 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
         b"stringable" => ("Stringable", None),
         b"throwable" => ("Throwable", None),
         b"exception" => ("Exception", None),
+        b"errorexception" => ("ErrorException", Some("Exception")),
+        b"logicexception" => ("LogicException", Some("Exception")),
+        b"badfunctioncallexception" => ("BadFunctionCallException", Some("LogicException")),
+        b"badmethodcallexception" => ("BadMethodCallException", Some("BadFunctionCallException")),
+        b"domainexception" => ("DomainException", Some("LogicException")),
+        b"invalidargumentexception" => ("InvalidArgumentException", Some("LogicException")),
+        b"lengthexception" => ("LengthException", Some("LogicException")),
+        b"outofrangeexception" => ("OutOfRangeException", Some("LogicException")),
+        b"runtimeexception" => ("RuntimeException", Some("Exception")),
+        b"outofboundsexception" => ("OutOfBoundsException", Some("RuntimeException")),
+        b"overflowexception" => ("OverflowException", Some("RuntimeException")),
+        b"rangeexception" => ("RangeException", Some("RuntimeException")),
+        b"underflowexception" => ("UnderflowException", Some("RuntimeException")),
+        b"unexpectedvalueexception" => ("UnexpectedValueException", Some("RuntimeException")),
         b"error" => ("Error", None),
         b"typeerror" => ("TypeError", Some("Error")),
         b"argumentcounterror" => ("ArgumentCountError", Some("TypeError")),
@@ -32,6 +46,14 @@ impl Runtime {
             "<?php interface Stringable { public function __toString():string; }".to_owned()
         } else if canonical == "Throwable" {
             "<?php interface Throwable extends Stringable {}".to_owned()
+        } else if canonical == "ErrorException" {
+            "<?php class ErrorException extends Exception {
+                public function __construct(string $message='', int $code=0,
+                    int $severity=1, ?string $filename=null, ?int $line=null,
+                    ?Throwable $previous=null) {}
+                final public function getSeverity():int {}
+            }"
+            .to_owned()
         } else if let Some(parent) = parent_name {
             format!("<?php class {canonical} extends {parent} {{}}")
         } else {
@@ -60,6 +82,9 @@ impl Runtime {
             }
             function.native = Some(match function.name.rsplit(|b| *b == b':').next().unwrap() {
                 b"__toString" => NativeMethod::ThrowableToString,
+                b"__construct" if canonical == "ErrorException" => {
+                    NativeMethod::ErrorExceptionConstruct
+                }
                 b"__construct" => NativeMethod::ThrowableConstruct,
                 b"getMessage" => NativeMethod::GetMessage,
                 b"getCode" => NativeMethod::GetCode,
@@ -68,6 +93,7 @@ impl Runtime {
                 b"getPrevious" => NativeMethod::GetPrevious,
                 b"getTrace" => NativeMethod::GetTrace,
                 b"getTraceAsString" => NativeMethod::GetTraceAsString,
+                b"getSeverity" => NativeMethod::GetSeverity,
                 _ => unreachable!(),
             });
         }
@@ -86,7 +112,18 @@ impl Runtime {
         if canonical == "Throwable" {
             methods.extend(interfaces[0].methods.iter().cloned());
         }
-        methods.extend(declaration.methods.iter().cloned());
+        for own in &declaration.methods {
+            let name = own.name.rsplit(|b| *b == b':').next().unwrap();
+            methods.retain(|inherited| {
+                !inherited
+                    .name
+                    .rsplit(|b| *b == b':')
+                    .next()
+                    .unwrap()
+                    .eq_ignore_ascii_case(name)
+            });
+            methods.push(own.clone());
+        }
         let class = Rc::new(Class {
             name: canonical.as_bytes().to_vec(),
             declaration,
@@ -115,7 +152,8 @@ impl Runtime {
             message: Vec::new(),
             code: 0,
             file: self.source.name.clone(),
-            line,
+            line: line as i64,
+            severity: 1,
             previous: None,
         })
     }
@@ -123,6 +161,7 @@ impl Runtime {
     pub(super) fn native_throwable_method(
         &mut self,
         method: NativeMethod,
+        supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
         let Some(Value::Object(object)) = self.lookup(b"this") else {
@@ -139,7 +178,7 @@ impl Runtime {
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
             NativeMethod::ThrowableToString => unreachable!(),
-            NativeMethod::ThrowableConstruct => {
+            NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {
                     unreachable!()
                 };
@@ -147,13 +186,30 @@ impl Runtime {
                     unreachable!()
                 };
                 let previous = self.lookup(b"previous").unwrap();
-                data.message = message.to_vec();
-                data.code = code;
-                data.previous = if let Value::Object(previous) = previous {
-                    Some(previous)
-                } else {
-                    None
-                };
+                // Omitted message, zero code, and null previous leave existing
+                // state intact when a constructor is invoked again.
+                if supplied > 0 {
+                    data.message = message.to_vec();
+                }
+                if code != 0 {
+                    data.code = code;
+                }
+                if let Value::Object(previous) = previous {
+                    data.previous = Some(previous);
+                }
+                if matches!(method, NativeMethod::ErrorExceptionConstruct) {
+                    let Value::Int(severity) = self.lookup(b"severity").unwrap() else {
+                        unreachable!()
+                    };
+                    data.severity = severity;
+                    if let Value::String(filename) = self.lookup(b"filename").unwrap() {
+                        data.file = filename.to_vec();
+                        data.line = 0;
+                    }
+                    if let Value::Int(line) = self.lookup(b"line").unwrap() {
+                        data.line = line;
+                    }
+                }
                 Value::Null
             }
             NativeMethod::GetTrace => Value::Array(data.trace.clone()),
@@ -163,7 +219,8 @@ impl Runtime {
             NativeMethod::GetMessage => Value::String(data.message.clone().into()),
             NativeMethod::GetCode => Value::Int(data.code),
             NativeMethod::GetFile => Value::String(data.file.clone().into()),
-            NativeMethod::GetLine => Value::Int(data.line as i64),
+            NativeMethod::GetLine => Value::Int(data.line),
+            NativeMethod::GetSeverity => Value::Int(data.severity),
             NativeMethod::GetPrevious => data.previous.clone().map_or(Value::Null, Value::Object),
         })
     }
@@ -190,7 +247,8 @@ impl Runtime {
                 message: error.message.as_bytes().to_vec(),
                 code: 0,
                 file: file.to_vec(),
-                line: error.line,
+                line: error.line as i64,
+                severity: 1,
                 previous: None,
             })),
         }));
@@ -224,7 +282,11 @@ impl Runtime {
         .into_iter()
         .find_map(|(class, kind)| object.class.is_a(class).then_some(kind))
         .unwrap_or(ErrorKind::Error);
-        let mut error = Error::new(kind, String::from_utf8_lossy(&data.message), data.line);
+        let mut error = Error::new(
+            kind,
+            String::from_utf8_lossy(&data.message),
+            usize::try_from(data.line).unwrap_or(line),
+        );
         error.throwable = Some(object.clone());
         error
     }

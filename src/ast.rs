@@ -118,6 +118,7 @@ pub(crate) struct CatchClause {
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
     ThrowableConstruct,
+    ErrorExceptionConstruct,
     ThrowableToString,
     GetMessage,
     GetCode,
@@ -126,6 +127,7 @@ pub(crate) enum NativeMethod {
     GetPrevious,
     GetTrace,
     GetTraceAsString,
+    GetSeverity,
 }
 
 impl Expr {

@@ -20,7 +20,8 @@ pub(crate) struct ThrowableData {
     pub message: Vec<u8>,
     pub code: i64,
     pub file: Vec<u8>,
-    pub line: usize,
+    pub line: i64,
+    pub severity: i64,
     pub previous: Option<Rc<PhpObject>>,
 }
 impl Eq for PhpObject {}

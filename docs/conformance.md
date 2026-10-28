@@ -7,7 +7,7 @@ compatibility claims.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
-| Project `tests/phpt`, Rust and reference PHP | 55 | 0 | 0 |
+| Project `tests/phpt`, Rust and reference PHP | 56 | 0 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
@@ -530,3 +530,35 @@ the tested rules. Reference operations, error-handler reentrancy, and the other
 previously documented gaps remain incomplete; crashes or undefined behavior in
 the C reference engine are not compatibility targets. This supersedes the earlier
 string-offset object-conversion limitation.
+
+
+The native-exception slice adds `ErrorException` and all 13 SPL exception
+classes with their PHP 8.5 inheritance. `ErrorException::__construct()` accepts
+message, code, severity, nullable filename/line, and previous Throwable through
+positional or named arguments. A supplied filename with a null line resets the
+line to zero; otherwise null location arguments preserve creation metadata.
+Signed line values survive getters, string conversion, and uncaught diagnostics.
+The final `getSeverity()` getter defaults to `E_ERROR`, including subclasses
+whose constructors skip the parent. Native constructors now preserve an omitted
+message, a zero code, or a null previous exception on repeated calls; named
+arguments fill earlier omitted positions with their defaults. Argument conversion
+precedes native mutation, and argument-count/type errors retain the declaring
+method and boolean value names.
+
+All **756 Rust tests**, including **19 new regressions**, and **56 project PHPT
+fixtures** pass; the latter also match the PHP 8.5.0 reference. The reproducible
+[native-exception comparison](conformance/php-8.5.0-native-exceptions.txt) matches
+**440 cases with zero mismatches**, including weak/strict scalar conversion,
+Stringable inputs, invalid arguments, reentry, subclass construction, inherited
+methods, and signed integer limits. Previous exception, Stringable, and trace
+comparisons also match (286, 306, and 220 cases). Refreshed exceptions,
+inheritance, classes, return-types, and magic-method suites lose no passing
+fixtures. Formatting and Clippy checks pass.
+
+The [ErrorException manual](https://www.php.net/manual/en/class.errorexception.php),
+PHP 8.5.0 `Zend/zend_exceptions.c` and `ext/spl/spl_exceptions.stub.php`, and local
+reference probes establish these behaviors. Throwable metadata remains separate
+from ordinary object properties: protected exception-property access, severity
+property redeclarations, property hooks, reflection/serialization, and error
+handler APIs remain incomplete. This supersedes earlier notes listing the
+ErrorException and SPL exception classes as wholly unsupported.

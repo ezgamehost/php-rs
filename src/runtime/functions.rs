@@ -354,7 +354,17 @@ impl Runtime {
         if function.native.is_some() && !bound.extra.is_empty() {
             return Err(Error::new(
                 ErrorKind::ArgumentCountError,
-                "Too many arguments for internal method",
+                format!(
+                    "{}() expects {} {} arguments, {} given",
+                    String::from_utf8_lossy(&function.name),
+                    if function.parameters.is_empty() {
+                        "exactly"
+                    } else {
+                        "at most"
+                    },
+                    function.parameters.len(),
+                    function.parameters.len() + bound.extra.len()
+                ),
                 line,
             ));
         }
@@ -457,7 +467,7 @@ impl Runtime {
                     self.scope
                         .insert(b"this".to_vec(), cell(Value::Object(object)));
                 }
-                return self.native_throwable_method(native, line);
+                return self.native_throwable_method(native, supplied_fixed, line);
             }
             self.strict_types = function.strict_types;
             self.source = function.source.clone();

@@ -110,9 +110,13 @@ impl Runtime {
         };
         if matches!(
             function.native,
-            Some(crate::ast::NativeMethod::ThrowableConstruct)
+            Some(
+                crate::ast::NativeMethod::ThrowableConstruct
+                    | crate::ast::NativeMethod::ErrorExceptionConstruct
+            )
         ) && !strict
             && value == Value::Null
+            && !ty.contains("null")
             && (ty.contains("string") || ty.contains("int"))
         {
             self.warnings.push(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)));
@@ -122,7 +126,12 @@ impl Runtime {
                 Value::Int(0)
             });
         }
-        let given = builtins::debug_type(&value).to_owned();
+        let given = match (&value, function.native.is_some()) {
+            (Value::Bool(true), true) => "true",
+            (Value::Bool(false), true) => "false",
+            _ => builtins::debug_type(&value),
+        }
+        .to_owned();
         let source = function
             .native
             .is_none()
