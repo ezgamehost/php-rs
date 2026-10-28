@@ -136,6 +136,7 @@ pub(crate) struct CatchClause {
 pub(crate) enum NativeMethod {
     Reflection,
     AttributeConstruct,
+    SensitiveValue,
     ThrowableConstruct,
     ErrorExceptionConstruct,
     ThrowableToString,

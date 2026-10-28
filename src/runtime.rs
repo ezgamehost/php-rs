@@ -48,6 +48,7 @@ mod reference_paths;
 mod reference_types;
 pub(crate) mod reflection;
 mod scope_slots;
+mod sensitive_parameters;
 mod static_members;
 mod string_builtins;
 mod string_offsets;
@@ -696,6 +697,8 @@ impl Runtime {
         let line = expr.line;
         match &expr.kind {
             ExprKind::Eval(code) => {
+                // Zend emits the eval operation after compiling its argument.
+                let line = code.line;
                 let value = self.eval(code)?;
                 let code = self.string_bytes(&value, line)?;
                 self.eval_code(&code, line)

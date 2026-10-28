@@ -32,7 +32,7 @@ pub(super) fn cast(
             Value::Array(_) => value,
             Value::Object(object) => {
                 let mut array = PhpArray::default();
-                for (key, value) in object.snapshot().entries() {
+                for (key, value) in object.export_properties().entries() {
                     array.insert(
                         ArrayKey::from_value(&key.to_value(), line, warnings)?,
                         value.clone(),

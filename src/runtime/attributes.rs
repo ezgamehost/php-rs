@@ -34,6 +34,15 @@ impl Runtime {
                 "public function __construct() {}",
                 true,
             ),
+            b"sensitiveparametervalue" => (
+                "SensitiveParameterValue",
+                0,
+                "private readonly mixed $value;
+                public function __construct(mixed $value) {}
+                public function getValue(): mixed {}
+                public function __debugInfo(): array {}",
+                true,
+            ),
             b"deprecated" => (
                 "Deprecated",
                 87,
@@ -54,7 +63,12 @@ impl Runtime {
             b"delayedtargetvalidation" => ("DelayedTargetValidation", 127, "", true),
             _ => return None,
         };
-        let code = format!("<?php #[Attribute({target})] final class {canonical} {{ {body} }}");
+        let marker = if target == 0 {
+            String::new()
+        } else {
+            format!("#[Attribute({target})]")
+        };
+        let code = format!("<?php {marker} final class {canonical} {{ {body} }}");
         let (mut statements, _, _) =
             parser::parse(lexer::lex(code.as_bytes()).expect("native attribute source"))
                 .expect("native attribute declaration");
@@ -62,7 +76,11 @@ impl Runtime {
             unreachable!()
         };
         for method in &mut Rc::make_mut(&mut declaration).methods {
-            Rc::make_mut(method).native = Some(NativeMethod::AttributeConstruct);
+            Rc::make_mut(method).native = Some(if target == 0 {
+                NativeMethod::SensitiveValue
+            } else {
+                NativeMethod::AttributeConstruct
+            });
         }
         let mut properties = declaration.properties.clone();
         for property in &mut properties {
@@ -98,6 +116,7 @@ impl Runtime {
         };
         let names: &[&[u8]] = match object.class_name.as_str() {
             "Attribute" => &[b"flags"],
+            "SensitiveParameterValue" => &[b"value"],
             "Deprecated" => &[b"message", b"since"],
             "NoDiscard" => &[b"message"],
             _ => &[],

@@ -249,7 +249,11 @@ new request. The CLI returns the low eight bits of the requested status.
 - `debug_backtrace` returns active frames with live argument snapshots, optional
   receiver objects, argument omission, and frame limits. `debug_print_backtrace`
   shares exception trace formatting and omits the main-script terminator.
-  Sensitive-parameter redaction and configurable trace settings remain unfinished.
+  Sensitive fixed parameters and positional variadic arguments are wrapped in
+  `SensitiveParameterValue` in backtraces and exception traces. The wrapper supports
+  `getValue`, cloning, readonly private storage, and hidden dump/array-cast properties.
+  PHP 8.5.0's extra named variadic behavior is preserved; trace configuration,
+  serialization, property reflection, and uninitialized wrapper reads remain unfinished.
 - Core builtins: `var_dump`, `print_r`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,

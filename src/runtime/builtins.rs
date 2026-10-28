@@ -768,7 +768,7 @@ fn dump_inner(
                 out.extend_from_slice(b"*RECURSION*\n");
                 return;
             }
-            let properties = object.snapshot();
+            let properties = object.export_properties();
             out.extend_from_slice(
                 format!(
                     "object({})#{} ({}) {{\n",
@@ -783,10 +783,11 @@ fn dump_inner(
                 .properties
                 .iter()
                 .filter(|p| {
-                    p.ty.is_some()
-                        || properties
-                            .get(&ArrayKey::String(p.storage_name()))
-                            .is_some()
+                    !object.hides_properties()
+                        && (p.ty.is_some()
+                            || properties
+                                .get(&ArrayKey::String(p.storage_name()))
+                                .is_some())
                 })
                 .map(|p| ArrayKey::String(p.storage_name()))
                 .collect();

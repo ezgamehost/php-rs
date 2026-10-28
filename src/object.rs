@@ -61,6 +61,18 @@ pub(crate) struct ThrowableData {
 }
 impl Eq for PhpObject {}
 impl PhpObject {
+    pub(crate) fn hides_properties(&self) -> bool {
+        self.class.name == b"SensitiveParameterValue"
+    }
+
+    pub(crate) fn export_properties(&self) -> PhpArray {
+        if self.hides_properties() {
+            PhpArray::default()
+        } else {
+            self.snapshot()
+        }
+    }
+
     pub(crate) fn snapshot(&self) -> PhpArray {
         let properties = self.properties.borrow();
         let mut result = PhpArray::default();

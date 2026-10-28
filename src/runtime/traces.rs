@@ -7,6 +7,7 @@ use crate::ast::Parameter;
 pub(super) struct TraceFrame {
     fields: PhpArray,
     object: Option<Rc<crate::PhpObject>>,
+    sensitive: Vec<ArrayKey>,
     pub(super) internal: bool,
     arguments: Option<PhpArray>,
     fixed: Vec<Vec<u8>>,
@@ -85,6 +86,21 @@ impl TraceFrame {
                 }
             }
         }
+        for (key, _) in arguments.entries() {
+            // Zend appends extra named variadics after positional redaction.
+            let ArrayKey::Int(index) = key else { continue };
+            let parameter = parameters
+                .get(*index as usize)
+                .or_else(|| parameters.last().filter(|parameter| parameter.variadic));
+            if parameter.is_some_and(|parameter| {
+                parameter
+                    .attributes
+                    .iter()
+                    .any(|attribute| attribute.name.eq_ignore_ascii_case(b"SensitiveParameter"))
+            }) {
+                frame.sensitive.push(key.clone());
+            }
+        }
         frame
     }
 
@@ -111,6 +127,7 @@ impl TraceFrame {
         Self {
             internal: false,
             object: None,
+            sensitive: Vec::new(),
             fields,
             arguments,
             fixed: Vec::new(),
@@ -189,27 +206,53 @@ impl Runtime {
             .map(|value| self.native_int(value, name, 2, line))
             .transpose()?
             .unwrap_or(0) as i32;
-        let mut trace = PhpArray::default();
-        // The builtin's own frame is present for argument errors, but is not
-        // part of the requested backtrace. A zero limit means all frames.
-        for frame in self.trace_frames.iter().rev().skip(1) {
-            if limit != 0 && trace.len() as i64 >= i64::from(limit) {
-                break;
-            }
-            trace.append(frame.capture(self, options), line)?;
-        }
+        // Retain the builtin frame for argument errors, but omit it from a
+        // successful requested trace. Zero means no frame limit.
+        let trace = self.capture_trace_frames(1, options, limit);
         if print {
             self.output.extend(format_trace(&trace, false));
             Ok(Value::Null)
         } else {
-            Ok(Value::Array(Rc::new(trace)))
+            Ok(Value::Array(trace))
         }
     }
 
-    pub(super) fn capture_trace(&self) -> Rc<PhpArray> {
+    pub(super) fn capture_trace(&mut self) -> Rc<PhpArray> {
+        self.capture_trace_frames(0, 0, 0)
+    }
+
+    fn capture_trace_frames(&mut self, skip: usize, options: i32, limit: i32) -> Rc<PhpArray> {
+        let limit = if limit == 0 {
+            usize::MAX
+        } else {
+            limit.max(0) as usize
+        };
+        // Snapshot before allocating wrappers so no active-frame borrow spans
+        // allocation. Captured values have PHP array copy-on-write semantics.
+        let frames: Vec<_> = self
+            .trace_frames
+            .iter()
+            .rev()
+            .skip(skip)
+            .take(limit)
+            .map(|frame| (frame.capture(self, options), frame.sensitive.clone()))
+            .collect();
         let mut trace = PhpArray::default();
-        for frame in self.trace_frames.iter().rev() {
-            trace.append(frame.capture(self, 0), 0).expect("trace size");
+        for (mut frame, sensitive) in frames {
+            let Value::Array(fields) = &mut frame else {
+                unreachable!()
+            };
+            if let Some(Value::Array(arguments)) =
+                Rc::make_mut(fields).get_mut(&ArrayKey::String(b"args".to_vec()))
+            {
+                let arguments = Rc::make_mut(arguments);
+                for key in sensitive {
+                    if let Some(value) = arguments.get_mut(&key) {
+                        *value = self.sensitive_parameter_value(value.dereferenced());
+                    }
+                }
+            }
+            trace.append(frame, 0).expect("trace size");
         }
         Rc::new(trace)
     }

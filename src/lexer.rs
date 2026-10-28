@@ -105,7 +105,7 @@ impl Lexer<'_> {
     fn scan(&mut self) -> Result<Vec<Token>, Error> {
         let mut depth = usize::from(self.interpolation);
         while self.pos < self.source.len() {
-            let line = self.line;
+            let mut line = self.line;
             if !self.php {
                 let start = self.pos;
                 while self.pos < self.source.len() && self.opening() == 0 {
@@ -184,6 +184,8 @@ impl Lexer<'_> {
             {
                 Kind::Cast(name)
             } else if self.starts(b"<<<") {
+                // The string AST begins at the body, after the opening label.
+                line += 1;
                 self.heredoc()?
             } else if (c == b'b' || c == b'B')
                 && matches!(self.source.get(self.pos + 1), Some(b'\'' | b'"'))

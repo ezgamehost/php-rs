@@ -174,7 +174,11 @@ definition of completion.
    Protected method access follows the original non-private prototype. Debug backtrace
    capture/printing shares exception trace machinery, with live arguments, optional
    receiver objects, omission flags, frame limits, and both backtrace constants.
-   SensitiveParameter redaction and configurable trace settings remain incomplete.
+   SensitiveParameter redaction covers fixed and positional variadic parameters in
+   debug/exception traces, with native SensitiveParameterValue storage, access,
+   cloning, and hidden exported properties. Extra named variadic behavior follows
+   PHP 8.5.0. Configurable trace settings, serialization, property reflection, and
+   uninitialized wrapper reads remain incomplete.
    SPL autoload queues support callback
    identity, prepend/removal, recursive lookup guards, exceptions, default file
    extensions, and runtime class/interface/trait/member resolution. Remaining:

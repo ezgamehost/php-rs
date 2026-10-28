@@ -149,7 +149,7 @@ impl Runtime {
         Some(class)
     }
 
-    pub(super) fn throwable_data(&self, class: &Class, line: usize) -> Option<ThrowableData> {
+    pub(super) fn throwable_data(&mut self, class: &Class, line: usize) -> Option<ThrowableData> {
         class.is_a(b"Throwable").then(|| ThrowableData {
             trace: self.capture_trace(),
             message: Vec::new(),
@@ -170,6 +170,9 @@ impl Runtime {
         if matches!(method, NativeMethod::Reflection) {
             return self.native_reflection_method(supplied, line);
         }
+        if matches!(method, NativeMethod::SensitiveValue) {
+            return self.native_sensitive_value(line);
+        }
         if matches!(method, NativeMethod::AttributeConstruct) {
             return self.native_attribute_constructor(line);
         }
@@ -188,6 +191,7 @@ impl Runtime {
         Ok(match method {
             NativeMethod::ThrowableToString
             | NativeMethod::AttributeConstruct
+            | NativeMethod::SensitiveValue
             | NativeMethod::Reflection => unreachable!(),
             NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
                 let Value::String(message) = self.lookup(b"message").unwrap() else {

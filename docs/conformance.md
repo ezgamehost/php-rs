@@ -338,7 +338,7 @@ restrictions. The dedicated upstream `print_r` suite improves to 5 passes, 1 fai
 and 7 unsupported cases. All 797 existing Rust tests, 57 reference-checked project
 fixtures, formatting, and Clippy pass; no new custom tests were added. Attribute
 reflection/instantiation, full Override/Deprecated/NoDiscard runtime behavior,
-sensitive-parameter redaction, property hooks, and fatal diagnostic rendering remain
+property hooks and fatal diagnostic rendering remain
 unfinished.
 
 The [class reflection slice](conformance/php-8.5.0-class-reflection-hillclimb.txt)
@@ -457,9 +457,29 @@ live fixed parameter values and positional/named extra arguments. Printed backtr
 omit the exception formatter's main-script terminator and are empty at top level.
 
 All 797 existing Rust tests and 57 reference-checked project fixtures pass, as do
-formatting and Clippy. No new custom tests were added. SensitiveParameter redaction,
-complete closure debug properties, attribute construction trace details, generators,
+formatting and Clippy. No new custom tests were added. Complete closure debug properties, attribute construction trace details, generators,
 fibers, stream wrappers, and configurable exception trace settings remain unfinished.
+
+The [sensitive-parameter slice](conformance/php-8.5.0-sensitive-parameters-hillclimb.txt)
+adds 11 Zend passes with zero Zend or reflection regressions. Backtraces and exception
+traces wrap sensitive fixed parameters and positional variadic arguments in native
+`SensitiveParameterValue` objects. This includes named fixed arguments, closures, arrow
+functions, nested calls, and eval. Extra non-variadic arguments remain ordinary values;
+PHP 8.5.0 also leaves extra named variadic arguments unwrapped, and this is preserved.
+
+Wrappers retain captured values in private readonly storage, expose `getValue`, and
+support cloning. Their exported properties are hidden for dumps, array casts, and
+`get_object_vars`; `__debugInfo` returns an empty array. They reject dynamic properties
+and are not themselves attributes. Trace capture snapshots active frames before wrapper
+allocation, and throwable allocation retains its reserved object identity. Nowdoc and
+heredoc literals carry their body line; eval uses its argument's source line, matching
+the newly passing eval trace fixture.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, with
+formatting and Clippy also green. No new custom tests were added. Seven of the 18
+sensitive-parameter fixtures remain blocked by assert/debug/export/serialization APIs,
+property reflection, destructors, or expected fatal diagnostics. Uninitialized wrapper
+reads and complete trace configuration remain unfinished.
 
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
@@ -468,12 +488,13 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1463 | 3385 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1474 | 3374 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 141 | 314 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |
 | PHP 8.5.0 `Zend/tests/backtrace`, Rust and reference PHP for passing cases | 12 | 4 | 4 |
+| PHP 8.5.0 `Zend/tests/function_arguments/sensitive_parameter*.phpt`, Rust and reference PHP for passing cases | 11 | 7 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
@@ -933,7 +954,7 @@ passes, including gains from the preceding exception work. The official
 [getTraceAsString](https://www.php.net/manual/en/exception.gettraceasstring.php)
 manuals, PHP 8.5.0 Zend source, and local reference probes establish the semantics.
 Throwable `__toString()`, property layouts, configurable trace argument capture
-and truncation, sensitive-parameter redaction, and the other exception gaps above
+and truncation, and the other exception gaps above
 remain incomplete. This supersedes the earlier stack-trace limitation.
 
 

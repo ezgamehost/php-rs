@@ -465,6 +465,7 @@ impl Runtime {
         self.initialize_class(&class)?;
         let properties = self.property_defaults(&class)?;
         self.next_object_id += 1;
+        let object_id = self.next_object_id;
         let object = Rc::new(PhpObject {
             reflection: RefCell::default(),
             throwable: RefCell::new(self.throwable_data(&class, line)),
@@ -473,7 +474,7 @@ impl Runtime {
             properties: RefCell::new(properties),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
-            object_id: self.next_object_id,
+            object_id,
         });
         if !call_constructor {
             return Ok(Value::Object(object));
