@@ -266,6 +266,7 @@ impl Runtime {
             }
         }
         Ok(Rc::new(Class {
+            aliases: RefCell::default(),
             interfaces,
             name: decl.name.clone(),
             declaration: decl,
@@ -287,11 +288,15 @@ impl Runtime {
             .strip_prefix(b"\\")
             .unwrap_or(name)
             .to_ascii_lowercase();
+        if let Some(class) = self.builtin_classes.borrow().get(&name) {
+            return Some(class.clone());
+        }
         if let Some(class) = self.builtin_throwable_class(&name) {
             return Some(class);
         }
         if name == b"stdclass" {
-            return Some(Rc::new(Class {
+            let class = Rc::new(Class {
+                aliases: RefCell::default(),
                 interfaces: Vec::new(),
                 name: b"stdClass".to_vec(),
                 parent: None,
@@ -325,7 +330,11 @@ impl Runtime {
                     methods: Vec::new(),
                     line: 0,
                 }),
-            }));
+            });
+            self.builtin_classes
+                .borrow_mut()
+                .insert(name, class.clone());
+            return Some(class);
         }
         self.classes.get(&name).cloned()
     }

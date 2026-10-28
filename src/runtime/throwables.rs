@@ -125,6 +125,7 @@ impl Runtime {
             methods.push(own.clone());
         }
         let class = Rc::new(Class {
+            aliases: RefCell::default(),
             name: canonical.as_bytes().to_vec(),
             declaration,
             parent,

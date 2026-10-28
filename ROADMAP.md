@@ -102,6 +102,9 @@ definition of completion.
    Anonymous classes reuse ordinary class linking with constructor arguments,
    readonly declarations, inheritance, interfaces, traits, and declaration identity.
    Enclosing function and anonymous class scopes remain distinct for magic constants.
+   Class aliases share linked identity and storage, including aliases of interfaces,
+   traits, anonymous classes, and implemented native classes. Inheritance queries
+   support aliases and distinguish source autoloading from target lookup.
    Traits support nested composition before inheritance, method precedence,
    `insteadof`, aliases, visibility/final adaptations, abstract requirements,
    property/constant compatibility checks, and lexical magic constants.

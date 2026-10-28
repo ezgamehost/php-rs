@@ -122,13 +122,31 @@ follows PHP 8.5.0 `Zend/zend_compile.c` and upstream anonymous-class fixtures.
 All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
 and Clippy pass, without new custom tests. Object-handle reuse, reflection,
 serialization, attribute validation, and complete diagnostic display remain gaps.
+The [class-alias and inheritance-query slice](conformance/php-8.5.0-class-aliases-hillclimb.txt)
+adds 17 Zend passes without regressions. `class_alias` maps aliases to an existing
+linked class and records the alias for type checks on existing objects and their
+descendants. Aliases share methods, static storage, and canonical class names;
+interfaces, traits, anonymous classes, and implemented native classes are supported.
+`stdClass` now has stable linked identity within a request. Alias source lookup
+honors its autoload flag, alias targets are case insensitive, and reserved names,
+duplicates, and missing sources produce diagnostics. `is_a` and `is_subclass_of`
+autoload permitted string sources but never their target names. PHP 8.5.0
+`Zend/zend_builtin_functions.c` and `Zend/zend_API.c` establish these rules.
+All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
+and Clippy pass. The focused class-alias plus anonymous-alias run records
+12 passes, 14 failures, and 1 unsupported case; six standard inheritance-query
+fixtures record 2 passes and 4 failures. The FILE section of upstream
+`Zend/tests/is_a.phpt` also matches expected output and reference exit status when
+executed directly; its INI section remains unsupported by the runner and is not
+counted as a pass. Closure class aliases, declaration-list APIs, complete native
+class coverage, and exact warning/compile-fatal behavior remain incomplete.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1115 | 3733 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1132 | 3716 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

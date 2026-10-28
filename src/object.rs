@@ -94,6 +94,7 @@ impl std::fmt::Debug for PhpObject {
 /// Linked class layout. Inherited methods retain their declaring function identity.
 #[derive(Debug)]
 pub(crate) struct Class {
+    pub aliases: RefCell<Vec<Vec<u8>>>,
     pub interfaces: Vec<Rc<Class>>,
     pub declaration: Rc<ClassDecl>,
     pub name: Vec<u8>,
@@ -116,6 +117,11 @@ impl Class {
     pub fn is_a(&self, name: &[u8]) -> bool {
         let name = name.strip_prefix(b"\\").unwrap_or(name);
         self.name.eq_ignore_ascii_case(name)
+            || self
+                .aliases
+                .borrow()
+                .iter()
+                .any(|alias| alias.eq_ignore_ascii_case(name))
             || self.parent.as_ref().is_some_and(|p| p.is_a(name))
             || self.interfaces.iter().any(|i| i.is_a(name))
     }
