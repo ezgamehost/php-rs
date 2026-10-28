@@ -19,8 +19,8 @@ impl Runtime {
         }
     }
 
-    fn require_member_class(&self, name: &[u8], line: usize) -> Result<Rc<Class>, Error> {
-        self.find_class(name).ok_or_else(|| {
+    fn require_member_class(&mut self, name: &[u8], line: usize) -> Result<Rc<Class>, Error> {
+        self.load_class(name, line)?.ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
                 format!("Class \"{}\" not found", String::from_utf8_lossy(name)),
@@ -66,12 +66,18 @@ impl Runtime {
             .expect("qualified constant");
         let name = &qualified[split + 2..];
         let class_name = self.contextual_class_name(&qualified[..split], line)?;
-        let Some(class) = self.find_class(&class_name) else {
+        let Some(class) = self.load_class(&class_name, line)? else {
             return if defined {
                 Ok(Value::Bool(false))
             } else {
-                self.require_member_class(&class_name, line)
-                    .map(|_| Value::Null)
+                Err(Error::new(
+                    ErrorKind::Error,
+                    format!(
+                        "Class \"{}\" not found",
+                        String::from_utf8_lossy(&class_name)
+                    ),
+                    line,
+                ))
             };
         };
         if defined && class.declaration.is_trait {

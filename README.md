@@ -52,6 +52,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - PHP operator precedence, short-circuit evaluation, and integer overflow promotion.
+- SPL autoloader registration, removal, inspection, and explicit dispatch, with
+  default extension-based file loading, recursion guards, and loader exceptions.
+  Runtime class, interface, trait, static member, and callable lookups invoke loaders.
 - Request-local `error_reporting` masks and `@` suppression, including nested scopes,
   exception restoration, and explicit mask changes inside suppressed expressions.
 - Named functions, recursion, local scopes, constant default arguments,

@@ -12,6 +12,7 @@ use std::{
 };
 
 mod array_callbacks;
+mod autoload;
 mod builtins;
 mod callbacks;
 mod casting;
@@ -53,6 +54,9 @@ pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,
+    autoloaders: Vec<Option<autoload::Autoloader>>,
+    autoloading: HashSet<Vec<u8>>,
+    autoload_extensions: Option<Vec<u8>>,
     /// Global inputs before execute, and the global values after it returns.
     pub variables: HashMap<Vec<u8>, Value>,
     scope: Scope,

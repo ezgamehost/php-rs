@@ -3,7 +3,7 @@ use crate::{ast::Visibility, object::Class};
 
 impl Runtime {
     pub(super) fn resolve_native_callback(
-        &self,
+        &mut self,
         value: &Value,
         line: usize,
     ) -> Result<functions::CallTarget, Error> {

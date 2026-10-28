@@ -139,7 +139,7 @@ impl Runtime {
     }
 
     pub(super) fn native_callback(
-        &self,
+        &mut self,
         value: &Value,
         function: &str,
         position: usize,
@@ -150,6 +150,7 @@ impl Runtime {
             return Ok(None);
         }
         self.resolve_native_callback(value, line).map(Some).map_err(|error| {
+            if error.throwable.is_some() || error.kind == ErrorKind::UnwindExit { return error; }
             Error::new(ErrorKind::TypeError, format!(
                 "{function}(): Argument #{position} ($callback) must be a valid callback{}, {}",
                 if nullable { " or null" } else { "" }, self.callback_error(value, &error),
@@ -180,7 +181,11 @@ impl Runtime {
         result
     }
 
-    pub(super) fn resolve_callable(&self, value: Value, line: usize) -> Result<CallTarget, Error> {
+    pub(super) fn resolve_callable(
+        &mut self,
+        value: Value,
+        line: usize,
+    ) -> Result<CallTarget, Error> {
         match value {
             Value::Object(object) => {
                 if let Some(function) = objects::method(&object.class, b"__invoke") {
@@ -234,7 +239,7 @@ impl Runtime {
         }
     }
 
-    fn resolve_name(&self, name: Vec<u8>, line: usize) -> Result<CallTarget, Error> {
+    fn resolve_name(&mut self, name: Vec<u8>, line: usize) -> Result<CallTarget, Error> {
         if let Some(separator) = name.windows(2).position(|part| part == b"::") {
             return self.resolve_class_method(
                 &name[..separator],

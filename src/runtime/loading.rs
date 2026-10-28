@@ -246,6 +246,44 @@ impl Runtime {
         fs::canonicalize(self.working_directory().join(&path))
             .or_else(|_| fs::canonicalize(self.source.directory.join(path)))
     }
+
+    pub(super) fn default_autoload(&mut self, name: &[u8], extensions: &[u8]) -> Result<(), Error> {
+        let mut base = name.to_ascii_lowercase();
+        for byte in &mut base {
+            if *byte == b'\\' {
+                *byte = std::path::MAIN_SEPARATOR as u8;
+            }
+        }
+        let mut extensions = extensions.split(|b| *b == b',').peekable();
+        while let Some(extension) = extensions.next() {
+            if extension.is_empty() && extensions.peek().is_none() {
+                break;
+            }
+            let mut filename = base.clone();
+            filename.extend(extension);
+            let Ok(path) = self.resolve_include(&filename) else {
+                continue;
+            };
+            if self.included_set.contains(&path) {
+                continue;
+            }
+            let Ok(code) = fs::read(&path) else {
+                continue;
+            };
+            self.record_include(path.clone());
+            // zend_execute uses the nearest user frame's symbol table, but
+            // the loaded top-level code has no lexical class scope.
+            let context = self.class_context.take();
+            let result =
+                self.execute_unit(&code, Rc::new(Source::file(&path)), Value::Int(1), None);
+            self.class_context = context;
+            result?;
+            if self.find_class(name).is_some() {
+                break;
+            }
+        }
+        Ok(())
+    }
 }
 
 fn code_document(code: &[u8]) -> Vec<u8> {

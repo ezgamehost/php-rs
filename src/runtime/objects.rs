@@ -58,6 +58,15 @@ impl Runtime {
         Ok(())
     }
     pub(super) fn register_class(&mut self, decl: Rc<ClassDecl>) -> Result<(), Error> {
+        if let Some(parent) = &decl.parent {
+            self.load_class(parent, decl.line)?;
+        }
+        for name in &decl.interfaces {
+            self.load_class(name, decl.line)?;
+        }
+        for name in decl.trait_uses.iter().flat_map(|use_| &use_.names) {
+            self.load_class(name, decl.line)?;
+        }
         let class = self.link_class(decl)?;
         let name = class.name.to_ascii_lowercase();
         self.classes.insert(name.clone(), class.clone());
@@ -374,7 +383,7 @@ impl Runtime {
                 }
             }
         };
-        let class = self.find_class(&name).ok_or_else(|| {
+        let class = self.load_class(&name, line)?.ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
                 format!("Class \"{}\" not found", String::from_utf8_lossy(&name)),
@@ -477,7 +486,7 @@ impl Runtime {
         Ok(Value::Object(object))
     }
     pub(super) fn resolve_method(
-        &self,
+        &mut self,
         value: Value,
         name: &[u8],
         line: usize,

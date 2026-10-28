@@ -95,14 +95,14 @@ impl Runtime {
     }
 
     pub(super) fn resolve_class_method(
-        &self,
+        &mut self,
         class: &[u8],
         name: &[u8],
         forwarding: bool,
         allow_this: bool,
         line: usize,
     ) -> Result<CallTarget, Error> {
-        let class = self.find_class(class).ok_or_else(|| {
+        let class = self.load_class(class, line)?.ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
                 format!("Class \"{}\" not found", String::from_utf8_lossy(class)),
@@ -257,7 +257,7 @@ impl Runtime {
                     {
                         return Ok(Value::Bool(false));
                     }
-                    Some(self.find_class(&class).ok_or_else(|| Error::new(ErrorKind::TypeError, "get_parent_class(): Argument #1 must be an object or a valid class name", line))?)
+                    Some(self.load_class(&class, line)?.ok_or_else(|| Error::new(ErrorKind::TypeError, "get_parent_class(): Argument #1 must be an object or a valid class name", line))?)
                 }
                 _ => {
                     return Err(Error::new(

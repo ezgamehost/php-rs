@@ -1,0 +1,54 @@
+Before: 5256 cases; 955 passed, 3893 failed, 408 unsupported
+After: 5256 cases; 972 passed, 3876 failed, 408 unsupported
+New passes: 17; regressions: 0
+NEW PASS: Zend/tests/autoload/bug26697.phpt
+NEW PASS: Zend/tests/autoload/bug42798.phpt
+NEW PASS: Zend/tests/autoload/bug46665.phpt
+NEW PASS: Zend/tests/autoload/bug61011.phpt
+NEW PASS: Zend/tests/bug71163.phpt
+NEW PASS: Zend/tests/bug78926.phpt
+NEW PASS: Zend/tests/bug79022.phpt
+NEW PASS: Zend/tests/callable_param_exception_leak.phpt
+NEW PASS: Zend/tests/catch.phpt
+NEW PASS: Zend/tests/exceptions/bug65254.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/autoload.phpt
+NEW PASS: Zend/tests/instanceof.phpt
+NEW PASS: Zend/tests/traits/bug62907.phpt
+NEW PASS: Zend/tests/traits/bug63305.phpt
+NEW PASS: Zend/tests/type_declarations/variance/mixed_return_type.phpt
+NEW PASS: Zend/tests/type_declarations/variance/unlinked_parent_1.phpt
+NEW PASS: Zend/tests/type_declarations/variance/unlinked_parent_2.phpt
+
+Most frequent remaining failure messages:
+548: ParseError: Expected ';'
+249: ParseError: Expected expression
+188: ParseError: Invalid non-public member declaration
+180: Error: Class "ReflectionClass" not found
+125: Error: Call to undefined function set_error_handler()
+122: ParseError: Expected parameter variable
+62: Error: Class "Fiber" not found
+50: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+38: ParseError: Expected ')'
+33: ParseError: Set visibility requires a static property
+31: ParseError: Invalid interface member declaration
+28: Error: Call to undefined function fopen()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

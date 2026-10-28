@@ -37,6 +37,12 @@ pub(super) enum Builtin {
     FuncGetArg,
     FuncGetArgs,
     ErrorReporting,
+    AutoloadRegister,
+    AutoloadUnregister,
+    AutoloadFunctions,
+    AutoloadCall,
+    Autoload,
+    AutoloadExtensions,
 }
 impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
@@ -81,6 +87,12 @@ impl Builtin {
             b"func_get_arg" => Self::FuncGetArg,
             b"func_get_args" => Self::FuncGetArgs,
             b"error_reporting" => Self::ErrorReporting,
+            b"spl_autoload_register" => Self::AutoloadRegister,
+            b"spl_autoload_unregister" => Self::AutoloadUnregister,
+            b"spl_autoload_functions" => Self::AutoloadFunctions,
+            b"spl_autoload_call" => Self::AutoloadCall,
+            b"spl_autoload" => Self::Autoload,
+            b"spl_autoload_extensions" => Self::AutoloadExtensions,
             _ => return None,
         })
     }
@@ -102,6 +114,16 @@ impl Builtin {
             Self::Exit => &[("status", true, false)],
             Self::GetIncludedFiles | Self::FuncNumArgs | Self::FuncGetArgs => &[],
             Self::FuncGetArg => &[("position", false, false)],
+            Self::AutoloadRegister => &[
+                ("callback", true, false),
+                ("throw", true, false),
+                ("prepend", true, false),
+            ],
+            Self::AutoloadUnregister => &[("callback", false, false)],
+            Self::AutoloadFunctions => &[],
+            Self::AutoloadCall => &[("class", false, false)],
+            Self::Autoload => &[("class", false, false), ("file_extensions", true, false)],
+            Self::AutoloadExtensions => &[("file_extensions", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
             Self::Strlen => &[("string", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
@@ -165,6 +187,17 @@ impl Runtime {
         line: usize,
         dynamic: bool,
     ) -> Result<Value, Error> {
+        if matches!(
+            builtin,
+            Builtin::AutoloadRegister
+                | Builtin::AutoloadUnregister
+                | Builtin::AutoloadFunctions
+                | Builtin::AutoloadCall
+                | Builtin::Autoload
+                | Builtin::AutoloadExtensions
+        ) {
+            return self.autoload_builtin(builtin, &args, line);
+        }
         if matches!(builtin, Builtin::ErrorReporting) {
             let previous = self.diagnostics.reporting;
             if let Some(value) = args[0]
@@ -216,7 +249,13 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
-            Builtin::ErrorReporting => unreachable!(),
+            Builtin::ErrorReporting
+            | Builtin::AutoloadRegister
+            | Builtin::AutoloadUnregister
+            | Builtin::AutoloadFunctions
+            | Builtin::AutoloadCall
+            | Builtin::Autoload
+            | Builtin::AutoloadExtensions => unreachable!(),
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
             Builtin::GetObjectVars => match first {
@@ -235,11 +274,18 @@ impl Runtime {
             },
             Builtin::ClassExists | Builtin::InterfaceExists | Builtin::TraitExists => {
                 let class = self.native_string(first, &name, 1, line)?;
-                if let Some(autoload) = &args[1] {
-                    self.native_bool(autoload, &name, 2, line)?;
-                }
+                let autoload = args[1]
+                    .as_ref()
+                    .map(|value| self.native_bool(value, &name, 2, line))
+                    .transpose()?
+                    .unwrap_or(true);
+                let found = if autoload {
+                    self.load_class(&class, line)?
+                } else {
+                    self.find_class(&class)
+                };
                 Ok(Value::Bool(
-                    self.find_class(&class).is_some_and(|c| {
+                    found.is_some_and(|c| {
                         c.declaration.is_interface == matches!(builtin, Builtin::InterfaceExists)
                             && c.declaration.is_trait == matches!(builtin, Builtin::TraitExists)
                     }) || matches!(builtin, Builtin::ClassExists)
@@ -253,7 +299,7 @@ impl Runtime {
                 let member = self.native_string(args[1].as_ref().unwrap(), &name, 2, line)?;
                 let class = match first {
                     Value::Object(object) => Some(object.class.clone()),
-                    Value::String(name) => self.find_class(&name.bytes()),
+                    Value::String(name) => self.load_class(&name.bytes(), line)?,
                     Value::Closure(_) => None,
                     _ => {
                         return Err(Error::new(
@@ -439,7 +485,7 @@ impl Runtime {
             }
         }
     }
-    fn native_string(
+    pub(super) fn native_string(
         &mut self,
         value: &Value,
         function: &str,
@@ -488,7 +534,7 @@ impl Runtime {
         self.warn_null(value, function, position, "int", line);
         value.integer(line, &mut self.diagnostics)
     }
-    fn native_bool(
+    pub(super) fn native_bool(
         &mut self,
         value: &Value,
         function: &str,

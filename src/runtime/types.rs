@@ -31,7 +31,7 @@ impl Runtime {
             return Ok(None);
         };
         let ty = &resolved;
-        if ty.accepts(&value) || (ty.contains("callable") && self.is_callable(&value)) {
+        if ty.accepts(&value) || (ty.contains("callable") && self.is_callable(&value, line)?) {
             return Ok(Some(value));
         }
         if !strict && ty.contains("string") && self.can_stringify(&value) {
@@ -102,8 +102,14 @@ impl Runtime {
         None
     }
 
-    fn is_callable(&self, value: &Value) -> bool {
-        self.resolve_callable(value.clone(), 0).is_ok()
+    fn is_callable(&mut self, value: &Value, line: usize) -> Result<bool, Error> {
+        match self.resolve_callable(value.clone(), line) {
+            Ok(_) => Ok(true),
+            Err(error) if error.throwable.is_some() || error.kind == ErrorKind::UnwindExit => {
+                Err(error)
+            }
+            Err(_) => Ok(false),
+        }
     }
 
     pub(super) fn check_argument(

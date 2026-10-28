@@ -102,7 +102,10 @@ definition of completion.
    `var_dump`, `strlen`, array keys/values/key existence, counting, and function
    existence implemented. Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
-   internal callback argument coercion. Remaining: configurable include paths, stream wrappers,
+   internal callback argument coercion. SPL autoload queues support callback
+   identity, prepend/removal, recursive lookup guards, exceptions, default file
+   extensions, and runtime class/interface/trait/member resolution. Remaining:
+   inheritance-variance autoloading, configurable include paths, stream wrappers,
    the other core and standard builtins, streams and
    filesystem, shutdown callbacks, output buffering, serialization, date/time, JSON, PCRE, SPL,
    encoding, networking, sessions, and remaining bundled extension surfaces.

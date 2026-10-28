@@ -42,13 +42,33 @@ initializers reject `@`. Existing Rust tests (797), reference-checked project
 PHPT fixtures (57), formatting, and Clippy all pass. No new custom tests or
 matrices were added. Error handlers, diagnostic interleaving, and exact fatal
 rendering remain incomplete.
+The [autoloading slice](conformance/php-8.5.0-autoload-hillclimb.txt) adds
+17 passing Zend cases with no regressions. SPL callback queues retain resolved
+callables, support duplicate registration, prepend/removal, and inspection, and
+observe changes made during dispatch. Runtime class, interface, trait, static
+member, and callable lookups load missing classes with a case-insensitive
+recursion guard. `class_exists` and related APIs honor autoload flags. Loader
+exceptions propagate through callable validation; `instanceof` and catch matching
+do not initiate loading. Default autoloading searches lowercased filenames with
+configurable extensions, includes each file once, and shares the caller's symbol
+table without its lexical class scope. Behavior follows the
+[PHP autoloading manual](https://www.php.net/manual/en/language.oop5.autoload.php)
+and PHP 8.5.0 `ext/spl/php_spl.c`/`Zend/zend_execute_API.c`.
+The focused Zend/autoload plus SPL/autoload runner records 8 passes, 13 failures,
+and 11 unsupported fixtures. Separately executing the ten upstream SPL fixtures
+that request only `include_path=.` matches reference output and exit status for
+nine; the remaining fixture requires object destruction. These manual executions
+do not change the runner's unsupported counts. Existing 797 Rust tests, 57
+reference-checked project fixtures, formatting, and Clippy pass. Inheritance
+variance autoloading, destructor callbacks, configurable include paths, and
+exact fatal diagnostics remain incomplete.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 955 | 3893 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 972 | 3876 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
