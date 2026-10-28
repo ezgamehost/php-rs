@@ -81,8 +81,12 @@ impl Runtime {
             let Some((key, reference)) = next else {
                 break;
             };
-            let mut destination = self.location(value_target)?;
-            self.bind_reference_location(&mut destination, reference, value_target.line)?;
+            if matches!(value_target.kind, ExprKind::Destructure(_)) {
+                self.destructure_reference(value_target, reference)?;
+            } else {
+                let mut destination = self.location(value_target)?;
+                self.bind_reference_location(&mut destination, reference, value_target.line)?;
+            }
             if let Some(target) = key_target {
                 self.assign_target(target, key.to_value())?;
             }

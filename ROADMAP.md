@@ -77,7 +77,10 @@ definition of completion.
    Reference variadics retain positional/named caller cells and apply typed entry
    coercion. Array argument unpacking separates copies before binding selected
    elements, and argument inspection snapshots live referenced values.
-   Remaining: property references, object reference iteration, reference destructuring, cycle collection,
+   Reference destructuring supports nested/keyed/skipped entries and foreach,
+   preserving source cells across rebinding and side effects in key expressions.
+   Calls returning values produce temporary reference targets with notices.
+   Remaining: property references, object reference iteration, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
    by-reference returns, Traversable unpacking and promoted property references,

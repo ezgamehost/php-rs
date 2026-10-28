@@ -14,9 +14,12 @@ fn pattern(mut expr: Expr, outer_list: Option<bool>) -> Result<Expr, Error> {
     if outer_list.is_some_and(|outer| outer != list) {
         return Err(Error::parse("Cannot mix [] and list()", expr.line));
     }
-    let keyed = elements
-        .iter()
-        .any(|element| matches!(element, ArrayElement::Entry(Some(_), _)));
+    let keyed = elements.iter().any(|element| {
+        matches!(
+            element,
+            ArrayElement::Entry(Some(_), _) | ArrayElement::Reference(Some(_), _)
+        )
+    });
     let mut targets = Vec::new();
     let mut has_target = false;
     for element in elements {
@@ -24,6 +27,13 @@ fn pattern(mut expr: Expr, outer_list: Option<bool>) -> Result<Expr, Error> {
             ArrayElement::Hole if !keyed => targets.push(ArrayElement::Hole),
             ArrayElement::Entry(key, value) if key.is_some() == keyed => {
                 targets.push(ArrayElement::Entry(key, pattern(value, Some(list))?));
+                has_target = true;
+            }
+            ArrayElement::Reference(key, value) if key.is_some() == keyed => {
+                if !value.is_writable() {
+                    return Err(Error::parse("Cannot assign to expression", value.line));
+                }
+                targets.push(ArrayElement::Reference(key, value));
                 has_target = true;
             }
             ArrayElement::Unpack(_) => {
@@ -297,6 +307,26 @@ impl Validator {
                 self.expression(right, false)?;
             }
             ExprKind::Assign(left, op, right) => {
+                if left.has_destructure_references() {
+                    let mut source = right.as_ref();
+                    while let ExprKind::Group(inner) = &source.kind {
+                        source = inner;
+                    }
+                    let call = matches!(source.kind, ExprKind::Call(_, _))
+                        || matches!(&source.kind, ExprKind::Binary(op, _, _) if op == "|>");
+                    if !source.is_writable() && !call {
+                        return Err(Error::parse(
+                            "Cannot assign reference to non referenceable value",
+                            right.line,
+                        ));
+                    }
+                    if source.has_nullsafe_chain() {
+                        return Err(Error::parse(
+                            "Cannot take reference of a nullsafe chain",
+                            right.line,
+                        ));
+                    }
+                }
                 self.expression(left, true)?;
                 self.expression(right, op == "=&")?;
             }

@@ -918,6 +918,9 @@ impl Runtime {
                 if op == "=&" {
                     return self.assign_reference(target, expr, line);
                 }
+                if target.has_destructure_references() {
+                    return self.assign_destructure_references(target, expr);
+                }
                 if matches!(target.kind, ExprKind::Destructure(_)) {
                     let value = self.eval(expr)?;
                     return self.assign_target(target, value);

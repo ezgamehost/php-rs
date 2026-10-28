@@ -163,6 +163,17 @@ impl Expr {
         }
     }
 
+    pub fn has_destructure_references(&self) -> bool {
+        match &self.kind {
+            ExprKind::Destructure(elements) => elements.iter().any(|element| match element {
+                ArrayElement::Reference(_, _) => true,
+                ArrayElement::Entry(_, value) => value.has_destructure_references(),
+                _ => false,
+            }),
+            _ => false,
+        }
+    }
+
     pub fn is_writable(&self) -> bool {
         if self.has_nullsafe_chain() {
             return false;

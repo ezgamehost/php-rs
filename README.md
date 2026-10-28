@@ -47,8 +47,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.
-- Value destructuring with `[]` and `list()`, including nested patterns, explicit
-  keys, skipped entries, indexed targets, and `foreach`.
+- Value and reference destructuring with `[]` and `list()`, including nested
+  patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
+  Reference patterns preserve source bindings across self-rebinding and key
+  expressions; missing referenced elements initialize without read warnings.
 - Variables, assignment, arithmetic, concatenation, scalar comparisons,
   boolean and bitwise operations, signed shifts, null coalescing, ternary expressions, and numeric increments.
 - Reference assignment between named/dynamic variables, individual `$GLOBALS`
@@ -243,7 +245,7 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
 reference captures, and fixed reference parameters work. Property references,
-object reference iteration, reference destructuring, Traversable unpacking, promoted property
+object reference iteration, Traversable unpacking, promoted property
 references, by-reference returns, and cycle collection remain unfinished.
 Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception

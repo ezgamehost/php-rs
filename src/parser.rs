@@ -332,6 +332,7 @@ impl Parser {
                 (None, first)
             };
             let value = targets::assignment_target(value)?;
+            by_reference |= value.has_destructure_references();
             if key.as_ref().is_some_and(|key| !key.is_writable()) {
                 return Err(Error::parse(
                     "Invalid foreach assignment target",
