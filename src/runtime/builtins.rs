@@ -586,7 +586,7 @@ pub(super) fn debug_type(value: &Value) -> &str {
         Value::String(_) => "string",
         Value::Array(_) => "array",
         Value::Closure(_) => "Closure",
-        Value::Object(object) => &object.class_name,
+        Value::Object(object) => object.class_name.split('\0').next().unwrap(),
     }
 }
 fn count(array: &PhpArray, recursive: bool) -> i64 {
@@ -631,7 +631,7 @@ fn dump_inner(
             out.extend_from_slice(
                 format!(
                     "object({})#{} ({}) {{\n",
-                    object.class_name,
+                    object.class_name.split('\0').next().unwrap(),
                     object.object_id,
                     properties.len()
                 )

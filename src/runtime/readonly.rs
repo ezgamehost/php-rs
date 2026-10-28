@@ -52,7 +52,7 @@ impl Runtime {
         let initialized = object.properties.borrow().get(&key).is_some();
         let qualified = format!(
             "{}::${}",
-            String::from_utf8_lossy(&owner.name),
+            owner.display_name(),
             String::from_utf8_lossy(&location.name)
         );
         // Unsetting an offset in absent storage is a no-op, including when the
@@ -80,7 +80,7 @@ impl Runtime {
         }
         let scope = self.class_context.as_ref().map_or_else(
             || "global scope".to_owned(),
-            |c| format!("scope {}", String::from_utf8_lossy(&c.scope.name)),
+            |c| format!("scope {}", c.scope.display_name()),
         );
         Err(Error::new(
             ErrorKind::Error,

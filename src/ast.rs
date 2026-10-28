@@ -27,6 +27,7 @@ pub(crate) enum ExprKind {
     Call(Box<Expr>, Vec<Argument>),
     Callable(Box<Expr>),
     Lambda(Rc<LambdaDecl>),
+    AnonymousClass(Rc<ClassDecl>),
     New(Box<Expr>, Vec<Argument>),
     Property(Box<Expr>, Box<Expr>),
     NullsafeProperty(Box<Expr>, Box<Expr>),

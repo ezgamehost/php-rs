@@ -40,6 +40,7 @@ pub(crate) fn parse_source(
         static_names: HashSet::new(),
         source,
         function_name: Vec::new(),
+        function_class: Vec::new(),
         class_name: Vec::new(),
         class_parent: None,
         trait_name: Vec::new(),
@@ -63,6 +64,7 @@ struct Parser {
     static_names: HashSet<Vec<u8>>,
     source: Rc<crate::source::Source>,
     function_name: Vec<u8>,
+    function_class: Vec<u8>,
     class_name: Vec<u8>,
     class_parent: Option<Vec<u8>>,
     trait_name: Vec<u8>,
@@ -174,13 +176,13 @@ impl Parser {
             return self.try_statement();
         }
         if self.eat("class") {
-            return self.class_declaration(false, false, false, false, false);
+            return self.class_declaration(false, false, false, false, false, None);
         }
         if self.eat("interface") {
-            return self.class_declaration(false, false, true, true, false);
+            return self.class_declaration(false, false, true, true, false, None);
         }
         if self.eat("trait") {
-            return self.class_declaration(false, false, false, false, true);
+            return self.class_declaration(false, false, false, false, true, None);
         }
         let readonly_class = self.is("readonly")
             && self.tokens.get(self.pos + 1).is_some_and(|token| {
@@ -211,7 +213,7 @@ impl Parser {
                 *flag = true;
             }
             self.expect("class")?;
-            return self.class_declaration(is_final, is_readonly, is_abstract, false, false);
+            return self.class_declaration(is_final, is_readonly, is_abstract, false, false, None);
         }
         let line = self.token().line;
         if self.eat("goto") {
@@ -530,6 +532,8 @@ impl Parser {
             self.declared_name(&name, namespaces::Symbol::Function, line)?
         };
         let outer_function_name = std::mem::replace(&mut self.function_name, name.clone());
+        let outer_function_class =
+            std::mem::replace(&mut self.function_class, self.class_name.clone());
         let mut parameters =
             self.function_parameters(method && name.eq_ignore_ascii_case(b"__construct"))?;
         let mut return_type = if self.eat(":") {
@@ -572,6 +576,7 @@ impl Parser {
         self.return_type = outer_return_type;
         self.static_names = outer_static_names;
         self.function_name = outer_function_name;
+        self.function_class = outer_function_class;
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
@@ -867,6 +872,7 @@ impl Parser {
                                 static_names: HashSet::new(),
                                 source: self.source.clone(),
                                 function_name: self.function_name.clone(),
+                                function_class: self.function_class.clone(),
                                 class_name: self.class_name.clone(),
                                 class_parent: self.class_parent.clone(),
                                 trait_name: self.trait_name.clone(),
@@ -934,11 +940,11 @@ impl Parser {
                         .into(),
                 )),
                 b"__method__"
-                    if !self.class_name.is_empty()
+                    if !self.function_class.is_empty()
                         && !self.function_name.is_empty()
                         && !self.function_name.starts_with(b"{closure:") =>
                 {
-                    let mut name = self.class_name.clone();
+                    let mut name = self.function_class.clone();
                     name.extend(b"::");
                     name.extend(&self.function_name);
                     ExprKind::Literal(Value::String(name.into()))
@@ -951,7 +957,15 @@ impl Parser {
                 }
                 b"__class__" => ExprKind::Literal(Value::String(self.class_name.clone().into())),
                 b"__function__" | b"__method__" => {
-                    ExprKind::Literal(Value::String(self.function_name.clone().into()))
+                    let name = if name.eq_ignore_ascii_case(b"__method__")
+                        && !self.class_name.is_empty()
+                        && !self.function_name.starts_with(b"{closure:")
+                    {
+                        Vec::new()
+                    } else {
+                        self.function_name.clone()
+                    };
+                    ExprKind::Literal(Value::String(name.into()))
                 }
                 b"__namespace__" => {
                     ExprKind::Literal(Value::String(self.namespace.name.clone().into()))

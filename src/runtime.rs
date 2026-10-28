@@ -721,6 +721,12 @@ impl Runtime {
                 self.read_location(&mut location, line, false, None)
             }
             ExprKind::New(class, args) => self.new_object(class, args, line),
+            ExprKind::AnonymousClass(class) => {
+                if self.find_class(&class.name).is_none() {
+                    self.register_class(class.clone())?;
+                }
+                Ok(Value::String(class.name.clone().into()))
+            }
             ExprKind::NullsafeProperty(_, _) => unreachable!("nullsafe chain evaluated above"),
             ExprKind::Property(base, name) => {
                 let value = self.eval(base)?;

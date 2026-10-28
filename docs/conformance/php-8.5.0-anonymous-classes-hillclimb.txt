@@ -1,0 +1,61 @@
+Before: 5256 cases; 1091 passed, 3757 failed, 408 unsupported
+After: 5256 cases; 1115 passed, 3733 failed, 408 unsupported
+New passes: 24; regressions: 0
+NEW PASS: Zend/tests/anon/001.phpt
+NEW PASS: Zend/tests/anon/002.phpt
+NEW PASS: Zend/tests/anon/006.phpt
+NEW PASS: Zend/tests/anon/007.phpt
+NEW PASS: Zend/tests/anon/008.phpt
+NEW PASS: Zend/tests/anon/009.phpt
+NEW PASS: Zend/tests/anon/010.phpt
+NEW PASS: Zend/tests/anon/012.phpt
+NEW PASS: Zend/tests/anon/014.phpt
+NEW PASS: Zend/tests/anon/015.phpt
+NEW PASS: Zend/tests/anon/016.phpt
+NEW PASS: Zend/tests/attributes/override/019.phpt
+NEW PASS: Zend/tests/constants/bug76430.phpt
+NEW PASS: Zend/tests/constexpr/constant_expressions_coalesce.phpt
+NEW PASS: Zend/tests/constexpr/new_anon_class.phpt
+NEW PASS: Zend/tests/gh19304.phpt
+NEW PASS: Zend/tests/gh19305-001.phpt
+NEW PASS: Zend/tests/gh19305-002.phpt
+NEW PASS: Zend/tests/named_params/__call.phpt
+NEW PASS: Zend/tests/readonly_classes/gh10377.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_001.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_036.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_037.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_038.phpt
+
+Most frequent remaining failure messages:
+520: ParseError: Expected ';'
+268: ParseError: Expected expression
+198: Error: Class "ReflectionClass" not found
+126: Error: Call to undefined function set_error_handler()
+117: ParseError: Expected parameter variable
+64: Error: Class "Fiber" not found
+51: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+45: ParseError: Expected function name
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+31: ParseError: Invalid interface member declaration
+31: Error: Call to undefined function fopen()
+28: Error: Call to undefined function class_alias()
+27: Error: Interface "ArrayAccess" not found
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

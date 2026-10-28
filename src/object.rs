@@ -110,6 +110,9 @@ pub(crate) struct Class {
     pub initializing: std::cell::Cell<bool>,
 }
 impl Class {
+    pub(crate) fn display_name(&self) -> std::borrow::Cow<'_, str> {
+        String::from_utf8_lossy(self.name.split(|b| *b == 0).next().unwrap())
+    }
     pub fn is_a(&self, name: &[u8]) -> bool {
         let name = name.strip_prefix(b"\\").unwrap_or(name);
         self.name.eq_ignore_ascii_case(name)

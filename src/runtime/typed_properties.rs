@@ -38,14 +38,15 @@ impl Runtime {
         let Some(ty) = &property.ty else {
             return Ok(value);
         };
+        let label = type_label(ty, owner);
         let ty = inheritance::class_type(ty, owner);
         let given = builtins::debug_type(&value).to_owned();
         self.coerce_type(value, &ty, strict, line)?.ok_or_else(|| {
             Error::new(
                 ErrorKind::TypeError,
                 format!(
-                    "Cannot assign {given} to property {}::${} of type {ty}",
-                    String::from_utf8_lossy(&owner.name),
+                    "Cannot assign {given} to property {}::${} of type {label}",
+                    owner.display_name(),
                     String::from_utf8_lossy(&property.name)
                 ),
                 line,
@@ -58,7 +59,7 @@ impl Runtime {
             ErrorKind::Error,
             format!(
                 "Typed property {}::${} must not be accessed before initialization",
-                String::from_utf8_lossy(&owner.name),
+                owner.display_name(),
                 String::from_utf8_lossy(name)
             ),
             line,
@@ -108,7 +109,7 @@ impl Runtime {
             format!(
                 "Cannot {} property {}::${} of type {} past its {} value",
                 if delta > 0 { "increment" } else { "decrement" },
-                String::from_utf8_lossy(&owner.name),
+                owner.display_name(),
                 String::from_utf8_lossy(&location.name),
                 type_label(ty, &owner),
                 if delta > 0 { "maximal" } else { "minimal" }
@@ -165,7 +166,19 @@ impl Runtime {
 
 // PHP displays class names before builtin union members, expanding iterable.
 pub(super) fn type_label(ty: &crate::ast::TypeDecl, owner: &Class) -> String {
-    let mut ty = inheritance::class_type(ty, owner);
+    let mut ty = ty.clone();
+    for member in &mut ty.members {
+        let class = match member.as_str() {
+            "self" => Some(owner),
+            "parent" => owner.parent.as_deref(),
+            _ => None,
+        };
+        if let Some(class) = class
+            && !class.name.contains(&0)
+        {
+            *member = class.display_name().into_owned();
+        }
+    }
     ty.members = ty
         .members
         .into_iter()

@@ -157,6 +157,14 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
                 ));
             }
         }
+        ExprKind::AnonymousClass(class) => {
+            let mut declaration = Stmt::Class(class.clone());
+            fold(std::slice::from_mut(&mut declaration), warnings);
+            let Stmt::Class(folded) = declaration else {
+                unreachable!()
+            };
+            *class = folded;
+        }
         ExprKind::Literal(_)
         | ExprKind::Variable(_)
         | ExprKind::Constant(_)

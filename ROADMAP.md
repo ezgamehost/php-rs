@@ -99,6 +99,9 @@ definition of completion.
    Method overloading dispatches missing/inaccessible calls through __call and
    __callStatic, including named arguments, first-class callables, callbacks,
    inherited handlers, late static binding, and autoload callback identity.
+   Anonymous classes reuse ordinary class linking with constructor arguments,
+   readonly declarations, inheritance, interfaces, traits, and declaration identity.
+   Enclosing function and anonymous class scopes remain distinct for magic constants.
    Traits support nested composition before inheritance, method precedence,
    `insteadof`, aliases, visibility/final adaptations, abstract requirements,
    property/constant compatibility checks, and lexical magic constants.

@@ -1,5 +1,10 @@
 use super::*;
 use crate::ast::{ClassConstant, ClassDecl, PropertyDecl};
+use std::sync::atomic::{AtomicU64, Ordering};
+
+// Declarations compiled by separate eval/include operations must stay distinct,
+// while repeated executions of one declaration reuse its class and statics.
+static ANONYMOUS_CLASSES: AtomicU64 = AtomicU64::new(0);
 
 impl Parser {
     pub(super) fn class_declaration(
@@ -9,34 +14,39 @@ impl Parser {
         is_abstract: bool,
         is_interface: bool,
         is_trait: bool,
+        anonymous_line: Option<usize>,
     ) -> Result<Stmt, Error> {
-        let line = self.token().line;
+        let line = anonymous_line.unwrap_or(self.token().line);
         if is_abstract && is_final {
             return Err(Error::parse(
                 "A class cannot be both abstract and final",
                 line,
             ));
         }
-        let Kind::Word(name) = self.token().kind.clone() else {
-            return Err(Error::parse("Expected class name", line));
+        let mut name = if anonymous_line.is_some() {
+            Vec::new()
+        } else {
+            let Kind::Word(name) = self.token().kind.clone() else {
+                return Err(Error::parse("Expected class name", line));
+            };
+            if name.contains(&b'\\')
+                || [
+                    "self", "parent", "static", "int", "float", "string", "bool", "null", "true",
+                    "false", "object", "mixed", "never", "void", "array", "callable", "iterable",
+                ]
+                .iter()
+                .any(|word| name.eq_ignore_ascii_case(word.as_bytes()))
+            {
+                return Err(Error::parse("Invalid class name", line));
+            }
+            self.label_name()?;
+            if name == b"_" {
+                self.warnings.push(format!(
+                    r#"Deprecated: Using "_" as a class name is deprecated on line {line}"#
+                ));
+            }
+            self.declared_name(&name, namespaces::Symbol::Class, line)?
         };
-        if name.contains(&b'\\')
-            || [
-                "self", "parent", "static", "int", "float", "string", "bool", "null", "true",
-                "false", "object", "mixed", "never", "void", "array", "callable", "iterable",
-            ]
-            .iter()
-            .any(|word| name.eq_ignore_ascii_case(word.as_bytes()))
-        {
-            return Err(Error::parse("Invalid class name", line));
-        }
-        self.label_name()?;
-        if name == b"_" {
-            self.warnings.push(format!(
-                r#"Deprecated: Using "_" as a class name is deprecated on line {line}"#
-            ));
-        }
-        let name = self.declared_name(&name, namespaces::Symbol::Class, line)?;
         let parent = if !is_interface && !is_trait && self.eat("extends") {
             let Kind::Word(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
@@ -67,6 +77,17 @@ impl Parser {
                     break;
                 }
             }
+        }
+        if anonymous_line.is_some() {
+            name = parent
+                .as_ref()
+                .or(interfaces.first())
+                .cloned()
+                .unwrap_or_else(|| b"class".to_vec());
+            name.extend_from_slice(b"@anonymous\0");
+            name.extend_from_slice(&self.source.name);
+            let id = ANONYMOUS_CLASSES.fetch_add(1, Ordering::Relaxed);
+            name.extend_from_slice(format!(":{line}${id:x}").as_bytes());
         }
         self.expect("{")?;
         let outer_parent = std::mem::replace(&mut self.class_parent, parent.clone());
@@ -590,6 +611,30 @@ impl Parser {
 
     pub(super) fn new_expression(&mut self) -> Result<ExprKind, Error> {
         let line = self.token().line;
+        let readonly = self.is("readonly") && self.tokens.get(self.pos + 1).is_some_and(|token| matches!(&token.kind, Kind::Word(name) if name.eq_ignore_ascii_case(b"class")));
+        if self.is("class") || readonly {
+            if readonly {
+                self.pos += 1;
+            }
+            self.expect("class")?;
+            let args = if self.eat("(") {
+                self.arguments()?
+            } else {
+                Vec::new()
+            };
+            let Stmt::Class(class) =
+                self.class_declaration(false, readonly, false, false, false, Some(line))?
+            else {
+                unreachable!()
+            };
+            return Ok(ExprKind::New(
+                Box::new(Expr {
+                    kind: ExprKind::AnonymousClass(class),
+                    line,
+                }),
+                args,
+            ));
+        }
         let class = if let Kind::Word(name) = self.token().kind.clone() {
             self.pos += 1;
             Expr {

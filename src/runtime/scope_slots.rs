@@ -113,6 +113,7 @@ impl Scope {
             }
             ExprKind::Variable(name) if !expr.is_globals() => self.reserve(name),
             ExprKind::Literal(_)
+            | ExprKind::AnonymousClass(_)
             | ExprKind::Variable(_)
             | ExprKind::Constant(_)
             | ExprKind::NamespacedName(_) => {}

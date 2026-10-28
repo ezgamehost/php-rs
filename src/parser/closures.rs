@@ -166,7 +166,10 @@ fn collect_captures(expr: &Expr, captures: &mut Vec<Capture>) {
                 capture(&c.name, captures);
             }
         }
-        ExprKind::Literal(_) | ExprKind::Constant(_) | ExprKind::NamespacedName(_) => {}
+        ExprKind::Literal(_)
+        | ExprKind::Constant(_)
+        | ExprKind::NamespacedName(_)
+        | ExprKind::AnonymousClass(_) => {}
         ExprKind::ClassName(e)
         | ExprKind::Group(e)
         | ExprKind::DynamicVariable(e)

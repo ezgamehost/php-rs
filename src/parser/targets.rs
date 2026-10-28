@@ -218,6 +218,7 @@ impl Validator {
             ));
         }
         match &expr.kind {
+            ExprKind::AnonymousClass(class) => self.validate(&[Stmt::Class(class.clone())])?,
             ExprKind::Literal(_)
             | ExprKind::Variable(_)
             | ExprKind::Constant(_)
