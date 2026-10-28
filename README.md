@@ -101,7 +101,7 @@ new request. The CLI returns the low eight bits of the requested status.
   closures, arrows, and anonymous classes retain resolved names and constant arguments.
   Internal target/repetition checks support delayed target validation.
   `AllowDynamicProperties` is inherited; core attribute classes expose PHP 8.5 target
-  flags and constructors. Class, function, method, and parameter attribute reflection
+  flags and constructors. Class, function, method, parameter, and property attribute reflection
   supports deferred argument evaluation, filtering, target/repetition validation,
   and instantiation using the
   declaration's scope and strict-types setting. Other attribute runtime effects remain unfinished.
@@ -111,9 +111,15 @@ new request. The CLI returns the low eight bits of the requested status.
 - Function/method/parameter reflection exposes names, source lines, visibility,
   signature metadata, defaults, attributes, named/union types, and closure captures.
   Reflective invocation supports named arguments, argument-array references, weak
-  coercion, non-public methods, and closure creation. Property/class-constant reflection,
+  coercion, non-public methods, and closure creation. Class-constant reflection,
   complete builtin signatures, prototypes/static variables, lazy objects, full reflector
   interfaces, and declaration string representations remain unfinished.
+- Property reflection supports declared/inherited/dynamic discovery, filters, types,
+  defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
+  initialization checks. Reflective reads and writes bypass visibility while retaining
+  typed-reference and readonly constraints. Declaration strings cover ordinary defaults;
+  doc comments, unevaluated expression rendering, raw/hooked access, lazy objects,
+  and complete internal property metadata remain unfinished.
 - Public/protected/private instance properties and constructor promotion, with
   separate private slots across inheritance, scoped iteration and `get_object_vars`,
   mangled array-cast keys, and asymmetric setters. Final properties and readonly
@@ -253,7 +259,7 @@ new request. The CLI returns the low eight bits of the requested status.
   `SensitiveParameterValue` in backtraces and exception traces. The wrapper supports
   `getValue`, cloning, readonly private storage, and hidden dump/array-cast properties.
   PHP 8.5.0's extra named variadic behavior is preserved; trace configuration,
-  serialization, property reflection, and uninitialized wrapper reads remain unfinished.
+  serialization and uninitialized wrapper reads remain unfinished.
 - Core builtins: `var_dump`, `print_r`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,

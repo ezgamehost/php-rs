@@ -296,6 +296,8 @@ pub(crate) enum TraitAdaptation {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PropertyDecl {
+    pub order: usize,
+    pub is_promoted: bool,
     pub attributes: Vec<Attribute>,
     pub declaring_class: Vec<u8>,
     pub visibility: Visibility,

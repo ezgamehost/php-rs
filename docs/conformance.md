@@ -481,6 +481,29 @@ sensitive-parameter fixtures remain blocked by assert/debug/export/serialization
 property reflection, destructors, or expected fatal diagnostics. Uninitialized wrapper
 reads and complete trace configuration remain unfinished.
 
+The [property-reflection slice](conformance/php-8.5.0-property-reflection-hillclimb.txt)
+adds 11 Zend and 55 reflection passes with zero regressions in either suite.
+`ReflectionProperty` and class/object property discovery now cover declared, inherited,
+static, and dynamic properties. Filtering uses PHP modifier flags, enumeration retains
+source order across static/instance and promoted declarations, and trait composition
+preserves each trait's property order. Qualified ancestor lookups and private ancestor
+exclusion follow PHP's reflection rules. `ReflectionObject` retains its receiver so
+subsequent discovery sees current dynamic properties.
+
+Metadata includes declaring classes, mangled storage names, visibility/asymmetric-set,
+readonly/final/promoted flags, types, defaults, and attributes evaluated in declaration
+scope. Reflective reads/writes bypass visibility through the existing property machinery,
+retaining magic access, weak scalar coercion, typed reference constraints, and readonly
+initialization checks. Initialization queries inspect storage without invoking magic
+getters. Ordinary property declaration strings include defaults and byte escaping.
+The sensitive-value reflection fixture also passes, bringing that subset to 12/18.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, with formatting
+and Clippy green. No new custom tests were added. Property hooks/raw access, lazy objects,
+doc comments, unevaluated default-expression rendering, and complete internal property
+metadata (including throwable properties) remain unfinished. Expected diagnostic matching
+still blocks deprecation/error fixtures; unsupported sections are not counted as passes.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -488,13 +511,13 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1474 | 3374 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 141 | 314 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1485 | 3363 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 196 | 259 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |
 | PHP 8.5.0 `Zend/tests/backtrace`, Rust and reference PHP for passing cases | 12 | 4 | 4 |
-| PHP 8.5.0 `Zend/tests/function_arguments/sensitive_parameter*.phpt`, Rust and reference PHP for passing cases | 11 | 7 | 0 |
+| PHP 8.5.0 `Zend/tests/function_arguments/sensitive_parameter*.phpt`, Rust and reference PHP for passing cases | 12 | 6 | 0 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

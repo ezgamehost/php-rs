@@ -9,10 +9,14 @@ mod attributes;
 mod declarations;
 mod functions;
 mod parameters;
+mod properties;
+use properties::PropertyReflection;
 
 #[derive(Clone)]
 pub(crate) enum ReflectionData {
     Class(Rc<Class>),
+    Object(Rc<PhpObject>),
+    Property(PropertyReflection),
     Function(FunctionReflection),
     Parameter {
         function: FunctionReflection,
@@ -69,6 +73,19 @@ impl Runtime {
             ReflectionData::Class(class) => {
                 properties.insert(ArrayKey::String(b"name".to_vec()), string(&class.name));
             }
+            ReflectionData::Object(object) => {
+                properties.insert(
+                    ArrayKey::String(b"name".to_vec()),
+                    string(&object.class.name),
+                );
+            }
+            ReflectionData::Property(property) => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(&property.name));
+                properties.insert(
+                    ArrayKey::String(b"class".to_vec()),
+                    string(&property.owner.name),
+                );
+            }
             ReflectionData::Function(function) => {
                 properties.insert(ArrayKey::String(b"name".to_vec()), string(function.name()));
                 if function.is_method {
@@ -118,6 +135,7 @@ impl Runtime {
             if unwrap_reflection {
                 return match &*object.reflection.borrow() {
                     Some(ReflectionData::Class(class)) => Ok(class.clone()),
+                    Some(ReflectionData::Object(object)) => Ok(object.class.clone()),
                     _ => Err(Error::new(
                         ErrorKind::Error,
                         "Internal error: Failed to retrieve the reflection object",
@@ -166,6 +184,9 @@ impl Runtime {
             return Err(self.reflection_error("Cannot clone object using __clone()", line));
         }
         if name == b"__construct" {
+            if object.class.is_a(b"ReflectionProperty") {
+                return self.reflection_property_constructor(&object, line);
+            }
             if object.class.is_a(b"ReflectionParameter") {
                 return self.reflection_parameter_constructor(&object, line);
             }
@@ -196,12 +217,19 @@ impl Runtime {
                     },
                 )
                 .unwrap();
-            let class = self.reflected_class(value, false, line)?;
+            let class = self.reflected_class(value.clone(), false, line)?;
             object
                 .properties
                 .borrow_mut()
                 .insert(ArrayKey::String(b"name".to_vec()), string(&class.name));
-            *object.reflection.borrow_mut() = Some(ReflectionData::Class(class));
+            *object.reflection.borrow_mut() = Some(if object.class.is_a(b"ReflectionObject") {
+                let Value::Object(target) = value else {
+                    unreachable!()
+                };
+                ReflectionData::Object(target)
+            } else {
+                ReflectionData::Class(class)
+            });
             return Ok(Value::Null);
         }
         let data = object.reflection.borrow().clone().ok_or_else(|| {
@@ -213,7 +241,13 @@ impl Runtime {
         })?;
         match data {
             ReflectionData::Class(class) => {
-                self.reflect_class_method(&class, &name, supplied, line)
+                self.reflect_class_method(&class, None, &name, supplied, line)
+            }
+            ReflectionData::Object(object) => {
+                self.reflect_class_method(&object.class, Some(&object), &name, supplied, line)
+            }
+            ReflectionData::Property(property) => {
+                self.reflect_property_method(property, &name, supplied, line)
             }
             ReflectionData::Function(function) => {
                 self.reflect_function_method(function, &name, line)
@@ -233,6 +267,7 @@ impl Runtime {
     fn reflect_class_method(
         &mut self,
         class: &Rc<Class>,
+        object: Option<&Rc<PhpObject>>,
         name: &[u8],
         supplied: usize,
         line: usize,
@@ -276,7 +311,8 @@ impl Runtime {
                             && !class.is_a(b"ReflectionAttribute")
                             && !class.is_a(b"ReflectionFunctionAbstract")
                             && !class.is_a(b"ReflectionParameter")
-                            && !class.is_a(b"ReflectionType"))),
+                            && !class.is_a(b"ReflectionType")
+                            && !class.is_a(b"ReflectionProperty"))),
             ),
             b"isinterface" => Value::Bool(decl.is_interface),
             b"istrait" => Value::Bool(decl.is_trait),
@@ -433,14 +469,8 @@ impl Runtime {
             b"hasmethod" => Value::Bool(
                 objects::method(class, &self.lookup(b"name").unwrap().to_bytes()).is_some(),
             ),
-            b"hasproperty" => {
-                let name = self.lookup(b"name").unwrap().to_bytes();
-                Value::Bool(
-                    reflected_properties(class, false)
-                        .iter()
-                        .chain(reflected_properties(class, true).iter())
-                        .any(|(_, property)| property.name == name),
-                )
+            b"hasproperty" | b"getproperty" | b"getproperties" => {
+                return self.reflect_class_properties(class, object, name, line);
             }
             b"hasconstant" => Value::Bool(
                 class

@@ -1,0 +1,138 @@
+Zend suite
+
+Before: 5256 cases; 1474 passed, 3374 failed, 408 unsupported
+After: 5256 cases; 1485 passed, 3363 failed, 408 unsupported
+New passes: 11; regressions: 0
+NEW PASS: Zend/tests/attributes/009_doctrine_annotations_example.phpt
+NEW PASS: Zend/tests/attributes/011_inheritance.phpt
+NEW PASS: Zend/tests/attributes/015_property_group.phpt
+NEW PASS: Zend/tests/autoload/bug78868.phpt
+NEW PASS: Zend/tests/autoload/bug78921.phpt
+NEW PASS: Zend/tests/ctor_promotion/bug79897.phpt
+NEW PASS: Zend/tests/ctor_promotion/ctor_promotion_attributes.phpt
+NEW PASS: Zend/tests/function_arguments/sensitive_parameter_value_reflection.phpt
+NEW PASS: Zend/tests/magic_methods/bug72177.phpt
+NEW PASS: Zend/tests/magic_methods/bug72177_2.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_018.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 141 passed, 314 failed, 37 unsupported
+After: 492 cases; 196 passed, 259 failed, 37 unsupported
+New passes: 55; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionClass_getProperties_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getProperty_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getProperty_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getProperty_004.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isInternal_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isUserDefined_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_basic1.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_basic3.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_basic4.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_isDefault.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_basic1.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_constructor_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_constructor_variation1.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getDeclaringClass_variation1.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getMangledName_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getMangledName_dynamic.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getMangledName_inheritance.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getMangledName_instance.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getMangledName_override.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getModifiers.001.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getValue_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_hasDefaultValue.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_isDefault_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_isDynamic_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_isInitialized.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_setValue_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_typed_static.phpt
+NEW PASS: ext/reflection/tests/asymmetric_visibility_flags.phpt
+NEW PASS: ext/reflection/tests/asymmetric_visibility_write.phpt
+NEW PASS: ext/reflection/tests/bug36337.phpt
+NEW PASS: ext/reflection/tests/bug36434.phpt
+NEW PASS: ext/reflection/tests/bug37816.phpt
+NEW PASS: ext/reflection/tests/bug39001.phpt
+NEW PASS: ext/reflection/tests/bug39067.phpt
+NEW PASS: ext/reflection/tests/bug40431.phpt
+NEW PASS: ext/reflection/tests/bug40794.phpt
+NEW PASS: ext/reflection/tests/bug45139.phpt
+NEW PASS: ext/reflection/tests/bug46064_2.phpt
+NEW PASS: ext/reflection/tests/bug48336.phpt
+NEW PASS: ext/reflection/tests/bug49719.phpt
+NEW PASS: ext/reflection/tests/bug53366.phpt
+NEW PASS: ext/reflection/tests/bug72174.phpt
+NEW PASS: ext/reflection/tests/bug75231.phpt
+NEW PASS: ext/reflection/tests/bug77772.phpt
+NEW PASS: ext/reflection/tests/bug78774.phpt
+NEW PASS: ext/reflection/tests/bug79683.phpt
+NEW PASS: ext/reflection/tests/bug79820.phpt
+NEW PASS: ext/reflection/tests/bug80370.phpt
+NEW PASS: ext/reflection/tests/bug80564.phpt
+NEW PASS: ext/reflection/tests/bug80821.phpt
+NEW PASS: ext/reflection/tests/bug81208.phpt
+NEW PASS: ext/reflection/tests/readonly_properties.phpt
+NEW PASS: ext/reflection/tests/types/mixed_type.phpt
+NEW PASS: ext/reflection/tests/types/union_types.phpt
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+18: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+9: ReflectionException: Class "Object" does not exist
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: Error: Class "ReflectionClassConstant" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: property hooks/raw access, lazy objects, doc comments, unevaluated default-expression rendering, and complete internal property metadata (including throwable properties) remain unfinished. Deprecation/error fixtures remain blocked by expected diagnostic matching. Unsupported sections are not counted as passes.

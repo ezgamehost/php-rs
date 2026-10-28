@@ -275,6 +275,13 @@ impl Runtime {
                 .extend(used.trait_property_checks.iter().cloned());
             decl.trait_constant_checks
                 .extend(used.trait_constant_checks.iter().cloned());
+            let property_order = decl
+                .properties
+                .iter()
+                .chain(&decl.static_properties)
+                .map(|p| p.order + 1)
+                .max()
+                .unwrap_or(0);
             for (properties, is_static) in
                 [(&used.properties, false), (&used.static_properties, true)]
             {
@@ -308,7 +315,9 @@ impl Runtime {
                         decl.trait_property_checks
                             .push((existing.clone(), property.clone()));
                     } else {
-                        target.push(property.clone());
+                        let mut property = property.clone();
+                        property.order += property_order;
+                        target.push(property);
                     }
                 }
             }

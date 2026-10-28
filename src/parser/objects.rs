@@ -577,6 +577,8 @@ impl Parser {
                     let attributes =
                         self.parse_attributes_at(attribute_range, attributes::Target::Property)?;
                     let property = PropertyDecl {
+                        order: properties.len() + static_properties.len(),
+                        is_promoted: false,
                         attributes,
                         declaring_class: Vec::new(),
                         visibility,

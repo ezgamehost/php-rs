@@ -148,12 +148,18 @@ definition of completion.
    in the declaration's source, scope, and strict-types mode. Function, method, and
    parameter reflection includes source/signature metadata, attributes, defaults,
    named/union types, closure creation/capture inspection, and reflective invocation.
+   Property reflection exposes declaration-ordered instance/static and dynamic
+   properties, metadata, types/defaults/attributes, initialization checks, and
+   visibility-bypassing reads/writes with type/reference/readonly checks.
+   Promoted and trait properties retain declaration order; ReflectionObject keeps
+   its receiver for live dynamic-property discovery.
    Native methods share argument-count validation with other internal functions.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   complete property/constant diagnostics, property hooks, remaining magic methods, property/class-constant reflection,
-   complete builtin signature metadata, prototypes/static variables, lazy objects,
+   complete property/constant diagnostics, property hooks, remaining magic methods, class-constant reflection,
+   property doc comments/raw access and expression stringification, complete internal
+   property/builtin signature metadata, prototypes/static variables, lazy objects,
    complete attribute instantiation and runtime effects, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
@@ -177,7 +183,7 @@ definition of completion.
    SensitiveParameter redaction covers fixed and positional variadic parameters in
    debug/exception traces, with native SensitiveParameterValue storage, access,
    cloning, and hidden exported properties. Extra named variadic behavior follows
-   PHP 8.5.0. Configurable trace settings, serialization, property reflection, and
+   PHP 8.5.0. Configurable trace settings, serialization, and
    uninitialized wrapper reads remain incomplete.
    SPL autoload queues support callback
    identity, prepend/removal, recursive lookup guards, exceptions, default file

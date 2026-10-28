@@ -42,6 +42,8 @@ impl Runtime {
                 public function getMethods(?int $filter=null): array {}
                 public function getConstructor(): ?ReflectionMethod {}
                 public function hasProperty(string $name): bool {}
+                public function getProperty(string $name): ReflectionProperty {}
+                public function getProperties(?int $filter=null): array {}
                 public function hasConstant(string $name): bool {}
                 public function getConstant(string $name): mixed {}
                 public function getConstants(?int $filter=null): array {}
@@ -137,6 +139,45 @@ impl Runtime {
                 public function invokeArgs(?object $object, array $args): mixed {}
                 public function setAccessible(bool $accessible): void {}
             "),
+            b"reflectionproperty" => ("ReflectionProperty", None, "
+                public const int IS_STATIC=16, IS_READONLY=128, IS_PUBLIC=1, IS_PROTECTED=2,
+                    IS_PRIVATE=4, IS_ABSTRACT=64, IS_PROTECTED_SET=2048, IS_PRIVATE_SET=4096,
+                    IS_VIRTUAL=512, IS_FINAL=32;
+                public readonly string $name;
+                public readonly string $class;
+                private function __clone(): void {}
+                public function __construct(object|string $class, string $property) {}
+                public function getName(): string {}
+                public function getMangledName(): string {}
+                public function isPublic(): bool {}
+                public function isProtected(): bool {}
+                public function isPrivate(): bool {}
+                public function isProtectedSet(): bool {}
+                public function isPrivateSet(): bool {}
+                public function isStatic(): bool {}
+                public function isReadOnly(): bool {}
+                public function isAbstract(): bool {}
+                public function isVirtual(): bool {}
+                public function isFinal(): bool {}
+                public function isDefault(): bool {}
+                public function isDynamic(): bool {}
+                public function isPromoted(): bool {}
+                public function getModifiers(): int {}
+                public function getDeclaringClass(): ReflectionClass {}
+                public function getValue(?object $object=null): mixed {}
+                public function setValue(mixed $objectOrValue, mixed $value=null): void {}
+                public function isInitialized(?object $object=null): bool {}
+                public function setAccessible(bool $accessible): void {}
+                public function hasType(): bool {}
+                public function getType(): ?ReflectionType {}
+                public function getSettableType(): ?ReflectionType {}
+                public function hasDefaultValue(): bool {}
+                public function getDefaultValue(): mixed {}
+                public function getAttributes(?string $name=null, int $flags=0): array {}
+                public function hasHooks(): bool {}
+                public function getHooks(): array {}
+                public function __toString(): string {}
+            "),
             b"reflectionparameter" => ("ReflectionParameter", None, "
                 public readonly string $name;
                 private function __clone(): void {}
@@ -178,7 +219,7 @@ impl Runtime {
         } else {
             ""
         };
-        let implements = if canonical == "ReflectionType" {
+        let implements = if matches!(canonical, "ReflectionType" | "ReflectionProperty") {
             " implements Stringable"
         } else {
             ""
@@ -222,7 +263,7 @@ impl Runtime {
             declaration,
             properties,
             parent,
-            interfaces: if canonical == "ReflectionType" {
+            interfaces: if matches!(canonical, "ReflectionType" | "ReflectionProperty") {
                 vec![self.find_class(b"Stringable").unwrap()]
             } else {
                 Vec::new()

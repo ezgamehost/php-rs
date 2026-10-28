@@ -104,6 +104,8 @@ impl Parser {
                 ));
             }
             properties.push(PropertyDecl {
+                order: properties.len() + static_properties.len(),
+                is_promoted: true,
                 attributes: param.attributes.clone(),
                 declaring_class: Vec::new(),
                 visibility: promotion.visibility,
