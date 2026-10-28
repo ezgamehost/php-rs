@@ -1,7 +1,7 @@
 use php_rs::{Runtime, lint};
 use std::{
     env, fs,
-    io::{self, Read, Write},
+    io::{self, Read},
     process::ExitCode,
 };
 
@@ -73,10 +73,7 @@ fn execute() -> Result<u8, Box<dyn std::error::Error>> {
     } else {
         runtime.execute(&source)
     };
-    io::stdout().write_all(&runtime.output)?;
-    for warning in &runtime.warnings {
-        eprintln!("Warning: {warning}");
-    }
+    runtime.write_output(&mut io::stdout().lock(), &mut io::stderr().lock())?;
     match result {
         Ok(_) => Ok(runtime.exit_status().unwrap_or(0) as u8),
         Err(error) => {

@@ -16,8 +16,10 @@ definition of completion.
    a selectable suite working directory and generated-file cleanup. Reference
    comparisons include process exit status, including intentional nonzero exits.
    Remaining: full upstream sections, reproducible reference provisioning in CI,
-   diagnostic comparison, and process-tree resource limits. Per-fixture workers
-   isolate crashes and enforce configurable process timeouts.
+   fatal diagnostic comparison, and process-tree resource limits. Per-fixture workers
+   isolate crashes and enforce configurable process timeouts. Nonfatal warnings,
+   notices, and deprecations retain source filenames and output positions, and
+   the harness compares their display text in emission order.
    Never count skipped tests as passing.
 3. **Core language (arrays started):** ordered arrays, key coercion, copy-on-write
    assignment, nested indexed writes, array union/comparison, `foreach` by value,

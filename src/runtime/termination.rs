@@ -21,7 +21,7 @@ impl Runtime {
         };
         match status {
             Value::String(message) => {
-                self.output.extend_from_slice(&message.bytes());
+                self.emit_output(&message.bytes());
                 self.exit_status.get_or_insert(0);
             }
             Value::Int(code) => self.exit_status = Some(code as i32),

@@ -78,7 +78,7 @@ impl Runtime {
                 called: class.clone(),
             }),
         );
-        let source = std::mem::replace(&mut self.source, owner.source.clone());
+        let source = self.replace_source(owner.source.clone());
         let strict = std::mem::replace(&mut self.strict_types, owner.strict_types);
         let result = (|| {
             let mut result = PhpArray::default();
@@ -96,7 +96,7 @@ impl Runtime {
             Ok(result)
         })();
         self.class_context = outer;
-        self.source = source;
+        self.replace_source(source);
         self.strict_types = strict;
         result
     }
@@ -224,7 +224,7 @@ impl Runtime {
                     ));
                 }
                 let arguments = self.attribute_arguments(owner, attribute)?;
-                let source = std::mem::replace(&mut self.source, owner.source.clone());
+                let source = self.replace_source(owner.source.clone());
                 let strict = std::mem::replace(&mut self.strict_types, owner.strict_types);
                 let result = self.instantiate_class(
                     class,
@@ -235,7 +235,7 @@ impl Runtime {
                     true,
                     attribute.line,
                 );
-                self.source = source;
+                self.replace_source(source);
                 self.strict_types = strict;
                 result?
             }

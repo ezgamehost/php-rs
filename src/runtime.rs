@@ -152,6 +152,51 @@ impl Flow {
     }
 }
 impl Runtime {
+    /// Ordinary output with displayed diagnostics interleaved, using PHP's
+    /// display_errors=1 format. The public output and warnings remain separate.
+    pub fn output_with_diagnostics(&self) -> Vec<u8> {
+        let mut result = Vec::new();
+        let mut position = 0;
+        for event in &self.diagnostics.events {
+            let end = event.position.clamp(position, self.output.len());
+            result.extend_from_slice(&self.output[position..end]);
+            result.push(b'\n');
+            result.extend_from_slice(&event.rendered);
+            position = end;
+        }
+        result.extend_from_slice(&self.output[position..]);
+        result
+    }
+
+    /// Write separate CLI output/error streams in diagnostic emission order.
+    pub fn write_output(
+        &self,
+        output: &mut impl std::io::Write,
+        diagnostics: &mut impl std::io::Write,
+    ) -> std::io::Result<()> {
+        let mut position = 0;
+        for event in &self.diagnostics.events {
+            let end = event.position.clamp(position, self.output.len());
+            output.write_all(&self.output[position..end])?;
+            output.flush()?;
+            diagnostics.write_all(&event.rendered)?;
+            diagnostics.flush()?;
+            position = end;
+        }
+        output.write_all(&self.output[position..])?;
+        output.flush()
+    }
+
+    fn emit_output(&mut self, bytes: &[u8]) {
+        self.output.extend_from_slice(bytes);
+        self.diagnostics.output_position = self.output.len();
+    }
+
+    fn replace_source(&mut self, source: Rc<crate::source::Source>) -> Rc<crate::source::Source> {
+        self.diagnostics.source = source.clone();
+        std::mem::replace(&mut self.source, source)
+    }
+
     /// Status requested by exit/die. A terminated request cannot execute more PHP.
     pub fn exit_status(&self) -> Option<i32> {
         self.exit_status
@@ -197,12 +242,12 @@ impl Runtime {
             Stmt::Function(function) => {
                 self.register_function(function.clone())?;
             }
-            Stmt::Text(text) => self.output.extend(text),
+            Stmt::Text(text) => self.emit_output(text),
             Stmt::Echo(values) => {
                 for value in values {
                     let v = self.eval(value)?;
                     let bytes = self.string_bytes(&v, value.line)?;
-                    self.output.extend(bytes);
+                    self.emit_output(&bytes);
                 }
             }
             Stmt::Expr(expr) => {
@@ -727,7 +772,7 @@ impl Runtime {
             ExprKind::Print(operand) => {
                 let value = self.eval(operand)?;
                 let bytes = self.string_bytes(&value, line)?;
-                self.output.extend(bytes);
+                self.emit_output(&bytes);
                 Ok(Value::Int(1))
             }
             ExprKind::Binary(op, value, class) if op == "instanceof" => {

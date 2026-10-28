@@ -736,6 +736,7 @@ impl Runtime {
                 for (_, value) in extra.entries() {
                     dump(value, 0, &mut self.output, line, &mut self.diagnostics);
                 }
+                self.diagnostics.output_position = self.output.len();
                 Ok(Value::Null)
             }
             Builtin::Count => {
@@ -1010,13 +1011,7 @@ fn count(
     seen.remove(&identity);
     result
 }
-fn dump(
-    value: &Value,
-    depth: usize,
-    out: &mut Vec<u8>,
-    line: usize,
-    warnings: &mut dyn WarningSink,
-) {
+fn dump(value: &Value, depth: usize, out: &mut Vec<u8>, line: usize, warnings: &mut Diagnostics) {
     dump_inner(value, depth, out, &mut HashSet::new(), line, warnings);
 }
 fn dump_inner(
@@ -1025,7 +1020,7 @@ fn dump_inner(
     out: &mut Vec<u8>,
     seen: &mut HashSet<usize>,
     line: usize,
-    warnings: &mut dyn WarningSink,
+    warnings: &mut Diagnostics,
 ) {
     match value {
         Value::Indirect(slot) => dump_inner(&slot.borrow(), depth, out, seen, line, warnings),
@@ -1093,6 +1088,7 @@ fn dump_inner(
                 out.extend_from_slice(b"[\"");
                 let raw = key.to_value().to_bytes();
                 let decoded = crate::object::property_name(&raw).unwrap_or_else(|message| {
+                    warnings.output_position = out.len();
                     warnings.push(format!("Notice: {message} on line {line}"));
                     crate::object::PropertyName {
                         scope: None,
@@ -1141,6 +1137,7 @@ fn dump_inner(
         Value::Closure(closure) => {
             let properties = closure_debug_properties(closure);
             let mut rendered = Vec::new();
+            let first_diagnostic = warnings.events.len();
             dump_inner(
                 &Value::Array(Rc::new(properties)),
                 depth,
@@ -1151,6 +1148,11 @@ fn dump_inner(
             );
             let start = rendered.iter().position(|b| *b == b'(').unwrap();
             out.extend_from_slice(format!("object(Closure)#{} ", closure.object_id).as_bytes());
+            // Nested dumps record positions in the temporary array rendering.
+            // Relocate them after replacing that rendering's header.
+            for event in &mut warnings.events[first_diagnostic..] {
+                event.position = out.len() + event.position.saturating_sub(start);
+            }
             out.extend_from_slice(&rendered[start..]);
         }
         Value::Null => out.extend_from_slice(b"NULL\n"),

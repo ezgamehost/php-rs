@@ -77,6 +77,7 @@ impl Runtime {
             return Ok(Value::Null);
         }
         self.scope.reconcile(std::mem::take(&mut self.variables));
+        self.diagnostics.output_position = self.output.len();
         self.diagnostics.messages = std::mem::take(&mut self.warnings);
         self.static_variables.remove(&None);
         let result = self.execute_unit(code, source, Value::Null, None);
@@ -106,12 +107,14 @@ impl Runtime {
             self.record_include(path.clone());
         }
         let previous_compiling = std::mem::replace(&mut self.diagnostics.compiling, true);
+        let diagnostic_source = std::mem::replace(&mut self.diagnostics.source, source.clone());
         self.diagnostics.extend(warnings);
         self.scope.reserve_variables(&statements);
         let prepared = self.prepare_functions(&mut statements);
         self.diagnostics.compiling = previous_compiling;
+        self.diagnostics.source = diagnostic_source;
         prepared?;
-        let previous_source = std::mem::replace(&mut self.source, source);
+        let previous_source = self.replace_source(source);
         let previous_strict = std::mem::replace(&mut self.strict_types, strict);
         let previous_function = self.current_function.take();
         let previous_returns_reference =
@@ -127,7 +130,7 @@ impl Runtime {
         if has_frame {
             self.trace_frames.pop();
         }
-        self.source = previous_source;
+        self.replace_source(previous_source);
         self.strict_types = previous_strict;
         self.current_function = previous_function;
         self.current_returns_reference = previous_returns_reference;

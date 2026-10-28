@@ -168,7 +168,7 @@ impl Runtime {
         let source = function
             .native
             .is_none()
-            .then(|| std::mem::replace(&mut self.source, function.source.clone()));
+            .then(|| self.replace_source(function.source.clone()));
         let conversion_line = if function.native.is_none() {
             function.line
         } else {
@@ -176,7 +176,7 @@ impl Runtime {
         };
         let converted = self.coerce_type(value, ty, strict, conversion_line);
         if let Some(source) = source {
-            self.source = source;
+            self.replace_source(source);
         }
         converted?.ok_or_else(|| {
             let site = if function.native.is_none() {

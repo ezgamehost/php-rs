@@ -16,6 +16,9 @@ pub(crate) struct Diagnostics {
     pub messages: Vec<String>,
     pub reporting: i64,
     pub compiling: bool,
+    pub source: std::rc::Rc<crate::source::Source>,
+    pub output_position: usize,
+    pub events: Vec<Diagnostic>,
 }
 
 impl Default for Diagnostics {
@@ -24,6 +27,9 @@ impl Default for Diagnostics {
             messages: Vec::new(),
             reporting: 30719,
             compiling: false,
+            source: Default::default(),
+            output_position: 0,
+            events: Vec::new(),
         }
     }
 }
@@ -51,7 +57,34 @@ impl WarningSink for Diagnostics {
             2
         };
         if self.reporting & level != 0 {
+            let (label, text) = if let Some(text) = message.strip_prefix("Deprecated: ") {
+                ("Deprecated", text)
+            } else if let Some(text) = message.strip_prefix("Notice: ") {
+                ("Notice", text)
+            } else {
+                (
+                    "Warning",
+                    message.strip_prefix("Warning: ").unwrap_or(&message),
+                )
+            };
+            let (text, line) = text
+                .rsplit_once(" on line ")
+                .and_then(|(text, line)| line.parse::<usize>().ok().map(|line| (text, line)))
+                .unwrap_or((text, 0));
+            let mut rendered = format!("{label}: {text} in ").into_bytes();
+            rendered.extend_from_slice(&self.source.name);
+            rendered.extend_from_slice(format!(" on line {line}\n").as_bytes());
+            self.events.push(Diagnostic {
+                position: self.output_position,
+                rendered,
+            });
             self.messages.push(message);
         }
     }
+}
+
+/// A displayed diagnostic at its position in the request's ordinary byte output.
+pub(crate) struct Diagnostic {
+    pub position: usize,
+    pub rendered: Vec<u8>,
 }

@@ -195,13 +195,7 @@ impl Case {
         if let Err(error) = result {
             return Outcome::Failed(error.to_string());
         }
-        if !runtime.warnings.is_empty() {
-            return Outcome::Failed(format!(
-                "Unexpected diagnostics: {}",
-                runtime.warnings.join("; ")
-            ));
-        }
-        self.check_output(&runtime.output)
+        self.check_output(&runtime.output_with_diagnostics())
     }
     pub fn check_output(&self, actual: &[u8]) -> Outcome {
         if !self.unsupported.is_empty() {

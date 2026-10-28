@@ -817,7 +817,7 @@ impl Runtime {
                 return self.native_throwable_method(native, supplied_fixed, line);
             }
             self.strict_types = function.strict_types;
-            self.source = function.source.clone();
+            self.replace_source(function.source.clone());
             if let Some(closure) = &closure
                 && let Some(environment) = &closure.environment
             {
@@ -846,7 +846,7 @@ impl Runtime {
         self.current_returns_reference = caller_returns_reference;
         self.current_closure = caller_closure;
         self.strict_types = caller_strict;
-        self.source = caller_source;
+        self.replace_source(caller_source);
         result
     }
 }

@@ -1,0 +1,307 @@
+Zend suite
+
+Before: 5256 cases; 1664 passed, 3184 failed, 408 unsupported
+After: 5256 cases; 1798 passed, 3050 failed, 408 unsupported
+New passes: 134; regressions: 0
+NEW PASS: Zend/tests/arrow_functions/002.phpt
+NEW PASS: Zend/tests/arrow_functions/003.phpt
+NEW PASS: Zend/tests/assign_by_val_function_by_ref_return_value.phpt
+NEW PASS: Zend/tests/assign_obj_ref_byval_function.phpt
+NEW PASS: Zend/tests/assign_ref_func_leak.phpt
+NEW PASS: Zend/tests/attributes/constants/constant_redefined_addition.phpt
+NEW PASS: Zend/tests/attributes/constants/constant_redefined_change.phpt
+NEW PASS: Zend/tests/attributes/constants/constant_redefined_removal.phpt
+NEW PASS: Zend/tests/bug39018.phpt
+NEW PASS: Zend/tests/bug47109.phpt
+NEW PASS: Zend/tests/bug48899-deprecated.phpt
+NEW PASS: Zend/tests/bug52001.phpt
+NEW PASS: Zend/tests/bug67856.phpt
+NEW PASS: Zend/tests/bug72543_2.phpt
+NEW PASS: Zend/tests/bug72944.phpt
+NEW PASS: Zend/tests/bug75573.phpt
+NEW PASS: Zend/tests/bug76860.phpt
+NEW PASS: Zend/tests/bug76860_2.phpt
+NEW PASS: Zend/tests/bug79979.phpt
+NEW PASS: Zend/tests/by_ref_optimization.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_002.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_008.phpt
+NEW PASS: Zend/tests/call_user_functions/call_user_func_by_ref.phpt
+NEW PASS: Zend/tests/class_alias/class_alias_014.phpt
+NEW PASS: Zend/tests/class_alias/class_alias_017.phpt
+NEW PASS: Zend/tests/clone/clone_003.phpt
+NEW PASS: Zend/tests/clone/clone_with_002.phpt
+NEW PASS: Zend/tests/closures/closure_012.phpt
+NEW PASS: Zend/tests/closures/closure_018.phpt
+NEW PASS: Zend/tests/coalesce/assign_coalesce_007.phpt
+NEW PASS: Zend/tests/code_before_loop_var_free.phpt
+NEW PASS: Zend/tests/concat/assign_concat_array_empty_string.phpt
+NEW PASS: Zend/tests/const_dereference_002.phpt
+NEW PASS: Zend/tests/constants/constants_001.phpt
+NEW PASS: Zend/tests/constants/constants_004.phpt
+NEW PASS: Zend/tests/constants/constants_008.phpt
+NEW PASS: Zend/tests/constants/dynamic_class_const_fetch.phpt
+NEW PASS: Zend/tests/constexpr/constant_expressions_arrays.phpt
+NEW PASS: Zend/tests/constexpr/constant_expressions_dynamic.phpt
+NEW PASS: Zend/tests/constexpr/gh10014.phpt
+NEW PASS: Zend/tests/constexpr/gh9136.phpt
+NEW PASS: Zend/tests/constexpr/gh9136_2.phpt
+NEW PASS: Zend/tests/dereference/dereference_001.phpt
+NEW PASS: Zend/tests/div_by_zero_compound_with_conversion.phpt
+NEW PASS: Zend/tests/e_strict-deprecated.phpt
+NEW PASS: Zend/tests/entry_block_with_predecessors.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting03.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting04.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting05.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting08.phpt
+NEW PASS: Zend/tests/error_reporting/error_reporting09.phpt
+NEW PASS: Zend/tests/exceptions/bug30162.phpt
+NEW PASS: Zend/tests/foreach/foreach_list_002.phpt
+NEW PASS: Zend/tests/gc/bug65372.phpt
+NEW PASS: Zend/tests/get_class_vars/get_class_vars_002.phpt
+NEW PASS: Zend/tests/get_parent_class_001.phpt
+NEW PASS: Zend/tests/gh10570.phpt
+NEW PASS: Zend/tests/gh16515.phpt
+NEW PASS: Zend/tests/inference_infinite_loop.phpt
+NEW PASS: Zend/tests/inheritance/bug29689.phpt
+NEW PASS: Zend/tests/inheritance/bug79862.phpt
+NEW PASS: Zend/tests/is_callable_trampoline_uaf-deprecated.phpt
+NEW PASS: Zend/tests/isset/bug29883.phpt
+NEW PASS: Zend/tests/list/bug39304.phpt
+NEW PASS: Zend/tests/list/destruct_bool.phpt
+NEW PASS: Zend/tests/list/destruct_float.phpt
+NEW PASS: Zend/tests/list/destruct_int.phpt
+NEW PASS: Zend/tests/list/destruct_string.phpt
+NEW PASS: Zend/tests/list/list_006.phpt
+NEW PASS: Zend/tests/list/list_reference_003.phpt
+NEW PASS: Zend/tests/list/list_reference_005.phpt
+NEW PASS: Zend/tests/list/list_reference_006.phpt
+NEW PASS: Zend/tests/lsb/lsb_013.phpt
+NEW PASS: Zend/tests/magic_methods/bug37667.phpt
+NEW PASS: Zend/tests/magic_methods/bug39775.phpt
+NEW PASS: Zend/tests/magic_methods/bug44899.phpt
+NEW PASS: Zend/tests/magic_methods/bug63462.phpt
+NEW PASS: Zend/tests/magic_methods/bug66609.phpt
+NEW PASS: Zend/tests/magic_methods/bug74340.phpt
+NEW PASS: Zend/tests/magic_methods/bug76667.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_002.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_004.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_009.phpt
+NEW PASS: Zend/tests/match/042.phpt
+NEW PASS: Zend/tests/method_argument_binding.phpt
+NEW PASS: Zend/tests/named_params/undef_var.phpt
+NEW PASS: Zend/tests/namespaces/ns_033.phpt
+NEW PASS: Zend/tests/namespaces/ns_073.phpt
+NEW PASS: Zend/tests/not_001.phpt
+NEW PASS: Zend/tests/null_to_non_nullable_special_func.phpt
+NEW PASS: Zend/tests/nullsafe_operator/003.phpt
+NEW PASS: Zend/tests/nullsafe_operator/015.phpt
+NEW PASS: Zend/tests/nullsafe_operator/018.phpt
+NEW PASS: Zend/tests/nullsafe_operator/025.phpt
+NEW PASS: Zend/tests/nullsafe_operator/029.phpt
+NEW PASS: Zend/tests/nullsafe_operator/031.phpt
+NEW PASS: Zend/tests/nullsafe_operator/033.phpt
+NEW PASS: Zend/tests/objects/objects_001.phpt
+NEW PASS: Zend/tests/offsets/gh20194.phpt
+NEW PASS: Zend/tests/prop_const_expr/lhs_non_object.phpt
+NEW PASS: Zend/tests/prop_const_expr/rhs_prop_not_found.phpt
+NEW PASS: Zend/tests/property_guard_hash_val.phpt
+NEW PASS: Zend/tests/restrict_globals/valid.phpt
+NEW PASS: Zend/tests/result_unused.phpt
+NEW PASS: Zend/tests/return_by_ref_from_void_function.phpt
+NEW PASS: Zend/tests/return_ref_none.phpt
+NEW PASS: Zend/tests/str_offset_001.phpt
+NEW PASS: Zend/tests/str_offset_003.phpt
+NEW PASS: Zend/tests/str_offset_004.phpt
+NEW PASS: Zend/tests/string_offset_int_min_max.phpt
+NEW PASS: Zend/tests/traits/bug60536_001.phpt
+NEW PASS: Zend/tests/traits/bug76773-deprecated.phpt
+NEW PASS: Zend/tests/type_coercion/float_to_int/warnings_float_literals.phpt
+NEW PASS: Zend/tests/type_coercion/float_to_int/warnings_float_literals_assignment_ops.phpt
+NEW PASS: Zend/tests/type_coercion/float_to_int/warnings_float_vars.phpt
+NEW PASS: Zend/tests/type_coercion/int_special_values.phpt
+NEW PASS: Zend/tests/type_coercion/type_casts/non_canonical_binary_cast.phpt
+NEW PASS: Zend/tests/type_coercion/type_casts/non_canonical_boolean_cast.phpt
+NEW PASS: Zend/tests/type_coercion/type_casts/non_canonical_double_cast.phpt
+NEW PASS: Zend/tests/type_coercion/type_casts/non_canonical_integer_cast.phpt
+NEW PASS: Zend/tests/type_declarations/callable/callable_003.phpt
+NEW PASS: Zend/tests/type_declarations/literal_types/false_standalone_implicit_nullability.phpt
+NEW PASS: Zend/tests/type_declarations/literal_types/true_standalone_implicit_nullability.phpt
+NEW PASS: Zend/tests/type_declarations/nullable_null.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_103.phpt
+NEW PASS: Zend/tests/unset/unset_cv01.phpt
+NEW PASS: Zend/tests/unset/unset_cv02.phpt
+NEW PASS: Zend/tests/unset/unset_cv03.phpt
+NEW PASS: Zend/tests/unset/unset_cv04.phpt
+NEW PASS: Zend/tests/use_function/ns_end_resets_seen_symbols_1.phpt
+NEW PASS: Zend/tests/use_function/ns_end_resets_seen_symbols_2.phpt
+NEW PASS: Zend/tests/varSyntax/encapsed_string_deref.phpt
+NEW PASS: Zend/tests/varSyntax/magic_const_deref.phpt
+NEW PASS: Zend/tests/varSyntax/propertyOfStringError.phpt
+
+Most frequent remaining failure messages:
+372: ParseError: Expected ';'
+137: Error: Call to undefined function set_error_handler()
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+29: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+24: Error: Class "ArrayObject" not found
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 244 passed, 211 failed, 37 unsupported
+After: 492 cases; 265 passed, 190 failed, 37 unsupported
+New passes: 21; regressions: 0
+NEW PASS: ext/reflection/tests/008.phpt
+NEW PASS: ext/reflection/tests/022.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_constructor_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getConstant_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getConstant_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getInterfaces_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getMethod_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getProperty_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getStaticPropertyValue_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_isSubclassOf_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_setStaticPropertyValue_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_constructor_error1.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_setAccessible.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_getConstant_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isSubclassOf.002.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getDefaultValue.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_setAccessible.phpt
+NEW PASS: ext/reflection/tests/bug30146.phpt
+NEW PASS: ext/reflection/tests/bug38653.phpt
+NEW PASS: ext/reflection/tests/bug42976.phpt
+
+Most frequent remaining failure messages:
+24: ParseError: Expected ';'
+22: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: Error: Class "Reflection" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Spl suite
+
+Before: 778 cases; 18 passed, 666 failed, 94 unsupported
+After: 778 cases; 19 passed, 665 failed, 94 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/spl_autoload_warn_on_false_do_throw.phpt
+
+Most frequent remaining failure messages:
+110: Error: Class "ArrayObject" not found
+67: Error: Class "ArrayIterator" not found
+63: Error: Class "SplFixedArray" not found
+52: Error: Class "SplFileObject" not found
+40: Error: Class "SplDoublyLinkedList" not found
+33: Error: Class "RecursiveArrayIterator" not found
+33: Error: Class "SplObjectStorage" not found
+21: Error: Class "SplTempFileObject" not found
+20: Error: Class "RecursiveIteratorIterator" not found
+20: Error: Class "SplFileInfo" not found
+17: Error: Class "SplMaxHeap" not found
+15: Error: Class "SplPriorityQueue" not found
+13: Error: Interface "Iterator" not found
+10: Error: Class "SplMinHeap" not found
+9: Error: Class "AppendIterator" not found
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+Standard suite
+
+Before: 730 cases; 299 passed, 279 failed, 152 unsupported
+After: 730 cases; 316 passed, 262 failed, 152 unsupported
+New passes: 17; regressions: 0
+NEW PASS: ext/standard/tests/strings/addcslashes_005.phpt
+NEW PASS: ext/standard/tests/strings/bug54238.phpt
+NEW PASS: ext/standard/tests/strings/bug61660.phpt
+NEW PASS: ext/standard/tests/strings/bug71969.phpt
+NEW PASS: ext/standard/tests/strings/chr_out_of_range.phpt
+NEW PASS: ext/standard/tests/strings/chr_variation1.phpt
+NEW PASS: ext/standard/tests/strings/hex2bin_error.phpt
+NEW PASS: ext/standard/tests/strings/implode_basic.phpt
+NEW PASS: ext/standard/tests/strings/join_variation3.phpt
+NEW PASS: ext/standard/tests/strings/join_variation5.phpt
+NEW PASS: ext/standard/tests/strings/ltrim_error.phpt
+NEW PASS: ext/standard/tests/strings/ord_not_1_byte.phpt
+NEW PASS: ext/standard/tests/strings/rtrim_error.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation52.phpt
+NEW PASS: ext/standard/tests/strings/strtr_empty_search_string.phpt
+NEW PASS: ext/standard/tests/strings/trim_error.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation8.phpt
+
+Most frequent remaining failure messages:
+29: Error: Call to undefined function fopen()
+17: Error: Call to undefined function html_entity_decode()
+14: Error: Call to undefined function sscanf()
+14: Error: Call to undefined function pack()
+13: Error: Call to undefined function crypt()
+8: Error: Undefined constant "HTML_ENTITIES"
+7: Error: Call to undefined function htmlspecialchars()
+6: Error: Call to undefined function wordwrap()
+6: Error: Call to undefined function base64_decode()
+6: Error: Call to undefined function htmlentities()
+6: Error: Call to undefined function str_getcsv()
+6: Error: Call to undefined function md5()
+6: Error: Call to undefined function strtok()
+5: Error: Call to undefined function htmlspecialchars_decode()
+5: Error: Call to undefined function levenshtein()
+
+Unsupported section combinations:
+84: SKIPIF
+40: INI
+11: INI, SKIPIF
+7: EXTENSIONS, INI
+5: CLEAN, INI
+3: EXTENSIONS
+2: ENV, SKIPIF

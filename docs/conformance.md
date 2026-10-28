@@ -853,6 +853,33 @@ signatures, constants, and upstream fixtures establish these rules. Diagnostic m
 INI/memory settings, deprecated interpolation, other APIs, and complete native reflection
 metadata remain unfinished.
 
+The [diagnostic display slice](conformance/php-8.5.0-diagnostics-hillclimb.txt) adds
+**173 upstream passes**: 134 Zend, 21 reflection, 17 standard string, and one SPL
+fixture, with no regressions. Diagnostics now record their source filename and byte
+position in ordinary output at emission time, after error-reporting filtering.
+Warnings, notices, and deprecations render with PHP's labels and source locations;
+function, include, eval, parameter-conversion, and reflected-attribute source contexts
+restore together. Compile diagnostics retain the compiled file's identity.
+
+The public Rust output and warning vectors remain separate. The CLI writes output
+and diagnostics to their respective streams in recorded order, flushing at boundaries.
+The PHPT harness interleaves displayed diagnostics with output and matches EXPECT,
+EXPECTF, or EXPECTREGEX. Reference checks use `display_errors=1` and `log_errors=0`,
+requiring matching expectations and process status. This replaces the previous blanket
+rejection of nonfatal diagnostics; unexpected warnings still fail output comparisons.
+Buffered print/export output and direct dumps retain their different emission ordering,
+including diagnostic positions relocated from temporary closure-dump buffers.
+
+Full suites reach **1798 / 3050 / 408** for Zend, **265 / 190 / 37** for reflection,
+**19 / 665 / 94** for SPL, and **316 / 262 / 152** for standard strings. All 797 existing
+Rust tests and 57 reference-checked project fixtures pass; formatting and Clippy pass.
+No custom tests were added. Existing upstream fixtures drive validation of diagnostic
+text, ordering, source locations, suppression, and reference behavior. These are gains
+in measured conformance from rendering existing diagnostics, not newly implemented
+language features. Fatal/uncaught diagnostic rendering, error handlers, configuration,
+and some diagnostic text/ordering edge cases remain incomplete; fatal errors still
+fail in the harness. Unsupported fixture counts are unchanged.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -860,11 +887,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1664 | 3184 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 244 | 211 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 18 | 666 | 94 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1798 | 3050 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 265 | 190 | 37 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 19 | 665 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 299 | 279 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 316 | 262 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

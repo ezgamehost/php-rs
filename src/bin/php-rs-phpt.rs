@@ -176,7 +176,7 @@ fn reference_check(
 ) -> Result<Outcome, String> {
     let mut command = Command::new(binary);
     command
-        .args(["-n", "-d", "display_errors=stderr", "-d", "log_errors=0"])
+        .args(["-n", "-d", "display_errors=1", "-d", "log_errors=0"])
         .arg(path)
         .current_dir(working_directory)
         .stdin(Stdio::null());

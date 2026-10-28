@@ -19,7 +19,7 @@ impl Runtime {
         if return_output {
             Ok(Value::String(output.into()))
         } else {
-            self.output.extend(output);
+            self.emit_output(&output);
             Ok(Value::Bool(true))
         }
     }
