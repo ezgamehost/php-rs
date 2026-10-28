@@ -199,11 +199,12 @@ impl Runtime {
                 .1;
             properties.insert(ArrayKey::String(b"value".to_vec()), value);
         }
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         Ok(Value::Object(Rc::new(PhpObject {
             class: class.clone(),
             class_name: class.display_name().into_owned(),
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
             properties: RefCell::new(properties),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),

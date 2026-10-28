@@ -132,7 +132,7 @@ impl Runtime {
             }
             _ => {}
         }
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         Value::Object(Rc::new(PhpObject {
             reflection: RefCell::new(Some(data)),
             throwable: RefCell::default(),
@@ -141,7 +141,8 @@ impl Runtime {
             properties: RefCell::new(properties),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
         }))
     }
 

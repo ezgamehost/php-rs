@@ -403,7 +403,7 @@ impl Runtime {
                     if let Some(closure) = target.closure {
                         return Ok(Value::Closure(closure));
                     }
-                    self.next_object_id += 1;
+                    let handle = self.allocate_object_handle();
                     return Ok(Value::Closure(Rc::new(crate::Closure {
                         magic_name: target.magic_name,
                         name: target.name,
@@ -411,7 +411,8 @@ impl Runtime {
                         context: target.context,
                         function: target.function,
                         environment: None,
-                        object_id: self.next_object_id,
+                        object_id: handle.id,
+                        _handle: handle,
                     })));
                 }
                 let Some(Value::Array(args)) = self.lookup(b"args") else {

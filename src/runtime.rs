@@ -102,7 +102,7 @@ pub struct Runtime {
     included_set: HashSet<std::path::PathBuf>,
     working_directory: Option<std::path::PathBuf>,
     exit_status: Option<i32>,
-    next_object_id: usize,
+    object_store: Rc<RefCell<crate::object::ObjectStore>>,
 }
 struct Location {
     overloaded: Option<Value>,

@@ -589,6 +589,24 @@ Configurable serialize_precision, property hooks, resources, and full native obj
 property representations remain incomplete. The implementation follows PHP 8.5.0
 `ext/standard/var.c`, native float formatting rules, and the upstream fixtures.
 
+The [object-handle slice](conformance/php-8.5.0-object-handles-hillclimb.txt) adds
+**28 upstream passes**: 22 Zend, five reflection, and one SPL, with zero regressions.
+Ordinary objects, closures, clones, enum cases, reflectors, sensitive-value wrappers,
+and exceptions now share a request-local allocator. Released handles are reused in
+last-freed-first order, after contained fields have released their own references.
+Live aliases keep the original handle; objects retained outside the Runtime keep the
+allocator alive. spl_object_id and spl_object_hash expose numeric handles and PHP's
+32-character hexadecimal representation for objects and closures.
+
+The full Zend suite records **1596 passed / 3252 failed / 408 unsupported**; reflection
+records **240 / 215 / 37**, and the newly measured full SPL suite records **17 / 667 / 94**.
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, with
+formatting and Clippy green. No custom tests were added. The implementation follows
+PHP 8.5.0 `Zend/zend_objects_API.c`, `ext/spl/php_spl.c`, and upstream fixtures.
+Cyclic garbage collection, destructor callbacks, and complete lifetime parity remain
+unfinished; this implements handle recycling for objects whose owning references are
+actually released.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -596,8 +614,9 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1574 | 3274 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 235 | 220 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1596 | 3252 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 240 | 215 | 37 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 17 | 667 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |

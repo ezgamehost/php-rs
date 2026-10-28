@@ -183,6 +183,9 @@ definition of completion.
    visibility, declaration/inheritance order, private ancestors, and name shadowing.
    Exporting values supports escaped byte strings, shortest round-tripping floats,
    arrays, ordinary object properties, enum cases, and circular-reference warnings.
+   Objects and closures share a request-local handle allocator, recycling released
+   handles in PHP's last-freed-first order after contained values are released.
+   spl_object_id and spl_object_hash expose the handle without affecting ownership.
    Trait composition installs aliases before the original method, matching Zend.
    Formatted printing/string construction supports printf,
    sprintf, vprintf, and vsprintf, including positional arguments, star width/precision,

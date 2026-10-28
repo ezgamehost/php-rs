@@ -91,6 +91,10 @@ new request. The CLI returns the low eight bits of the requested status.
   Instance methods bind `$this`, support named/typed arguments, and
   expose bound first-class callables. Non-static closures retain `$this`.
   Method-array callbacks and invokable objects work with pipes and array callbacks.
+- Request-local object handles are shared by objects and closures and recycled
+  after their last owning reference is released. `spl_object_id` and `spl_object_hash`
+  expose those handles. Cyclic garbage collection and destructor callbacks remain
+  unfinished.
 - Anonymous classes, including readonly declarations, constructor arguments,
   inheritance, interfaces, and traits. Repeated executions share the declaration's
   class and static state; separately compiled declarations have distinct identities.

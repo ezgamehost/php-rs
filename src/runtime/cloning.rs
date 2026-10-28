@@ -61,7 +61,7 @@ impl Runtime {
         {
             self.check_method_access(&method, line)?;
         }
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         if let Value::Closure(closure) = original {
             if let Some((key, _)) = updates.and_then(|a| a.entries().first()) {
                 return Err(Error::new(
@@ -104,7 +104,8 @@ impl Runtime {
                 context: closure.context.clone(),
                 function: closure.function.clone(),
                 environment,
-                object_id: self.next_object_id,
+                object_id: handle.id,
+                _handle: handle,
             })));
         }
         let Value::Object(original) = original else {
@@ -125,7 +126,8 @@ impl Runtime {
             properties: RefCell::new(original.properties.borrow().clone()),
             unset_properties: RefCell::new(original.unset_properties.borrow().clone()),
             reinitializable: RefCell::new(original.reinitializable.borrow().clone()),
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
         });
         self.inherit_reference_sources(&object);
         if let Some(method) = objects::method(&object.class, b"__clone") {

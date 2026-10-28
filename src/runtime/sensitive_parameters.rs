@@ -10,7 +10,7 @@ impl Runtime {
             ArrayKey::String(class.properties[0].storage_name()),
             value.dereferenced(),
         );
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         Value::Object(Rc::new(crate::PhpObject {
             class_name: "SensitiveParameterValue".into(),
             class,
@@ -19,7 +19,8 @@ impl Runtime {
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
             throwable: RefCell::default(),
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
         }))
     }
 

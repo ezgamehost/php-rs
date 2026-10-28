@@ -11,6 +11,7 @@ pub struct Closure {
     pub(crate) function: Option<Rc<FunctionDecl>>,
     pub(crate) object_id: usize,
     pub(crate) environment: Option<Environment>,
+    pub(crate) _handle: crate::object::ObjectHandle,
 }
 
 #[derive(Debug)]

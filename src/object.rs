@@ -47,6 +47,44 @@ pub struct PhpObject {
     pub(crate) unset_properties: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) object_id: usize,
+    // Release the handle after fields that may own other PHP objects.
+    pub(crate) _handle: ObjectHandle,
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct ObjectStore {
+    next: usize,
+    free: Vec<usize>,
+}
+
+#[derive(Debug)]
+pub(crate) struct ObjectHandle {
+    pub id: usize,
+    store: Rc<RefCell<ObjectStore>>,
+}
+
+impl ObjectHandle {
+    pub fn allocate(store: &Rc<RefCell<ObjectStore>>) -> Self {
+        let id = {
+            let mut store = store.borrow_mut();
+            if let Some(id) = store.free.pop() {
+                id
+            } else {
+                store.next += 1;
+                store.next
+            }
+        };
+        Self {
+            id,
+            store: store.clone(),
+        }
+    }
+}
+
+impl Drop for ObjectHandle {
+    fn drop(&mut self) {
+        self.store.borrow_mut().free.push(self.id);
+    }
 }
 
 #[derive(Clone)]

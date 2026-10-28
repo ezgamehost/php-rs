@@ -116,7 +116,7 @@ impl Runtime {
                 properties.insert(ArrayKey::String(b"scalar".to_vec()), value);
             }
         }
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         Value::Object(Rc::new(crate::PhpObject {
             class: self.find_class(b"stdClass").expect("built-in stdClass"),
             class_name: "stdClass".to_owned(),
@@ -125,7 +125,8 @@ impl Runtime {
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
             throwable: RefCell::new(None),
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
         }))
     }
 }

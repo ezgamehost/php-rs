@@ -27,7 +27,7 @@ impl Runtime {
             };
             captures.push((capture.name.clone(), value));
         }
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         Ok(Value::Closure(Rc::new(crate::Closure {
             magic_name: None,
             name: lambda.function.name.clone(),
@@ -41,7 +41,8 @@ impl Runtime {
                 None
             },
             function: Some(lambda.function.clone()),
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
             environment: Some(Environment {
                 captures,
                 statics: RefCell::new(HashMap::new()),

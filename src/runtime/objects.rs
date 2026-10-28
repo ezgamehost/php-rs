@@ -7,6 +7,10 @@ use crate::{
 };
 
 impl Runtime {
+    pub(super) fn allocate_object_handle(&self) -> crate::object::ObjectHandle {
+        crate::object::ObjectHandle::allocate(&self.object_store)
+    }
+
     pub(super) fn prepare_classes(&mut self, statements: &mut [Stmt]) -> Result<(), Error> {
         let mut linked = Vec::new();
         // Early binding follows declaration order. An inherited class whose
@@ -475,8 +479,8 @@ impl Runtime {
         }
         self.initialize_class(&class)?;
         let properties = self.property_defaults(&class)?;
-        self.next_object_id += 1;
-        let object_id = self.next_object_id;
+        let handle = self.allocate_object_handle();
+        let object_id = handle.id;
         let object = Rc::new(PhpObject {
             reflection: RefCell::default(),
             throwable: RefCell::new(self.throwable_data(&class, line)),
@@ -486,6 +490,7 @@ impl Runtime {
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             object_id,
+            _handle: handle,
         });
         if !call_constructor {
             return Ok(Value::Object(object));

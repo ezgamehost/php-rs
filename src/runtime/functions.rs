@@ -68,7 +68,7 @@ impl Runtime {
         if let Some(closure) = target.closure {
             return Ok(Value::Closure(closure));
         }
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         Ok(Value::Closure(Rc::new(crate::Closure {
             magic_name: target.magic_name,
             name: if matches!(target.builtin, Some(Builtin::Exit)) {
@@ -79,7 +79,8 @@ impl Runtime {
             this: target.this,
             context: target.context,
             function: target.function,
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
             environment: None,
         })))
     }

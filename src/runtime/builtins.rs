@@ -33,6 +33,8 @@ pub(super) enum Builtin {
     MethodExists,
     PropertyExists,
     GetObjectVars,
+    ObjectId,
+    ObjectHash,
     GetClassVars,
     GetClassMethods,
     Is(&'static str),
@@ -96,6 +98,8 @@ impl Builtin {
             b"method_exists" => Self::MethodExists,
             b"property_exists" => Self::PropertyExists,
             b"get_object_vars" => Self::GetObjectVars,
+            b"spl_object_id" => Self::ObjectId,
+            b"spl_object_hash" => Self::ObjectHash,
             b"get_class_vars" => Self::GetClassVars,
             b"get_class_methods" => Self::GetClassMethods,
             b"is_int" | b"is_integer" | b"is_long" => Self::Is("int"),
@@ -142,7 +146,7 @@ impl Builtin {
             Self::GetCalledClass => &[],
             Self::GetClassVars => &[("class", false, false)],
             Self::GetClassMethods => &[("object_or_class", false, false)],
-            Self::GetObjectVars => &[("object", false, false)],
+            Self::GetObjectVars | Self::ObjectId | Self::ObjectHash => &[("object", false, false)],
             Self::EnumExists => &[("enum", false, false), ("autoload", true, false)],
             Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
             Self::ClassAlias => &[
@@ -469,6 +473,18 @@ impl Runtime {
             Builtin::Strlen => Ok(Value::Int(
                 self.native_string(first, &name, 1, line)?.len() as i64
             )),
+            Builtin::ObjectId | Builtin::ObjectHash => {
+                let id = match first {
+                    Value::Object(object) => object.object_id,
+                    Value::Closure(closure) => closure.object_id,
+                    _ => return Err(type_error(first, &name, 1, "object", line)),
+                };
+                Ok(if matches!(builtin, Builtin::ObjectId) {
+                    Value::Int(id as i64)
+                } else {
+                    Value::String(format!("{id:016x}0000000000000000").into_bytes().into())
+                })
+            }
             Builtin::GetType => Ok(Value::String(
                 match first {
                     Value::Reference(_) | Value::Indirect(_) => {

@@ -262,11 +262,12 @@ impl Runtime {
         }
         let name = format!("{:?}", error.kind);
         let class = self.find_class(name.as_bytes()).expect("error class");
-        self.next_object_id += 1;
+        let handle = self.allocate_object_handle();
         error.throwable = Some(Rc::new(crate::PhpObject {
             class_name: name,
             class,
-            object_id: self.next_object_id,
+            object_id: handle.id,
+            _handle: handle,
             properties: RefCell::default(),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
