@@ -74,6 +74,7 @@ impl Runtime {
                 None,
                 "
                 public const int IS_INSTANCEOF=2;
+                public string $name;
                 private function __construct() {}
                 private function __clone(): void {}
                 public function getName(): string {}
@@ -140,6 +141,29 @@ impl Runtime {
                 public function invoke(?object $object, mixed ...$args): mixed {}
                 public function invokeArgs(?object $object, array $args): mixed {}
                 public function setAccessible(bool $accessible): void {}
+            "),
+            b"reflectionconstant" => ("ReflectionConstant", None, "
+                public string $name;
+                public function __construct(string $name) {}
+                public function getName(): string {}
+                public function getNamespaceName(): string {}
+                public function getShortName(): string {}
+                public function getValue(): mixed {}
+                public function isDeprecated(): bool {}
+                public function getFileName(): string|false {}
+                public function getExtension(): ?ReflectionExtension {}
+                public function getExtensionName(): string|false {}
+                public function __toString(): string {}
+                public function getAttributes(?string $name=null, int $flags=0): array {}
+            "),
+            b"reflectionextension" => ("ReflectionExtension", None, "
+                public string $name;
+                private function __clone(): void {}
+                public function __construct(string $name) {}
+                public function getName(): string {}
+                public function getVersion(): ?string {}
+                public function isPersistent(): bool {}
+                public function isTemporary(): bool {}
             "),
             b"reflectionclassconstant" => ("ReflectionClassConstant", None, "
                 public const int IS_PUBLIC=1, IS_PROTECTED=2, IS_PRIVATE=4, IS_FINAL=32;
@@ -246,7 +270,10 @@ impl Runtime {
         };
         let implements = if matches!(
             canonical,
-            "ReflectionType" | "ReflectionProperty" | "ReflectionClassConstant"
+            "ReflectionType"
+                | "ReflectionProperty"
+                | "ReflectionClassConstant"
+                | "ReflectionConstant"
         ) {
             " implements Stringable"
         } else {
@@ -293,7 +320,10 @@ impl Runtime {
             parent,
             interfaces: if matches!(
                 canonical,
-                "ReflectionType" | "ReflectionProperty" | "ReflectionClassConstant"
+                "ReflectionType"
+                    | "ReflectionProperty"
+                    | "ReflectionClassConstant"
+                    | "ReflectionConstant"
             ) {
                 vec![self.find_class(b"Stringable").unwrap()]
             } else {

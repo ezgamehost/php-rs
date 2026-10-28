@@ -1,0 +1,93 @@
+Zend suite
+
+Before: 5256 cases; 1490 passed, 3358 failed, 408 unsupported
+After: 5256 cases; 1498 passed, 3350 failed, 408 unsupported
+New passes: 8; regressions: 0
+NEW PASS: Zend/tests/attributes/001_placement.phpt
+NEW PASS: Zend/tests/attributes/constants/allow_named_parameters.phpt
+NEW PASS: Zend/tests/attributes/constants/multiple_attributes_grouped.phpt
+NEW PASS: Zend/tests/attributes/constants/multiple_attributes_ungrouped.phpt
+NEW PASS: Zend/tests/attributes/constants/oss_fuzz_428053935.phpt
+NEW PASS: Zend/tests/attributes/constants/repeatable-userland.phpt
+NEW PASS: Zend/tests/attributes/constants/target_all_targets_const-default.phpt
+NEW PASS: Zend/tests/attributes/constants/target_all_targets_const-explicit.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 206 passed, 249 failed, 37 unsupported
+After: 492 cases; 219 passed, 236 failed, 37 unsupported
+New passes: 13; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionConstant_getAttributes.phpt
+NEW PASS: ext/reflection/tests/ReflectionConstant_getAttributes_empty.phpt
+NEW PASS: ext/reflection/tests/ReflectionConstant_getAttributes_internal.phpt
+NEW PASS: ext/reflection/tests/ReflectionConstant_inexistent.phpt
+NEW PASS: ext/reflection/tests/ReflectionConstant_isDeprecated_userland.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_constructor_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_constructor_error.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_double_construct.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_getName_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_getVersion_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_isPersistant.phpt
+NEW PASS: ext/reflection/tests/ReflectionExtension_isTemporary.phpt
+NEW PASS: ext/reflection/tests/gh12908.phpt
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+19: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: object-ID reuse, random/resource APIs, runtime effects of user Deprecated attributes, complete extension inventories and reflection APIs, and remaining internal constants are unfinished. Full reflector interfaces and diagnostic matching remain incomplete. Unsupported sections are not counted as passes.

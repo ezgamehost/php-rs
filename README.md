@@ -126,6 +126,11 @@ new request. The CLI returns the low eight bits of the requested status.
   survive lexing, grouped declarations, inheritance, and trait composition.
   Reflection metadata field writes raise ReflectionException; fields retain their
   native typed-property behavior for unsetting and references.
+- Global-constant reflection retains original names, source files, values, attributes,
+  and declaration strictness. It exposes namespace/short names, deprecation metadata,
+  extension ownership, and declaration strings. ReflectionAttribute exposes its name
+  field. Basic extension reflection provides names, versions, and persistence for Core,
+  standard, Reflection, and SPL; complete extension inventories/APIs remain unfinished.
 - Public/protected/private instance properties and constructor promotion, with
   separate private slots across inheritance, scoped iteration and `get_object_vars`,
   mangled array-cast keys, and asymmetric setters. Final properties and readonly

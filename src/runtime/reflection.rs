@@ -9,6 +9,7 @@ mod attributes;
 mod constants;
 mod declarations;
 mod functions;
+mod global_constants;
 mod parameters;
 mod properties;
 use properties::PropertyReflection;
@@ -21,6 +22,8 @@ pub(crate) enum ReflectionData {
         name: Vec<u8>,
     },
     Object(Rc<PhpObject>),
+    Constant(Rc<super::constants::GlobalConstant>),
+    Extension(String),
     Property(PropertyReflection),
     Function(FunctionReflection),
     Parameter {
@@ -75,6 +78,15 @@ impl Runtime {
         let class = self.find_class(kind).expect("reflection class");
         let mut properties = PhpArray::default();
         match &data {
+            ReflectionData::Constant(constant) => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(&constant.name));
+            }
+            ReflectionData::Extension(name) => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(name));
+            }
+            ReflectionData::Attribute { attribute, .. } => {
+                properties.insert(ArrayKey::String(b"name".to_vec()), string(&attribute.name));
+            }
             ReflectionData::Class(class) => {
                 properties.insert(ArrayKey::String(b"name".to_vec()), string(&class.name));
             }
@@ -193,6 +205,12 @@ impl Runtime {
             return Err(self.reflection_error("Cannot clone object using __clone()", line));
         }
         if name == b"__construct" {
+            if object.class.is_a(b"ReflectionConstant") {
+                return self.reflection_constant_constructor(&object, line);
+            }
+            if object.class.is_a(b"ReflectionExtension") {
+                return self.reflection_extension_constructor(&object, line);
+            }
             if object.class.is_a(b"ReflectionClassConstant") {
                 return self.reflection_class_constant_constructor(&object, line);
             }
@@ -252,6 +270,12 @@ impl Runtime {
             )
         })?;
         match data {
+            ReflectionData::Constant(constant) => {
+                self.reflect_constant_method(&constant, &name, line)
+            }
+            ReflectionData::Extension(extension) => {
+                self.reflect_extension_method(&extension, &name)
+            }
             ReflectionData::Class(class) => {
                 self.reflect_class_method(&class, None, &name, supplied, line)
             }
@@ -329,7 +353,9 @@ impl Runtime {
                             && !class.is_a(b"ReflectionParameter")
                             && !class.is_a(b"ReflectionType")
                             && !class.is_a(b"ReflectionProperty")
-                            && !class.is_a(b"ReflectionClassConstant"))),
+                            && !class.is_a(b"ReflectionClassConstant")
+                            && !class.is_a(b"ReflectionConstant")
+                            && !class.is_a(b"ReflectionExtension"))),
             ),
             b"isinterface" => Value::Bool(decl.is_interface),
             b"istrait" => Value::Bool(decl.is_trait),

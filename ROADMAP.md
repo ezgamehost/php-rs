@@ -156,13 +156,17 @@ definition of completion.
    Class-constant reflection supports individual/filtered discovery, deferred values,
    types/flags/attributes, declaring classes, and declaration strings. Ordinary
    property/constant documentation comments survive lexing and composition.
+   Global constants retain declaration names/source/attributes/strictness for reflection.
+   Their reflectors expose values, namespace names, deprecation flags, attributes,
+   extension ownership, and declaration strings. Basic extension name/version/persistence
+   reflection is available for Core, standard, Reflection, and SPL.
    Native reflector metadata fields use the reflection write handler rather than
    PHP readonly-property flags. Native methods share argument-count validation
    with other internal functions.
    Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
    direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
-   complete property/constant diagnostics, property hooks, remaining magic methods, global-constant reflection,
+   complete property/constant diagnostics, property hooks, remaining magic methods, complete extension reflection/inventories,
    promoted-property/class/function doc comments, raw property access and expression
    stringification, complete internal
    property/builtin signature metadata, prototypes/static variables, lazy objects,

@@ -92,7 +92,7 @@ pub struct Runtime {
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
     builtin_classes: RefCell<HashMap<Vec<u8>, Rc<crate::object::Class>>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
-    constants: HashMap<Vec<u8>, Value>,
+    constants: HashMap<Vec<u8>, Rc<constants::GlobalConstant>>,
     strict_types: bool,
     source: Rc<crate::source::Source>,
     included_files: Vec<std::path::PathBuf>,
@@ -156,10 +156,15 @@ impl Runtime {
                     self.bind_static(name, initializer.as_ref())?;
                 }
             }
-            Stmt::Const(constants, _) => {
+            Stmt::Const(constants, attributes) => {
                 for (name, expr) in constants {
                     let value = self.eval_default(expr)?;
-                    self.define_constant(name.clone(), value, expr.line);
+                    self.define_constant_with_attributes(
+                        name.clone(),
+                        value,
+                        attributes.clone(),
+                        expr.line,
+                    );
                 }
             }
             Stmt::Class(class) => self.register_class(class.clone())?,

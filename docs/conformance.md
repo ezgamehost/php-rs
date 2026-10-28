@@ -526,6 +526,28 @@ and internal metadata, and class/function declaration rendering remain unfinishe
 Expected diagnostic matching still blocks fatal/deprecation fixtures; unsupported sections
 are not counted as passes.
 
+The [global-constant reflection slice](conformance/php-8.5.0-global-constant-reflection-hillclimb.txt)
+adds 8 Zend and 13 reflection passes with zero regressions in either suite.
+Global constant records retain the original declaration name, value, source file,
+attributes, and strict-types setting. Namespace lookup remains case-insensitive for
+its prefix while reflection reports the original spelling. `ReflectionConstant` exposes
+names, values, source locations, deprecation metadata, attributes, extension ownership,
+and declaration strings. Reflection reads avoid ordinary constant-access deprecations.
+
+Global attributes use the constant target and declaration context for filtering,
+argument evaluation, repeatability checks, and instantiation. Native `E_STRICT` metadata
+includes its Deprecated attribute and named arguments. `ReflectionAttribute` now exposes
+its public name field. Basic `ReflectionExtension` objects provide names, versions, and
+persistence for Core, standard, Reflection, and SPL; extension inventories and the rest
+of their reflection API remain unfinished.
+
+All 797 existing Rust tests and 57 reference-checked project fixtures pass, with formatting
+and Clippy green. No new custom tests were added. Remaining global-constant fixtures are
+blocked by object-ID reuse, random/resource APIs, or unsupported extension sections.
+Runtime effects of user Deprecated attributes, remaining internal constants, full
+reflector interfaces, and diagnostic matching remain incomplete. Unsupported sections
+are not counted as passes.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
@@ -533,8 +555,8 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1490 | 3358 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 206 | 249 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1498 | 3350 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 219 | 236 | 37 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `ext/standard/tests/class_object/get_class_{methods,vars}*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/is_callable*.phpt`, Rust and reference PHP for passing cases | 4 | 3 | 0 |

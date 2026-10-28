@@ -647,6 +647,8 @@ impl Runtime {
                 || object.class.is_a(b"ReflectionParameter")
                 || object.class.is_a(b"ReflectionProperty")
                 || object.class.is_a(b"ReflectionClassConstant")
+                || object.class.is_a(b"ReflectionConstant")
+                || object.class.is_a(b"ReflectionExtension")
                 || object.class.is_a(b"ReflectionAttribute")
                 || object.class.is_a(b"ReflectionType"))
             && object.class.properties.iter().any(|p| p.name == name)
