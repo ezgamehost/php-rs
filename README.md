@@ -60,6 +60,9 @@ new request. The CLI returns the low eight bits of the requested status.
   keys, signed padding, and native size validation.
 - `range` generates integer, floating-point, and byte-string sequences, with native
   endpoint/step coercion, direction checks, conversion diagnostics, and size bounds.
+- `abs`, `ceil`, `floor`, `sqrt`, `intdiv`, `fdiv`, `fmod`, `fpow`, and the
+  finite/infinite/NaN predicates support native numeric argument conversion.
+  `pow` and `**` share integer overflow promotion and PHP 8.5 zero-base deprecations.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.

@@ -65,6 +65,7 @@ pub(super) enum Builtin {
     GetClassMethods,
     Is(&'static str),
     Range,
+    Math(math::Math),
     ArraySlice,
     ArrayReverse,
     ArrayChunk,
@@ -192,6 +193,18 @@ impl Builtin {
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
             b"range" => Self::Range,
+            b"abs" => Self::Math(math::Math::Abs),
+            b"ceil" => Self::Math(math::Math::Ceil),
+            b"floor" => Self::Math(math::Math::Floor),
+            b"pow" => Self::Math(math::Math::Pow),
+            b"fpow" => Self::Math(math::Math::Fpow),
+            b"fdiv" => Self::Math(math::Math::Fdiv),
+            b"fmod" => Self::Math(math::Math::Fmod),
+            b"intdiv" => Self::Math(math::Math::Intdiv),
+            b"sqrt" => Self::Math(math::Math::Sqrt),
+            b"is_finite" => Self::Math(math::Math::IsFinite),
+            b"is_infinite" => Self::Math(math::Math::IsInfinite),
+            b"is_nan" => Self::Math(math::Math::IsNan),
             b"array_slice" => Self::ArraySlice,
             b"array_reverse" => Self::ArrayReverse,
             b"array_chunk" => Self::ArrayChunk,
@@ -369,6 +382,7 @@ impl Builtin {
                 ("end", false, false),
                 ("step", true, false),
             ],
+            Self::Math(kind) => kind.parameters(),
             Self::ArraySlice => &[
                 ("array", false, false),
                 ("offset", false, false),
@@ -681,6 +695,7 @@ impl Runtime {
                 Ok(Value::Bool(exists))
             }
             Builtin::Range => self.range(&args, line),
+            Builtin::Math(kind) => self.math(kind, &name, &args, line),
             Builtin::ArraySlice
             | Builtin::ArrayReverse
             | Builtin::ArrayChunk

@@ -41,6 +41,7 @@ mod jumps;
 mod loading;
 mod magic_properties;
 mod matching;
+mod math;
 mod method_visibility;
 mod nullsafe;
 mod objects;
@@ -1058,6 +1059,9 @@ fn binary(
     warnings: &mut dyn WarningSink,
 ) -> Result<Value, Error> {
     use Value::*;
+    if op == "**" {
+        return math::power(&left, &right, line, warnings);
+    }
     match op {
         "&&" | "and" => return Ok(Bool(left.is_truthy() && right.is_truthy())),
         "||" | "or" => return Ok(Bool(left.is_truthy() || right.is_truthy())),
@@ -1159,7 +1163,6 @@ fn binary(
             "-" => a.checked_sub(*b),
             "*" => a.checked_mul(*b),
             "/" if a.checked_rem(*b) == Some(0) => a.checked_div(*b),
-            "**" => u32::try_from(*b).ok().and_then(|b| a.checked_pow(b)),
             _ => None,
         };
         if let Some(n) = integer {
@@ -1171,7 +1174,6 @@ fn binary(
         "-" => a - b,
         "*" => a * b,
         "/" => a / b,
-        "**" => a.powf(b),
         _ => unreachable!("Unknown operator: {op}"),
     }))
 }

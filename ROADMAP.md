@@ -237,6 +237,10 @@ definition of completion.
    and size validation. Exact allocation-fatal reporting and memory limits remain.
    Range supports integer/float/byte sequences, numeric-string ambiguity, signed
    steps, endpoint warnings, and maximum-size validation.
+   Core math includes abs/ceil/floor/sqrt, intdiv, IEEE fdiv/fmod/fpow, and
+   finite/infinite/NaN predicates. Pow and exponentiation share integer promotion,
+   operand conversion errors, and zero-base deprecations. Rounding modes, base
+   conversion, number formatting, and transcendental functions remain unfinished.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

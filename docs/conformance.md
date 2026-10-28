@@ -1007,6 +1007,32 @@ fixtures, and direct reference checks establish these behaviors. Remaining execu
 range fixtures require pow(); INI precision settings, native reflection type completeness,
 error handlers, and memory-limit/fatal-allocation behavior remain unfinished.
 
+The [core math slice](conformance/php-8.5.0-math-hillclimb.txt) adds **15 upstream passes**:
+eight standard math fixtures, four Zend fixtures, and three array fixtures. No previously
+passing cases regress across Zend, reflection, SPL, strings, arrays, or the newly measured
+full math suite. `abs`, `ceil`, and `floor` preserve PHP's int|float conversion rules;
+`sqrt`, `fmod`, `fdiv`, `fpow`, `is_finite`, `is_infinite`, and `is_nan` use native float
+conversion, including strict integer-to-float widening and weak null deprecations.
+`intdiv` truncates toward zero and raises the native zero-divisor and minimum-integer
+overflow exceptions. IEEE operations retain infinities, NaN, and signed zero.
+
+`pow` and `**` share operator conversions and integer exponentiation with promotion at
+the same multiplication step as PHP. They emit PHP 8.5's zero-base/negative-exponent
+deprecation; `fpow` retains its distinct warning-free float behavior. This also fixes
+the remaining executable range-size fixtures. Native function names and parameter names
+support callbacks and named calls. Complete reflection type metadata is still pending.
+
+Zend reaches **2043 / 2805 / 408**, arrays **154 / 634 / 52**, and math **10 / 44 / 117**.
+Reflection, SPL, and strings retain their previous totals. All 797 existing Rust tests,
+57 reference-checked project fixtures, formatting, and Clippy pass. No custom tests or
+generated matrices were added. Nine existing INI-bearing upstream math programs also
+match reference output and exit status when run directly with their requested precision
+settings; these remain unsupported in the harness and are not counted as passes.
+PHP 8.5.0 math implementations, operator code, stubs, and upstream fixtures establish
+the behavior. Rounding modes, number formatting, base conversion, trigonometric and
+logarithmic functions, streams, configurable precision, and extension object arithmetic
+remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1014,11 +1040,12 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2039 | 2809 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2043 | 2805 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 151 | 637 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 154 | 634 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 10 | 44 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 317 | 261 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
