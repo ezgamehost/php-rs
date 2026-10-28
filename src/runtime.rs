@@ -25,6 +25,7 @@ mod comparison;
 mod constants;
 mod destructuring;
 mod foreach;
+mod formatting;
 mod function_arguments;
 mod functions;
 mod inheritance;

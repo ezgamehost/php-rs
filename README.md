@@ -261,6 +261,10 @@ new request. The CLI returns the low eight bits of the requested status.
   string prefixes, and indented heredoc/nowdoc strings.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
+- `printf`, `sprintf`, `vprintf`, and `vsprintf` share byte-oriented formatting,
+  positional arguments, dynamic width/precision, custom padding, integer bases,
+  floating-point formats, and PHP's format-validation errors. Printing occurs
+  after successful formatting and returns the emitted byte count.
 - Binary-safe `str_repeat`, `strrev`, `chr`, and `ord`, with scalar/Stringable
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 

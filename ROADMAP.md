@@ -158,7 +158,10 @@ definition of completion.
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
    `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function
-   existence implemented. Byte-string repetition/reversal and chr/ord conversion
+   existence implemented. Formatted printing/string construction supports printf,
+   sprintf, vprintf, and vsprintf, including positional arguments, star width/precision,
+   byte padding, integer/float conversions, and validation errors. Locale configuration
+   and resource formatting remain incomplete. Byte-string repetition/reversal and chr/ord conversion
    include PHP 8.5 deprecations; common native argument diagnostics include parameter
    names, received types, and argument counts. Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and

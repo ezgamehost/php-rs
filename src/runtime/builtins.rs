@@ -13,6 +13,10 @@ pub(super) enum Builtin {
     Count,
     VarDump,
     PrintR,
+    Printf,
+    Sprintf,
+    Vprintf,
+    Vsprintf,
     GetType,
     GetDebugType,
     GetClass,
@@ -65,6 +69,10 @@ impl Builtin {
             b"count" | b"sizeof" => Self::Count,
             b"var_dump" => Self::VarDump,
             b"print_r" => Self::PrintR,
+            b"printf" => Self::Printf,
+            b"sprintf" => Self::Sprintf,
+            b"vprintf" => Self::Vprintf,
+            b"vsprintf" => Self::Vsprintf,
             b"gettype" => Self::GetType,
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
@@ -157,6 +165,8 @@ impl Builtin {
             Self::Ord => &[("character", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
+            Self::Printf | Self::Sprintf => &[("format", false, false), ("values", false, true)],
+            Self::Vprintf | Self::Vsprintf => &[("format", false, false), ("values", false, false)],
             Self::PrintR => &[("value", false, false), ("return", true, false)],
             Self::GetType | Self::GetDebugType | Self::Is(_) => &[("value", false, false)],
             Self::ArrayKeys => &[
@@ -435,6 +445,9 @@ impl Runtime {
                     || (kind == "object" && matches!(first, Value::Closure(_) | Value::Object(_))),
             )),
             Builtin::PrintR => self.print_r(&args, line),
+            Builtin::Printf | Builtin::Sprintf | Builtin::Vprintf | Builtin::Vsprintf => {
+                self.formatted_print(builtin, &name, &args, &extra, line)
+            }
             Builtin::VarDump => {
                 if extra
                     .entries()

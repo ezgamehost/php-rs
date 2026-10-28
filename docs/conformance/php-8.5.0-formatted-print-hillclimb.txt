@@ -1,0 +1,172 @@
+Zend suite
+
+Before: 5256 cases; 1404 passed, 3444 failed, 408 unsupported
+After: 5256 cases; 1411 passed, 3437 failed, 408 unsupported
+New passes: 7; regressions: 0
+NEW PASS: Zend/tests/dynamic_call/bug68475.phpt
+NEW PASS: Zend/tests/first_class_callable/first_class_callable_001.phpt
+NEW PASS: Zend/tests/fr47160.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_array_003.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_array_004.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_string_001.phpt
+NEW PASS: Zend/tests/match/028.phpt
+
+Most frequent remaining failure messages:
+532: ParseError: Expected ';'
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+134: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+47: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection extension suite
+
+Before: 492 cases; 138 passed, 317 failed, 37 unsupported
+After: 492 cases; 140 passed, 315 failed, 37 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionMethod_getModifiers_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_invalidMethodInConstructor.phpt
+
+Most frequent remaining failure messages:
+47: ParseError: Expected ';'
+38: Error: Class "ReflectionProperty" not found
+18: Error: Object of class ReflectionClass could not be converted to string
+15: Error: Class "ReflectionExtension" not found
+14: Error: Call to undefined method ReflectionClass::getProperty()
+9: ReflectionException: Class "Object" does not exist
+8: Error: Class "ReflectionConstant" not found
+7: Error: Class "Fiber" not found
+6: Error: Class "ReflectionClassConstant" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Object of class ReflectionObject could not be converted to string
+5: ReflectionException: Class "ReflectionProperty" does not exist
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Class "Reflection" not found
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Formatting functions (101 printf/sprintf/vprintf/vsprintf fixtures)
+
+Before: 101 cases; 0 passed, 61 failed, 40 unsupported
+After: 101 cases; 51 passed, 10 failed, 40 unsupported
+New passes: 51; regressions: 0
+NEW PASS: ext/standard/tests/strings/printf_basic1.phpt
+NEW PASS: ext/standard/tests/strings/printf_basic2.phpt
+NEW PASS: ext/standard/tests/strings/printf_basic3.phpt
+NEW PASS: ext/standard/tests/strings/printf_basic4.phpt
+NEW PASS: ext/standard/tests/strings/printf_basic5.phpt
+NEW PASS: ext/standard/tests/strings/printf_basic6.phpt
+NEW PASS: ext/standard/tests/strings/printf_basic9.phpt
+NEW PASS: ext/standard/tests/strings/printf_error.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic1.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic2.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic3.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic4.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic5.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic6.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_basic9.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_error.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_f.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_star.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation10.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation15.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation27.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation3.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation46.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation47.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation5.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation53.phpt
+NEW PASS: ext/standard/tests/strings/sprintf_variation9.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic1.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic2.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic3.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic4.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic5.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic6.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic8.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_basic9.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation10.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation17.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation18.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation3.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation5.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation6.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation7.phpt
+NEW PASS: ext/standard/tests/strings/vprintf_variation9.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic1.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic2.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic3.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic4.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic5.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic6.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic8.phpt
+NEW PASS: ext/standard/tests/strings/vsprintf_basic9.phpt
+
+Most frequent remaining failure messages:
+5: Error: Call to undefined function fopen()
+1: Unexpected diagnostics: Array to string conversion on line 89; Array to string conversion on line 89; Array to string conversion
+1: Error: Call to undefined function set_error_handler()
+1: Unexpected diagnostics: Object of class stdClass could not be converted to int on line 33; Object of class Foo could not be converted to int on line 57; Object of class Foo could n
+1: Unexpected diagnostics: Notice: sprintf(): Requested precision of 988 digits was truncated to PHP maximum of 53 digits
+1: Unexpected diagnostics: Array to string conversion on line 57; Array to string conversion on line 57; Array to string conversion on line 57; Array to string conversion on line 57; 
+
+Unsupported section combinations:
+36: SKIPIF
+2: INI, SKIPIF
+1: INI
+1: EXTENSIONS
+
+Additional upstream formatting bug fixtures
+
+Reference: PHP 8.5 (/private/tmp/php-rs-reference/php-8.5.0/sapi/cli/php)
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug20108.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug22207.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug22227.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug23894_32bit.phpt UNSUPPORTED: SKIPIF
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug23894_64bit.phpt UNSUPPORTED: SKIPIF
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug26878.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug26973.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug27278.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug28633.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug36392.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug47842.phpt UNSUPPORTED: SKIPIF
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug48709.phpt FAIL: Error: Call to undefined function metaphone() on line 16
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug65230.phpt UNSUPPORTED: INI, SKIPIF
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug67249.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug69751.phpt PASS
+10 passed, 1 failed, 4 unsupported
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT fixtures pass. cargo fmt --check, cargo clippy --all-targets -- -D warnings, and git diff --check pass. No new custom tests were added.
+
+Limits: locale configuration, resources, error handlers, and matching expected diagnostics remain unfinished; unsupported sections are not counted as passes.

@@ -383,8 +383,27 @@ All 797 existing Rust tests, 57 reference-checked project fixtures, formatting, 
 Clippy pass; no new custom tests were added. Property/class-constant reflection,
 complete builtin parameter/return signatures, tentative return metadata, prototypes,
 static-variable inspection, doc comments/declaration formatting, intersection types,
-Reflector integration, and lazy objects remain unfinished. Missing printf/sprintf,
-Closure APIs, generators, and diagnostic rendering also block upstream cases.
+Reflector integration, and lazy objects remain unfinished. Closure APIs, generators,
+and diagnostic rendering also block upstream cases.
+
+The [formatted printing slice](conformance/php-8.5.0-formatted-print-hillclimb.txt)
+adds 7 Zend passes, 2 reflection passes, and 51 formatting-suite passes, with zero
+regressions. The 101 formatting fixtures now contain 51 passes, 10 failures, and
+40 unsupported cases. Ten additional upstream formatting bug fixtures pass; one
+requires `metaphone`, and four have unsupported sections.
+
+`printf`, `sprintf`, `vprintf`, and `vsprintf` share binary-safe format parsing,
+sequential/positional arguments, star width and precision, custom padding, string
+truncation, signed/unsigned/base integers, and fixed/exponential/general floats.
+General float formatting includes shortest precision (`-1`) and PHP's exponent
+spelling. Argument arrays use insertion order, references are dereferenced without
+mutation, and printing is deferred until formatting succeeds. Missing arguments,
+invalid widths/precisions/specifiers, and unknown named parameters produce PHP's
+exception classes and messages. Existing conversion diagnostics are preserved.
+
+All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
+and Clippy pass. No new custom tests were added. Locale configuration, resource
+arguments, error handlers, and matching expected diagnostics remain unfinished.
 
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
@@ -393,8 +412,9 @@ historical measurements made before EXPECTF and namespace support.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1404 | 3444 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 138 | 317 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1411 | 3437 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 140 | 315 | 37 |
+| PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
