@@ -245,6 +245,12 @@ impl Parser {
                 self.tokens.get(self.pos + 1).map(|t| &t.kind),
                 Some(Kind::Word(_))
             )
+            || self.is("function")
+                && matches!(self.tokens.get(self.pos + 1).map(|t| &t.kind), Some(Kind::Symbol(s)) if s == "&")
+                && matches!(
+                    self.tokens.get(self.pos + 2).map(|t| &t.kind),
+                    Some(Kind::Word(_))
+                )
         {
             self.pos += 1;
             return self.function(false, false);
@@ -520,6 +526,7 @@ impl Parser {
         Ok(body)
     }
     fn function(&mut self, method: bool, is_abstract: bool) -> Result<Stmt, Error> {
+        let returns_reference = self.eat("&");
         let outer_parent = if method {
             self.class_parent.clone()
         } else {
@@ -573,6 +580,18 @@ impl Parser {
                 });
             }
         }
+        if returns_reference && return_type.as_ref().is_some_and(|ty| ty.contains("void")) {
+            let label = if method {
+                format!(
+                    "{}::{}",
+                    String::from_utf8_lossy(&self.class_name),
+                    String::from_utf8_lossy(&name)
+                )
+            } else {
+                String::from_utf8_lossy(&name).into_owned()
+            };
+            self.warnings.push(format!("Deprecated: {label}(): Returning by reference from a void function is deprecated on line {line}"));
+        }
         self.validate_defaults(&name, &mut parameters, line)?;
         self.expect(if is_abstract { ";" } else { "{" })?;
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
@@ -595,6 +614,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            returns_reference,
             trait_origin: None,
             native: None,
             visibility: Visibility::Public,

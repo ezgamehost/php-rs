@@ -179,6 +179,33 @@ impl Runtime {
         flow: Flow,
         function: &FunctionDecl,
     ) -> Result<Value, Error> {
+        let (flow, reference) = match flow {
+            Flow::Return(Value::Reference(reference), line) => {
+                let value = reference.borrow().clone();
+                (Flow::Return(value, line), Some(reference))
+            }
+            flow => (flow, None),
+        };
+        let line = match &flow {
+            Flow::Return(_, line) if *line != 0 => *line,
+            _ => function.line,
+        };
+        let value = self.check_return_value(flow, function)?;
+        if function.returns_reference {
+            let reference = if let Some(reference) = reference {
+                *reference.borrow_mut() = value;
+                reference
+            } else {
+                self.diagnostics.push(format!("Notice: Only variable references should be returned by reference on line {line}"));
+                cell(value)
+            };
+            Ok(Value::Reference(reference))
+        } else {
+            Ok(value)
+        }
+    }
+
+    fn check_return_value(&mut self, flow: Flow, function: &FunctionDecl) -> Result<Value, Error> {
         let Some(ty) = &function.return_type else {
             return Ok(match flow {
                 Flow::Return(v, _) => v,

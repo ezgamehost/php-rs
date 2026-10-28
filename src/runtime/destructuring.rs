@@ -10,12 +10,17 @@ impl Runtime {
         while let ExprKind::Group(inner) = &source.kind {
             source = inner;
         }
-        let referenceable = source.is_writable() && !source.is_globals();
+        let mut referenceable = source.is_writable() && !source.is_globals();
         let reference = if referenceable {
             self.argument_reference(source, source.line)?
         } else {
-            let value = self.eval(source)?;
-            cell(value)
+            match self.eval_inner(source)? {
+                Value::Reference(reference) => {
+                    referenceable = true;
+                    reference
+                }
+                value => cell(value),
+            }
         };
         self.destructure_reference_inner(target, reference.clone(), referenceable)?;
         let value = reference.borrow().clone();

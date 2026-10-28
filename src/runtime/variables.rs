@@ -69,6 +69,43 @@ pub(super) fn cell(value: Value) -> Cell {
 }
 
 impl Runtime {
+    pub(super) fn eval_reference_return(&mut self, expression: &Expr) -> Result<Value, Error> {
+        let mut expression = expression;
+        while let ExprKind::Group(inner) = &expression.kind {
+            expression = inner;
+        }
+        if expression.is_globals()
+            || matches!(&expression.kind, ExprKind::Variable(name) if name == b"this")
+        {
+            return Ok(Value::Reference(cell(self.eval(expression)?)));
+        }
+        if let ExprKind::Assign(target, op, source) = &expression.kind
+            && op == "=&"
+        {
+            return self
+                .reference_assignment(target, source, expression.line)
+                .map(Value::Reference);
+        }
+        if expression.is_writable() {
+            return self
+                .argument_reference(expression, expression.line)
+                .map(Value::Reference);
+        }
+        self.eval_inner(expression)
+    }
+
+    fn reference_call(&mut self, expression: &Expr, line: usize) -> Result<Cell, Error> {
+        match self.eval_inner(expression)? {
+            Value::Reference(reference) => Ok(reference),
+            value => {
+                self.diagnostics.push(format!(
+                    "Notice: Only variables should be assigned by reference on line {line}"
+                ));
+                Ok(cell(value))
+            }
+        }
+    }
+
     pub(super) fn assign_reference(
         &mut self,
         target: &Expr,
@@ -81,6 +118,9 @@ impl Runtime {
     }
 
     pub(super) fn argument_reference(&mut self, source: &Expr, line: usize) -> Result<Cell, Error> {
+        if matches!(source.kind, ExprKind::Call(_, _)) {
+            return self.reference_call(source, line);
+        }
         let mut source = self.location(source)?;
         if source.object.is_some() || source.static_class.is_some() {
             return Err(Error::new(
@@ -109,6 +149,11 @@ impl Runtime {
         line: usize,
     ) -> Result<Cell, Error> {
         let mut target = self.location(target)?;
+        if matches!(source.kind, ExprKind::Call(_, _)) {
+            let reference = self.reference_call(source, line)?;
+            self.bind_reference_location(&mut target, reference.clone(), line)?;
+            return Ok(reference);
+        }
         let mut source = self.location(source)?;
         if target.name == b"GLOBALS"
             && !target.global

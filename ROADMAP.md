@@ -80,10 +80,14 @@ definition of completion.
    Reference destructuring supports nested/keyed/skipped entries and foreach,
    preserving source cells across rebinding and side effects in key expressions.
    Calls returning values produce temporary reference targets with notices.
+   Functions, methods, closures, and arrows can return variable/array references.
+   Typed returns coerce the referent; ordinary expression reads dereference it,
+   while reference consumers retain identity. Getter and string-conversion paths
+   handle returned references, and method overrides preserve reference contracts.
    Remaining: property references, object reference iteration, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
-   by-reference returns, Traversable unpacking and promoted property references,
+   Traversable unpacking and promoted property references,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    complete namespace validation and error/exception behavior.

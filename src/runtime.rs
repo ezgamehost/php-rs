@@ -72,6 +72,7 @@ pub struct Runtime {
     trace_frames: Vec<traces::TraceFrame>,
     static_variables: HashMap<Option<Vec<u8>>, Scope>,
     current_function: Option<Vec<u8>>,
+    current_returns_reference: bool,
     class_context: Option<crate::object::ClassContext>,
     in_constant_expression: bool,
     folding_constants: bool,
@@ -363,6 +364,9 @@ impl Runtime {
             Stmt::Return(value) => {
                 return Ok(Flow::Return(
                     match value {
+                        Some(expr) if self.current_returns_reference => {
+                            self.eval_reference_return(expr)?
+                        }
                         Some(expr) => self.eval(expr)?,
                         None => Value::Null,
                     },
@@ -494,6 +498,7 @@ impl Runtime {
                 self.warn_indirect_magic(object, &location.name, &value, line);
                 location.overloaded = Some(value.clone());
             }
+            value = value.dereferenced();
             for key in &mut location.keys {
                 if matches!(value, Value::String(_))
                     && let Some(message) = string_error
@@ -653,7 +658,9 @@ impl Runtime {
                 self.read_location(&mut location, expr.line, true, None)
             }
             ExprKind::Property(base, name) => {
-                let value = self.coalesce_read(base, access.intermediate())?;
+                let value = self
+                    .coalesce_read(base, access.intermediate())?
+                    .dereferenced();
                 let name = self.variable_name(name)?;
                 Ok(if let Value::Object(object) = value {
                     self.read_property_value(&object, &name, expr.line, access)?

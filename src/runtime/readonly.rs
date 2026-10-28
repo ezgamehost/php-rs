@@ -150,7 +150,7 @@ impl Runtime {
                     }
                     let cached = overloaded.then(|| value.clone());
                     Ok((
-                        value,
+                        value.dereferenced(),
                         Some(Location {
                             overloaded: cached,
                             object: Some(object),

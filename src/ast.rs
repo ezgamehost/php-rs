@@ -339,6 +339,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub returns_reference: bool,
     pub trait_origin: Option<Vec<u8>>,
     pub native: Option<NativeMethod>,
     pub visibility: Visibility,

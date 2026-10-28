@@ -262,7 +262,9 @@ impl Validator {
                             if let Some(key) = key {
                                 self.expression(key, false)?;
                             }
-                            if !value.is_writable() || matches!(value.kind, ExprKind::Group(_)) {
+                            if (!value.is_writable() && !matches!(value.kind, ExprKind::Call(_, _)))
+                                || matches!(value.kind, ExprKind::Group(_))
+                            {
                                 return Err(Error::parse(
                                     "Cannot create reference to a non-variable",
                                     value.line,

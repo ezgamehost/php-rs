@@ -75,6 +75,9 @@ new request. The CLI returns the low eight bits of the requested status.
   Array argument unpacking separates copied arrays before binding element references.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
   with live parameter values, default gaps, and snapshots of referenced arguments.
+- Reference returns from functions, methods, closures, and arrows retain variable
+  or array-element cells for reference assignment, arguments, and iteration.
+  Return coercion updates the referent; ordinary reads still copy values.
 - Instance classes and `stdClass`, constructors, shared object handles,
   dynamic property names, nested property/array writes, and basic live property
   iteration. Instance methods bind `$this`, support named/typed arguments, and
@@ -93,6 +96,7 @@ new request. The CLI returns the low eight bits of the requested status.
 - Magic property methods `__get`, `__set`, `__isset`, and `__unset`, with
   recursion guards, distinct typed-uninitialized/unset states, quiet probes,
   checked getter results, and temporary values for indirect modification.
+  Reference-returning getters preserve their referents during indirect writes.
 - Missing and inaccessible methods dispatch through `__call` and `__callStatic`,
   preserving requested names, named arguments, inherited handlers, and late static
   binding across direct calls, callbacks, first-class callables, and autoloaders.
@@ -244,9 +248,9 @@ involving deletion/reinsertion of visited properties also remain unfinished.
 Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
-reference captures, and fixed reference parameters work. Property references,
-object reference iteration, Traversable unpacking, promoted property
-references, by-reference returns, and cycle collection remain unfinished.
+reference captures, reference parameters/returns, and reference destructuring work.
+Property references, object reference iteration, Traversable unpacking, promoted
+property references, and cycle collection remain unfinished.
 Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception
 handlers, protected exception-property access (including severity), and complete compile-time fatal

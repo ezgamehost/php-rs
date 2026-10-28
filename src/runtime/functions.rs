@@ -423,7 +423,7 @@ impl Runtime {
             expr = inner;
         }
         let wants_references = parameters.iter().any(|parameter| parameter.by_reference);
-        let reference = if let ExprKind::Assign(target, op, source) = &expr.kind
+        let mut reference = if let ExprKind::Assign(target, op, source) = &expr.kind
             && op == "=&"
             && wants_references
         {
@@ -441,7 +441,14 @@ impl Runtime {
         } else if let Some(location) = &mut location {
             self.read_location(location, line, false, None)?
         } else {
-            self.eval(expr)?
+            self.eval_inner(expr)?
+        };
+        let value = if let Value::Reference(returned) = value {
+            let value = returned.borrow().clone();
+            reference = Some(returned);
+            value
+        } else {
+            value
         };
         let Value::Array(array) = value else {
             return Err(Error::new(
@@ -576,7 +583,11 @@ impl Runtime {
             let value = reference.borrow().clone();
             return Ok((value, Some(reference)));
         }
-        let value = self.eval(expr)?;
+        let value = self.eval_inner(expr)?;
+        if let Value::Reference(reference) = value {
+            let value = reference.borrow().clone();
+            return Ok((value, Some(reference)));
+        }
         if matches!(expr.kind, ExprKind::Call(_, _) | ExprKind::New(_, _)) {
             self.diagnostics.push(format!(
                 "Notice: Only variables should be passed by reference on line {line}"
@@ -715,6 +726,7 @@ impl Runtime {
             .unwrap()
             .enter_scope(self.callers.len());
         let caller_context = std::mem::replace(&mut self.class_context, context);
+        let caller_returns_reference = self.current_returns_reference;
         let caller_arguments = self.current_arguments.take();
         let caller_closure = std::mem::replace(&mut self.current_closure, closure.clone());
         let caller_function = self
@@ -815,6 +827,7 @@ impl Runtime {
                     .insert(b"this".to_vec(), cell(Value::Object(object)));
             }
             self.current_arguments = Some(arguments);
+            self.current_returns_reference = function.returns_reference;
             let flow = self.block(&function.body)?;
             self.check_return(flow, &function)
         })();
@@ -823,6 +836,7 @@ impl Runtime {
         self.class_context = caller_context;
         self.current_function = caller_function;
         self.current_arguments = caller_arguments;
+        self.current_returns_reference = caller_returns_reference;
         self.current_closure = caller_closure;
         self.strict_types = caller_strict;
         self.source = caller_source;

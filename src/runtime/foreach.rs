@@ -12,7 +12,7 @@ impl Runtime {
         while let ExprKind::Group(inner) = &expression.kind {
             expression = inner;
         }
-        let reference_source = match &expression.kind {
+        let mut reference_source = match &expression.kind {
             ExprKind::Assign(target, op, source) if op == "=&" => {
                 Some(self.reference_assignment(target, source, expression.line)?)
             }
@@ -28,8 +28,15 @@ impl Runtime {
         } else {
             match &mut location {
                 Some(location) => self.read_location(location, expression.line, false, None)?,
-                None => self.eval(expression)?,
+                None => self.eval_inner(expression)?,
             }
+        };
+        let value = if let Value::Reference(reference) = value {
+            let value = reference.borrow().clone();
+            reference_source = Some(reference);
+            value
+        } else {
+            value
         };
         if matches!(value, Value::Closure(_)) {
             return Ok(Flow::Next);

@@ -249,13 +249,29 @@ All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
 and Clippy pass; no new custom tests were added. Property reference storage,
 ArrayAccess integration, by-reference returns, and exact fatal/notice rendering
 remain incomplete.
+The [reference-return slice](conformance/php-8.5.0-reference-returns-hillclimb.txt)
+adds 25 Zend passes with zero regressions. Named functions, methods, closures,
+and arrows retain return-reference mode. Return expressions can expose variable
+or array-element cells, including calls forwarding existing references; return
+coercion updates the referent. Reference assignment, array reference literals,
+fixed/variadic parameters, argument unpacking, destructuring, foreach, saved
+callables, and pipes retain returned cells, while ordinary expression reads copy
+values. Return mode is restored across nested calls and reset for include/eval
+units. Invalid reference returns and assignments emit notices; void reference
+returns emit the PHP 8.5 compile deprecation. Method overrides preserve inherited
+reference-return contracts. String conversion reads referenced strings, and
+magic getter results retain reference identity during indirect writes and typed
+result checks. All 797 existing Rust tests, 57 reference-checked project fixtures,
+formatting, and Clippy pass; no new custom tests were added. Property reference
+storage, ArrayAccess, complete magic-property reference behavior, recursion
+resource limits, and exact diagnostic rendering remain unfinished.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1250 | 3598 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1275 | 3573 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

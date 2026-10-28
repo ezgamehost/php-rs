@@ -299,6 +299,9 @@ impl Runtime {
         parent: &FunctionDecl,
         class: &Class,
     ) -> bool {
+        if parent.returns_reference && !child.returns_reference {
+            return false;
+        }
         let required = |f: &FunctionDecl| {
             f.parameters
                 .iter()

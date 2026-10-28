@@ -17,7 +17,7 @@ impl Runtime {
             )?;
             let internal = self.trace_frames.last().is_some_and(|f| f.internal);
             let result = self.invoke_at(target, &[], line, false, internal)?;
-            let Value::String(bytes) = result else {
+            let Value::String(bytes) = result.dereferenced() else {
                 unreachable!("__toString has a string return type")
             };
             return Ok(bytes.to_vec());

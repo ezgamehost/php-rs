@@ -114,6 +114,8 @@ impl Runtime {
         let previous_source = std::mem::replace(&mut self.source, source);
         let previous_strict = std::mem::replace(&mut self.strict_types, strict);
         let previous_function = self.current_function.take();
+        let previous_returns_reference =
+            std::mem::replace(&mut self.current_returns_reference, false);
         let previous_closure = self.current_closure.take();
         let previous_arguments = self.current_arguments.take();
         let previous_statics = self.static_variables.remove(&None);
@@ -128,6 +130,7 @@ impl Runtime {
         self.source = previous_source;
         self.strict_types = previous_strict;
         self.current_function = previous_function;
+        self.current_returns_reference = previous_returns_reference;
         self.current_closure = previous_closure;
         self.current_arguments = previous_arguments;
         self.static_variables.remove(&None);

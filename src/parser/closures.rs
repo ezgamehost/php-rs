@@ -8,6 +8,7 @@ impl Parser {
         is_static: bool,
         line: usize,
     ) -> Result<ExprKind, Error> {
+        let returns_reference = self.eat("&");
         let context = if self.function_name.is_empty() {
             String::from_utf8_lossy(&self.source.name).into_owned()
         } else if self.function_name.starts_with(b"{closure:") {
@@ -63,6 +64,9 @@ impl Parser {
         } else {
             None
         };
+        if returns_reference && return_type.as_ref().is_some_and(|ty| ty.contains("void")) {
+            self.warnings.push(format!("Deprecated: {}(): Returning by reference from a void function is deprecated on line {line}", String::from_utf8_lossy(&name)));
+        }
         self.validate_defaults(&name, &mut parameters, line)?;
         if let Some(last) = parameters
             .iter()
@@ -110,6 +114,7 @@ impl Parser {
         self.control_depth = outer_depth;
         self.finally_depths = outer_finally_depths;
         let function = Rc::new(FunctionDecl {
+            returns_reference,
             trait_origin: None,
             native: None,
             visibility: Visibility::Public,

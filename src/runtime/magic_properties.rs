@@ -133,11 +133,23 @@ impl Runtime {
                 .find(|p| p.name == name && p.ty.is_some())
         {
             let getter = objects::method(&object.class, Magic::Get.name()).expect("getter");
+            let reference = if let Value::Reference(reference) = &value {
+                Some(reference.clone())
+            } else {
+                None
+            };
+            let value = value.dereferenced();
             let given = builtins::debug_type(&value).to_owned();
             let value = self.check_property_value(&owner, property, value, getter.strict_types, line).map_err(|error| {
                 if error.throwable.is_some() || error.kind != ErrorKind::TypeError { return error; }
                 Error::new(ErrorKind::TypeError, format!("Value of type {given} returned from {}() must be compatible with unset property {}::${} of type {}", String::from_utf8_lossy(&getter.name), String::from_utf8_lossy(&owner.name), String::from_utf8_lossy(name), typed_properties::type_label(property.ty.as_ref().unwrap(), &owner)), line)
             })?;
+            let value = if let Some(reference) = reference {
+                *reference.borrow_mut() = value;
+                Value::Reference(reference)
+            } else {
+                value
+            };
             return Ok(Some(value));
         }
         Ok(Some(value))
@@ -231,7 +243,10 @@ impl Runtime {
         value: &Value,
         line: usize,
     ) {
-        if !matches!(value, Value::Object(_) | Value::Closure(_)) {
+        if !matches!(
+            value,
+            Value::Object(_) | Value::Closure(_) | Value::Reference(_)
+        ) {
             self.diagnostics.push(format!("Notice: Indirect modification of overloaded property {}::${} has no effect on line {line}", object.class_name, String::from_utf8_lossy(name)));
         }
     }
