@@ -139,7 +139,7 @@ Most frequent remaining failure messages:
 1: Error: Call to undefined function set_error_handler()
 1: Unexpected diagnostics: Object of class stdClass could not be converted to int on line 33; Object of class Foo could not be converted to int on line 57; Object of class Foo could n
 1: Unexpected diagnostics: Notice: sprintf(): Requested precision of 988 digits was truncated to PHP maximum of 53 digits
-1: Unexpected diagnostics: Array to string conversion on line 57; Array to string conversion on line 57; Array to string conversion on line 57; Array to string conversion on line 57; 
+1: Unexpected diagnostics: Array to string conversion on line 57; Array to string conversion on line 57; Array to string conversion on line 57; Array to string conversion on line 57;
 
 Unsupported section combinations:
 36: SKIPIF
