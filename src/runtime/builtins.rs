@@ -15,6 +15,10 @@ pub(super) enum Builtin {
     Substr,
     SubstrReplace,
     StringSearch(string_search::SearchKind),
+    StrCompare(bool, bool),
+    SubstrCompare,
+    SubstrCount,
+    StrSpan(bool),
     Trim(u8, &'static str),
     Chr,
     Ord,
@@ -99,6 +103,14 @@ impl Builtin {
             b"str_contains" => Self::StringSearch(string_search::SearchKind::Contains),
             b"str_starts_with" => Self::StringSearch(string_search::SearchKind::StartsWith),
             b"str_ends_with" => Self::StringSearch(string_search::SearchKind::EndsWith),
+            b"strcmp" => Self::StrCompare(false, false),
+            b"strcasecmp" => Self::StrCompare(true, false),
+            b"strncmp" => Self::StrCompare(false, true),
+            b"strncasecmp" => Self::StrCompare(true, true),
+            b"substr_compare" => Self::SubstrCompare,
+            b"substr_count" => Self::SubstrCount,
+            b"strspn" => Self::StrSpan(true),
+            b"strcspn" => Self::StrSpan(false),
             b"trim" => Self::Trim(3, "trim"),
             b"ltrim" => Self::Trim(1, "ltrim"),
             b"rtrim" => Self::Trim(2, "rtrim"),
@@ -215,6 +227,31 @@ impl Builtin {
             }
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
             Self::StringSearch(kind) => kind.parameters(),
+            Self::StrCompare(_, false) => &[("string1", false, false), ("string2", false, false)],
+            Self::StrCompare(_, true) => &[
+                ("string1", false, false),
+                ("string2", false, false),
+                ("length", false, false),
+            ],
+            Self::SubstrCompare => &[
+                ("haystack", false, false),
+                ("needle", false, false),
+                ("offset", false, false),
+                ("length", true, false),
+                ("case_insensitive", true, false),
+            ],
+            Self::SubstrCount => &[
+                ("haystack", false, false),
+                ("needle", false, false),
+                ("offset", true, false),
+                ("length", true, false),
+            ],
+            Self::StrSpan(_) => &[
+                ("string", false, false),
+                ("characters", false, false),
+                ("offset", true, false),
+                ("length", true, false),
+            ],
             Self::StrReplace(_) => &[
                 ("search", false, false),
                 ("replace", false, false),
@@ -294,6 +331,8 @@ impl Builtin {
                 default: optional.then_some(Expr {
                     kind: ExprKind::Literal(match (self, *name) {
                         (Self::StringSearch(_), "offset") => Value::Int(0),
+                        (Self::SubstrCount | Self::StrSpan(_), "offset") => Value::Int(0),
+                        (Self::SubstrCompare, "case_insensitive") => Value::Bool(false),
                         (Self::StringSearch(_), "before_needle") => Value::Bool(false),
                         (Self::Trim(..), "characters") => {
                             Value::String(b" \n\r\t\x0b\0".to_vec().into())
@@ -399,6 +438,12 @@ impl Runtime {
             Builtin::Substr => self.substring(&args, line),
             Builtin::SubstrReplace => self.substring_replace(&args, line),
             Builtin::StringSearch(kind) => self.string_search(kind, &args, line),
+            Builtin::StrCompare(insensitive, bounded) => {
+                self.string_compare(insensitive, bounded, &args, line)
+            }
+            Builtin::SubstrCompare => self.substring_compare(&args, line),
+            Builtin::SubstrCount => self.substring_count(&args, line),
+            Builtin::StrSpan(included) => self.string_span(included, &args, line),
             Builtin::ErrorReporting
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister

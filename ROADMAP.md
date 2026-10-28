@@ -210,6 +210,9 @@ definition of completion.
    limits, null lengths, and insertion-ordered array inputs with missing-entry defaults.
    Position/suffix searches and contains/starts-with/ends-with predicates support binary
    strings, ASCII case folding, positive/negative offsets, empty needles, and prefix results.
+   Binary comparisons and bounded/insensitive variants, substring comparison, literal
+   character spans, and substring counting preserve their distinct range/error rules.
+   Locale-sensitive substring comparison beyond the default C locale remains unfinished.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

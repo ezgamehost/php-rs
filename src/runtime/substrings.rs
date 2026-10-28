@@ -130,7 +130,7 @@ impl Runtime {
     }
 }
 
-fn substring_range(size: usize, offset: i64, length: Option<i64>) -> (usize, usize) {
+pub(super) fn substring_range(size: usize, offset: i64, length: Option<i64>) -> (usize, usize) {
     let start = if offset < 0 {
         (size as u64).saturating_sub(offset.unsigned_abs()) as usize
     } else {

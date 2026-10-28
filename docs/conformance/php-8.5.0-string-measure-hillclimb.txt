@@ -1,0 +1,207 @@
+Zend suite
+
+Before: 5256 cases; 1656 passed, 3192 failed, 408 unsupported
+After: 5256 cases; 1659 passed, 3189 failed, 408 unsupported
+New passes: 3; regressions: 0
+NEW PASS: Zend/tests/strcasecmp_basic.phpt
+NEW PASS: Zend/tests/strncasecmp_basic.phpt
+NEW PASS: Zend/tests/strncmp_basic.phpt
+
+Most frequent remaining failure messages:
+372: ParseError: Expected ';'
+137: Error: Call to undefined function set_error_handler()
+136: Error: Call to undefined method ReflectionClass::newLazyGhost()
+66: Error: Class "Fiber" not found
+52: Error: Undefined constant "yield"
+48: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+29: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+26: Error: Call to undefined method ReflectionClass::newLazyProxy()
+24: Error: Class "ArrayObject" not found
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+Reflection suite
+
+Before: 492 cases; 244 passed, 211 failed, 37 unsupported
+After: 492 cases; 244 passed, 211 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+24: ParseError: Expected ';'
+22: Error: Object of class ReflectionClass could not be converted to string
+9: ReflectionException: Class "Object" does not exist
+7: Error: Class "Fiber" not found
+6: ParseError: Constant expression contains invalid operations
+6: ReflectionException: Class "DateTime" does not exist
+5: Error: Class "Reflection" not found
+5: Error: Object of class ReflectionObject could not be converted to string
+4: Error: Object of class ReflectionMethod could not be converted to string
+4: Error: Call to undefined method ReflectionParameter::getClass()
+3: ReflectionException: Function sort() does not exist
+3: ReflectionException: Property Exception::$message does not exist
+3: Error: Object of class ReflectionFunction could not be converted to string
+3: Error: Class "ReflectionReference" not found
+2: Error: Call to undefined method ReflectionExtension::getClasses()
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+Spl suite
+
+Before: 778 cases; 18 passed, 666 failed, 94 unsupported
+After: 778 cases; 18 passed, 666 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+110: Error: Class "ArrayObject" not found
+67: Error: Class "ArrayIterator" not found
+63: Error: Class "SplFixedArray" not found
+52: Error: Class "SplFileObject" not found
+40: Error: Class "SplDoublyLinkedList" not found
+33: Error: Class "RecursiveArrayIterator" not found
+33: Error: Class "SplObjectStorage" not found
+21: Error: Class "SplTempFileObject" not found
+20: Error: Class "RecursiveIteratorIterator" not found
+20: Error: Class "SplFileInfo" not found
+17: Error: Class "SplMaxHeap" not found
+15: Error: Class "SplPriorityQueue" not found
+13: Error: Interface "Iterator" not found
+10: Error: Class "SplMinHeap" not found
+9: Error: Class "AppendIterator" not found
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+Standard suite
+
+Before: 730 cases; 164 passed, 414 failed, 152 unsupported
+After: 730 cases; 208 passed, 370 failed, 152 unsupported
+New passes: 44; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug33605.phpt
+NEW PASS: ext/standard/tests/strings/bug36944.phpt
+NEW PASS: ext/standard/tests/strings/bug39032.phpt
+NEW PASS: ext/standard/tests/strings/bug54454.phpt
+NEW PASS: ext/standard/tests/strings/bug55451.phpt
+NEW PASS: ext/standard/tests/strings/bug74041.phpt
+NEW PASS: ext/standard/tests/strings/bug77853.phpt
+NEW PASS: ext/standard/tests/strings/strcspn.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_basic.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_variation10.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_variation11.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_variation12.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_variation5.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_variation6.phpt
+NEW PASS: ext/standard/tests/strings/strcspn_variation9.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_basic.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_error.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_variation1.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_variation2.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_variation3.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_variation7.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_variation8.phpt
+NEW PASS: ext/standard/tests/strings/strncasecmp_variation9.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_basic.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_error.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_variation1.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_variation2.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_variation3.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_variation7.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_variation8.phpt
+NEW PASS: ext/standard/tests/strings/strncmp_variation9.phpt
+NEW PASS: ext/standard/tests/strings/strspn.phpt
+NEW PASS: ext/standard/tests/strings/strspn_basic.phpt
+NEW PASS: ext/standard/tests/strings/strspn_variation10.phpt
+NEW PASS: ext/standard/tests/strings/strspn_variation11.phpt
+NEW PASS: ext/standard/tests/strings/strspn_variation12.phpt
+NEW PASS: ext/standard/tests/strings/strspn_variation5.phpt
+NEW PASS: ext/standard/tests/strings/strspn_variation6.phpt
+NEW PASS: ext/standard/tests/strings/strspn_variation9.phpt
+NEW PASS: ext/standard/tests/strings/substr_compare.phpt
+NEW PASS: ext/standard/tests/strings/substr_count_basic.phpt
+NEW PASS: ext/standard/tests/strings/substr_count_error.phpt
+NEW PASS: ext/standard/tests/strings/substr_count_variation_001.phpt
+NEW PASS: ext/standard/tests/strings/substr_count_variation_002.phpt
+
+Most frequent remaining failure messages:
+28: Error: Call to undefined function fopen()
+26: Error: Call to undefined function strip_tags()
+17: Error: Call to undefined function html_entity_decode()
+14: Error: Call to undefined function sscanf()
+14: Error: Call to undefined function strtr()
+14: Error: Call to undefined function pack()
+13: Error: Call to undefined function crypt()
+11: Error: Call to undefined function chunk_split()
+8: Error: Undefined constant "HTML_ENTITIES"
+6: Error: Call to undefined function wordwrap()
+6: Error: Call to undefined function htmlspecialchars()
+6: Error: Call to undefined function base64_decode()
+6: Error: Call to undefined function implode()
+6: Error: Call to undefined function htmlentities()
+6: Error: Call to undefined function str_getcsv()
+
+Unsupported section combinations:
+84: SKIPIF
+40: INI
+11: INI, SKIPIF
+7: EXTENSIONS, INI
+5: CLEAN, INI
+3: EXTENSIONS
+2: ENV, SKIPIF
+
+Validation
+
+797 existing Rust tests and 57 reference-checked project fixtures pass.
+Formatting and Clippy pass; no custom tests or generated differential matrix.
+Baseline runtime: 76ecd37.
+
+Reproduce
+
+cargo build --bins
+cargo test
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+target/debug/php-rs-phpt --reference /tmp/php-rs-reference/php-8.5.0/sapi/cli/php --cwd /tmp/php-rs-reference/php-8.5.0 SUITE
+
+Run Zend/tests, ext/reflection/tests, ext/spl/tests, and ext/standard/tests/strings
+separately. Compare logs with tools/compare_phpt.py. Passing fixtures also match
+PHP 8.5.0 output and exit status.
+
+Implementation
+
+Binary and ASCII-insensitive string comparisons, bounded comparison, substring
+comparison, literal byte spans, and non-overlapping substring counting. Argument
+coercion precedes semantic checks; each API retains its own range/error rules.
+Locale-sensitive substring comparison beyond the default C locale, other string APIs,
+complete native reflection metadata, INI support, and diagnostic rendering remain gaps.
