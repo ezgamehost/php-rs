@@ -1,0 +1,90 @@
+PHP 8.5.0 full Zend suite: EXPECTF runner coverage (2026-10-28)
+Before: 77d585f exact-output runner
+After: EXPECTF/EXPECTREGEX via reference PCRE; per-fixture workers
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests
+All 7,777 EXPECTF patterns across php-src translate identically to official run-tests.php.
+New passes reflect expanded measurement, not runtime feature changes.
+Diagnostics still fail; expected fatal/warning output is not yet supported.
+Worker isolation records bug64660.phpt stack overflow and continues.
+
+Before: 5256 cases; 669 passed, 1825 failed, 2762 unsupported
+After: 5256 cases; 713 passed, 4135 failed, 408 unsupported
+New passes: 44; regressions: 0
+NEW PASS: Zend/tests/ErrorException_construct.phpt
+NEW PASS: Zend/tests/bug30080.phpt
+NEW PASS: Zend/tests/bug47836.phpt
+NEW PASS: Zend/tests/bug69017.phpt
+NEW PASS: Zend/tests/clone/bug24884.phpt
+NEW PASS: Zend/tests/clone/clone_005.phpt
+NEW PASS: Zend/tests/clone/clone_with_001.phpt
+NEW PASS: Zend/tests/clone/clone_with_007.phpt
+NEW PASS: Zend/tests/coalesce/assign_coalesce_006.phpt
+NEW PASS: Zend/tests/constants/dir-constant-eval.phpt
+NEW PASS: Zend/tests/constants/magic_const_in_global_scope.phpt
+NEW PASS: Zend/tests/exceptions/bug60569.phpt
+NEW PASS: Zend/tests/exceptions/bug61362.phpt
+NEW PASS: Zend/tests/exceptions/gh10810.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/property_initializer_scope_001.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/property_initializer_scope_003.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/static_call.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/static_call_self.phpt
+NEW PASS: Zend/tests/first_class_callable/constexpr/userland.phpt
+NEW PASS: Zend/tests/foreach/bug39017.phpt
+NEW PASS: Zend/tests/get_included_files_basic.phpt
+NEW PASS: Zend/tests/get_required_files.phpt
+NEW PASS: Zend/tests/gh14969.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_method_call_004.phpt
+NEW PASS: Zend/tests/indirect_reference_this.phpt
+NEW PASS: Zend/tests/match/037.phpt
+NEW PASS: Zend/tests/objects/objects_031.phpt
+NEW PASS: Zend/tests/pipe_operator/exception_interruption.phpt
+NEW PASS: Zend/tests/pipe_operator/prec_004.phpt
+NEW PASS: Zend/tests/pipe_operator/precedence_comparison.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_clone_error6.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_clone_success1.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_clone_success2.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_clone_success4.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_coercion_type_error.phpt
+NEW PASS: Zend/tests/return_types/007.phpt
+NEW PASS: Zend/tests/return_types/021.phpt
+NEW PASS: Zend/tests/return_types/028.phpt
+NEW PASS: Zend/tests/return_types/inheritance004.phpt
+NEW PASS: Zend/tests/try/try_finally_024.phpt
+NEW PASS: Zend/tests/try/try_finally_025.phpt
+NEW PASS: Zend/tests/try/try_finally_026.phpt
+NEW PASS: Zend/tests/try/try_finally_027.phpt
+NEW PASS: Zend/tests/variadic/adding_additional_optional_parameter.phpt
+
+Most frequent remaining failure messages:
+1058: ParseError: Expected ';'
+249: ParseError: Expected expression
+172: ParseError: Invalid non-public member declaration
+167: Error: Class "ReflectionClass" not found
+120: Error: Call to undefined function set_error_handler()
+118: ParseError: Expected parameter variable
+59: Error: Class "Fiber" not found
+56: Error: Call to undefined function spl_autoload_register()
+49: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+40: ParseError: Constant expression contains invalid operations
+37: ParseError: Unexpected byte 0x40
+36: ParseError: Expected ')'
+36: ParseError: Expected '{'
+34: ParseError: Expected public property or method
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

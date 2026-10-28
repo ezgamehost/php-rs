@@ -213,8 +213,11 @@ syntax validation, resource limits, and exact PHP diagnostic formatting also
 remain to be implemented. Passing the repository tests does not establish PHP
 conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation plan.
 
-The PHPT runner currently supports `TEST`, `FILE`, and exact `EXPECT` output,
-plus descriptive `DESCRIPTION` and `CREDITS` sections. Other sections are reported
+The PHPT runner supports `TEST`, `FILE`, and exact `EXPECT` output,
+plus descriptive `DESCRIPTION` and `CREDITS` sections. With `--reference`, it also
+supports `EXPECTF` (including `%r` fragments) and `EXPECTREGEX`, using the reference
+PHP binary's PCRE engine to match output. Test programs still execute in Rust;
+the PHP matcher receives only patterns and output as byte strings. Other sections are reported
 as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
 fail a test. `--reference` checks the PHP major/minor version and validates passing
 fixtures against both interpreters, including process exit status. Intentional
@@ -224,7 +227,10 @@ The runner writes each supported `FILE` section to a temporary `.php` sibling
 of the `.phpt` fixture and runs both interpreters against that filename. It
 refuses to overwrite an existing file and removes generated files after the run.
 Use `--cwd /path/to/php-src` to select the suite root; the default is the current
-directory. Test code is not sandboxed, and process timeouts remain unfinished.
+directory. Each fixture runs in a separate worker, so a Rust panic or stack
+overflow fails that fixture without aborting the suite. The parent removes the
+generated file even after worker failure. Worker and reference executions have a
+10-second timeout, adjustable with `--timeout SECONDS`. Test code is not sandboxed.
 Use upstream PHPT failures as the primary implementation backlog. Compare the
 same suite before and after each slice with `python3 tools/compare_phpt.py
 before.log after.log`; the tool lists new passes and fails on regressions.

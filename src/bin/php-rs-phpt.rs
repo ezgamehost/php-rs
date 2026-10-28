@@ -3,11 +3,17 @@ use std::{
     env,
     ffi::{OsStr, OsString},
     fs,
+    io::Read,
     path::{Path, PathBuf},
     process::{Command, ExitCode, Stdio},
+    thread,
+    time::{Duration, Instant},
 };
 
 fn main() -> ExitCode {
+    if env::args_os().nth(1).as_deref() == Some(OsStr::new("--worker")) {
+        return worker();
+    }
     match run() {
         Ok(success) => ExitCode::from(if success { 0 } else { 1 }),
         Err(error) => {
@@ -21,9 +27,22 @@ fn run() -> Result<bool, String> {
     let mut reference = None;
     let mut working_directory = env::current_dir().map_err(|error| error.to_string())?;
     let mut paths = Vec::new();
+    let mut timeout = Duration::from_secs(10);
     while let Some(arg) = args.next() {
         if arg == "--reference" {
             reference = Some(args.next().ok_or("--reference requires a PHP 8.5 binary")?);
+        } else if arg == "--timeout" {
+            let seconds: u64 = args
+                .next()
+                .ok_or("--timeout requires seconds")?
+                .to_str()
+                .ok_or("Invalid timeout")?
+                .parse()
+                .map_err(|_| "Invalid timeout")?;
+            if seconds == 0 {
+                return Err("Timeout must be positive".into());
+            }
+            timeout = Duration::from_secs(seconds);
         } else if arg == "--cwd" {
             let directory = args.next().ok_or("--cwd requires a directory")?;
             working_directory = fs::canonicalize(directory)
@@ -33,7 +52,7 @@ fn run() -> Result<bool, String> {
             }
         } else if arg == "--help" {
             println!(
-                "Usage: php-rs-phpt [--reference PHP_8_5_BINARY] [--cwd SUITE_ROOT] [FILE_OR_DIRECTORY ...]\nDefault directory: tests/phpt. Unsupported tests make the run unsuccessful."
+                "Usage: php-rs-phpt [--reference PHP_8_5_BINARY] [--cwd SUITE_ROOT] [--timeout SECONDS] [FILE_OR_DIRECTORY ...]\nDefault directory: tests/phpt. Default per-process timeout: 10 seconds. EXPECTF/EXPECTREGEX require --reference. Unsupported tests make the run unsuccessful."
             );
             return Ok(true);
         } else if arg.as_encoded_bytes().starts_with(b"-") {
@@ -65,7 +84,7 @@ fn run() -> Result<bool, String> {
     let (mut passed, mut failed, mut unsupported) = (0, 0, 0);
     for path in files {
         let bytes = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-        let outcome = match Case::parse(&bytes) {
+        let outcome = match Case::parse_with_reference(&bytes, reference.as_ref().map(Path::new)) {
             Err(error) => Outcome::Failed(format!("Malformed PHPT: {error}")),
             Ok(case) if !case.unsupported_sections().is_empty() => {
                 Outcome::Unsupported(case.unsupported_sections().to_vec())
@@ -73,7 +92,8 @@ fn run() -> Result<bool, String> {
             Ok(case) => match case.prepare(&path) {
                 Err(error) => Outcome::Failed(error),
                 Ok(prepared) => {
-                    let (outcome, status) = prepared.run_with_status(&working_directory);
+                    let (outcome, status) =
+                        run_worker(&path, &working_directory, reference.as_deref(), timeout);
                     if outcome == Outcome::Passed {
                         if let Some(binary) = &reference {
                             reference_check(
@@ -82,6 +102,7 @@ fn run() -> Result<bool, String> {
                                 prepared.path(),
                                 &working_directory,
                                 status,
+                                timeout,
                             )?
                         } else {
                             outcome
@@ -151,14 +172,18 @@ fn reference_check(
     path: &Path,
     working_directory: &Path,
     expected_status: u8,
+    timeout: Duration,
 ) -> Result<Outcome, String> {
-    let output = Command::new(binary)
+    let mut command = Command::new(binary);
+    command
         .args(["-n", "-d", "display_errors=stderr", "-d", "log_errors=0"])
         .arg(path)
         .current_dir(working_directory)
-        .stdin(Stdio::null())
-        .output()
-        .map_err(|error| error.to_string())?;
+        .stdin(Stdio::null());
+    let output = match timed_output(&mut command, timeout) {
+        Ok(output) => output,
+        Err(error) => return Ok(Outcome::Failed(format!("Reference PHP: {error}"))),
+    };
     if output.status.code() != Some(i32::from(expected_status)) || !output.stderr.is_empty() {
         return Ok(Outcome::Failed(format!(
             "Reference PHP failed (expected exit status {expected_status}, got {}): {}",
@@ -169,5 +194,115 @@ fn reference_check(
     Ok(match case.check_output(&output.stdout) {
         Outcome::Failed(reason) => Outcome::Failed(format!("Reference PHP mismatch: {reason}")),
         other => other,
+    })
+}
+
+fn worker() -> ExitCode {
+    let args: Vec<_> = env::args_os().skip(2).collect();
+    if !(2..=3).contains(&args.len()) {
+        return ExitCode::from(2);
+    }
+    let result = (|| -> Result<(), String> {
+        let fixture = Path::new(&args[0]);
+        let bytes = fs::read(fixture).map_err(|error| error.to_string())?;
+        let case = Case::parse_with_reference(&bytes, args.get(2).map(Path::new))?;
+        let path = fs::canonicalize(fixture)
+            .map_err(|error| error.to_string())?
+            .with_extension("php");
+        let (outcome, status) = case.run_file_with_status(&path, Path::new(&args[1]));
+        match outcome {
+            Outcome::Passed => println!("PASS {status}"),
+            Outcome::Failed(reason) => print!("FAIL\n{reason}"),
+            Outcome::Unsupported(_) => return Err("Unsupported worker fixture".into()),
+        }
+        Ok(())
+    })();
+    if let Err(error) = result {
+        eprintln!("{error}");
+        return ExitCode::from(2);
+    }
+    ExitCode::SUCCESS
+}
+
+fn run_worker(
+    fixture: &Path,
+    cwd: &Path,
+    reference: Option<&OsStr>,
+    timeout: Duration,
+) -> (Outcome, u8) {
+    let result = (|| -> Result<(Outcome, u8), String> {
+        let mut command = Command::new(env::current_exe().map_err(|error| error.to_string())?);
+        command.arg("--worker").arg(fixture).arg(cwd);
+        if let Some(reference) = reference {
+            command.arg(reference);
+        }
+        let output = timed_output(&mut command, timeout)?;
+        if !output.status.success() || !output.stderr.is_empty() {
+            return Err(format!(
+                "Worker {}: {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr).trim()
+            ));
+        }
+        let response = String::from_utf8(output.stdout).map_err(|error| error.to_string())?;
+        if let Some(status) = response.strip_prefix("PASS ") {
+            return Ok((
+                Outcome::Passed,
+                status.trim().parse().map_err(|_| "Invalid worker status")?,
+            ));
+        }
+        if let Some(reason) = response.strip_prefix("FAIL\n") {
+            return Ok((Outcome::Failed(reason.into()), 255));
+        }
+        Err("Invalid worker response".into())
+    })();
+    result.unwrap_or_else(|error| (Outcome::Failed(error), 255))
+}
+
+fn timed_output(command: &mut Command, timeout: Duration) -> Result<std::process::Output, String> {
+    let mut child = command
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|error| error.to_string())?;
+    let mut stdout = child.stdout.take().unwrap();
+    let mut stderr = child.stderr.take().unwrap();
+    let out = thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stdout.read_to_end(&mut bytes).map(|_| bytes)
+    });
+    let err = thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stderr.read_to_end(&mut bytes).map(|_| bytes)
+    });
+    let start = Instant::now();
+    let mut expired = false;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break Ok(status),
+            Ok(None) if start.elapsed() < timeout => thread::sleep(Duration::from_millis(1)),
+            pending => {
+                expired = matches!(pending, Ok(None));
+                let _ = child.kill();
+                break child.wait();
+            }
+        }
+    };
+    let stdout = out
+        .join()
+        .map_err(|_| "Output reader panicked")?
+        .map_err(|error| error.to_string())?;
+    let stderr = err
+        .join()
+        .map_err(|_| "Error reader panicked")?
+        .map_err(|error| error.to_string())?;
+    if expired {
+        return Err(format!("Timed out after {} seconds", timeout.as_secs()));
+    }
+    Ok(std::process::Output {
+        status: status.map_err(|error| error.to_string())?,
+        stdout,
+        stderr,
     })
 }

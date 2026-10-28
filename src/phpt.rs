@@ -1,4 +1,4 @@
-//! PHPT parsing and exact-output conformance checks. Unsupported sections are
+//! PHPT parsing and output conformance checks. Unsupported sections are
 //! reported explicitly, never ignored or treated as successful tests.
 use crate::Runtime;
 use std::{
@@ -6,6 +6,7 @@ use std::{
     fs::{self, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
 #[derive(Debug)]
@@ -14,6 +15,8 @@ pub struct Case {
     pub source: Vec<u8>,
     expected: Vec<u8>,
     unsupported: Vec<String>,
+    expectation: String,
+    reference: Option<PathBuf>,
 }
 #[derive(Debug, PartialEq)]
 pub enum Outcome {
@@ -41,17 +44,26 @@ impl PreparedCase<'_> {
 
     /// Run the fixture and return its CLI-compatible process status as well.
     pub fn run_with_status(&self, working_directory: &Path) -> (Outcome, u8) {
+        self.case
+            .run_file_with_status(&self.path, working_directory)
+    }
+}
+
+impl Case {
+    /// Execute a file already materialized by the parent harness. Keeping its
+    /// lifetime in the parent allows cleanup even if a worker aborts.
+    pub fn run_file_with_status(&self, path: &Path, working_directory: &Path) -> (Outcome, u8) {
         let mut runtime = Runtime::default();
         if let Err(error) = runtime.set_working_directory(working_directory) {
             return (Outcome::Failed(format!("Working directory: {error}")), 255);
         }
-        let result = runtime.execute_file(&self.path);
+        let result = runtime.execute_file(path);
         let status = if result.is_err() {
             255
         } else {
             runtime.exit_status().unwrap_or(0) as u8
         };
-        (self.case.runtime_outcome(&runtime, result), status)
+        (self.runtime_outcome(&runtime, result), status)
     }
 }
 
@@ -63,6 +75,12 @@ impl Drop for PreparedCase<'_> {
 
 impl Case {
     pub fn parse(bytes: &[u8]) -> Result<Self, String> {
+        Self::parse_with_reference(bytes, None)
+    }
+
+    /// PHP supplies PCRE matching for EXPECTF/EXPECTREGEX only; fixture programs
+    /// still execute in the Rust runtime. Without it these formats are unsupported.
+    pub fn parse_with_reference(bytes: &[u8], reference: Option<&Path>) -> Result<Self, String> {
         let mut sections: BTreeMap<String, Vec<u8>> = BTreeMap::new();
         let mut current = None;
         for line in bytes.split_inclusive(|c| *c == b'\n') {
@@ -114,7 +132,8 @@ impl Case {
         let unsupported = sections
             .keys()
             .filter(|key| {
-                !["TEST", "FILE", "EXPECT", "DESCRIPTION", "CREDITS"].contains(&key.as_str())
+                !(["TEST", "FILE", "EXPECT", "DESCRIPTION", "CREDITS"].contains(&key.as_str())
+                    || reference.is_some() && ["EXPECTF", "EXPECTREGEX"].contains(&key.as_str()))
             })
             .cloned()
             .collect();
@@ -123,6 +142,8 @@ impl Case {
             source: sections[files[0]].clone(),
             expected: sections[expected[0]].clone(),
             unsupported,
+            expectation: expected[0].to_owned(),
+            reference: reference.map(Path::to_owned),
         })
     }
     pub fn unsupported_sections(&self) -> &[String] {
@@ -186,7 +207,17 @@ impl Case {
         if !self.unsupported.is_empty() {
             return Outcome::Unsupported(self.unsupported.clone());
         }
-        if normalize(actual) == normalize(&self.expected) {
+        let actual_normalized = normalize(actual);
+        let expected_normalized = normalize(&self.expected);
+        let matches = if self.expectation == "EXPECT" {
+            actual_normalized == expected_normalized
+        } else {
+            match self.match_pattern(&expected_normalized, &actual_normalized) {
+                Ok(matches) => matches,
+                Err(error) => return Outcome::Failed(format!("PHPT matcher: {error}")),
+            }
+        };
+        if matches {
             Outcome::Passed
         } else {
             Outcome::Failed(format!(
@@ -194,6 +225,46 @@ impl Case {
                 String::from_utf8_lossy(&self.expected),
                 String::from_utf8_lossy(actual)
             ))
+        }
+    }
+
+    fn match_pattern(&self, expected: &[u8], actual: &[u8]) -> Result<bool, String> {
+        let binary = self.reference.as_ref().ok_or("Missing reference PHP")?;
+        let mut child = Command::new(binary)
+            .args([
+                "-n",
+                "-r",
+                include_str!("phpt_match.php"),
+                &self.expectation,
+            ])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|error| error.to_string())?;
+        // Length framing preserves arbitrary bytes, including NULs and newlines.
+        // Patterns are input data, never interpolated into PHP source or shell code.
+        let written = (|| -> std::io::Result<()> {
+            let mut stdin = child.stdin.take().unwrap();
+            writeln!(stdin, "{}", expected.len())?;
+            stdin.write_all(expected)?;
+            stdin.write_all(actual)
+        })();
+        let output = child
+            .wait_with_output()
+            .map_err(|error| error.to_string())?;
+        written.map_err(|error| error.to_string())?;
+        if !output.status.success() || !output.stderr.is_empty() {
+            return Err(format!(
+                "{}: {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        match output.stdout.as_slice() {
+            b"1" => Ok(true),
+            b"0" => Ok(false),
+            _ => Err("Invalid matcher response".into()),
         }
     }
 }

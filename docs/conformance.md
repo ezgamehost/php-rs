@@ -8,11 +8,18 @@ compatibility claims.
 The primary progress measure is now before/after performance on the upstream
 PHP suite, with existing Rust tests used as regression checks. The first full
 Zend comparison is [recorded here](conformance/php-8.5.0-object-casts-hillclimb.txt).
+The [EXPECTF coverage expansion](conformance/php-8.5.0-expectf-hillclimb.txt)
+executes 2,354 additional cases and verifies 44 additional passes, with no
+regressions. This measures existing runtime behavior; it is not a runtime feature
+gain. All 7,777 upstream EXPECTF patterns translate identically to PHP 8.5.0
+`run-tests.php`. Workers isolate crashes and enforce per-process timeouts.
+The full Zend row below uses this expanded runner; subset rows remain historical
+measurements made before EXPECTF support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 669 | 1825 | 2762 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 713 | 4135 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |
