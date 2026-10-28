@@ -88,7 +88,11 @@ definition of completion.
    constants, type checks, and interface_exists.
    Private/protected methods support access checks, lexical private dispatch,
    constructor/clone visibility, and saved method callables.
-   Remaining: built-in interfaces, interface properties, traits, abstract properties, intersection/DNF constant types,
+   Traits support nested composition before inheritance, method precedence,
+   `insteadof`, aliases, visibility/final adaptations, abstract requirements,
+   property/constant compatibility checks, and lexical magic constants.
+   Remaining: built-in interfaces, interface properties, abstract properties, intersection/DNF constant types,
+   direct static trait-access deprecations and exact composition diagnostics,
    complete constant/default resolution,
    property/constant visibility, property hooks, remaining magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.

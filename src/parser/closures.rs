@@ -110,6 +110,7 @@ impl Parser {
         self.control_depth = outer_depth;
         self.finally_depths = outer_finally_depths;
         let function = Rc::new(FunctionDecl {
+            trait_origin: None,
             native: None,
             visibility: Visibility::Public,
             is_abstract: false,

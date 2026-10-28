@@ -14,6 +14,7 @@ impl Runtime {
         // Interface inheritance and implementation always resolve at execution.
         self.link_available_classes(statements, &mut linked)?;
         for class in linked {
+            self.validate_trait_values(&class)?;
             self.validate_overrides(&class)?;
         }
         Ok(())
@@ -27,6 +28,11 @@ impl Runtime {
             match statement {
                 Stmt::Class(decl)
                     if decl.interfaces.is_empty()
+                        && decl
+                            .trait_uses
+                            .iter()
+                            .flat_map(|use_| &use_.names)
+                            .all(|name| self.find_class(name).is_some())
                         && !decl
                             .methods
                             .iter()
@@ -53,17 +59,27 @@ impl Runtime {
     }
     pub(super) fn register_class(&mut self, decl: Rc<ClassDecl>) -> Result<(), Error> {
         let class = self.link_class(decl)?;
-        self.validate_overrides(&class)?;
-        self.classes.insert(class.name.to_ascii_lowercase(), class);
+        let name = class.name.to_ascii_lowercase();
+        self.classes.insert(name.clone(), class.clone());
+        if let Err(error) = self
+            .validate_trait_values(&class)
+            .and_then(|_| self.validate_overrides(&class))
+        {
+            self.classes.remove(&name);
+            return Err(error);
+        }
         Ok(())
     }
     fn link_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
+        let decl = self.compose_traits(decl)?;
         // __toString implies Stringable in PHP, so its public visibility is
         // checked when the class is linked rather than when its body is parsed.
-        if decl.methods.iter().any(|m| {
-            method_name(m).eq_ignore_ascii_case(b"__tostring")
-                && m.visibility != crate::ast::Visibility::Public
-        }) {
+        if !decl.is_trait
+            && decl.methods.iter().any(|m| {
+                method_name(m).eq_ignore_ascii_case(b"__tostring")
+                    && m.visibility != crate::ast::Visibility::Public
+            })
+        {
             return Err(Error::new(
                 ErrorKind::Error,
                 "Method __toString() must have public visibility",
@@ -96,6 +112,13 @@ impl Runtime {
         } else {
             None
         };
+        if parent.as_ref().is_some_and(|p| p.declaration.is_trait) {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "A class cannot extend a trait",
+                decl.line,
+            ));
+        }
         if parent.as_ref().is_some_and(|p| p.declaration.is_interface) {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -104,10 +127,11 @@ impl Runtime {
             ));
         }
         let mut interfaces = self.link_interfaces(&decl)?;
-        if decl
-            .methods
-            .iter()
-            .any(|m| method_name(m).eq_ignore_ascii_case(b"__tostring"))
+        if !decl.is_trait
+            && decl
+                .methods
+                .iter()
+                .any(|m| method_name(m).eq_ignore_ascii_case(b"__tostring"))
             && !interfaces.iter().any(|i| i.is_a(b"Stringable"))
             && !parent.as_ref().is_some_and(|p| p.is_a(b"Stringable"))
         {
@@ -269,6 +293,11 @@ impl Runtime {
                 initialized: std::cell::Cell::new(false),
                 initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
+                    is_trait: false,
+                    trait_uses: Vec::new(),
+                    trait_requirements: Vec::new(),
+                    trait_property_checks: Vec::new(),
+                    trait_constant_checks: Vec::new(),
                     is_interface: false,
                     interfaces: Vec::new(),
                     is_abstract: false,
@@ -352,6 +381,16 @@ impl Runtime {
                 line,
             )
         })?;
+        if class.declaration.is_trait {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot instantiate trait {}",
+                    String::from_utf8_lossy(&class.name)
+                ),
+                line,
+            ));
+        }
         if class.declaration.is_interface {
             return Err(Error::new(
                 ErrorKind::Error,

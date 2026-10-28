@@ -90,6 +90,10 @@ impl Runtime {
     }
 
     pub(super) fn validate_overrides(&self, class: &Class) -> Result<(), Error> {
+        if class.declaration.is_trait {
+            return Ok(());
+        }
+        self.validate_trait_requirements(class)?;
         self.validate_interfaces(class)?;
         if !class.declaration.is_abstract
             && let Some(method) = class.methods.iter().find(|method| method.is_abstract)

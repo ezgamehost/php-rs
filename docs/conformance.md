@@ -25,13 +25,19 @@ adds another 20 passes with zero regressions. It implements `call_user_func`,
 Named array arguments follow the [PHP callback rules](https://www.php.net/manual/en/function.call-user-func-array.php);
 direct positional calls follow the compiler path, while wrapper calls retain
 internal callback coercion and trace frames.
+The [trait composition slice](conformance/php-8.5.0-traits-hillclimb.txt)
+adds 85 passing cases without regressions. Nested traits, method precedence,
+aliases, visibility/final adaptations, abstract requirements, member compatibility,
+and magic constants follow the [PHP trait semantics](https://www.php.net/manual/en/language.oop5.traits.php),
+including PHP 8.5 composition before inheritance. Some newly passing fixtures
+contain attributes; this does not establish attribute validation support.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 833 | 4015 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 918 | 3930 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

@@ -1,0 +1,132 @@
+PHP 8.5.0 full Zend suite: trait composition (2026-10-28)
+Before: 3a82f64
+After: trait declarations, nested composition, adaptations, member compatibility, trait_exists
+Command: php-rs-phpt --reference <php-8.5.0>/sapi/cli/php --cwd <php-8.5.0> <php-8.5.0>/Zend/tests
+Every passing fixture also matches reference PHP output and exit status.
+Existing Rust tests: 797 passed. Project PHPT: 57 passed. No new custom tests.
+Traits compose before inheritance, matching PHP 8.5 precedence for properties and constants.
+Remaining gaps include non-public instance properties, direct static trait-access deprecations, reflection and exact fatal diagnostics.
+Passing attribute fixtures does not imply attribute validation, which remains unimplemented.
+
+Before: 5256 cases; 833 passed, 4015 failed, 408 unsupported
+After: 5256 cases; 918 passed, 3930 failed, 408 unsupported
+New passes: 85; regressions: 0
+NEW PASS: Zend/tests/attributes/override/007.phpt
+NEW PASS: Zend/tests/attributes/override/009.phpt
+NEW PASS: Zend/tests/attributes/override/016.phpt
+NEW PASS: Zend/tests/attributes/override/018.phpt
+NEW PASS: Zend/tests/attributes/override/gh12189.phpt
+NEW PASS: Zend/tests/attributes/override/gh12189_3.phpt
+NEW PASS: Zend/tests/attributes/override/gh12189_5.phpt
+NEW PASS: Zend/tests/attributes/override/gh12189_6.phpt
+NEW PASS: Zend/tests/attributes/override/properties_06.phpt
+NEW PASS: Zend/tests/bug69420.phpt
+NEW PASS: Zend/tests/bug75079.phpt
+NEW PASS: Zend/tests/class_exists_003.phpt
+NEW PASS: Zend/tests/ctor_promotion/ctor_promotion_trait.phpt
+NEW PASS: Zend/tests/grammar/semi_reserved_006.phpt
+NEW PASS: Zend/tests/grammar/semi_reserved_008.phpt
+NEW PASS: Zend/tests/grammar/semi_reserved_009.phpt
+NEW PASS: Zend/tests/grammar/semi_reserved_010.phpt
+NEW PASS: Zend/tests/inheritance/bug71414.phpt
+NEW PASS: Zend/tests/readonly_classes/gh9285_success.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_clone_error5.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_trait_match.phpt
+NEW PASS: Zend/tests/static_variables/static_variable_in_private_trait_method.phpt
+NEW PASS: Zend/tests/static_variables/static_variables_traits.phpt
+NEW PASS: Zend/tests/traits/abstract_method_2.phpt
+NEW PASS: Zend/tests/traits/abstract_method_7.phpt
+NEW PASS: Zend/tests/traits/abstract_method_8.phpt
+NEW PASS: Zend/tests/traits/bug55086.phpt
+NEW PASS: Zend/tests/traits/bug55137.phpt
+NEW PASS: Zend/tests/traits/bug55214.phpt
+NEW PASS: Zend/tests/traits/bug55355.phpt
+NEW PASS: Zend/tests/traits/bug55424.phpt
+NEW PASS: Zend/tests/traits/bug55825.phpt
+NEW PASS: Zend/tests/traits/bug60217a.phpt
+NEW PASS: Zend/tests/traits/bug61998.phpt
+NEW PASS: Zend/tests/traits/bug63911.phpt
+NEW PASS: Zend/tests/traits/bug64070.phpt
+NEW PASS: Zend/tests/traits/bug65419.phpt
+NEW PASS: Zend/tests/traits/bug65576a.phpt
+NEW PASS: Zend/tests/traits/bug65576b.phpt
+NEW PASS: Zend/tests/traits/bug69174.phpt
+NEW PASS: Zend/tests/traits/bug70958.phpt
+NEW PASS: Zend/tests/traits/bug71275.phpt
+NEW PASS: Zend/tests/traits/bug74607.phpt
+NEW PASS: Zend/tests/traits/bug74607a.phpt
+NEW PASS: Zend/tests/traits/bug74922b.phpt
+NEW PASS: Zend/tests/traits/bug74922c.phpt
+NEW PASS: Zend/tests/traits/bug75607.phpt
+NEW PASS: Zend/tests/traits/bug75607a.phpt
+NEW PASS: Zend/tests/traits/bug76700.phpt
+NEW PASS: Zend/tests/traits/bug76773.phpt
+NEW PASS: Zend/tests/traits/bug77966.phpt
+NEW PASS: Zend/tests/traits/bug80055.phpt
+NEW PASS: Zend/tests/traits/bugs/overridding-static-property-with-doc-block.phpt
+NEW PASS: Zend/tests/traits/constant_001.phpt
+NEW PASS: Zend/tests/traits/constant_002.phpt
+NEW PASS: Zend/tests/traits/constant_003.phpt
+NEW PASS: Zend/tests/traits/constant_017.phpt
+NEW PASS: Zend/tests/traits/gh10935.phpt
+NEW PASS: Zend/tests/traits/gh12468_1.phpt
+NEW PASS: Zend/tests/traits/gh12468_2.phpt
+NEW PASS: Zend/tests/traits/gh14009_003.phpt
+NEW PASS: Zend/tests/traits/gh14009_005.phpt
+NEW PASS: Zend/tests/traits/gh14480.phpt
+NEW PASS: Zend/tests/traits/gh15753.phpt
+NEW PASS: Zend/tests/traits/gh16198.phpt
+NEW PASS: Zend/tests/traits/gh17214.phpt
+NEW PASS: Zend/tests/traits/gh17959.phpt
+NEW PASS: Zend/tests/traits/gh18295.phpt
+NEW PASS: Zend/tests/traits/interface_001.phpt
+NEW PASS: Zend/tests/traits/language020.phpt
+NEW PASS: Zend/tests/traits/property009.phpt
+NEW PASS: Zend/tests/traits/static_001.phpt
+NEW PASS: Zend/tests/traits/static_002.phpt
+NEW PASS: Zend/tests/traits/static_003.phpt
+NEW PASS: Zend/tests/traits/static_get_called_class.phpt
+NEW PASS: Zend/tests/traits/trait_constant_001.phpt
+NEW PASS: Zend/tests/traits/trait_exists_001.phpt
+NEW PASS: Zend/tests/traits/trait_exists_002.phpt
+NEW PASS: Zend/tests/traits/trait_exists_003.phpt
+NEW PASS: Zend/tests/type_declarations/relative_types/relative_type_in_evaled_class_using_trait.phpt
+NEW PASS: Zend/tests/type_declarations/relative_types/relative_type_in_evaled_trait.phpt
+NEW PASS: Zend/tests/type_declarations/relative_types/traits/trait_parent_type_in_class_no_parent1.phpt
+NEW PASS: Zend/tests/type_declarations/relative_types/traits/trait_parent_type_in_class_no_parent2.phpt
+NEW PASS: Zend/tests/type_declarations/relative_types/traits/trait_parent_type_in_class_no_parent3.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_059.phpt
+
+Most frequent remaining failure messages:
+547: ParseError: Expected ';'
+249: ParseError: Expected expression
+187: ParseError: Invalid non-public member declaration
+175: Error: Class "ReflectionClass" not found
+123: Error: Call to undefined function set_error_handler()
+121: ParseError: Expected parameter variable
+59: Error: Class "Fiber" not found
+57: Error: Call to undefined function spl_autoload_register()
+50: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+43: ParseError: Expected '{'
+42: ParseError: Constant expression contains invalid operations
+37: ParseError: Expected ')'
+37: ParseError: Unexpected byte 0x40
+37: Error: Call to undefined function error_reporting()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

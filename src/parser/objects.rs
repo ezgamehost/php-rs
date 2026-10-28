@@ -8,6 +8,7 @@ impl Parser {
         is_readonly: bool,
         is_abstract: bool,
         is_interface: bool,
+        is_trait: bool,
     ) -> Result<Stmt, Error> {
         let line = self.token().line;
         if is_abstract && is_final {
@@ -36,7 +37,7 @@ impl Parser {
             ));
         }
         let name = self.declared_name(&name, namespaces::Symbol::Class, line)?;
-        let parent = if !is_interface && self.eat("extends") {
+        let parent = if !is_interface && !is_trait && self.eat("extends") {
             let Kind::Word(name) = self.token().kind.clone() else {
                 return Err(Error::parse(
                     "Expected parent class name",
@@ -49,11 +50,13 @@ impl Parser {
             None
         };
         let mut interfaces = Vec::new();
-        if self.eat(if is_interface {
-            "extends"
-        } else {
-            "implements"
-        }) {
+        if !is_trait
+            && self.eat(if is_interface {
+                "extends"
+            } else {
+                "implements"
+            })
+        {
             loop {
                 let Kind::Word(name) = self.token().kind.clone() else {
                     return Err(Error::parse("Expected interface name", self.token().line));
@@ -68,12 +71,21 @@ impl Parser {
         self.expect("{")?;
         let outer_parent = std::mem::replace(&mut self.class_parent, parent.clone());
         let outer_class = std::mem::replace(&mut self.class_name, name.clone());
+        let outer_trait = std::mem::replace(
+            &mut self.trait_name,
+            if is_trait { name.clone() } else { Vec::new() },
+        );
+        let mut trait_uses = Vec::new();
         let mut properties: Vec<PropertyDecl> = Vec::new();
         let mut static_properties: Vec<PropertyDecl> = Vec::new();
         let mut constants: Vec<ClassConstant> = Vec::new();
         let mut methods: Vec<Rc<FunctionDecl>> = Vec::new();
         let mut final_methods = Vec::new();
         while !self.eat("}") {
+            if !is_interface && self.eat("use") {
+                trait_uses.push(self.trait_use()?);
+                continue;
+            }
             let mut final_method = false;
             let mut abstract_method = false;
             let mut public = false;
@@ -151,7 +163,7 @@ impl Parser {
                     self.token().line,
                 ));
             }
-            if abstract_method && visibility == Visibility::Private {
+            if abstract_method && visibility == Visibility::Private && !is_trait {
                 return Err(Error::parse(
                     "Abstract methods cannot be private",
                     self.token().line,
@@ -193,7 +205,7 @@ impl Parser {
             }
             if self.eat("function") {
                 let abstract_method = abstract_method || is_interface;
-                if abstract_method && !is_abstract {
+                if abstract_method && !is_abstract && !is_trait {
                     return Err(Error::parse(
                         "A class with abstract methods must be abstract",
                         self.token().line,
@@ -314,6 +326,9 @@ impl Parser {
                 qualified.extend(b"::");
                 qualified.extend(&function.name);
                 function.name = qualified;
+                if is_trait {
+                    function.trait_origin = Some(function.name.clone());
+                }
                 methods.push(method);
             } else if self.eat("const") && !static_method {
                 if final_method && visibility == Visibility::Private {
@@ -487,7 +502,13 @@ impl Parser {
         }
         self.class_name = outer_class;
         self.class_parent = outer_parent;
+        self.trait_name = outer_trait;
         Ok(Stmt::Class(Rc::new(ClassDecl {
+            is_trait,
+            trait_uses,
+            trait_requirements: Vec::new(),
+            trait_property_checks: Vec::new(),
+            trait_constant_checks: Vec::new(),
             is_interface,
             interfaces,
             parent,
@@ -619,6 +640,11 @@ impl Parser {
 
     pub(super) fn class_name_expression(&self, value: Expr) -> ExprKind {
         if let Some(name) = value.static_class_name() {
+            if !self.trait_name.is_empty()
+                && (name.eq_ignore_ascii_case(b"self") || name.eq_ignore_ascii_case(b"parent"))
+            {
+                return ExprKind::ClassName(Box::new(value));
+            }
             let name = match name.to_ascii_lowercase().as_slice() {
                 b"self" if !self.class_name.is_empty() => Some(self.class_name.clone()),
                 b"parent" => self

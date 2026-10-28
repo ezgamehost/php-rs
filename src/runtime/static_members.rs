@@ -74,6 +74,9 @@ impl Runtime {
                     .map(|_| Value::Null)
             };
         };
+        if defined && class.declaration.is_trait {
+            return Ok(Value::Bool(false));
+        }
         if defined
             && !class
                 .constant_owner(name)
@@ -91,6 +94,17 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
+        if class.declaration.is_trait && !self.checking_trait_values {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot access trait constant {}::{} directly",
+                    String::from_utf8_lossy(&class.name),
+                    String::from_utf8_lossy(name)
+                ),
+                line,
+            ));
+        }
         let owner = class.constant_owner(name).ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,

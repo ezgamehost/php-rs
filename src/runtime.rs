@@ -39,6 +39,7 @@ mod stringable;
 mod termination;
 mod throwables;
 mod traces;
+mod traits;
 mod typed_properties;
 mod types;
 mod variables;
@@ -60,6 +61,7 @@ pub struct Runtime {
     class_context: Option<crate::object::ClassContext>,
     in_constant_expression: bool,
     folding_constants: bool,
+    checking_trait_values: bool,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,

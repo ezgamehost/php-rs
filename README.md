@@ -159,8 +159,13 @@ new request. The CLI returns the low eight bits of the requested status.
   grouped imports, and lexical name resolution in calls, types, inheritance,
   catches, and class members. Unqualified functions and constants fall back to
   global definitions; dynamic strings keep their literal names.
+- Traits support nested composition, method precedence, `insteadof`, aliases,
+  visibility/final adaptations, abstract requirements, independent method static
+  storage, and property/constant composition before inheritance. `trait_exists`
+  distinguishes traits from classes and interfaces.
 - Lexical `__LINE__`, `__FILE__`, `__DIR__`, `__FUNCTION__`, `__METHOD__`,
-  `__CLASS__`, and `__NAMESPACE__`; `__TRAIT__` remains empty pending trait support.
+  `__CLASS__`, `__NAMESPACE__`, and `__TRAIT__`, including the using class for
+  trait `__CLASS__` and the original defining trait for `__TRAIT__`/`__METHOD__`.
 - Parameter and return types for available values, nullable/union types, scalar
   coercion, typed variadics, default validation, and `void`/`never` return rules.
   `declare(strict_types=1)` preserves caller and declaration scope across calls;
@@ -192,10 +197,11 @@ new request. The CLI returns the low eight bits of the requested status.
 
 Known gaps include intersection/DNF types, most builtins, references, complete exception APIs,
 generators, attributes, extensions, and most PHP 8.5 additions.
-The object implementation is a foundation: built-in interfaces, interface properties, traits,
+The object implementation is a foundation: built-in interfaces, interface properties,
 non-public instance properties, asymmetric instance-property visibility, property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
 most magic methods, autoloading, and reflection remain unfinished. Closure methods,
+direct static trait-access deprecations, complete trait conflict diagnostics,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.
 Callable checks cover function names, Closure objects, instance-method arrays,

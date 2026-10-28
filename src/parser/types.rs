@@ -78,7 +78,7 @@ impl Parser {
                     line,
                 ));
             }
-            if bare == "parent" && self.class_parent.is_none() {
+            if bare == "parent" && self.class_parent.is_none() && self.trait_name.is_empty() {
                 return Err(Error::parse(
                     "Cannot use parent when current class scope has no parent",
                     line,

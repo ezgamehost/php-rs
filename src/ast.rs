@@ -225,6 +225,11 @@ impl Expr {
 #[derive(Debug, Clone)]
 pub(crate) struct ClassDecl {
     pub is_interface: bool,
+    pub is_trait: bool,
+    pub trait_uses: Vec<TraitUse>,
+    pub trait_requirements: Vec<Rc<FunctionDecl>>,
+    pub trait_property_checks: Vec<(PropertyDecl, PropertyDecl)>,
+    pub trait_constant_checks: Vec<(ClassConstant, ClassConstant)>,
     pub interfaces: Vec<Vec<u8>>,
     pub parent: Option<Vec<u8>>,
     pub is_abstract: bool,
@@ -237,6 +242,28 @@ pub(crate) struct ClassDecl {
     pub constants: Vec<ClassConstant>,
     pub methods: Vec<Rc<FunctionDecl>>,
     pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct TraitUse {
+    pub names: Vec<Vec<u8>>,
+    pub adaptations: Vec<TraitAdaptation>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum TraitAdaptation {
+    InsteadOf {
+        source: Vec<u8>,
+        method: Vec<u8>,
+        excluded: Vec<Vec<u8>>,
+    },
+    Alias {
+        source: Option<Vec<u8>>,
+        method: Vec<u8>,
+        alias: Option<Vec<u8>>,
+        visibility: Option<Visibility>,
+        is_final: bool,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -275,6 +302,7 @@ pub(crate) struct Parameter {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionDecl {
+    pub trait_origin: Option<Vec<u8>>,
     pub native: Option<NativeMethod>,
     pub visibility: Visibility,
     pub is_abstract: bool,

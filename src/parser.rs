@@ -17,6 +17,7 @@ mod namespaces;
 mod objects;
 mod promotion;
 mod targets;
+mod traits;
 mod types;
 mod variables;
 
@@ -41,6 +42,7 @@ pub(crate) fn parse_source(
         function_name: Vec::new(),
         class_name: Vec::new(),
         class_parent: None,
+        trait_name: Vec::new(),
         namespace: namespaces::Namespace::default(),
     };
     let mut statements = parser.program()?;
@@ -63,6 +65,7 @@ struct Parser {
     function_name: Vec<u8>,
     class_name: Vec<u8>,
     class_parent: Option<Vec<u8>>,
+    trait_name: Vec<u8>,
     namespace: namespaces::Namespace,
 }
 impl Parser {
@@ -171,10 +174,13 @@ impl Parser {
             return self.try_statement();
         }
         if self.eat("class") {
-            return self.class_declaration(false, false, false, false);
+            return self.class_declaration(false, false, false, false, false);
         }
         if self.eat("interface") {
-            return self.class_declaration(false, false, true, true);
+            return self.class_declaration(false, false, true, true, false);
+        }
+        if self.eat("trait") {
+            return self.class_declaration(false, false, false, false, true);
         }
         let readonly_class = self.is("readonly")
             && self.tokens.get(self.pos + 1).is_some_and(|token| {
@@ -205,7 +211,7 @@ impl Parser {
                 *flag = true;
             }
             self.expect("class")?;
-            return self.class_declaration(is_final, is_readonly, is_abstract, false);
+            return self.class_declaration(is_final, is_readonly, is_abstract, false, false);
         }
         let line = self.token().line;
         if self.eat("goto") {
@@ -569,6 +575,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            trait_origin: None,
             native: None,
             visibility: Visibility::Public,
             is_abstract,
@@ -862,6 +869,7 @@ impl Parser {
                                 function_name: self.function_name.clone(),
                                 class_name: self.class_name.clone(),
                                 class_parent: self.class_parent.clone(),
+                                trait_name: self.trait_name.clone(),
                                 namespace: self.namespace.clone(),
                             };
                             let expr = parser.expr(0)?;
@@ -935,6 +943,12 @@ impl Parser {
                     name.extend(&self.function_name);
                     ExprKind::Literal(Value::String(name.into()))
                 }
+                b"__class__" if !self.trait_name.is_empty() && !self.class_name.is_empty() => {
+                    ExprKind::ClassName(Box::new(Expr {
+                        kind: ExprKind::Constant(b"self".to_vec()),
+                        line,
+                    }))
+                }
                 b"__class__" => ExprKind::Literal(Value::String(self.class_name.clone().into())),
                 b"__function__" | b"__method__" => {
                     ExprKind::Literal(Value::String(self.function_name.clone().into()))
@@ -942,7 +956,7 @@ impl Parser {
                 b"__namespace__" => {
                     ExprKind::Literal(Value::String(self.namespace.name.clone().into()))
                 }
-                b"__trait__" => ExprKind::Literal(Value::String(Vec::new().into())),
+                b"__trait__" => ExprKind::Literal(Value::String(self.trait_name.clone().into())),
                 b"eval" => {
                     self.expect("(")?;
                     let code = self.expr(0)?;
