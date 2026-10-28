@@ -29,6 +29,7 @@ impl Runtime {
         }
         self.next_object_id += 1;
         Ok(Value::Closure(Rc::new(crate::Closure {
+            magic_name: None,
             name: lambda.function.name.clone(),
             context: self.class_context.clone(),
             this: if !lambda.is_static {

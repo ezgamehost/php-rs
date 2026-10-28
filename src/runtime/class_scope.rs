@@ -90,7 +90,19 @@ impl Runtime {
             };
             (name, false)
         };
+        let literal = matches!(name.kind, ExprKind::Literal(_));
         let name = self.method_name(name)?;
+        if literal
+            && name.eq_ignore_ascii_case(b"__construct")
+            && let Some(class) = self.load_class(&class, line)?
+            && objects::method(&class, &name).is_none()
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Cannot call constructor",
+                line,
+            ));
+        }
         self.resolve_class_method(&class, &name, forwarding, true, line)
     }
 
@@ -109,7 +121,43 @@ impl Runtime {
                 line,
             )
         })?;
-        let function = objects::method(&class, name).ok_or_else(|| {
+        let function = objects::method(&class, name);
+        let active_this = if allow_this {
+            match self.lookup(b"this") {
+                Some(Value::Object(object)) if object.class.is_a(&class.name) => Some(object),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        let called = if forwarding {
+            self.class_context
+                .as_ref()
+                .map_or(class.clone(), |c| c.called.clone())
+        } else {
+            class.clone()
+        };
+        if function
+            .as_ref()
+            .is_none_or(|f| self.check_method_access(f, line).is_err())
+        {
+            if objects::method(&class, b"__call").is_some()
+                && let Some(object) = &active_this
+                && let Some(handler) = objects::method(&object.class, b"__call")
+            {
+                return self.magic_method_target(
+                    handler,
+                    object.class.clone(),
+                    Some(object.clone()),
+                    name,
+                    line,
+                );
+            }
+            if let Some(handler) = objects::method(&class, b"__callStatic") {
+                return self.magic_method_target(handler, called, None, name, line);
+            }
+        }
+        let function = function.ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
                 format!(
@@ -120,24 +168,29 @@ impl Runtime {
                 line,
             )
         })?;
-        let this = if allow_this && !function.is_static {
-            match self.lookup(b"this") {
-                Some(Value::Object(object)) if object.class.is_a(&class.name) => Some(object),
-                _ => None,
-            }
-        } else {
+        let this = if function.is_static {
             None
-        };
-        let called = if let Some(object) = &this {
-            object.class.clone()
-        } else if forwarding {
-            self.class_context
-                .as_ref()
-                .map_or(class.clone(), |c| c.called.clone())
         } else {
-            class
+            active_this
         };
+        let called = this.as_ref().map_or(called, |object| object.class.clone());
         self.method_target(function, called, this, line)
+    }
+
+    pub(super) fn magic_method_target(
+        &self,
+        handler: Rc<FunctionDecl>,
+        called: Rc<Class>,
+        this: Option<Rc<crate::PhpObject>>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<CallTarget, Error> {
+        let mut target = self.unchecked_method_target(handler, called, this, line)?;
+        let prefix = target.name.iter().rposition(|b| *b == b':').unwrap() + 1;
+        target.name.truncate(prefix);
+        target.name.extend_from_slice(name);
+        target.magic_name = Some(name.to_vec());
+        Ok(target)
     }
 
     pub(super) fn method_target(
@@ -188,6 +241,7 @@ impl Runtime {
             .expect("method declaring class is linked");
         let this = if function.is_static { None } else { this };
         Ok(CallTarget {
+            magic_name: None,
             name: function.name.clone(),
             function: Some(function),
             builtin: None,

@@ -31,7 +31,15 @@ impl Runtime {
                 .class_context
                 .as_ref()
                 .is_some_and(|context| context.scope.is_a(&class));
-            self.resolve_class_method(&class, &method, false, allow_this, line)
+            let target = self.resolve_class_method(&class, &method, false, allow_this, line)?;
+            if method.eq_ignore_ascii_case(b"__construct") && target.magic_name.is_some() {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "Cannot call constructor",
+                    line,
+                ));
+            }
+            Ok(target)
         } else {
             self.resolve_callable(value.clone(), line)
         }

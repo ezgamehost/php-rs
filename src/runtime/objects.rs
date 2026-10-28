@@ -514,7 +514,21 @@ impl Runtime {
                 line,
             ));
         };
-        let function = self.instance_method(&object.class, name).ok_or_else(|| {
+        let function = self.instance_method(&object.class, name);
+        if function
+            .as_ref()
+            .is_none_or(|f| self.check_method_access(f, line).is_err())
+            && let Some(handler) = method(&object.class, b"__call")
+        {
+            return self.magic_method_target(
+                handler,
+                object.class.clone(),
+                Some(object),
+                name,
+                line,
+            );
+        }
+        let function = function.ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
                 format!(

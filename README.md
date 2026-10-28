@@ -73,6 +73,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - Magic property methods `__get`, `__set`, `__isset`, and `__unset`, with
   recursion guards, distinct typed-uninitialized/unset states, quiet probes,
   checked getter results, and temporary values for indirect modification.
+- Missing and inaccessible methods dispatch through `__call` and `__callStatic`,
+  preserving requested names, named arguments, inherited handlers, and late static
+  binding across direct calls, callbacks, first-class callables, and autoloaders.
 - Public class inheritance with inherited constructors/properties/methods,
   virtual dispatch, shared inherited method statics, and `final` classes/methods.
   Overrides validate arity, variadic parameters, parameter contravariance, and
@@ -210,9 +213,9 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, references, complete exception APIs,
 generators, attributes, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties,
-non-public instance properties, asymmetric instance-property visibility, property hooks,
+property hooks,
 intersection/DNF constant types, complete constant/default-expression compatibility,
-most magic methods, autoloading, and reflection remain unfinished. Closure methods,
+remaining magic methods, inheritance-variance autoloading, and reflection remain unfinished. Closure methods,
 direct static trait-access deprecations, complete trait conflict diagnostics,
 complete closure debugging and magic-constant context, exact object handle reuse, and iteration edge cases
 involving deletion/reinsertion of visited properties also remain unfinished.

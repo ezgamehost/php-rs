@@ -58,11 +58,19 @@ impl Runtime {
 
     pub(super) fn acquire_callable(&mut self, callee: &Expr, line: usize) -> Result<Value, Error> {
         let target = self.resolve_callee(callee, line)?;
+        if self.in_constant_expression && target.magic_name.is_some() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Creating a callable for the magic __callStatic() method is not supported in constant expressions",
+                line,
+            ));
+        }
         if let Some(closure) = target.closure {
             return Ok(Value::Closure(closure));
         }
         self.next_object_id += 1;
         Ok(Value::Closure(Rc::new(crate::Closure {
+            magic_name: target.magic_name,
             name: if matches!(target.builtin, Some(Builtin::Exit)) {
                 b"exit".to_vec()
             } else {
@@ -191,7 +199,11 @@ impl Runtime {
                 if let Some(function) = objects::method(&object.class, b"__invoke") {
                     self.unchecked_method_target(function, object.class.clone(), Some(object), line)
                 } else {
-                    self.resolve_method(Value::Object(object), b"__invoke", line)
+                    Err(Error::new(
+                        ErrorKind::Error,
+                        format!("Object of type {} is not callable", object.class_name),
+                        line,
+                    ))
                 }
             }
             Value::Array(array) if array.len() == 2 => {
@@ -217,6 +229,7 @@ impl Runtime {
             }
             Value::String(name) => self.resolve_name(name.to_vec(), line),
             Value::Closure(closure) => Ok(CallTarget {
+                magic_name: closure.magic_name.clone(),
                 this: closure.this.clone(),
                 context: closure.context.clone(),
                 name: closure.name.clone(),
@@ -266,6 +279,7 @@ impl Runtime {
             ));
         }
         Ok(CallTarget {
+            magic_name: None,
             this: None,
             context: None,
             name: normalized_name,
@@ -287,12 +301,33 @@ impl Runtime {
 
     pub(super) fn invoke_at(
         &mut self,
-        target: CallTarget,
+        mut target: CallTarget,
         args: &[Argument],
         line: usize,
         dynamic: bool,
         internal: bool,
     ) -> Result<Value, Error> {
+        if let Some(name) = target.magic_name.take() {
+            target.name = target.function.as_ref().unwrap().name.clone();
+            let parameters = [magic_parameter()];
+            let bound = self.bind_call_arguments(&parameters, args, line)?;
+            let literal = |value| {
+                Argument::Positional(Expr {
+                    kind: ExprKind::Literal(value),
+                    line,
+                })
+            };
+            return self.invoke_at(
+                target,
+                &[
+                    literal(Value::String(name.into())),
+                    literal(Value::Array(Rc::new(bound.extra))),
+                ],
+                line,
+                dynamic,
+                internal,
+            );
+        }
         let function = &target.function;
         let builtin = target.builtin;
 
@@ -301,35 +336,7 @@ impl Runtime {
         } else {
             builtin.unwrap().parameters()
         };
-        let mut bound = BoundArguments::new(&parameters);
-        for arg in args {
-            match arg {
-                Argument::Positional(expr) => {
-                    let value = self.eval(expr)?;
-                    bound.push(None, value, &parameters, line)?;
-                }
-                Argument::Named(name, expr) => {
-                    let value = self.eval(expr)?;
-                    bound.push(Some(name.clone()), value, &parameters, line)?;
-                }
-                Argument::Unpack(expr) => {
-                    let Value::Array(array) = self.eval(expr)? else {
-                        return Err(Error::new(
-                            ErrorKind::TypeError,
-                            "Only arrays and Traversables can be unpacked",
-                            line,
-                        ));
-                    };
-                    for (key, value) in array.entries() {
-                        let name = match key {
-                            ArrayKey::Int(_) => None,
-                            ArrayKey::String(name) => Some(name.clone()),
-                        };
-                        bound.push(name, value.clone(), &parameters, line)?;
-                    }
-                }
-            }
-        }
+        let bound = self.bind_call_arguments(&parameters, args, line)?;
         let optimized = !dynamic
             && target.name != b"key_exists"
             && optimized_trace_call(builtin, args, self.current_function.is_some());
@@ -351,6 +358,44 @@ impl Runtime {
         result
     }
 
+    fn bind_call_arguments(
+        &mut self,
+        parameters: &[Parameter],
+        args: &[Argument],
+        line: usize,
+    ) -> Result<BoundArguments, Error> {
+        let mut bound = BoundArguments::new(parameters);
+        for arg in args {
+            match arg {
+                Argument::Positional(expr) => {
+                    let value = self.eval(expr)?;
+                    bound.push(None, value, parameters, line)?;
+                }
+                Argument::Named(name, expr) => {
+                    let value = self.eval(expr)?;
+                    bound.push(Some(name.clone()), value, parameters, line)?;
+                }
+                Argument::Unpack(expr) => {
+                    let Value::Array(array) = self.eval(expr)? else {
+                        return Err(Error::new(
+                            ErrorKind::TypeError,
+                            "Only arrays and Traversables can be unpacked",
+                            line,
+                        ));
+                    };
+                    for (key, value) in array.entries() {
+                        let name = match key {
+                            ArrayKey::Int(_) => None,
+                            ArrayKey::String(name) => Some(name.clone()),
+                        };
+                        bound.push(name, value.clone(), parameters, line)?;
+                    }
+                }
+            }
+        }
+        Ok(bound)
+    }
+
     fn invoke_bound(
         &mut self,
         target: CallTarget,
@@ -360,6 +405,7 @@ impl Runtime {
         dynamic: bool,
     ) -> Result<Value, Error> {
         let CallTarget {
+            magic_name: _,
             name,
             function,
             builtin,
@@ -723,6 +769,7 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut dyn WarningSink, switches:
 
 #[derive(Clone)]
 pub(super) struct CallTarget {
+    pub(super) magic_name: Option<Vec<u8>>,
     pub(super) name: Vec<u8>,
     pub(super) function: Option<Rc<FunctionDecl>>,
     pub(super) builtin: Option<Builtin>,
@@ -748,5 +795,16 @@ fn optimized_trace_call(builtin: Option<Builtin>, args: &[Argument], in_function
         Some(Builtin::FuncNumArgs | Builtin::FuncGetArgs) => in_function && args.is_empty(),
         Some(Builtin::ArrayKeyExists) => args.len() == 2,
         _ => false,
+    }
+}
+
+pub(super) fn magic_parameter() -> Parameter {
+    Parameter {
+        name: b"arguments".to_vec(),
+        ty: None,
+        implicit_nullable: false,
+        default: None,
+        variadic: true,
+        promotion: None,
     }
 }

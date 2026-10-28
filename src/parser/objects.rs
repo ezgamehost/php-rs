@@ -244,19 +244,34 @@ impl Parser {
                         method.line,
                     ));
                 }
-                if [b"__get".as_slice(), b"__set", b"__isset", b"__unset"]
-                    .iter()
-                    .any(|name| method.name.eq_ignore_ascii_case(name))
+                if [
+                    b"__get".as_slice(),
+                    b"__set",
+                    b"__isset",
+                    b"__unset",
+                    b"__call",
+                    b"__callstatic",
+                ]
+                .iter()
+                .any(|name| method.name.eq_ignore_ascii_case(name))
                 {
                     let setter = method.name.eq_ignore_ascii_case(b"__set");
-                    let count = if setter { 2 } else { 1 };
+                    let call = method.name.eq_ignore_ascii_case(b"__call")
+                        || method.name.eq_ignore_ascii_case(b"__callstatic");
+                    let count = if setter || call { 2 } else { 1 };
+                    let invalid_arguments_type = call
+                        && method
+                            .parameters
+                            .get(1)
+                            .and_then(|p| p.ty.as_ref())
+                            .is_some_and(|ty| !ty.contains("array") && !ty.contains("mixed"));
                     let invalid_name_type = method
                         .parameters
                         .first()
                         .and_then(|p| p.ty.as_ref())
                         .is_some_and(|ty| !ty.contains("string") && !ty.contains("mixed"));
                     let invalid_return = method.return_type.as_ref().is_some_and(|ty| {
-                        if method.name.eq_ignore_ascii_case(b"__get") {
+                        if call || method.name.eq_ignore_ascii_case(b"__get") {
                             false
                         } else {
                             ty.members.iter().any(|member| {
@@ -271,13 +286,17 @@ impl Parser {
                     });
                     if method.parameters.iter().filter(|p| !p.variadic).count() != count
                         || invalid_name_type
+                        || invalid_arguments_type
                         || invalid_return
                     {
-                        return Err(Error::parse(
-                            "Invalid magic property method signature",
-                            method.line,
-                        ));
+                        return Err(Error::parse("Invalid magic method signature", method.line));
                     }
+                }
+                if method.name.eq_ignore_ascii_case(b"__callstatic") && !static_method {
+                    return Err(Error::parse(
+                        "Method __callStatic() must be static",
+                        method.line,
+                    ));
                 }
                 if static_method
                     && [

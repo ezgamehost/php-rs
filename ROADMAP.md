@@ -96,6 +96,9 @@ definition of completion.
    Magic property methods handle inaccessible/unset reads, writes, isset/empty,
    and unset, with per-property guards, typed getter checks, temporary indirect
    writes, caller trace locations, and restoration after exceptions.
+   Method overloading dispatches missing/inaccessible calls through __call and
+   __callStatic, including named arguments, first-class callables, callbacks,
+   inherited handlers, late static binding, and autoload callback identity.
    Traits support nested composition before inheritance, method precedence,
    `insteadof`, aliases, visibility/final adaptations, abstract requirements,
    property/constant compatibility checks, and lexical magic constants.

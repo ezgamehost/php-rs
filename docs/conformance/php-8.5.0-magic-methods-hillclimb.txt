@@ -1,0 +1,61 @@
+Before: 5256 cases; 1067 passed, 3781 failed, 408 unsupported
+After: 5256 cases; 1091 passed, 3757 failed, 408 unsupported
+New passes: 24; regressions: 0
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_011.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_012.phpt
+NEW PASS: Zend/tests/bug34260.phpt
+NEW PASS: Zend/tests/bug45180.phpt
+NEW PASS: Zend/tests/bug51176.phpt
+NEW PASS: Zend/tests/bug55247.phpt
+NEW PASS: Zend/tests/first_class_callable/first_class_callable_005.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_call_string_002.phpt
+NEW PASS: Zend/tests/lsb/lsb_016.phpt
+NEW PASS: Zend/tests/magic_methods/bug19859.phpt
+NEW PASS: Zend/tests/magic_methods/bug47801.phpt
+NEW PASS: Zend/tests/magic_methods/bug53826.phpt
+NEW PASS: Zend/tests/magic_methods/bug69025.phpt
+NEW PASS: Zend/tests/magic_methods/bug69212.phpt
+NEW PASS: Zend/tests/magic_methods/bug69427.phpt
+NEW PASS: Zend/tests/magic_methods/bug77339.phpt
+NEW PASS: Zend/tests/magic_methods/call_static.phpt
+NEW PASS: Zend/tests/magic_methods/call_static_002.phpt
+NEW PASS: Zend/tests/magic_methods/call_static_003.phpt
+NEW PASS: Zend/tests/magic_methods/call_static_007.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_001.phpt
+NEW PASS: Zend/tests/objects/objects_021.phpt
+NEW PASS: Zend/tests/objects/objects_028.phpt
+NEW PASS: Zend/tests/traits/static_004.phpt
+
+Most frequent remaining failure messages:
+579: ParseError: Expected ';'
+259: ParseError: Expected expression
+196: Error: Class "ReflectionClass" not found
+125: Error: Call to undefined function set_error_handler()
+114: ParseError: Expected parameter variable
+62: Error: Class "Fiber" not found
+51: ParseError: Expected '('
+48: Error: Undefined constant "yield"
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+40: ParseError: Expected function name
+38: ParseError: Expected ')'
+31: ParseError: Invalid interface member declaration
+31: Error: Call to undefined function fopen()
+27: ParseError: Invalid abstract method declaration
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

@@ -705,17 +705,31 @@ fn dump_inner(
             seen.remove(&object.object_id);
         }
         Value::Closure(closure) => {
-            let parameters = closure
-                .function
-                .as_ref()
-                .map(|f| f.parameters.clone())
-                .unwrap_or_else(|| Builtin::lookup(&closure.name).unwrap().parameters());
+            let parameters = if closure.magic_name.is_some() {
+                vec![functions::magic_parameter()]
+            } else {
+                closure
+                    .function
+                    .as_ref()
+                    .map(|f| f.parameters.clone())
+                    .unwrap_or_else(|| Builtin::lookup(&closure.name).unwrap().parameters())
+            };
             let mut properties = PhpArray::default();
-            let name = closure.function.as_ref().map_or(&closure.name, |f| &f.name);
+            let name = if closure.magic_name.is_some() {
+                &closure.name
+            } else {
+                closure.function.as_ref().map_or(&closure.name, |f| &f.name)
+            };
             properties.insert(
                 ArrayKey::String(b"function".to_vec()),
                 Value::String(name.clone().into()),
             );
+            if let Some(object) = &closure.this {
+                properties.insert(
+                    ArrayKey::String(b"this".to_vec()),
+                    Value::Object(object.clone()),
+                );
+            }
             if !parameters.is_empty() {
                 let mut entries = PhpArray::default();
                 for param in parameters {

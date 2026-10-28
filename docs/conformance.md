@@ -92,13 +92,29 @@ PHP 8.5.0. The implementation is grounded in the
 [PHP overloading rules](https://www.php.net/manual/en/language.oop5.overloading.php)
 and `Zend/zend_object_handlers.c`. Reference-returning getters, method overloading,
 property hooks, destructors, and exact diagnostic rendering remain unfinished.
+The [method-overloading slice](conformance/php-8.5.0-magic-methods-hillclimb.txt)
+adds 24 passing Zend fixtures with zero regressions. Missing or inaccessible
+methods dispatch through `__call` and `__callStatic`; accessible methods retain
+ordinary visibility, abstract-method, and static-call checks. Resolved callables
+retain the requested method name independently of the handler, preserving named
+argument keys, inherited handler scope, late static binding, saved closures, and
+autoload callback identity. Closure dumps expose the virtual method name,
+variadic arguments, and bound object. Objects still require a declared `__invoke`
+to be callable. Literal static constructor calls and magic callables in constant
+expressions retain PHP's restrictions. Parser checks cover handler arity,
+staticness, and parameter types. Behavior follows PHP 8.5.0
+`Zend/zend_object_handlers.c`, `Zend/zend_API.c`, and the upstream fixtures.
+All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
+and Clippy pass. No new custom tests or differential matrices were added.
+General references, closure reflection/binding APIs, destructor callbacks, and
+exact diagnostic rendering remain incomplete.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1067 | 3781 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1091 | 3757 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

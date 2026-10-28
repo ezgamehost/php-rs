@@ -77,6 +77,7 @@ impl Runtime {
                 ),
             });
             return Ok(Value::Closure(Rc::new(crate::Closure {
+                magic_name: closure.magic_name.clone(),
                 name: closure.name.clone(),
                 this: closure.this.clone(),
                 context: closure.context.clone(),

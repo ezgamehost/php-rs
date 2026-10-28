@@ -20,6 +20,7 @@ impl Autoloader {
         }
         matches!(self.value, Value::Object(_)) == matches!(other.value, Value::Object(_))
             && self.target.name.eq_ignore_ascii_case(&target.name)
+            && self.target.magic_name == target.magic_name
             && same(&self.target.this, &target.this)
             && same(&self.target.closure, &target.closure)
             && self.target.context.as_ref().map(|c| &c.called.name)
@@ -104,14 +105,14 @@ impl Runtime {
                     .unwrap_or_else(|| Value::String(context.called.name.clone().into())),
                 line,
             )?;
-            let name = target
-                .function
-                .as_ref()
-                .map_or(target.name.as_slice(), |f| f.name.as_slice());
-            array.append(
-                Value::String(name.rsplit(|b| *b == b':').next().unwrap().to_vec().into()),
-                line,
-            )?;
+            let name = target.magic_name.as_deref().unwrap_or_else(|| {
+                let name = target
+                    .function
+                    .as_ref()
+                    .map_or(target.name.as_slice(), |f| f.name.as_slice());
+                name.rsplit(|b| *b == b':').next().unwrap()
+            });
+            array.append(Value::String(name.to_vec().into()), line)?;
             Value::Array(Rc::new(array))
         } else {
             Value::String(
