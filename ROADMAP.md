@@ -74,10 +74,13 @@ definition of completion.
    Array foreach by reference retains live source cells and element aliases.
    Weak iterator tokens keep independent positions in array copies; insertion,
    deletion, nested loops, source replacement, and final aliases are supported.
+   Reference variadics retain positional/named caller cells and apply typed entry
+   coercion. Array argument unpacking separates copies before binding selected
+   elements, and argument inspection snapshots live referenced values.
    Remaining: property references, object reference iteration, reference destructuring, cycle collection,
    advanced interpolation, complete
    operators, complete class-context magic constants, other superglobals,
-   by-reference returns, variadics/unpacking and promoted property references,
+   by-reference returns, Traversable unpacking and promoted property references,
    Closure methods and complete object context handling,
    intersection/DNF types and class resolution,
    complete namespace validation and error/exception behavior.

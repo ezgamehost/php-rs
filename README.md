@@ -68,10 +68,11 @@ new request. The CLI returns the low eight bits of the requested status.
   exception restoration, and explicit mask changes inside suppressed expressions.
 - Named functions, recursion, local scopes, constant default arguments,
   named arguments, variadics, argument unpacking, and string-based function calls.
-  Fixed by-reference parameters bind variable/global/array cells, including named calls,
-  entry coercion, and callback temporary-value warnings.
+  Fixed and variadic by-reference parameters bind variable/global/array cells,
+  including named calls, entry coercion, and callback temporary-value warnings.
+  Array argument unpacking separates copied arrays before binding element references.
   `func_num_args`, `func_get_arg`, and `func_get_args` expose supplied arguments,
-  with live parameter values, default gaps, and separate variadic argument copies.
+  with live parameter values, default gaps, and snapshots of referenced arguments.
 - Instance classes and `stdClass`, constructors, shared object handles,
   dynamic property names, nested property/array writes, and basic live property
   iteration. Instance methods bind `$this`, support named/typed arguments, and
@@ -242,7 +243,7 @@ Callable checks cover function names, Closure objects, instance-method arrays,
 and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
 reference captures, and fixed reference parameters work. Property references,
-object reference iteration, reference destructuring, variadics/unpacking, promoted property
+object reference iteration, reference destructuring, Traversable unpacking, promoted property
 references, by-reference returns, and cycle collection remain unfinished.
 Reference cycles are not yet collected.
 Throwable property layouts, configurable trace settings, error/exception

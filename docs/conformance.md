@@ -220,13 +220,27 @@ reference-checked project fixtures, formatting, and Clippy pass; no new custom
 tests were added. Object/property reference iteration, reference destructuring,
 internal array-pointer APIs, mutating array builtins, and diagnostic formatting
 remain incomplete.
+The [reference variadic/unpacking slice](conformance/php-8.5.0-reference-variadics-hillclimb.txt)
+adds six Zend passes with zero regressions. Reference variadics retain caller
+cells for positional and named arguments, including typed entry coercion and
+callback temporary references. Array argument unpacking binds selected entries
+to reference parameters after separating copied source arrays, retaining named
+keys and supporting temporary arrays. Later argument evaluation cannot rebind
+already-acquired references. `func_get_arg`/`func_get_args` and captured traces
+read referenced values into snapshots; subsequent argument inspection still
+sees mutations through the original cells. Variadic reference errors use the
+actual positional argument number and omit a fixed parameter name. Invalid
+unpacking diagnostics report the supplied type. All 797 existing Rust tests,
+57 reference-checked project fixtures, formatting, and Clippy pass; no new custom
+tests were added. Traversable unpacking, property reference sources, reference
+returns, and complete diagnostic rendering remain unfinished.
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1238 | 3610 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1244 | 3604 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

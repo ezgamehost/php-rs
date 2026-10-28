@@ -377,7 +377,13 @@ impl Runtime {
                 Argument::Positional(expr) => {
                     let (value, reference) =
                         if let Some(index) = bound.parameter_index(parameters, None) {
-                            self.eval_call_argument(expr, &parameters[index], index, target, line)?
+                            self.eval_call_argument(
+                                expr,
+                                &parameters[index],
+                                bound.positional,
+                                target,
+                                line,
+                            )?
                         } else {
                             (self.eval(expr)?, None)
                         };
@@ -393,30 +399,7 @@ impl Runtime {
                     bound.push(Some(name.clone()), value, reference, parameters, line)?;
                 }
                 Argument::Unpack(expr) => {
-                    let Value::Array(array) = self.eval(expr)? else {
-                        return Err(Error::new(
-                            ErrorKind::TypeError,
-                            "Only arrays and Traversables can be unpacked",
-                            line,
-                        ));
-                    };
-                    for (key, value) in array.entries() {
-                        let name = match key {
-                            ArrayKey::Int(_) => None,
-                            ArrayKey::String(name) => Some(name.clone()),
-                        };
-                        if bound
-                            .parameter_index(parameters, name.as_deref())
-                            .is_some_and(|index| parameters[index].by_reference)
-                        {
-                            return Err(Error::new(
-                                ErrorKind::Error,
-                                "References to unpacked array elements are not supported yet",
-                                line,
-                            ));
-                        }
-                        bound.push(name, value.dereferenced(), None, parameters, line)?;
-                    }
+                    self.bind_unpacked_arguments(expr, parameters, &mut bound, line)?;
                 }
             }
         }
@@ -426,6 +409,124 @@ impl Runtime {
             }
         }
         Ok(bound)
+    }
+
+    fn bind_unpacked_arguments(
+        &mut self,
+        expr: &Expr,
+        parameters: &[Parameter],
+        bound: &mut BoundArguments,
+        line: usize,
+    ) -> Result<(), Error> {
+        let mut expr = expr;
+        while let ExprKind::Group(inner) = &expr.kind {
+            expr = inner;
+        }
+        let wants_references = parameters.iter().any(|parameter| parameter.by_reference);
+        let reference = if let ExprKind::Assign(target, op, source) = &expr.kind
+            && op == "=&"
+            && wants_references
+        {
+            Some(self.reference_assignment(target, source, line)?)
+        } else {
+            None
+        };
+        let mut location = if wants_references && expr.is_writable() && !expr.is_globals() {
+            Some(self.location(expr)?)
+        } else {
+            None
+        };
+        let value = if let Some(reference) = &reference {
+            reference.borrow().clone()
+        } else if let Some(location) = &mut location {
+            self.read_location(location, line, false, None)?
+        } else {
+            self.eval(expr)?
+        };
+        let Value::Array(array) = value else {
+            return Err(Error::new(
+                ErrorKind::TypeError,
+                format!(
+                    "Only arrays and Traversables can be unpacked, {} given",
+                    builtins::debug_type(&value)
+                ),
+                line,
+            ));
+        };
+        let mut positional = bound.positional;
+        let requires_reference = array.entries().iter().any(|(key, _)| {
+            let index = match key {
+                ArrayKey::Int(_) => {
+                    let index = positional;
+                    positional += 1;
+                    (index < parameters.len())
+                        .then_some(index)
+                        .or_else(|| bound.variadic.then(|| parameters.len() - 1))
+                }
+                ArrayKey::String(name) => bound.parameter_index(parameters, Some(name)),
+            };
+            index.is_some_and(|index| parameters[index].by_reference)
+        });
+        if !requires_reference {
+            for (key, value) in array.entries() {
+                let name = match key {
+                    ArrayKey::Int(_) => None,
+                    ArrayKey::String(name) => Some(name.clone()),
+                };
+                bound.push(name, value.dereferenced(), None, parameters, line)?;
+            }
+            return Ok(());
+        }
+        let keys: Vec<_> = array.entries().iter().map(|(key, _)| key.clone()).collect();
+        let source = if let Some(reference) = reference {
+            drop(array);
+            reference
+        } else if let Some(location) = &mut location {
+            if location.object.is_some() || location.static_class.is_some() {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "References to properties are not supported yet",
+                    line,
+                ));
+            }
+            drop(array);
+            self.location_reference(location, line)?
+        } else {
+            cell(Value::Array(array))
+        };
+        for key in keys {
+            let name = match &key {
+                ArrayKey::Int(_) => None,
+                ArrayKey::String(name) => Some(name.clone()),
+            };
+            let by_reference = bound
+                .parameter_index(parameters, name.as_deref())
+                .is_some_and(|index| parameters[index].by_reference);
+            let mut offset = Offset::new(Some(key.to_value()));
+            let (value, reference) = if by_reference {
+                let reference = reference_paths::acquire(
+                    source.clone(),
+                    std::slice::from_mut(&mut offset),
+                    line,
+                    &mut self.diagnostics,
+                )?;
+                let value = reference.borrow().clone();
+                (value, Some(reference))
+            } else {
+                (
+                    read_offset(
+                        source.borrow().clone(),
+                        &mut offset,
+                        line,
+                        Access::Read,
+                        &mut self.diagnostics,
+                    )?,
+                    None,
+                )
+            };
+            bound.push(name, value, reference, parameters, line)?;
+        }
+        Ok(())
     }
 
     fn eval_call_argument(
@@ -439,23 +540,20 @@ impl Runtime {
         if !parameter.by_reference {
             return Ok((self.eval(expr)?, None));
         }
-        if parameter.variadic {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "Reference variadic arrays are not supported yet",
-                line,
-            ));
-        }
+        let label = if parameter.variadic {
+            String::new()
+        } else {
+            format!(" (${})", String::from_utf8_lossy(&parameter.name))
+        };
         if target.reference_values {
             if let ExprKind::Literal(Value::Reference(reference)) = &expr.kind {
                 return Ok((reference.borrow().clone(), Some(reference.clone())));
             }
             let value = self.eval(expr)?;
             self.diagnostics.push(format!(
-                "{}(): Argument #{} (${}) must be passed by reference, value given on line {line}",
+                "{}(): Argument #{}{label} must be passed by reference, value given on line {line}",
                 String::from_utf8_lossy(&target.name),
-                index + 1,
-                String::from_utf8_lossy(&parameter.name)
+                index + 1
             ));
             return Ok((value, None));
         }
@@ -488,10 +586,9 @@ impl Runtime {
         Err(Error::new(
             ErrorKind::Error,
             format!(
-                "{}(): Argument #{} (${}) could not be passed by reference",
+                "{}(): Argument #{}{label} could not be passed by reference",
                 String::from_utf8_lossy(&target.name),
-                index + 1,
-                String::from_utf8_lossy(&parameter.name)
+                index + 1
             ),
             line,
         ))
@@ -634,15 +731,21 @@ impl Runtime {
                 let value = if param.variadic {
                     let mut values = PhpArray::default();
                     arguments.extra.clear();
-                    for (offset, (key, value)) in bound.extra.entries().iter().enumerate() {
+                    for (offset, (key, stored)) in bound.extra.entries().iter().enumerate() {
                         let value = self.check_argument(
-                            value.clone(),
+                            stored.dereferenced(),
                             param,
                             &function,
                             index + offset + 1,
                             caller_strict,
                             line,
                         )?;
+                        let value = if let Value::Reference(reference) = stored {
+                            *reference.borrow_mut() = value;
+                            Value::Reference(reference.clone())
+                        } else {
+                            value
+                        };
                         if matches!(key, ArrayKey::Int(_)) {
                             arguments.extra.push(value.clone());
                         }
@@ -801,6 +904,11 @@ impl BoundArguments {
                 if self.extra.get(&key).is_some() {
                     return Err(overwritten(&name, line));
                 }
+                let value = if parameters.last().is_some_and(|p| p.by_reference) {
+                    Value::Reference(reference.unwrap_or_else(|| cell(value)))
+                } else {
+                    value
+                };
                 self.extra.insert(key, value);
             } else {
                 return Err(Error::new(
@@ -826,6 +934,11 @@ impl BoundArguments {
                 self.fixed[index] = Some(value);
                 self.references[index] = reference;
             } else {
+                let value = if self.variadic && parameters.last().is_some_and(|p| p.by_reference) {
+                    Value::Reference(reference.unwrap_or_else(|| cell(value)))
+                } else {
+                    value
+                };
                 self.extra.append(value, line)?;
             }
         }

@@ -18,7 +18,7 @@ impl FunctionArguments {
                 .get(name)
                 .map_or(Value::Null, |cell| cell.borrow().clone())
         } else {
-            self.extra[index - self.fixed.len()].clone()
+            self.extra[index - self.fixed.len()].dereferenced()
         }
     }
 }

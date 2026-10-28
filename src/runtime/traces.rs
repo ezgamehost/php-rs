@@ -130,7 +130,11 @@ impl TraceFrame {
 
     fn capture(&self, runtime: &Runtime) -> Value {
         let mut fields = self.fields.clone();
-        if let Some(mut arguments) = self.arguments.clone() {
+        if let Some(stored) = &self.arguments {
+            let mut arguments = PhpArray::default();
+            for (key, value) in stored.entries() {
+                arguments.insert(key.clone(), value.dereferenced());
+            }
             if let Some(depth) = self.scope_depth {
                 let scope = if depth == runtime.callers.len() {
                     &runtime.scope
