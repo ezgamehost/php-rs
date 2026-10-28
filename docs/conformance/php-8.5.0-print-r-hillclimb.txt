@@ -1,0 +1,53 @@
+Before: 5256 cases; 1356 passed, 3492 failed, 408 unsupported
+After: 5256 cases; 1372 passed, 3476 failed, 408 unsupported
+New passes: 16; regressions: 0
+NEW PASS: Zend/tests/autoload/bug33116.phpt
+NEW PASS: Zend/tests/bug28072.phpt
+NEW PASS: Zend/tests/bug35509.phpt
+NEW PASS: Zend/tests/bug39944.phpt
+NEW PASS: Zend/tests/bug40757.phpt
+NEW PASS: Zend/tests/bug55135.phpt
+NEW PASS: Zend/tests/bug70332.phpt
+NEW PASS: Zend/tests/exceptions/bug50383.phpt
+NEW PASS: Zend/tests/gh11016.phpt
+NEW PASS: Zend/tests/gh11244-005.phpt
+NEW PASS: Zend/tests/magic_methods/bug46409.phpt
+NEW PASS: Zend/tests/magic_methods/bug72813.phpt
+NEW PASS: Zend/tests/objects/objects_033.phpt
+NEW PASS: Zend/tests/ternary_operator_basic.phpt
+NEW PASS: Zend/tests/unset/bug34518.phpt
+NEW PASS: Zend/tests/unset/bug62653.phpt
+
+Most frequent remaining failure messages:
+539: ParseError: Expected ';'
+209: Error: Class "ReflectionClass" not found
+133: Error: Call to undefined function set_error_handler()
+66: Error: Class "Fiber" not found
+51: Error: Undefined constant "yield"
+48: Error: Interface "ArrayAccess" not found
+43: ParseError: Constant expression contains invalid operations
+43: ParseError: Expected '{'
+33: Error: Call to undefined function fopen()
+31: ParseError: Invalid interface member declaration
+31: ParseError: Cannot assign to expression
+28: Error: Class "WeakMap" not found
+27: ParseError: Invalid abstract method declaration
+27: Error: Call to undefined function register_shutdown_function()
+24: Error: Call to undefined function set_exception_handler()
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW

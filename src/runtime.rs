@@ -36,6 +36,7 @@ mod method_visibility;
 mod nullsafe;
 mod objects;
 mod offsets;
+mod printing;
 mod property_references;
 mod property_visibility;
 mod readonly;

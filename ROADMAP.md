@@ -148,7 +148,7 @@ definition of completion.
    complete property/constant diagnostics, property hooks, remaining magic methods, reflection, attributes, enums,
    generators, fibers, garbage collection, and weak references.
 5. **Standard runtime and extensions (core builtins started):** type inspection,
-   `var_dump`, `strlen`, array keys/values/key existence, counting, and function
+   `var_dump`, `print_r`, `strlen`, array keys/values/key existence, counting, and function
    existence implemented. Byte-string repetition/reversal and chr/ord conversion
    include PHP 8.5 deprecations; common native argument diagnostics include parameter
    names, received types, and argument counts. Array map/filter/reduce support available callables,

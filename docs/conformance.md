@@ -310,13 +310,28 @@ fixtures, formatting, and Clippy pass; no new custom tests were added. Iterator 
 ArrayAccess objects, deletion/reinsertion cursor edge cases, object destructors, and
 cycle collection remain unfinished.
 
+The [print_r slice](conformance/php-8.5.0-print-r-hillclimb.txt) adds 16 Zend
+passes with zero regressions. `print_r` writes formatted output or returns a string,
+with binary-safe scalar/key rendering, nested array/object indentation, private and
+protected property labels, and recursion detection through shared references.
+Object rendering invokes `__debugInfo`, including reference-returning methods, and
+reports PHP 8.5's null-result deprecation. Scalar NaN rendering emits PHP's warning.
+Closure property construction is shared with the existing dump formatter. Four of
+13 dedicated upstream `print_r` cases pass; two fail on dynamic-property attributes
+or resource support, and seven require unsupported INI/whitespace sections. All 797
+existing Rust tests, 57 reference-checked project fixtures, formatting, and Clippy
+pass; no new custom tests were added. Custom debug properties in `var_dump`, complete
+closure metadata, object identity reuse, callback reentrancy edge cases, and resource
+printing remain unfinished.
+
 The full Zend row below includes these changes; other subset rows remain
 historical measurements made before EXPECTF and namespace support.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1356 | 3492 | 408 |
+| PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 4 | 2 | 7 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 1372 | 3476 | 408 |
 | PHP 8.5.0 `tests/basic`, Rust | 6 | 5 | 99 |
 | PHP 8.5.0 `tests/lang`, Rust and reference PHP for passing cases | 71 | 96 | 127 |
 | PHP 8.5.0 `Zend/tests/match`, Rust and reference PHP for passing cases | 17 | 5 | 13 |

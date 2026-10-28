@@ -12,6 +12,7 @@ pub(super) enum Builtin {
     Ord,
     Count,
     VarDump,
+    PrintR,
     GetType,
     GetDebugType,
     GetClass,
@@ -63,6 +64,7 @@ impl Builtin {
             b"ord" => Self::Ord,
             b"count" | b"sizeof" => Self::Count,
             b"var_dump" => Self::VarDump,
+            b"print_r" => Self::PrintR,
             b"gettype" => Self::GetType,
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
@@ -155,6 +157,7 @@ impl Builtin {
             Self::Ord => &[("character", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
+            Self::PrintR => &[("value", false, false), ("return", true, false)],
             Self::GetType | Self::GetDebugType | Self::Is(_) => &[("value", false, false)],
             Self::ArrayKeys => &[
                 ("array", false, false),
@@ -430,6 +433,7 @@ impl Runtime {
                 debug_type(first) == kind
                     || (kind == "object" && matches!(first, Value::Closure(_) | Value::Object(_))),
             )),
+            Builtin::PrintR => self.print_r(&args, line),
             Builtin::VarDump => {
                 if extra
                     .entries()
@@ -787,54 +791,7 @@ fn dump_inner(
             seen.remove(&object.object_id);
         }
         Value::Closure(closure) => {
-            let parameters = if closure.magic_name.is_some() {
-                vec![functions::magic_parameter()]
-            } else {
-                closure
-                    .function
-                    .as_ref()
-                    .map(|f| f.parameters.clone())
-                    .unwrap_or_else(|| Builtin::lookup(&closure.name).unwrap().parameters())
-            };
-            let mut properties = PhpArray::default();
-            let name = if closure.magic_name.is_some() {
-                &closure.name
-            } else {
-                closure.function.as_ref().map_or(&closure.name, |f| &f.name)
-            };
-            properties.insert(
-                ArrayKey::String(b"function".to_vec()),
-                Value::String(name.clone().into()),
-            );
-            if let Some(object) = &closure.this {
-                properties.insert(
-                    ArrayKey::String(b"this".to_vec()),
-                    Value::Object(object.clone()),
-                );
-            }
-            if !parameters.is_empty() {
-                let mut entries = PhpArray::default();
-                for param in parameters {
-                    let mut key = if param.by_reference {
-                        b"&$".to_vec()
-                    } else {
-                        b"$".to_vec()
-                    };
-                    key.extend(param.name);
-                    entries.insert(
-                        ArrayKey::String(key),
-                        Value::String(if param.default.is_some() || param.variadic {
-                            b"<optional>".to_vec().into()
-                        } else {
-                            b"<required>".to_vec().into()
-                        }),
-                    );
-                }
-                properties.insert(
-                    ArrayKey::String(b"parameter".to_vec()),
-                    Value::Array(Rc::new(entries)),
-                );
-            }
+            let properties = closure_debug_properties(closure);
             let mut rendered = Vec::new();
             dump_inner(
                 &Value::Array(Rc::new(properties)),
@@ -909,4 +866,56 @@ fn dump_float(n: f64) -> String {
     } else {
         n.to_string()
     }
+}
+
+pub(super) fn closure_debug_properties(closure: &crate::Closure) -> PhpArray {
+    let parameters = if closure.magic_name.is_some() {
+        vec![functions::magic_parameter()]
+    } else {
+        closure
+            .function
+            .as_ref()
+            .map(|f| f.parameters.clone())
+            .unwrap_or_else(|| Builtin::lookup(&closure.name).unwrap().parameters())
+    };
+    let mut properties = PhpArray::default();
+    let name = if closure.magic_name.is_some() {
+        &closure.name
+    } else {
+        closure.function.as_ref().map_or(&closure.name, |f| &f.name)
+    };
+    properties.insert(
+        ArrayKey::String(b"function".to_vec()),
+        Value::String(name.clone().into()),
+    );
+    if let Some(object) = &closure.this {
+        properties.insert(
+            ArrayKey::String(b"this".to_vec()),
+            Value::Object(object.clone()),
+        );
+    }
+    if !parameters.is_empty() {
+        let mut entries = PhpArray::default();
+        for param in parameters {
+            let mut key = if param.by_reference {
+                b"&$".to_vec()
+            } else {
+                b"$".to_vec()
+            };
+            key.extend(param.name);
+            entries.insert(
+                ArrayKey::String(key),
+                Value::String(if param.default.is_some() || param.variadic {
+                    b"<optional>".to_vec().into()
+                } else {
+                    b"<required>".to_vec().into()
+                }),
+            );
+        }
+        properties.insert(
+            ArrayKey::String(b"parameter".to_vec()),
+            Value::Array(Rc::new(entries)),
+        );
+    }
+    properties
 }
