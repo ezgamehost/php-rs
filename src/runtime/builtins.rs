@@ -210,6 +210,28 @@ impl Builtin {
             b"is_finite" => Self::Math(math::Math::IsFinite),
             b"is_infinite" => Self::Math(math::Math::IsInfinite),
             b"is_nan" => Self::Math(math::Math::IsNan),
+            b"pi" => Self::Math(math::Math::Pi),
+            b"sin" => Self::Math(math::Math::Sin),
+            b"cos" => Self::Math(math::Math::Cos),
+            b"tan" => Self::Math(math::Math::Tan),
+            b"asin" => Self::Math(math::Math::Asin),
+            b"acos" => Self::Math(math::Math::Acos),
+            b"atan" => Self::Math(math::Math::Atan),
+            b"atan2" => Self::Math(math::Math::Atan2),
+            b"sinh" => Self::Math(math::Math::Sinh),
+            b"cosh" => Self::Math(math::Math::Cosh),
+            b"tanh" => Self::Math(math::Math::Tanh),
+            b"asinh" => Self::Math(math::Math::Asinh),
+            b"acosh" => Self::Math(math::Math::Acosh),
+            b"atanh" => Self::Math(math::Math::Atanh),
+            b"exp" => Self::Math(math::Math::Exp),
+            b"expm1" => Self::Math(math::Math::Expm1),
+            b"log" => Self::Math(math::Math::Log),
+            b"log10" => Self::Math(math::Math::Log10),
+            b"log1p" => Self::Math(math::Math::Log1p),
+            b"hypot" => Self::Math(math::Math::Hypot),
+            b"deg2rad" => Self::Math(math::Math::Deg2rad),
+            b"rad2deg" => Self::Math(math::Math::Rad2deg),
             b"round" => Self::Round,
             b"number_format" => Self::NumberFormat,
             b"base_convert" => Self::BaseConvert,
@@ -488,6 +510,12 @@ impl Builtin {
                     if matches!((self, *name), (Self::Round, "mode")) {
                         return rounding::default_mode();
                     }
+                    if matches!((self, *name), (Self::Math(math::Math::Log), "base")) {
+                        return Expr {
+                            kind: ExprKind::Constant(b"M_E".to_vec()),
+                            line: 0,
+                        };
+                    }
                     Expr {
                         kind: ExprKind::Literal(match (self, *name) {
                             (Self::Ucwords, "separators") => {
@@ -618,6 +646,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::Math(kind) = builtin {
+            return self.math(kind, &name, &args, line);
+        }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
             Builtin::StrReplace(insensitive) => {
@@ -744,7 +775,6 @@ impl Runtime {
                 Ok(Value::Bool(exists))
             }
             Builtin::Range => self.range(&args, line),
-            Builtin::Math(kind) => self.math(kind, &name, &args, line),
             Builtin::Round => self.round(&args, line),
             Builtin::NumberFormat => self.number_format(&args, line),
             Builtin::BaseConvert | Builtin::BaseDecode(_) | Builtin::BaseEncode(_) => {
@@ -763,6 +793,7 @@ impl Runtime {
             Builtin::ArrayFilter => self.array_filter(&args, line),
             Builtin::ArrayReduce => self.array_reduce(&args, line),
             Builtin::Exit
+            | Builtin::Math(_)
             | Builtin::GetIncludedFiles
             | Builtin::FuncNumArgs
             | Builtin::FuncGetArg

@@ -14,11 +14,37 @@ pub(super) enum Math {
     IsFinite,
     IsInfinite,
     IsNan,
+    Pi,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
+    Atan2,
+    Sinh,
+    Cosh,
+    Tanh,
+    Asinh,
+    Acosh,
+    Atanh,
+    Exp,
+    Expm1,
+    Log,
+    Log10,
+    Log1p,
+    Hypot,
+    Deg2rad,
+    Rad2deg,
 }
 
 impl Math {
     pub(super) fn parameters(self) -> &'static [(&'static str, bool, bool)] {
         match self {
+            Self::Pi => &[],
+            Self::Atan2 => &[("y", false, false), ("x", false, false)],
+            Self::Hypot => &[("x", false, false), ("y", false, false)],
+            Self::Log => &[("num", false, false), ("base", true, false)],
             Self::Pow | Self::Fpow => &[("num", false, false), ("exponent", false, false)],
             Self::Fdiv | Self::Fmod | Self::Intdiv => {
                 &[("num1", false, false), ("num2", false, false)]
@@ -36,6 +62,9 @@ impl Runtime {
         args: &[Option<Value>],
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(kind, Math::Pi) {
+            return Ok(Value::Float(std::f64::consts::PI));
+        }
         let first = args[0].as_ref().unwrap();
         if matches!(kind, Math::Pow) {
             return power(
@@ -83,12 +112,54 @@ impl Runtime {
             Math::IsFinite => Value::Bool(a.is_finite()),
             Math::IsInfinite => Value::Bool(a.is_infinite()),
             Math::IsNan => Value::Bool(a.is_nan()),
-            Math::Fpow | Math::Fdiv | Math::Fmod => {
+            Math::Sin => Value::Float(a.sin()),
+            Math::Cos => Value::Float(a.cos()),
+            Math::Tan => Value::Float(a.tan()),
+            Math::Asin => Value::Float(a.asin()),
+            Math::Acos => Value::Float(a.acos()),
+            Math::Atan => Value::Float(a.atan()),
+            Math::Sinh => Value::Float(a.sinh()),
+            Math::Cosh => Value::Float(a.cosh()),
+            Math::Tanh => Value::Float(a.tanh()),
+            Math::Asinh => Value::Float(a.asinh()),
+            Math::Acosh => Value::Float(a.acosh()),
+            Math::Atanh => Value::Float(a.atanh()),
+            Math::Exp => Value::Float(a.exp()),
+            Math::Expm1 => Value::Float(a.exp_m1()),
+            Math::Log10 => Value::Float(a.log10()),
+            Math::Log1p => Value::Float(a.ln_1p()),
+            Math::Deg2rad => Value::Float((a / 180.0) * std::f64::consts::PI),
+            Math::Rad2deg => Value::Float((a / std::f64::consts::PI) * 180.0),
+            Math::Log => {
+                let Some(base) = args[1].as_ref() else {
+                    return Ok(Value::Float(a.ln()));
+                };
+                let base = self.native_float(base, name, 2, line)?;
+                if base <= 0.0 {
+                    return Err(Error::new(
+                        ErrorKind::ValueError,
+                        "log(): Argument #2 ($base) must be greater than 0",
+                        line,
+                    ));
+                }
+                Value::Float(if base == 2.0 {
+                    a.log2()
+                } else if base == 10.0 {
+                    a.log10()
+                } else if base == 1.0 {
+                    f64::NAN
+                } else {
+                    a.ln() / base.ln()
+                })
+            }
+            Math::Fpow | Math::Fdiv | Math::Fmod | Math::Atan2 | Math::Hypot => {
                 let b = self.native_float(args[1].as_ref().unwrap(), name, 2, line)?;
                 Value::Float(match kind {
                     Math::Fpow => a.powf(b),
                     Math::Fdiv => a / b,
                     Math::Fmod => a % b,
+                    Math::Atan2 => a.atan2(b),
+                    Math::Hypot => a.hypot(b),
                     _ => unreachable!(),
                 })
             }

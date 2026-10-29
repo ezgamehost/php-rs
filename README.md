@@ -68,6 +68,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `round` supports all eight `RoundingMode` enum cases, legacy integer modes,
   signed zero, and decimal precision correction. `number_format` supports exact
   integer rounding, negative decimal places, and binary string separators.
+- Trigonometric/inverse and hyperbolic/inverse functions, `atan2`, `hypot`,
+  `exp`/`expm1`, `log`/`log10`/`log1p`, degree/radian conversion, `pi`, and
+  PHP's standard mathematical constants.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.

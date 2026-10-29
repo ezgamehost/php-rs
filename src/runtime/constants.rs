@@ -59,7 +59,8 @@ impl Runtime {
                 | b"PHP_ROUND_HALF_DOWN"
                 | b"PHP_ROUND_HALF_EVEN"
                 | b"PHP_ROUND_HALF_ODD"
-        ) {
+        ) || math_constant(name).is_some()
+        {
             "standard"
         } else {
             "Core"
@@ -213,6 +214,30 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"E_ALL" => Value::Int(30719),
         b"DEBUG_BACKTRACE_PROVIDE_OBJECT" => Value::Int(1),
         b"DEBUG_BACKTRACE_IGNORE_ARGS" => Value::Int(2),
+        _ => return math_constant(name).map(Value::Float),
+    })
+}
+
+fn math_constant(name: &[u8]) -> Option<f64> {
+    use std::f64::consts;
+    Some(match name {
+        b"M_E" => consts::E,
+        b"M_LOG2E" => consts::LOG2_E,
+        b"M_LOG10E" => consts::LOG10_E,
+        b"M_LN2" => consts::LN_2,
+        b"M_LN10" => consts::LN_10,
+        b"M_PI" => consts::PI,
+        b"M_PI_2" => consts::FRAC_PI_2,
+        b"M_PI_4" => consts::FRAC_PI_4,
+        b"M_1_PI" => consts::FRAC_1_PI,
+        b"M_2_PI" => consts::FRAC_2_PI,
+        b"M_SQRTPI" => 1.772453850905516,
+        b"M_2_SQRTPI" => consts::FRAC_2_SQRT_PI,
+        b"M_LNPI" => 1.1447298858494002,
+        b"M_EULER" => 0.5772156649015329,
+        b"M_SQRT2" => consts::SQRT_2,
+        b"M_SQRT1_2" => consts::FRAC_1_SQRT_2,
+        b"M_SQRT3" => 3.0_f64.sqrt(),
         _ => return None,
     })
 }

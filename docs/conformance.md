@@ -1089,6 +1089,36 @@ fixtures, and the reference executable. Remaining math failures require streams,
 timeouts, trigonometric/logarithmic functions, constants, random functions, or serialization.
 Configurable precision and complete native reflection types remain unfinished.
 
+The [transcendental math slice](conformance/php-8.5.0-transcendental-hillclimb.txt) adds
+**11 upstream passes**: six math fixtures, four Zend fixtures, and one string fixture.
+There are no regressions across the six measured suites. It registers 22 functions:
+trigonometric and inverse trigonometric functions, hyperbolic and inverse hyperbolic
+functions, `atan2`, `hypot`, `exp`, `expm1`, `log`, `log10`, `log1p`, `deg2rad`,
+`rad2deg`, and `pi`. Native float conversion applies caller strictness and argument
+diagnostics. Degree/radian conversion preserves PHP's operation order; `log` uses
+dedicated base-two/base-ten paths, returns NaN for base one, and rejects nonpositive
+bases. The default base retains the `M_E` constant expression for reflection. Zero-argument
+math dispatch handles `pi` before accessing required arguments.
+
+Seventeen standard mathematical constants are registered with standard-extension metadata.
+Rust's floating math operations provide the host math-library behavior; no extra dependency
+was added. Local reference comparisons confirm domain/NaN/infinity behavior and signed
+zero for the checked fixtures. Transcendental last-bit results may depend on the host math
+library, as they do in PHP.
+
+Zend reaches **2047 / 2801 / 408**, math **49 / 5 / 117**, and strings **324 / 254 / 152**.
+Arrays, reflection, and SPL retain their previous totals. All 797 existing Rust tests,
+57 reference-checked project fixtures, formatting, and Clippy pass. Sixty additional
+upstream INI/SKIPIF-bearing programs were compared directly: 43 match with their requested
+settings, and 17 differ only under unsupported precision/serialize_precision settings and
+match PHP with the runtime's current defaults. They remain unsupported and are excluded
+from the harness pass count. A short reference probe also matches logarithm base special
+cases, default reflection, and named atan2/hypot arguments. No custom tests or generated
+matrices were added. PHP 8.5.0 math code, constant definitions, native stubs, fixtures,
+and reference execution establish these behaviors. The five remaining executable math
+fixtures require streams, execution timeouts, random functions, or serialization.
+INI/SKIPIF support, complete native reflection types, and resource limits remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1096,13 +1126,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2043 | 2805 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2047 | 2801 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 154 | 634 | 52 |
-| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 43 | 11 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 323 | 255 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

@@ -245,7 +245,10 @@ definition of completion.
    cases, legacy modes, signed zero, and decimal boundary correction. Number formatting
    preserves integer precision, rounds negative decimal places, and inserts custom byte
    separators. Native integer coercion distinguishes fractional float-string deprecations.
-   Transcendental functions, configurable precision, and memory limits remain unfinished.
+   Trigonometric/inverse, hyperbolic/inverse, exponential/logarithmic functions, atan2,
+   hypot, degree/radian conversion, pi, and mathematical constants are implemented.
+   Configurable precision, random functions, execution timeouts, and memory limits
+   remain unfinished.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only
