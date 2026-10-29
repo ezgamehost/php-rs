@@ -1531,6 +1531,45 @@ handlers, and complete reflection metadata remain incomplete. No custom tests or
 matrices were added. PHP 8.5.0 `ext/standard/array.c`, `Zend/zend_API.c`, object handlers,
 upstream PHPT, and reference execution establish the implemented behavior.
 
+The [resource/stream slice](conformance/php-8.5.0-resources-hillclimb.txt) adds
+**59 upstream passes**: 30 array, 17 Zend, ten string, and two math fixtures, with no
+regressions across the six suites. A distinct resource value preserves handle identity and
+shared closed state. `is_resource`, `get_resource_id`, `get_resource_type`, `gettype`,
+`get_debug_type`, dumps, print/export output, and trace formatting recognize open/closed
+handles. Explicit integer/float casts use the handle ID; string casts retain the resource
+label. PHP 8.5 arithmetic rejects resources, native scalar parameters reject implicit
+resource conversion, resource array keys warn and convert to IDs, and numeric sorting and
+loose resource/string comparison follow their separate native conversion paths.
+
+Basic streams implement `fopen`, `fclose`, `fread`, `fwrite`/`fputs`, `feof`, `ftell`,
+`fseek`, `rewind`, and `fflush`, with `SEEK_SET`, `SEEK_CUR`, and `SEEK_END`. Local files
+use native file handles and byte paths. Memory streams retain permissions, binary content,
+positions, and EOF state; temporary streams own a distinct registered backing resource.
+Default contexts allocate lazily, and handle allocation reserves the CLI standard-stream
+IDs. Closing any alias closes the handle for all aliases while retaining its ID.
+Logical stream positions preserve PHP's append-mode behavior instead of exposing the OS
+append offset. Stream validation precedes later argument coercion, without holding a
+resource borrow while user string conversion runs. `file_exists` and `unlink` support
+local file lifecycle checks, including continued use of an unlinked open file.
+
+The focused stream/resource run covers **75 fixtures: 12 passed / 24 failed / 39
+unsupported**, independently of the six-suite gain count. It includes existing read/write
+roundtrip, seek-boundary, closed-resource, and unlink-with-open-handle cases. A short
+reference probe matches casts, identity/comparisons, array-key diagnostics, weak parameter
+rejection, file and memory I/O, append positions, EOF/seek behavior, invalid modes/paths,
+closed aliases, temporary backing-resource IDs, and unlink behavior. Remaining focused
+failures require other APIs such as `fgets`, `chmod`, `basename`, configurable include
+paths, context creation, and wrapper registration. Temporary files left by failing fixture
+setup were removed after verification.
+
+Arrays reach **567 / 221 / 52**, Zend **2113 / 2735 / 408**, strings **335 / 243 / 152**,
+and math **51 / 3 / 117**. All 797 existing Rust tests, 57 reference-checked project PHPT
+cases, formatting, and Clippy pass. No custom tests or generated matrices were added.
+Standard-stream constants and I/O, resource enumeration, configurable contexts, general
+URL/user wrappers, socket behavior, temporary-file spill thresholds, buffering parity,
+and PHP memory limits remain incomplete. PHP 8.5.0 stream/operator source, native
+signatures, upstream PHPT, and reference execution establish the implemented behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1538,13 +1577,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2096 | 2752 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2113 | 2735 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 537 | 251 | 52 |
-| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 567 | 221 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

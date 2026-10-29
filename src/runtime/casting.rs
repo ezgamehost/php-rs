@@ -52,6 +52,7 @@ pub(super) fn cast(
         CastKind::Int => {
             Value::Int(match &value {
                 Value::Int(number) => *number,
+                Value::Resource(resource) => resource.id,
                 Value::Float(number) => {
                     if out_of_range(*number) {
                         warnings.push(format!("The float {} is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(&value.to_bytes())));
@@ -74,6 +75,7 @@ pub(super) fn cast(
         CastKind::Float => Value::Float(match &value {
             Value::Float(number) => *number,
             Value::Int(number) => *number as f64,
+            Value::Resource(resource) => resource.id as f64,
             Value::String(bytes) => match numeric_prefix(&bytes.bytes()) {
                 Some((number, _)) => {
                     let number = number.as_float();

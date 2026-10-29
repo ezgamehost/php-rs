@@ -112,6 +112,13 @@ new request. The CLI returns the low eight bits of the requested status.
   Pop/shift return values without retaining the removed element’s reference binding.
 - `array_column` extracts array entries or visible/magic object properties, supports
   optional index columns, preserves null values, and returns dereferenced values.
+- Resource values preserve handle identity and closed state across aliases, with
+  `is_resource`, `get_resource_id`, `get_resource_type`, inspection, casts, and key conversion.
+- Basic file streams support `fopen`, `fclose`, `fread`, `fwrite`/`fputs`, `feof`,
+  `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
+  `php://memory` and the in-memory part of `php://temp` are supported; temporary
+  spill-to-disk, standard-stream constants, context configuration, and general
+  wrapper registration remain unfinished.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key
@@ -428,7 +435,7 @@ Automatic initialization and scope handling for the other superglobals are not
 implemented; `$GLOBALS` currently exposes the variables created by PHP code or
 provided through `Runtime::variables`. File loading currently
 uses the working directory and the executing source directory; configurable
-`include_path`, stream wrappers, and PHP configuration are not implemented.
+`include_path`, general stream wrappers, and PHP configuration remain incomplete.
 Complete object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also

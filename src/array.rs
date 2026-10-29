@@ -52,6 +52,13 @@ impl ArrayKey {
                 return Self::from_value(&value.borrow(), line, warnings);
             }
             Value::Int(n) => Self::Int(*n),
+            Value::Resource(resource) => {
+                warnings.push(format!(
+                    "Resource ID#{} used as offset, casting to integer ({}) on line {line}",
+                    resource.id, resource.id
+                ));
+                Self::Int(resource.id)
+            }
             Value::Float(_) => Self::Int(value.integer(line, warnings)?),
             Value::Bool(b) => Self::Int(i64::from(*b)),
             Value::Null => {

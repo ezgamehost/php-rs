@@ -364,6 +364,6 @@ fn format_argument(output: &mut Vec<u8>, value: &Value) {
                 output.extend_from_slice(b".0");
             }
         }
-        Value::Int(_) => output.extend_from_slice(&value.to_bytes()),
+        Value::Int(_) | Value::Resource(_) => output.extend_from_slice(&value.to_bytes()),
     }
 }

@@ -15,6 +15,7 @@ pub enum Value {
     Array(Rc<PhpArray>),
     Closure(Rc<crate::Closure>),
     Object(Rc<crate::PhpObject>),
+    Resource(Rc<crate::PhpResource>),
 }
 
 impl Clone for Value {
@@ -30,6 +31,7 @@ impl Clone for Value {
             Self::Array(value) => Self::Array(value.clone()),
             Self::Object(value) => Self::Object(value.clone()),
             Self::Closure(value) => Self::Closure(value.clone()),
+            Self::Resource(value) => Self::Resource(value.clone()),
         }
     }
 }
@@ -65,6 +67,7 @@ impl Value {
             (Self::String(a), Self::String(b)) => a == b,
             (Self::Object(a), Self::Object(b)) => a == b,
             (Self::Closure(a), Self::Closure(b)) => a == b,
+            (Self::Resource(a), Self::Resource(b)) => Rc::ptr_eq(a, b),
             (Self::Array(a), Self::Array(b)) => {
                 if Rc::ptr_eq(a, b) {
                     return Ok(true);
@@ -147,7 +150,7 @@ impl Value {
     pub fn is_truthy(&self) -> bool {
         match self {
             Self::Reference(value) | Self::Indirect(value) => value.borrow().is_truthy(),
-            Self::Closure(_) | Self::Object(_) => true,
+            Self::Closure(_) | Self::Object(_) | Self::Resource(_) => true,
             Self::Null => false,
             Self::Array(a) => !a.is_empty(),
             Self::Bool(b) => *b,
@@ -162,6 +165,7 @@ impl Value {
             Self::Null | Self::Bool(false) => Vec::new(),
             Self::Bool(true) => b"1".to_vec(),
             Self::Int(n) => n.to_string().into_bytes(),
+            Self::Resource(resource) => format!("Resource id #{}", resource.id).into_bytes(),
             Self::Float(n) => format_float(*n).into_bytes(),
             Self::String(s) => s.to_vec(),
             Self::Array(_) => b"Array".to_vec(),
@@ -183,6 +187,11 @@ impl Value {
             Self::Closure(_) => Err(Error::new(
                 ErrorKind::TypeError,
                 "Unsupported operand type: Closure",
+                line,
+            )),
+            Self::Resource(_) => Err(Error::new(
+                ErrorKind::TypeError,
+                "Unsupported operand type: resource",
                 line,
             )),
             Self::Array(_) => Err(Error::new(

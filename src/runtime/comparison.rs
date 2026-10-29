@@ -108,6 +108,14 @@ impl Runtime {
             }
             (Array(_), _) => Some(Ordering::Greater),
             (_, Array(_)) => Some(Ordering::Less),
+            (Resource(resource), _) => {
+                let other = resource_number(right);
+                self.compare_inner(&Int(resource.id), &other, line, seen)?
+            }
+            (_, Resource(resource)) => {
+                let other = resource_number(left);
+                self.compare_inner(&other, &Int(resource.id), line, seen)?
+            }
             (Int(a), Int(b)) => a.partial_cmp(b),
             (Int(_) | Float(_), Int(_) | Float(_)) => {
                 left.as_float().partial_cmp(&right.as_float())
@@ -150,5 +158,15 @@ impl Runtime {
             }
         }
         Ok(Some(Ordering::Equal))
+    }
+}
+
+fn resource_number(value: &Value) -> Value {
+    match value {
+        Value::Resource(resource) => Value::Int(resource.id),
+        Value::String(bytes) => {
+            crate::value::numeric_prefix(&bytes.bytes()).map_or(Value::Int(0), |(number, _)| number)
+        }
+        _ => value.clone(),
     }
 }

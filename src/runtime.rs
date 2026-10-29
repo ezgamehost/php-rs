@@ -70,6 +70,7 @@ mod scope_slots;
 mod sensitive_parameters;
 mod sorting;
 mod static_members;
+mod streams;
 mod string_builtins;
 mod string_bytes;
 mod string_measure;
@@ -131,6 +132,7 @@ pub struct Runtime {
     working_directory: Option<std::path::PathBuf>,
     exit_status: Option<i32>,
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
+    resources: crate::resource::Store,
 }
 struct Location {
     offset_reference: Option<variables::Cell>,
@@ -1113,6 +1115,17 @@ fn binary(
             }
         }
         return Ok(Array(Rc::new(result)));
+    }
+    if matches!(left, Resource(_)) || matches!(right, Resource(_)) {
+        return Err(Error::new(
+            ErrorKind::TypeError,
+            format!(
+                "Unsupported operand types: {} {op} {}",
+                builtins::debug_type(&left),
+                builtins::debug_type(&right)
+            ),
+            line,
+        ));
     }
     if matches!(op, "&" | "|" | "^") {
         if let (String(a), String(b)) = (&left, &right) {

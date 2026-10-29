@@ -99,6 +99,7 @@ fn unhandled(value: &Value, line: usize) -> Error {
             text
         }
         Value::Array(_) => "of type array".into(),
+        Value::Resource(_) => "of type resource".into(),
         Value::Closure(_) => "of type Closure".into(),
         Value::Object(object) => format!("of type {}", object.class_name),
         Value::String(value) => {

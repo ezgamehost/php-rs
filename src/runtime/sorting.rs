@@ -204,6 +204,7 @@ impl Runtime {
         match value {
             Value::Float(n) => *n,
             Value::Int(n) => *n as f64,
+            Value::Resource(resource) => resource.id as f64,
             Value::String(s) => {
                 crate::value::numeric_prefix(&s.bytes()).map_or(0.0, |(n, _)| n.as_float())
             }

@@ -48,7 +48,7 @@ impl Runtime {
                 (true, closure.object_id),
                 true,
             ),
-            Value::Null => {
+            Value::Null | Value::Resource(_) => {
                 output.extend(b"NULL");
                 return;
             }

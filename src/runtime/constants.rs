@@ -61,6 +61,7 @@ impl Runtime {
                 | b"PHP_ROUND_HALF_ODD"
         ) || math_constant(name).is_some()
             || sort_constant(name).is_some()
+            || seek_constant(name).is_some()
             || extract_constant(name).is_some()
         {
             "standard"
@@ -182,7 +183,20 @@ fn extract_constant(name: &[u8]) -> Option<Value> {
     }))
 }
 
+fn seek_constant(name: &[u8]) -> Option<Value> {
+    Some(Value::Int(match name {
+        b"SEEK_SET" => 0,
+        b"SEEK_CUR" => 1,
+        b"SEEK_END" => 2,
+        _ => return None,
+    }))
+}
+
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = seek_constant(name) {
+        return Some(value);
+    }
+
     if let Some(value) = extract_constant(name) {
         return Some(value);
     }

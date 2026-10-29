@@ -57,7 +57,11 @@ impl Runtime {
         if strict
             || matches!(
                 value,
-                Value::Null | Value::Array(_) | Value::Closure(_) | Value::Object(_)
+                Value::Null
+                    | Value::Array(_)
+                    | Value::Closure(_)
+                    | Value::Object(_)
+                    | Value::Resource(_)
             )
         {
             return None;

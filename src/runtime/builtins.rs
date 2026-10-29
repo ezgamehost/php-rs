@@ -46,6 +46,11 @@ pub(super) enum Builtin {
     Vsprintf,
     GetType,
     GetDebugType,
+    ResourceInfo(bool),
+    Fopen,
+    FileExists,
+    Unlink,
+    Stream(streams::Operation),
     GetClass,
     GetParentClass,
     GetCalledClass,
@@ -218,6 +223,20 @@ impl Builtin {
             b"is_string" => Self::Is("string"),
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
+            b"is_resource" => Self::Is("resource"),
+            b"get_resource_id" => Self::ResourceInfo(true),
+            b"get_resource_type" => Self::ResourceInfo(false),
+            b"fopen" => Self::Fopen,
+            b"file_exists" => Self::FileExists,
+            b"unlink" => Self::Unlink,
+            b"fclose" => Self::Stream(streams::Operation::Close),
+            b"fread" => Self::Stream(streams::Operation::Read),
+            b"fwrite" | b"fputs" => Self::Stream(streams::Operation::Write),
+            b"feof" => Self::Stream(streams::Operation::Eof),
+            b"ftell" => Self::Stream(streams::Operation::Tell),
+            b"fseek" => Self::Stream(streams::Operation::Seek),
+            b"rewind" => Self::Stream(streams::Operation::Rewind),
+            b"fflush" => Self::Stream(streams::Operation::Flush),
             b"range" => Self::Range,
             b"abs" => Self::Math(math::Math::Abs),
             b"ceil" => Self::Math(math::Math::Ceil),
@@ -346,6 +365,29 @@ impl Builtin {
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
+            Self::ResourceInfo(_) => &[("resource", false, false)],
+            Self::FileExists => &[("filename", false, false)],
+            Self::Unlink => &[("filename", false, false), ("context", true, false)],
+            Self::Fopen => &[
+                ("filename", false, false),
+                ("mode", false, false),
+                ("use_include_path", true, false),
+                ("context", true, false),
+            ],
+            Self::Stream(streams::Operation::Read) => {
+                &[("stream", false, false), ("length", false, false)]
+            }
+            Self::Stream(streams::Operation::Write) => &[
+                ("stream", false, false),
+                ("data", false, false),
+                ("length", true, false),
+            ],
+            Self::Stream(streams::Operation::Seek) => &[
+                ("stream", false, false),
+                ("offset", false, false),
+                ("whence", true, false),
+            ],
+            Self::Stream(_) => &[("stream", false, false)],
             Self::GetClass => &[("object", true, false)],
             Self::Clone => &[("object", false, false), ("withProperties", true, false)],
             Self::GetParentClass => &[("object_or_class", true, false)],
@@ -651,6 +693,8 @@ impl Builtin {
                             }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Range, "step") => Value::Int(1),
+                            (Self::Fopen, "use_include_path") => Value::Bool(false),
+                            (Self::Stream(streams::Operation::Seek), "whence") => Value::Int(0),
                             (Self::ArraySort(_) | Self::Extract, "flags") => Value::Int(0),
                             (Self::Extract, "prefix") => Value::String(Vec::new().into()),
                             (Self::ArraySplice, "replacement") => {
@@ -819,6 +863,20 @@ impl Runtime {
         }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::Fopen => self.fopen(&args, line),
+            Builtin::FileExists => self.file_path_operation(false, &args, line),
+            Builtin::Unlink => self.file_path_operation(true, &args, line),
+            Builtin::Stream(operation) => self.stream_operation(operation, &name, &args, line),
+            Builtin::ResourceInfo(id) => {
+                let Value::Resource(resource) = first else {
+                    return Err(type_error(first, &name, 1, "resource", line));
+                };
+                Ok(if id {
+                    Value::Int(resource.id)
+                } else {
+                    Value::String(resource.type_name().as_bytes().to_vec().into())
+                })
+            }
             Builtin::ArrayColumn => self.array_column(&args, line),
             Builtin::MinMax(maximum) => {
                 self.extremum(maximum, &name, first, &extra, direct_positional, line)
@@ -1029,16 +1087,29 @@ impl Runtime {
                     Value::String(_) => "string",
                     Value::Array(_) => "array",
                     Value::Closure(_) | Value::Object(_) => "object",
+                    Value::Resource(resource) => {
+                        if resource.is_open() {
+                            "resource"
+                        } else {
+                            "resource (closed)"
+                        }
+                    }
                 }
                 .as_bytes()
                 .to_vec()
                 .into(),
             )),
             Builtin::GetDebugType => {
-                Ok(Value::String(debug_type(first).as_bytes().to_vec().into()))
+                let kind = if let Value::Resource(resource) = first {
+                    resource.debug_type()
+                } else {
+                    debug_type(first)
+                };
+                Ok(Value::String(kind.as_bytes().to_vec().into()))
             }
             Builtin::Is(kind) => Ok(Value::Bool(
-                debug_type(first) == kind
+                (debug_type(first) == kind
+                    && !matches!(first, Value::Resource(resource) if !resource.is_open()))
                     || (kind == "object" && matches!(first, Value::Closure(_) | Value::Object(_))),
             )),
             Builtin::PrintR => self.print_r(&args, line),
@@ -1237,7 +1308,7 @@ impl Runtime {
         }
         if matches!(
             value,
-            Value::Array(_) | Value::Closure(_) | Value::Object(_)
+            Value::Array(_) | Value::Closure(_) | Value::Object(_) | Value::Resource(_)
         ) || (self.strict_types && !matches!(value, Value::String(_)))
         {
             return Err(type_error(value, function, position, kind, line));
@@ -1269,6 +1340,7 @@ impl Runtime {
             return Ok(value.clone());
         }
         if self.strict_types
+            || matches!(value, Value::Resource(_))
             || (matches!(value, Value::Object(_) | Value::Closure(_)) && !self.can_stringify(value))
         {
             return Err(type_error(value, function, position, kind, line));
@@ -1297,7 +1369,7 @@ impl Runtime {
         if (self.strict_types && !matches!(value, Value::Int(_)))
             || matches!(
                 value,
-                Value::Array(_) | Value::Closure(_) | Value::Object(_)
+                Value::Array(_) | Value::Closure(_) | Value::Object(_) | Value::Resource(_)
             )
             || matches!(value, Value::String(s) if crate::value::numeric_string(&s.bytes()).is_none())
         {
@@ -1334,7 +1406,7 @@ impl Runtime {
     ) -> Result<bool, Error> {
         if matches!(
             value,
-            Value::Array(_) | Value::Closure(_) | Value::Object(_)
+            Value::Array(_) | Value::Closure(_) | Value::Object(_) | Value::Resource(_)
         ) || (self.strict_types && !matches!(value, Value::Bool(_)))
         {
             return Err(type_error(value, function, position, "bool", line));
@@ -1408,6 +1480,7 @@ pub(super) fn debug_type(value: &Value) -> &str {
         Value::Array(_) => "array",
         Value::Closure(_) => "Closure",
         Value::Object(object) => object.class_name.split('\0').next().unwrap(),
+        Value::Resource(_) => "resource",
     }
 }
 fn count(
@@ -1579,6 +1652,14 @@ fn dump_inner(
             out.extend_from_slice(&rendered[start..]);
         }
         Value::Null => out.extend_from_slice(b"NULL\n"),
+        Value::Resource(resource) => out.extend_from_slice(
+            format!(
+                "resource({}) of type ({})\n",
+                resource.id,
+                resource.type_name()
+            )
+            .as_bytes(),
+        ),
         Value::Bool(b) => out.extend_from_slice(if *b {
             b"bool(true)\n"
         } else {

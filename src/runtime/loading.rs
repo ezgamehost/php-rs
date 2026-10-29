@@ -22,7 +22,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn working_directory(&self) -> PathBuf {
+    pub(super) fn working_directory(&self) -> PathBuf {
         self.working_directory
             .clone()
             .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
