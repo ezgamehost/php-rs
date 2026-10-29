@@ -1769,6 +1769,26 @@ No custom tests or generated matrices were added. Rust storage grows as needed;
 PHP allocation sizes, memory-limit configuration, and allocation-failure diagnostics
 are not reproduced. The wrapping adaptation retains PHP's notices/license.
 
+The [strtok slice](conformance/php-8.5.0-strtok-hillclimb.txt) adds
+**seven upstream passes**: six string fixtures and one Zend regression fixture.
+`strtok` retains a copied source and cursor in each `Runtime`, resets them when a
+nonnull second argument is supplied, and continues tokenization when that argument
+is omitted or null. Each call uses its current byte delimiter set, including NUL
+and high bytes. Consuming a delimiter-only remainder releases the saved source;
+subsequent continuation warns. Reaching an already exhausted cursor instead returns
+false without clearing the source. Parameter conversion finishes before the outer
+call updates or borrows state, preserving nested `strtok` calls from Stringable code.
+
+Zend reaches **2122 / 2726 / 408**, strings **369 / 209 / 152**; the other four
+suite totals remain unchanged, with zero regressions across all six. The focused
+selection reports **6 / 0 / 0**. All 797 existing Rust tests, 57 reference-checked
+project PHPT, formatting, and Clippy pass. A short reference probe matches initial
+warnings, both exhaustion paths, delimiter changes, explicit null, binary input,
+named arguments, validation failures that preserve state, and nested coercion calls.
+No custom tests or generated matrices were added. As with other string operations,
+PHP memory limits and allocation-failure diagnostics remain incomplete. The native
+string.c adaptation retains PHP's notices/license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1776,13 +1796,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2121 | 2727 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2122 | 2726 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 363 | 215 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 369 | 209 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

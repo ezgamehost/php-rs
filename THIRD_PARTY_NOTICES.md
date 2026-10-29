@@ -187,8 +187,8 @@ Thies C. Arntzen, Wez Furlong, and Jim Winstead.
 `ext/standard/base64.c`, copyright (c) The PHP Group. The source lists
 Jim Winstead and Xinchen Hui as authors.
 
-`src/runtime/wordwrap.rs` contains an altered Rust adaptation of PHP 8.5.0's
-`ext/standard/string.c`, copyright (c) The PHP Group. The source lists
+`src/runtime/wordwrap.rs` and `src/runtime/string_token.rs` contain altered Rust
+adaptations of PHP 8.5.0's `ext/standard/string.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 
 This product includes PHP software, freely available from

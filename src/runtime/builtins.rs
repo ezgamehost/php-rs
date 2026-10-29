@@ -14,6 +14,7 @@ pub(super) enum Builtin {
     Base64(bool),
     Rot13,
     Wordwrap,
+    Strtok,
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -156,6 +157,7 @@ impl Builtin {
             b"base64_decode" => Self::Base64(false),
             b"str_rot13" => Self::Rot13,
             b"wordwrap" => Self::Wordwrap,
+            b"strtok" => Self::Strtok,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -499,6 +501,7 @@ impl Builtin {
                 &[("string", false, false)]
             }
             Self::Base64(false) => &[("string", false, false), ("strict", true, false)],
+            Self::Strtok => &[("string", false, false), ("token", true, false)],
             Self::Wordwrap => &[
                 ("string", false, false),
                 ("width", true, false),
@@ -998,6 +1001,7 @@ impl Runtime {
             Builtin::StripTags => self.strip_tags(&args, line),
             Builtin::Base64(encode) => self.base64(encode, &name, &args, line),
             Builtin::Wordwrap => self.wordwrap(&args, line),
+            Builtin::Strtok => self.string_token(&args, line),
             Builtin::Hex2Bin
             | Builtin::Rot13
             | Builtin::FirstCase(_)

@@ -411,6 +411,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `str_rot13`, with native argument coercion and padding validation.
 - Byte-oriented `wordwrap` supports custom breaks, optional long-word cutting,
   existing separators, and PHP's zero/negative-width behavior.
+- `strtok` keeps request-local tokenization state, supports changing byte delimiters,
+  and preserves PHP's continuation, exhaustion, and restart behavior.
 - ASCII `strtolower`/`strtoupper`, lowercase `bin2hex` encoding, and
   `trim`/`ltrim`/`rtrim`/`chop` with binary character lists and inclusive ranges.
 - `str_replace`/`str_ireplace` support binary strings and arrays, sequential searches,

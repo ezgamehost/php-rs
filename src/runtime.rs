@@ -83,6 +83,7 @@ mod string_offsets;
 mod string_replace;
 mod string_search;
 mod string_split;
+mod string_token;
 mod string_transform;
 mod stringable;
 mod strip_tags;
@@ -124,6 +125,7 @@ pub struct Runtime {
     folding_constants: bool,
     checking_trait_values: bool,
     sort_compare_deprecated: bool,
+    string_token_state: Option<(Vec<u8>, usize)>,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
