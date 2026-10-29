@@ -80,6 +80,8 @@ new request. The CLI returns the low eight bits of the requested status.
 - `array_first`/`array_last`, first/last keys, and list detection inspect insertion
   order. `array_flip`, `array_count_values`, and `array_combine` support PHP key
   conversion, duplicate handling, and reference-aware value copying.
+- `array_merge`/`array_replace` and their recursive forms support numeric-key
+  handling, nested collisions, reference separation, and recursion errors.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

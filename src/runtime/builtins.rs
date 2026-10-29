@@ -87,6 +87,8 @@ pub(super) enum Builtin {
     ArrayFlip,
     ArrayCountValues,
     ArrayCombine,
+    ArrayMerge(bool),
+    ArrayReplace(bool),
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -274,6 +276,10 @@ impl Builtin {
             b"array_flip" => Self::ArrayFlip,
             b"array_count_values" => Self::ArrayCountValues,
             b"array_combine" => Self::ArrayCombine,
+            b"array_merge" => Self::ArrayMerge(false),
+            b"array_merge_recursive" => Self::ArrayMerge(true),
+            b"array_replace" => Self::ArrayReplace(false),
+            b"array_replace_recursive" => Self::ArrayReplace(true),
             b"function_exists" => Self::FunctionExists,
             b"is_callable" => Self::IsCallable,
             b"debug_backtrace" => Self::DebugBacktrace,
@@ -437,6 +443,8 @@ impl Builtin {
                 &[("array", false, false)]
             }
             Self::ArrayCombine => &[("keys", false, false), ("values", false, false)],
+            Self::ArrayMerge(_) => &[("arrays", false, true)],
+            Self::ArrayReplace(_) => &[("array", false, false), ("replacements", false, true)],
             Self::Range => &[
                 ("start", false, false),
                 ("end", false, false),
@@ -678,6 +686,9 @@ impl Runtime {
         let name = String::from_utf8_lossy(name);
         if let Builtin::Math(kind) = builtin {
             return self.math(kind, &name, &args, line);
+        }
+        if matches!(builtin, Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_)) {
+            return self.array_join(builtin, &name, &args, &extra, line);
         }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
@@ -959,6 +970,7 @@ impl Runtime {
             | Builtin::ArrayFlip
             | Builtin::ArrayCountValues
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
+            Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) => unreachable!(),
             Builtin::ArrayKeys => {
                 if args[1].is_none() && args[2].is_some() {
                     return Err(Error::new(
@@ -1203,6 +1215,7 @@ impl Runtime {
 fn parameter_label(function: &str, position: usize) -> String {
     Builtin::lookup(function.to_ascii_lowercase().as_bytes())
         .and_then(|builtin| builtin.parameters().get(position - 1).cloned())
+        .filter(|parameter| !parameter.variadic)
         .map_or_else(String::new, |p| {
             format!(" (${})", String::from_utf8_lossy(&p.name))
         })

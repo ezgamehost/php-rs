@@ -1173,6 +1173,35 @@ fixtures, and reference execution establish these behaviors. Remaining targeted 
 require streams, JSON, or internal array-pointer functions. Complete native reflection
 types, configurable memory limits, and INI/SKIPIF harness support remain unfinished.
 
+The [array merge and replacement slice](conformance/php-8.5.0-array-join-hillclimb.txt)
+adds **27 upstream passes**: 26 array fixtures and one Zend fixture, with no regressions
+across Zend, reflection, SPL, strings, arrays, or math. `array_merge` renumbers top-level
+numeric keys and overwrites duplicate string keys without changing their insertion
+position. `array_replace` preserves keys and replaces matching entries. Both validate
+all array arguments before processing; merging zero arrays returns an empty array.
+
+Recursive merging combines duplicate string-key values, casts objects to their property
+arrays, retains null values, and preserves existing nested numeric keys and append
+positions. Recursive replacement descends only when both colliding values are arrays.
+Colliding reference containers separate from their inputs, while untouched entries use
+PHP's shared/unshared reference copying rules. Recursion guards follow the distinct PHP
+merge and replacement rules; unrelated shared siblings and permitted cross-input sharing
+remain valid. Upstream cases cover recursive inputs, orphan references, input preservation,
+and next-index overflow. Native variadic type errors now omit a parameter label, also
+fixing an existing `array_map` fixture. Unknown named variadic arguments no longer count
+toward a native function's minimum arity.
+
+Arrays reach **223 / 565 / 52**, and Zend **2052 / 2796 / 408**. All 797 existing Rust
+tests, 57 reference-checked project fixtures, formatting, and Clippy pass. Direct PHP
+comparisons verify argument errors, shared references, and overlapping array inputs.
+The existing `array_merge.phpt` FILE program matches PHP with `precision=14`, but its
+INI-bearing fixture remains unsupported and is not counted as a pass. No custom tests
+or generated matrices were added. PHP 8.5.0 array implementations, native signatures,
+upstream fixtures, and reference execution establish the behavior. Remaining targeted
+fixtures depend on streams, internal array cursors, or array walking. Packed/mixed table
+metadata, complete native reflection types, memory limits, and INI/SKIPIF harness support
+remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1180,11 +1209,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2051 | 2797 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2052 | 2796 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 197 | 591 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 223 | 565 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

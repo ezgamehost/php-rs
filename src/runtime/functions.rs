@@ -622,7 +622,15 @@ impl Runtime {
                 .iter()
                 .rposition(Option::is_some)
                 .map_or(0, |i| i + 1);
-            let supplied = supplied_fixed + bound.extra.len();
+            // Unknown named variadic arguments live outside PHP's positional
+            // argument frame and do not satisfy a native minimum arity.
+            let supplied = supplied_fixed
+                + bound
+                    .extra
+                    .entries()
+                    .iter()
+                    .filter(|(key, _)| matches!(key, ArrayKey::Int(_)))
+                    .count();
             let required = parameters
                 .iter()
                 .filter(|p| !p.variadic && p.default.is_none())
