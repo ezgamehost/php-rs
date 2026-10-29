@@ -73,6 +73,7 @@ pub(super) enum Builtin {
     BaseEncode(u8),
     ArraySlice,
     ArraySplice,
+    ArrayColumn,
     ArrayStack(array_stack::Action),
     ArrayReverse,
     ArrayChunk,
@@ -263,6 +264,7 @@ impl Builtin {
             b"dechex" => Self::BaseEncode(16),
             b"array_slice" => Self::ArraySlice,
             b"array_splice" => Self::ArraySplice,
+            b"array_column" => Self::ArrayColumn,
             b"array_push" => Self::ArrayStack(array_stack::Action::Push),
             b"array_pop" => Self::ArrayStack(array_stack::Action::Pop),
             b"array_shift" => Self::ArrayStack(array_stack::Action::Shift),
@@ -546,6 +548,11 @@ impl Builtin {
                 ("length", true, false),
                 ("replacement", true, false),
             ],
+            Self::ArrayColumn => &[
+                ("array", false, false),
+                ("column_key", false, false),
+                ("index_key", true, false),
+            ],
             Self::ArrayStack(array_stack::Action::Push | array_stack::Action::Unshift) => {
                 &[("array", false, false), ("values", false, true)]
             }
@@ -812,6 +819,7 @@ impl Runtime {
         }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::ArrayColumn => self.array_column(&args, line),
             Builtin::MinMax(maximum) => {
                 self.extremum(maximum, &name, first, &extra, direct_positional, line)
             }

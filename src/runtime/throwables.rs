@@ -448,7 +448,7 @@ impl Runtime {
     }
 }
 
-fn append_previous(current: &Rc<crate::PhpObject>, previous: &Rc<crate::PhpObject>) {
+pub(super) fn append_previous(current: &Rc<crate::PhpObject>, previous: &Rc<crate::PhpObject>) {
     let mut seen = HashSet::new();
     let mut next = Some(previous.clone());
     while let Some(object) = next {

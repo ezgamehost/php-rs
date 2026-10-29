@@ -110,6 +110,8 @@ new request. The CLI returns the low eight bits of the requested status.
 - `array_push`, `array_pop`, `array_shift`, and `array_unshift` support reference
   targets, copy-on-write, numeric append-key restoration, and cursor/iterator updates.
   Pop/shift return values without retaining the removed element’s reference binding.
+- `array_column` extracts array entries or visible/magic object properties, supports
+  optional index columns, preserves null values, and returns dereferenced values.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

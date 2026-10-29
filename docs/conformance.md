@@ -1502,6 +1502,35 @@ metadata remain incomplete. No custom tests or generated matrices were added. Be
 is grounded in PHP 8.5.0 `ext/standard/array.c`/`Zend/zend_hash.c`, native signatures,
 upstream PHPT, and reference execution.
 
+The [array-column slice](conformance/php-8.5.0-array-column-hillclimb.txt) adds
+**11 upstream array passes**, with no regressions across the six suites. `array_column`
+accepts nullable string/integer selectors with PHP's strict/weak argument coercion,
+including Stringable objects in weak mode and float-to-string fallback outside the integer
+range. Array lookup normalizes integer-string keys; object lookup preserves property-name
+spelling and respects the caller's visibility. Initialized null properties are included,
+missing or never-initialized typed properties are skipped, and inaccessible/missing
+properties use `__isset` before `__get`. Explicitly unset typed properties retain their
+existing getter type checks.
+
+A null column selector copies whole rows. Selected values and index values are dereferenced;
+missing index values append, duplicate index keys overwrite without changing their original
+position, and null/float index keys produce PHP's conversion diagnostics. An exhausted
+append index silently drops a later unindexed row, matching the native function. Pending
+exceptions suppress subsequent user property calls while later ordinary rows continue to
+produce native diagnostics; subsequent key errors chain the earlier exception. Exit
+signals still stop immediately.
+
+Arrays reach **537 / 251 / 52**; the other suite totals are unchanged. All 797 existing Rust
+tests, 57 reference-checked project PHPT cases, formatting, and Clippy pass. A short reference
+probe matches missing versus null columns, reference detachment, whole scalar rows, caller
+visibility, magic access, unset typed-property failures, Stringable/float selectors, key
+collisions, exhausted append indices, warning order after errors, and chained exceptions.
+`array_column_basic` still fails at its stream-resource setup (`fopen`); the runner does
+not count its earlier matching output as a pass. Resources, property hooks, native object
+handlers, and complete reflection metadata remain incomplete. No custom tests or generated
+matrices were added. PHP 8.5.0 `ext/standard/array.c`, `Zend/zend_API.c`, object handlers,
+upstream PHPT, and reference execution establish the implemented behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1513,7 +1542,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 526 | 262 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 537 | 251 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
