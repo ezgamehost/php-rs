@@ -6,6 +6,11 @@ derived sorting algorithm. This product includes the Zend Engine, freely
 available at http://www.zend.com. The Zend Engine is freely available at
 http://www.zend.com.
 
+`src/runtime/path_parts.rs` adapts `zend_dirname` from PHP 8.5.0's
+`Zend/zend_compile.c`, copyright (c) Zend Technologies Ltd. The source lists
+Andi Gutmans, Zeev Suraski, and Nikita Popov as authors. The Zend license below
+also applies to this adaptation.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -188,7 +193,8 @@ Thies C. Arntzen, Wez Furlong, and Jim Winstead.
 `ext/standard/base64.c`, copyright (c) The PHP Group. The source lists
 Jim Winstead and Xinchen Hui as authors.
 
-`src/runtime/wordwrap.rs`, `src/runtime/string_token.rs`, and `src/runtime/csv.rs`
+`src/runtime/wordwrap.rs`, `src/runtime/string_token.rs`, `src/runtime/csv.rs`,
+and `src/runtime/path_parts.rs`
 contain altered Rust adaptations of PHP 8.5.0's `ext/standard/string.c`, copyright
 (c) The PHP Group. The source lists
 Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.

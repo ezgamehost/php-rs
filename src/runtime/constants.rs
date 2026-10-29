@@ -69,6 +69,7 @@ impl Runtime {
         ) || math_constant(name).is_some()
             || sort_constant(name).is_some()
             || seek_constant(name).is_some()
+            || pathinfo_constant(name).is_some()
             || extract_constant(name).is_some()
         {
             "standard"
@@ -200,6 +201,9 @@ fn seek_constant(name: &[u8]) -> Option<Value> {
 }
 
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = pathinfo_constant(name) {
+        return Some(value);
+    }
     if let Some(value) = seek_constant(name) {
         return Some(value);
     }
@@ -275,6 +279,17 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"DEBUG_BACKTRACE_IGNORE_ARGS" => Value::Int(2),
         _ => return math_constant(name).map(Value::Float),
     })
+}
+
+fn pathinfo_constant(name: &[u8]) -> Option<Value> {
+    Some(Value::Int(match name {
+        b"PATHINFO_DIRNAME" => 1,
+        b"PATHINFO_BASENAME" => 2,
+        b"PATHINFO_EXTENSION" => 4,
+        b"PATHINFO_FILENAME" => 8,
+        b"PATHINFO_ALL" => 15,
+        _ => return None,
+    }))
 }
 
 fn math_constant(name: &[u8]) -> Option<f64> {

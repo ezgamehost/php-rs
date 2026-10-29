@@ -1810,6 +1810,30 @@ matrices were added. Configurable character locales, stream CSV APIs, PHP memory
 limits, and allocation-failure diagnostics remain unfinished. The parser adaptation
 retains PHP's notices/license.
 
+The [path-component slice](conformance/php-8.5.0-path-parts-hillclimb.txt) adds
+**17 upstream passes**: nine strings, four Zend fixtures, and four dedicated file
+fixtures. `basename`, `dirname`, and `pathinfo` implement POSIX path-string handling,
+including trailing/repeated separators, suffix removal, empty/root paths, repeated
+parent traversal, and dotfile extensions. `dirname` stops when additional levels
+cannot shorten the result, including enormous requested levels. `pathinfo` returns
+an array only for exactly `PATHINFO_ALL`; other flag combinations return the first
+available selected component in native order. Its dirname field retains the native
+C-string NUL truncation while other components preserve their byte lengths.
+
+All five `PATHINFO_*` constants are registered under the standard extension;
+`pathinfo`'s reflected default retains the `PATHINFO_ALL` constant expression.
+Zend reaches **2126 / 2722 / 408**, strings **385 / 193 / 152**, with the other
+four tracked suites unchanged and zero regressions across all six. The dedicated
+file selection improves from **0 / 4 / 16** to **4 / 0 / 16**. The focused string
+selection reports **9 / 0 / 4**. Unsupported fixtures are not counted as passes.
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. A short reference probe matches embedded NULs, suffix boundaries,
+large levels, flag combinations, named arguments, reflected defaults, coercion
+side effects, and deprecations. No custom tests or generated matrices were added.
+Windows path rules, non-ASCII-compatible locales, PHP memory limits, and allocation
+failure diagnostics remain unfinished. The adaptations retain PHP/Zend notices
+and licenses.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1817,13 +1841,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2122 | 2726 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2126 | 2722 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 376 | 202 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 385 | 193 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

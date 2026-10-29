@@ -16,6 +16,9 @@ pub(super) enum Builtin {
     Wordwrap,
     Strtok,
     StrGetCsv,
+    Basename,
+    Dirname,
+    Pathinfo,
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -160,6 +163,9 @@ impl Builtin {
             b"wordwrap" => Self::Wordwrap,
             b"strtok" => Self::Strtok,
             b"str_getcsv" => Self::StrGetCsv,
+            b"basename" => Self::Basename,
+            b"dirname" => Self::Dirname,
+            b"pathinfo" => Self::Pathinfo,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -504,6 +510,9 @@ impl Builtin {
             }
             Self::Base64(false) => &[("string", false, false), ("strict", true, false)],
             Self::Strtok => &[("string", false, false), ("token", true, false)],
+            Self::Basename => &[("path", false, false), ("suffix", true, false)],
+            Self::Dirname => &[("path", false, false), ("levels", true, false)],
+            Self::Pathinfo => &[("path", false, false), ("flags", true, false)],
             Self::StrGetCsv => &[
                 ("string", false, false),
                 ("separator", true, false),
@@ -770,6 +779,12 @@ impl Builtin {
                     if matches!((self, *name), (Self::Round, "mode")) {
                         return rounding::default_mode();
                     }
+                    if matches!((self, *name), (Self::Pathinfo, "flags")) {
+                        return Expr {
+                            kind: ExprKind::Constant(b"PATHINFO_ALL".to_vec()),
+                            line: 0,
+                        };
+                    }
                     if matches!((self, *name), (Self::Math(math::Math::Log), "base")) {
                         return Expr {
                             kind: ExprKind::Constant(b"M_E".to_vec()),
@@ -786,6 +801,8 @@ impl Builtin {
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
+                            (Self::Basename, "suffix") => Value::String(Vec::new().into()),
+                            (Self::Dirname, "levels") => Value::Int(1),
                             (Self::StrGetCsv, "separator") => Value::String(b",".to_vec().into()),
                             (Self::StrGetCsv, "enclosure") => Value::String(b"\"".to_vec().into()),
                             (Self::StrGetCsv, "escape") => Value::String(b"\\".to_vec().into()),
@@ -1014,6 +1031,9 @@ impl Runtime {
             Builtin::Wordwrap => self.wordwrap(&args, line),
             Builtin::Strtok => self.string_token(&args, line),
             Builtin::StrGetCsv => self.str_getcsv(&args, line),
+            Builtin::Basename | Builtin::Dirname | Builtin::Pathinfo => {
+                self.path_part(builtin, &name, &args, line)
+            }
             Builtin::Hex2Bin
             | Builtin::Rot13
             | Builtin::FirstCase(_)

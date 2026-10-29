@@ -63,6 +63,7 @@ mod nullsafe;
 mod number_format;
 mod objects;
 mod offsets;
+mod path_parts;
 mod printing;
 mod property_references;
 mod property_visibility;
