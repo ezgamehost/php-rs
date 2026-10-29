@@ -1647,6 +1647,28 @@ destructors, physical sparse-table history, PHP memory limits, and complete nati
 metadata remain incomplete. PHP 8.5.0 array source, native signatures, upstream
 PHPT, and reference execution establish these behaviors.
 
+The [array predicate search slice](conformance/php-8.5.0-array-find-hillclimb.txt)
+adds **six upstream array passes**, with no regressions across the six suites.
+`array_find`, `array_find_key`, `array_any`, and `array_all` invoke the predicate
+with each value and key, stopping at the first matching or failing result as
+appropriate. Empty inputs return null for find operations, false for any, and
+true for all. Callback validation still runs for empty arrays.
+
+Callback arguments preserve existing reference cells. Found values are read after
+the callback and dereferenced on return; value arguments without reference bindings
+retain their native reference-parameter warnings and do not mutate the input.
+Callbacks may replace the caller's array while iteration retains the passed array.
+Exceptions propagate immediately without invoking later predicates.
+
+Arrays reach **718 / 70 / 52**; the other five suite totals remain unchanged.
+All 797 existing Rust tests, 57 reference-checked project PHPT cases, formatting,
+and Clippy pass. A short reference probe matches all four functions, empty and
+short-circuit behavior, argument-error ordering, reference mutation and return
+separation, callback input replacement, and exceptions. No custom tests or generated
+matrices were added. Error handlers, destructors, property hooks, PHP memory limits,
+and complete native metadata remain incomplete. PHP 8.5.0 array source, native
+signatures, upstream PHPT, and reference execution establish these behaviors.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1658,7 +1680,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 279 | 176 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 712 | 76 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 718 | 70 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

@@ -1,7 +1,49 @@
 use super::builtins::require_array;
 use super::*;
 
+#[derive(Debug, Clone, Copy)]
+pub(super) enum Find {
+    Value,
+    Key,
+    Any,
+    All,
+}
+
 impl Runtime {
+    pub(super) fn array_find(
+        &mut self,
+        kind: Find,
+        name: &str,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let array = require_array(args[0].as_ref().unwrap(), name, 1, line)?;
+        // Even empty inputs validate the callback before returning.
+        let callback = self
+            .native_callback(args[1].as_ref().unwrap(), name, 2, false, line)?
+            .unwrap();
+        let all = matches!(kind, Find::All);
+        for (key, value) in array.entries() {
+            let arguments = [value.clone(), key.to_value()];
+            let matched = self
+                .call_callback(&callback, &arguments, line)?
+                .to_bool(line, &mut self.diagnostics);
+            if matched != all {
+                return Ok(match kind {
+                    // Read after the callback: existing reference cells may
+                    // have changed, but the returned value is detached.
+                    Find::Value => arguments[0].dereferenced(),
+                    Find::Key => arguments[1].clone(),
+                    Find::Any | Find::All => Value::Bool(!all),
+                });
+            }
+        }
+        Ok(match kind {
+            Find::Value | Find::Key => Value::Null,
+            Find::Any | Find::All => Value::Bool(all),
+        })
+    }
+
     pub(super) fn array_map(
         &mut self,
         args: &[Option<Value>],

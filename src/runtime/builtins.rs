@@ -112,6 +112,7 @@ pub(super) enum Builtin {
     GetDefinedVars,
     ArrayMap,
     ArrayFilter,
+    ArrayFind(array_callbacks::Find),
     ArrayReduce,
     CallUserFunc,
     CallUserFuncArray,
@@ -327,6 +328,10 @@ impl Builtin {
             b"array_values" => Self::ArrayValues,
             b"array_map" => Self::ArrayMap,
             b"array_filter" => Self::ArrayFilter,
+            b"array_find" => Self::ArrayFind(array_callbacks::Find::Value),
+            b"array_find_key" => Self::ArrayFind(array_callbacks::Find::Key),
+            b"array_any" => Self::ArrayFind(array_callbacks::Find::Any),
+            b"array_all" => Self::ArrayFind(array_callbacks::Find::All),
             b"array_reduce" => Self::ArrayReduce,
             b"call_user_func" => Self::CallUserFunc,
             b"call_user_func_array" => Self::CallUserFuncArray,
@@ -665,6 +670,7 @@ impl Builtin {
                 ("callback", false, false),
                 ("initial", true, false),
             ],
+            Self::ArrayFind(_) => &[("array", false, false), ("callback", false, false)],
             Self::ArrayKeyExists => &[("key", false, false), ("array", false, false)],
             Self::ArraySearch(_) => &[
                 ("needle", false, false),
@@ -1065,6 +1071,7 @@ impl Runtime {
                 self.call_user_function(builtin, &args, &extra, line)
             }
             Builtin::ArrayFilter => self.array_filter(&args, line),
+            Builtin::ArrayFind(kind) => self.array_find(kind, &name, &args, line),
             Builtin::ArrayReduce => self.array_reduce(&args, line),
             Builtin::Exit
             | Builtin::Math(_)
