@@ -234,7 +234,7 @@ fn math_constant(name: &[u8]) -> Option<f64> {
         b"M_SQRTPI" => 1.772453850905516,
         b"M_2_SQRTPI" => consts::FRAC_2_SQRT_PI,
         b"M_LNPI" => 1.1447298858494002,
-        b"M_EULER" => 0.5772156649015329,
+        b"M_EULER" => consts::EULER_GAMMA,
         b"M_SQRT2" => consts::SQRT_2,
         b"M_SQRT1_2" => consts::FRAC_1_SQRT_2,
         b"M_SQRT3" => 3.0_f64.sqrt(),
