@@ -57,13 +57,35 @@ impl Runtime {
         key: &ArrayKey,
         line: usize,
     ) -> Result<Cell, Error> {
+        self.property_iteration_reference(object, key, line, false)
+    }
+
+    pub(super) fn walked_property_reference(
+        &mut self,
+        object: &Rc<PhpObject>,
+        key: &ArrayKey,
+        line: usize,
+    ) -> Result<Cell, Error> {
+        self.property_iteration_reference(object, key, line, true)
+    }
+
+    fn property_iteration_reference(
+        &mut self,
+        object: &Rc<PhpObject>,
+        key: &ArrayKey,
+        line: usize,
+        native_walk: bool,
+    ) -> Result<Cell, Error> {
         let property = object
             .class
             .properties
             .iter()
             .find(|property| ArrayKey::String(property.storage_name()) == *key);
+        // Native array_walk acquires storage references directly; foreach has
+        // the additional readonly restriction. Both retain property type sources.
         if let Some(property) = property
             && property.is_readonly
+            && !native_walk
         {
             let owner = object.class.property_slot_owner(property);
             return Err(Error::new(

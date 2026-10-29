@@ -166,6 +166,14 @@ impl PhpArray {
     }
 
     pub(crate) fn start_reference_iteration(&mut self, token: &Rc<()>) {
+        self.start_reference_iteration_at(token, 0);
+    }
+
+    pub(crate) fn cursor_position(&self) -> usize {
+        self.cursor
+    }
+
+    pub(crate) fn start_reference_iteration_at(&mut self, token: &Rc<()>, position: usize) {
         self.iterators
             .get_mut()
             .retain(|(token, _)| token.strong_count() != 0);
@@ -177,7 +185,9 @@ impl PhpArray {
         {
             return;
         }
-        self.iterators.get_mut().push((Rc::downgrade(token), 0));
+        self.iterators
+            .get_mut()
+            .push((Rc::downgrade(token), position));
         for (_, value) in &mut self.entries {
             if !matches!(value, Value::Indirect(_)) {
                 *value =

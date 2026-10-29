@@ -17,6 +17,7 @@ mod array_cursor;
 mod array_inspection;
 mod array_join;
 mod array_segments;
+mod array_walk;
 mod attributes;
 mod autoload;
 mod base_conversion;

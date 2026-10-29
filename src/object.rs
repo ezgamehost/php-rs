@@ -40,6 +40,7 @@ pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
     pub(crate) property_cursor: RefCell<PropertyCursor>,
+    pub(crate) property_iterators: RefCell<Vec<std::rc::Weak<RefCell<PropertyCursor>>>>,
     pub(crate) reflection: RefCell<Option<crate::runtime::reflection::ReflectionData>>,
     pub(crate) throwable: RefCell<Option<ThrowableData>>,
     pub(crate) class: Rc<Class>,
@@ -67,6 +68,17 @@ impl Clone for PropertyCursor {
             } else {
                 0
             },
+        }
+    }
+}
+
+impl PropertyCursor {
+    pub(crate) fn remove(&mut self, key: &crate::ArrayKey) {
+        if let Some(index) = self.keys.iter().position(|existing| existing == key) {
+            self.keys.remove(index);
+            if self.position > index {
+                self.position -= 1;
+            }
         }
     }
 }
@@ -131,12 +143,38 @@ impl PhpObject {
         {
             return;
         }
-        let mut cursor = self.property_cursor.borrow_mut();
-        if let Some(index) = cursor.keys.iter().position(|existing| existing == key) {
-            cursor.keys.remove(index);
-            if cursor.position > index {
-                cursor.position -= 1;
+        self.property_cursor.borrow_mut().remove(key);
+        for iterator in self
+            .property_iterators
+            .borrow()
+            .iter()
+            .filter_map(std::rc::Weak::upgrade)
+        {
+            iterator.borrow_mut().remove(key);
+        }
+    }
+
+    pub(crate) fn sync_property_cursor(&self, cursor: &mut PropertyCursor) {
+        let properties = self.properties.borrow();
+        let mut keys: Vec<_> = self
+            .class
+            .properties
+            .iter()
+            .map(|property| crate::ArrayKey::String(property.storage_name()))
+            .collect();
+        for (key, _) in properties.entries() {
+            if !keys.contains(key) {
+                keys.push(key.clone());
             }
+        }
+        if cursor.keys != keys {
+            cursor.position = cursor
+                .keys
+                .iter()
+                .take(cursor.position)
+                .filter(|key| keys.contains(key))
+                .count();
+            cursor.keys = keys;
         }
     }
 

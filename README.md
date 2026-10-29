@@ -84,6 +84,8 @@ new request. The CLI returns the low eight bits of the requested status.
   handling, nested collisions, reference separation, and recursion errors.
 - `current`/`pos`, `key`, `reset`, `end`, `next`, and `prev` support internal array
   cursors, copy-on-write separation, and deprecated object-property traversal.
+- `array_walk` and `array_walk_recursive` invoke callbacks on live entry references,
+  follow input mutations/replacement, and enforce typed-property constraints.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

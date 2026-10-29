@@ -65,33 +65,9 @@ fn move_array_cursor(value: &mut Value, action: Cursor) -> Value {
 }
 
 fn object_cursor(object: &PhpObject, action: Cursor, result_used: bool) -> Value {
-    let properties = object.properties.borrow();
-    // Declared properties occupy stable slots even while uninitialized/unset.
-    // Object hash-table iteration includes non-public storage names.
-    let mut keys: Vec<_> = object
-        .class
-        .properties
-        .iter()
-        .map(|property| ArrayKey::String(property.storage_name()))
-        .collect();
-    for (key, _) in properties.entries() {
-        if !keys.contains(key) {
-            keys.push(key.clone());
-        }
-    }
     let mut cursor = object.property_cursor.borrow_mut();
-    if cursor.keys != keys {
-        // Reconcile deletions before moving. Appending beyond the previous end
-        // makes the new entry current, just as a HashTable append does.
-        let old_position = cursor.position;
-        cursor.position = cursor
-            .keys
-            .iter()
-            .take(old_position)
-            .filter(|key| keys.contains(key))
-            .count();
-        cursor.keys = keys;
-    }
+    object.sync_property_cursor(&mut cursor);
+    let properties = object.properties.borrow();
     let len = cursor.keys.len();
     cursor.position = action.advance(cursor.position, len);
     if action.moves() && !result_used {

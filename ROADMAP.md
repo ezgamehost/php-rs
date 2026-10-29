@@ -261,7 +261,10 @@ definition of completion.
    detection. Internal array cursors support current/pos, key, reset, end, next, and
    prev, including copy-on-write and deletion/append behavior. Deprecated object
    traversal preserves declared slots, skips uninitialized properties, and observes
-   whether a moving call's return value is consumed. Native variadic errors omit
+   whether a moving call's return value is consumed. Array walking and recursive
+   walking support callbacks, optional userdata, live reference mutation, deletion,
+   append/replacement, recursion errors, and typed object-property references.
+   Cast-object backing-table reference sharing remains incomplete. Native variadic errors omit
    parameter labels and exclude unknown named
    arguments from minimum-arity counts. Callable inspection supports syntax-only
    checks, autoloading, scoped/abstract/magic methods, descriptive output names,

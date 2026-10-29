@@ -90,6 +90,7 @@ pub(super) enum Builtin {
     ArrayMerge(bool),
     ArrayReplace(bool),
     ArrayCursor(crate::array::Cursor),
+    ArrayWalk(bool),
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -281,6 +282,8 @@ impl Builtin {
             b"array_merge_recursive" => Self::ArrayMerge(true),
             b"array_replace" => Self::ArrayReplace(false),
             b"array_replace_recursive" => Self::ArrayReplace(true),
+            b"array_walk" => Self::ArrayWalk(false),
+            b"array_walk_recursive" => Self::ArrayWalk(true),
             b"current" | b"pos" => Self::ArrayCursor(crate::array::Cursor::Current),
             b"key" => Self::ArrayCursor(crate::array::Cursor::Key),
             b"reset" => Self::ArrayCursor(crate::array::Cursor::Reset),
@@ -453,6 +456,11 @@ impl Builtin {
             Self::ArrayMerge(_) => &[("arrays", false, true)],
             Self::ArrayReplace(_) => &[("array", false, false), ("replacements", false, true)],
             Self::ArrayCursor(_) => &[("array", false, false)],
+            Self::ArrayWalk(_) => &[
+                ("array", false, false),
+                ("callback", false, false),
+                ("arg", true, false),
+            ],
             Self::Range => &[
                 ("start", false, false),
                 ("end", false, false),
@@ -547,7 +555,8 @@ impl Builtin {
                 attributes: Vec::new(),
                 by_reference: (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
-                    || matches!(self, Self::ArrayCursor(action) if action.moves()),
+                    || matches!(self, Self::ArrayCursor(action) if action.moves())
+                    || (matches!(self, Self::ArrayWalk(_)) && *name == "array"),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
                 ty: None,
@@ -702,6 +711,9 @@ impl Runtime {
         }
         if let Builtin::ArrayCursor(action) = builtin {
             return self.array_cursor(action, &name, args, references, line, result_used);
+        }
+        if let Builtin::ArrayWalk(recursive) = builtin {
+            return self.array_walk(recursive, &name, args, references, line);
         }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
@@ -985,6 +997,7 @@ impl Runtime {
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
             Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) => unreachable!(),
             Builtin::ArrayCursor(_) => unreachable!(),
+            Builtin::ArrayWalk(_) => unreachable!(),
             Builtin::ArrayKeys => {
                 if args[1].is_none() && args[2].is_some() {
                     return Err(Error::new(

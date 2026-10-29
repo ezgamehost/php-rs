@@ -125,6 +125,7 @@ impl Runtime {
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),
             property_cursor: RefCell::new(original.property_cursor.borrow().clone()),
+            property_iterators: RefCell::default(),
             unset_properties: RefCell::new(original.unset_properties.borrow().clone()),
             reinitializable: RefCell::new(original.reinitializable.borrow().clone()),
             object_id: handle.id,

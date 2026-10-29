@@ -207,6 +207,7 @@ impl Runtime {
             _handle: handle,
             properties: RefCell::new(properties),
             property_cursor: RefCell::default(),
+            property_iterators: RefCell::default(),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             throwable: RefCell::default(),

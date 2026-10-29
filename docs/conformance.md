@@ -1232,6 +1232,38 @@ implementations, native signatures, upstream fixtures, and reference execution e
 the behavior. Streams, complete native-object property handlers, packed/mixed table
 metadata, native reflection types, and INI/SKIPIF harness support remain unfinished.
 
+The [array walking slice](conformance/php-8.5.0-array-walk-hillclimb.txt) adds **43 upstream
+passes**: 41 array fixtures and two Zend fixtures, with no regressions across Zend,
+reflection, SPL, strings, arrays, or math. `array_walk` and `array_walk_recursive` validate
+the array/object input and callback, pass live value references and original keys, and
+include userdata only when supplied. Callback return values are ignored. Recursive walks
+descend into arrays, preserve input copy-on-write separation, and reject recursive array
+cycles. The internal array cursor is independent of the walk position.
+
+Walk positions advance before callback execution and follow deletion, appending, and
+replacement of the input. Replacing the input with an unrelated array resumes at its
+internal cursor; replacement with a scalar raises `Iterated value is no longer an array
+or object`. Object traversal includes encoded non-public property names, skips
+uninitialized properties, and shares the existing typed-reference constraint machinery.
+It follows native walking's reference acquisition behavior, including readonly-property
+storage. Weak property-iteration tokens allow dynamic deletion to update active walks
+without extending object lifetimes. Generic foreach reference acquisition retains its
+own readonly restrictions. Invalid input errors retain PHP's legacy `array` wording even
+though objects are accepted.
+
+Arrays reach **297 / 491 / 52**, and Zend **2065 / 2783 / 408**. All 797 existing Rust
+tests, 57 reference-checked project fixtures, formatting, and Clippy pass. Direct PHP
+comparisons match live mutations, replacement cursor positions, scalar replacement
+errors, typed/readonly properties, and recursive inputs when properties are constructed
+directly. A separate comparison exposes an outstanding cast-object backing-table gap:
+after a walk appends a property to an object cast from an array, PHP retains a shared
+reference wrapper on the first visited property while this runtime drops that wrapper.
+The values agree, but the reference representation does not; the mismatch is recorded in
+the report and is not claimed as a pass. Remaining targeted fixtures require `min`,
+`settype`, `flush`, PCRE, array intersection, or PHP 8.5 closure-debug metadata. No custom
+tests or generated matrices were added. PHP 8.5.0 array/hash-table implementations,
+native signatures, upstream fixtures, and reference execution establish the behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1239,11 +1271,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2063 | 2785 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2065 | 2783 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 256 | 532 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 297 | 491 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
