@@ -16,6 +16,7 @@ mod array_callbacks;
 mod array_segments;
 mod attributes;
 mod autoload;
+mod base_conversion;
 mod builtins;
 mod callable_inspection;
 mod callbacks;

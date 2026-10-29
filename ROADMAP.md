@@ -239,8 +239,10 @@ definition of completion.
    steps, endpoint warnings, and maximum-size validation.
    Core math includes abs/ceil/floor/sqrt, intdiv, IEEE fdiv/fmod/fpow, and
    finite/infinite/NaN predicates. Pow and exponentiation share integer promotion,
-   operand conversion errors, and zero-base deprecations. Rounding modes, base
-   conversion, number formatting, and transcendental functions remain unfinished.
+   operand conversion errors, and zero-base deprecations. Base conversion supports
+   bases 2–36, numeric prefixes, ignored-character deprecations, float promotion,
+   and full-width negative integer encoding. Rounding modes, number formatting,
+   and transcendental functions remain unfinished.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only

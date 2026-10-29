@@ -1033,6 +1033,28 @@ the behavior. Rounding modes, number formatting, base conversion, trigonometric 
 logarithmic functions, streams, configurable precision, and extension object arithmetic
 remain unfinished.
 
+The [base conversion slice](conformance/php-8.5.0-base-conversion-hillclimb.txt) adds
+**10 upstream passes**: eight math fixtures and two string fixtures, with no regressions
+across the six measured upstream suites. `base_convert`, `bindec`, `octdec`, and `hexdec`
+trim C whitespace, recognize the appropriate binary/octal/hexadecimal prefix, ignore
+invalid digits with one PHP deprecation per call, and promote integer accumulation to
+float at overflow. `base_convert` validates bases 2–36 after native parameter conversions,
+preserves PHP's float division and 64-digit output-buffer behavior, and rejects infinite
+results. `decbin`, `decoct`, and `dechex` convert native integers to unsigned 64-bit digit
+strings, including negative inputs. Parameter names and native coercions are registered
+for all seven functions.
+
+Math reaches **18 / 36 / 117** and strings **319 / 259 / 152**; Zend, arrays, reflection,
+and SPL are unchanged. All 797 existing Rust tests, 57 reference-checked project fixtures,
+formatting, and Clippy pass. Thirteen additional existing upstream conversion programs,
+whose INI/SKIPIF sections are unsupported by the harness, match PHP directly on the
+64-bit host with their requested settings. A short reference probe also matches float
+output truncation and infinite conversion errors. These direct comparisons do not change
+the harness totals, and no custom test files or generated matrices were added. Behavior
+follows PHP 8.5.0 `ext/standard/math.c`, native stubs, and upstream fixtures. Stream-based
+variation fixtures, INI/SKIPIF harness support, complete native reflection type metadata,
+rounding, number formatting, and transcendental math remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1045,8 +1067,8 @@ measurements reported by their individual slices.
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 154 | 634 | 52 |
-| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 10 | 44 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 317 | 261 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 18 | 36 | 117 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 319 | 259 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

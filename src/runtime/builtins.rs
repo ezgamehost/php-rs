@@ -66,6 +66,9 @@ pub(super) enum Builtin {
     Is(&'static str),
     Range,
     Math(math::Math),
+    BaseConvert,
+    BaseDecode(u8),
+    BaseEncode(u8),
     ArraySlice,
     ArrayReverse,
     ArrayChunk,
@@ -205,6 +208,13 @@ impl Builtin {
             b"is_finite" => Self::Math(math::Math::IsFinite),
             b"is_infinite" => Self::Math(math::Math::IsInfinite),
             b"is_nan" => Self::Math(math::Math::IsNan),
+            b"base_convert" => Self::BaseConvert,
+            b"bindec" => Self::BaseDecode(2),
+            b"octdec" => Self::BaseDecode(8),
+            b"hexdec" => Self::BaseDecode(16),
+            b"decbin" => Self::BaseEncode(2),
+            b"decoct" => Self::BaseEncode(8),
+            b"dechex" => Self::BaseEncode(16),
             b"array_slice" => Self::ArraySlice,
             b"array_reverse" => Self::ArrayReverse,
             b"array_chunk" => Self::ArrayChunk,
@@ -383,6 +393,15 @@ impl Builtin {
                 ("step", true, false),
             ],
             Self::Math(kind) => kind.parameters(),
+            Self::BaseConvert => &[
+                ("num", false, false),
+                ("from_base", false, false),
+                ("to_base", false, false),
+            ],
+            Self::BaseDecode(2) => &[("binary_string", false, false)],
+            Self::BaseDecode(8) => &[("octal_string", false, false)],
+            Self::BaseDecode(_) => &[("hex_string", false, false)],
+            Self::BaseEncode(_) => &[("num", false, false)],
             Self::ArraySlice => &[
                 ("array", false, false),
                 ("offset", false, false),
@@ -696,6 +715,9 @@ impl Runtime {
             }
             Builtin::Range => self.range(&args, line),
             Builtin::Math(kind) => self.math(kind, &name, &args, line),
+            Builtin::BaseConvert | Builtin::BaseDecode(_) | Builtin::BaseEncode(_) => {
+                self.base_conversion(builtin, &name, &args, line)
+            }
             Builtin::ArraySlice
             | Builtin::ArrayReverse
             | Builtin::ArrayChunk
