@@ -550,7 +550,10 @@ impl Runtime {
         } else {
             format!(" (${})", String::from_utf8_lossy(&parameter.name))
         };
-        let prefer_reference = matches!(target.builtin, Some(Builtin::ArrayMultisort));
+        let prefer_reference = matches!(
+            target.builtin,
+            Some(Builtin::ArrayMultisort | Builtin::Extract)
+        );
         if target.reference_values {
             if let ExprKind::Literal(Value::Reference(reference)) = &expr.kind {
                 return Ok((reference.borrow().clone(), Some(reference.clone())));
@@ -859,6 +862,7 @@ impl Runtime {
                 self.scope
                     .insert(b"this".to_vec(), cell(Value::Object(object)));
             }
+            self.scope.reserve_variables(&function.body);
             self.current_arguments = Some(arguments);
             self.current_returns_reference = function.returns_reference;
             let flow = self.block(&function.body)?;

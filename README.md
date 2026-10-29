@@ -98,6 +98,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `array_multisort` applies stable lexicographic row ordering with independent
   comparison/direction flags, preserves string keys, renumbers numeric keys, and
   supports PHP's preferred-reference arguments and repeated input aliases.
+- `extract` supports overwrite, skip, conditional/prefixed extraction, and
+  reference rebinding in the current scope, including typed-reference assignments,
+  compiled-but-unset locals, name validation, and dynamic-call restrictions.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

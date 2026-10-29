@@ -95,6 +95,7 @@ pub(super) enum Builtin {
     ArraySort(sorting::Sort),
     ArrayUserSort(sorting::UserSort),
     ArrayMultisort,
+    Extract,
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -288,6 +289,7 @@ impl Builtin {
             b"array_replace_recursive" => Self::ArrayReplace(true),
             b"array_walk" => Self::ArrayWalk(false),
             b"array_walk_recursive" => Self::ArrayWalk(true),
+            b"extract" => Self::Extract,
             b"array_multisort" => Self::ArrayMultisort,
             b"usort" => Self::ArrayUserSort(sorting::UserSort::Values),
             b"uasort" => Self::ArrayUserSort(sorting::UserSort::Associative),
@@ -478,6 +480,11 @@ impl Builtin {
                 &[("array", false, false)]
             }
             Self::ArraySort(_) => &[("array", false, false), ("flags", true, false)],
+            Self::Extract => &[
+                ("array", false, false),
+                ("flags", true, false),
+                ("prefix", true, false),
+            ],
             Self::ArrayMultisort => &[("array", false, false), ("rest", false, true)],
             Self::ArrayUserSort(_) => &[("array", false, false), ("callback", false, false)],
             Self::MinMax(_) => &[("value", false, false), ("values", false, true)],
@@ -584,7 +591,10 @@ impl Builtin {
                     || matches!(self, Self::ArrayCursor(action) if action.moves())
                     || (matches!(
                         self,
-                        Self::ArrayWalk(_) | Self::ArraySort(_) | Self::ArrayUserSort(_)
+                        Self::ArrayWalk(_)
+                            | Self::ArraySort(_)
+                            | Self::ArrayUserSort(_)
+                            | Self::Extract
                     ) && *name == "array"),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
@@ -607,7 +617,8 @@ impl Builtin {
                             }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Range, "step") => Value::Int(1),
-                            (Self::ArraySort(_), "flags") => Value::Int(0),
+                            (Self::ArraySort(_) | Self::Extract, "flags") => Value::Int(0),
+                            (Self::Extract, "prefix") => Value::String(Vec::new().into()),
                             (Self::Round, "precision") => Value::Int(0),
                             (Self::ArraySearch(_), "strict") => Value::Bool(false),
                             (Self::NumberFormat, "decimals") => Value::Int(0),
@@ -741,6 +752,9 @@ impl Runtime {
         }
         if let Builtin::ArrayCursor(action) = builtin {
             return self.array_cursor(action, &name, args, references, line, result_used);
+        }
+        if matches!(builtin, Builtin::Extract) {
+            return self.extract_variables(args, references, dynamic, line);
         }
         if matches!(builtin, Builtin::ArrayMultisort) {
             return self.array_multisort(args, references, extra, line);
@@ -1042,7 +1056,8 @@ impl Runtime {
             Builtin::ArrayWalk(_)
             | Builtin::ArraySort(_)
             | Builtin::ArrayUserSort(_)
-            | Builtin::ArrayMultisort => {
+            | Builtin::ArrayMultisort
+            | Builtin::Extract => {
                 unreachable!()
             }
             Builtin::ArrayKeys => {

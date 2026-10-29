@@ -24,6 +24,10 @@ impl Scope {
             self.order.push(name.to_vec());
         }
     }
+    pub(super) fn has_slot(&self, name: &[u8]) -> bool {
+        self.slots.contains(name)
+    }
+
     pub(super) fn get(&self, name: &[u8]) -> Option<&Cell> {
         self.values.get(name)
     }

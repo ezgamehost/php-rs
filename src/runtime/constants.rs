@@ -61,6 +61,7 @@ impl Runtime {
                 | b"PHP_ROUND_HALF_ODD"
         ) || math_constant(name).is_some()
             || sort_constant(name).is_some()
+            || extract_constant(name).is_some()
         {
             "standard"
         } else {
@@ -167,7 +168,25 @@ fn sort_constant(name: &[u8]) -> Option<Value> {
     }))
 }
 
+fn extract_constant(name: &[u8]) -> Option<Value> {
+    Some(Value::Int(match name {
+        b"EXTR_OVERWRITE" => 0,
+        b"EXTR_SKIP" => 1,
+        b"EXTR_PREFIX_SAME" => 2,
+        b"EXTR_PREFIX_ALL" => 3,
+        b"EXTR_PREFIX_INVALID" => 4,
+        b"EXTR_PREFIX_IF_EXISTS" => 5,
+        b"EXTR_IF_EXISTS" => 6,
+        b"EXTR_REFS" => 256,
+        _ => return None,
+    }))
+}
+
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = extract_constant(name) {
+        return Some(value);
+    }
+
     if let Some(value) = sort_constant(name) {
         return Some(value);
     }

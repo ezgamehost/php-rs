@@ -1387,6 +1387,36 @@ establish the behavior. Remaining multisort fixtures stop at missing `set_error_
 or `DateTime`; resources, locale configuration, complete native reflection metadata,
 and reentrant observation/mutation of native sorting tables remain unfinished.
 
+The [variable-extraction slice](conformance/php-8.5.0-extract-hillclimb.txt) adds **35
+upstream passes**: 28 array fixtures, six Zend fixtures, and one reflection fixture,
+with no regressions across the six suites. `extract` and the `EXTR_*` constants support
+all seven extraction modes and the reference modifier. Key/prefix identifiers follow
+PHP's byte rules, numeric keys are considered only by the applicable prefix modes, and
+empty names, `$this`, and an existing `GLOBALS` symbol retain their mode-specific rules.
+The low flag byte selects the mode; the reference bit controls separation, and unrelated
+high bits do not change the mode. Argument conversion, separation, flag validation,
+prefix validation, and dynamic-call rejection follow PHP's ordering.
+
+Value extraction retains its source table while overwriting locals and assigns through
+existing references with PHP's weak type checks, even in strict files. Reference
+extraction separates the input, creates references only for accepted entries, and rebinds
+locals instead of overwriting their previous reference targets. Input aliases and
+self-overwriting source names retain the native argument's cell. Function scopes now
+reserve compiled local slots before executing their bodies, as top-level scopes already
+did; prefix-if-existing extraction can distinguish an unset compiled local from a name
+absent from the symbol table. The preferred-reference argument binder accepts literal
+arrays and expression results without by-reference notices.
+
+Arrays reach **476 / 312 / 52**, Zend **2082 / 2766 / 408**, and reflection
+**278 / 177 / 37**. All 797 existing Rust tests, 57 reference-checked project fixtures,
+formatting, and Clippy pass. Every array fixture named `extract*` passes. A short reference
+comparison matches prefix modes with unset/later locals, copy-on-write reference extraction,
+source-variable overwrite, typed-reference coercion and rebinding, byte identifiers,
+`GLOBALS` rules, high flag bits, and dynamic-call error precedence. No custom tests or
+generated matrices were added. PHP 8.5.0 source, native signatures, upstream PHPT, and
+reference execution establish the behavior. General variable introspection, destructors,
+error handlers, resources, and complete native reflection metadata remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1394,11 +1424,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2076 | 2772 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 277 | 178 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2082 | 2766 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 448 | 340 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 476 | 312 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
