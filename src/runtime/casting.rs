@@ -80,7 +80,11 @@ pub(super) fn cast(
                 Some((number, _)) => {
                     let number = number.as_float();
                     if number == 0.0
-                        && bytes.bytes().iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'-')
+                        && bytes
+                            .bytes()
+                            .iter()
+                            .find(|b| !crate::value::numeric_whitespace(b))
+                            == Some(&b'-')
                     {
                         -0.0
                     } else {

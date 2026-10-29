@@ -73,6 +73,7 @@ mod reference_paths;
 mod reference_types;
 pub(crate) mod reflection;
 mod rounding;
+mod scalar_values;
 mod scope_slots;
 mod sensitive_parameters;
 mod sorting;

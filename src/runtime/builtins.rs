@@ -19,6 +19,7 @@ pub(super) enum Builtin {
     Basename,
     Dirname,
     Pathinfo,
+    ScalarValue(crate::ast::CastKind),
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -166,6 +167,10 @@ impl Builtin {
             b"basename" => Self::Basename,
             b"dirname" => Self::Dirname,
             b"pathinfo" => Self::Pathinfo,
+            b"intval" => Self::ScalarValue(crate::ast::CastKind::Int),
+            b"floatval" | b"doubleval" => Self::ScalarValue(crate::ast::CastKind::Float),
+            b"boolval" => Self::ScalarValue(crate::ast::CastKind::Bool),
+            b"strval" => Self::ScalarValue(crate::ast::CastKind::String),
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -251,6 +256,8 @@ impl Builtin {
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
             b"is_resource" => Self::Is("resource"),
+            b"is_numeric" => Self::Is("numeric"),
+            b"is_scalar" => Self::Is("scalar"),
             b"get_resource_id" => Self::ResourceInfo(true),
             b"get_resource_type" => Self::ResourceInfo(false),
             b"fopen" => Self::Fopen,
@@ -513,6 +520,10 @@ impl Builtin {
             Self::Basename => &[("path", false, false), ("suffix", true, false)],
             Self::Dirname => &[("path", false, false), ("levels", true, false)],
             Self::Pathinfo => &[("path", false, false), ("flags", true, false)],
+            Self::ScalarValue(crate::ast::CastKind::Int) => {
+                &[("value", false, false), ("base", true, false)]
+            }
+            Self::ScalarValue(_) => &[("value", false, false)],
             Self::StrGetCsv => &[
                 ("string", false, false),
                 ("separator", true, false),
@@ -803,6 +814,9 @@ impl Builtin {
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
                             (Self::Basename, "suffix") => Value::String(Vec::new().into()),
                             (Self::Dirname, "levels") => Value::Int(1),
+                            (Self::ScalarValue(crate::ast::CastKind::Int), "base") => {
+                                Value::Int(10)
+                            }
                             (Self::StrGetCsv, "separator") => Value::String(b",".to_vec().into()),
                             (Self::StrGetCsv, "enclosure") => Value::String(b"\"".to_vec().into()),
                             (Self::StrGetCsv, "escape") => Value::String(b"\\".to_vec().into()),
@@ -1031,6 +1045,7 @@ impl Runtime {
             Builtin::Wordwrap => self.wordwrap(&args, line),
             Builtin::Strtok => self.string_token(&args, line),
             Builtin::StrGetCsv => self.str_getcsv(&args, line),
+            Builtin::ScalarValue(kind) => self.scalar_value(kind, &name, &args, line),
             Builtin::Basename | Builtin::Dirname | Builtin::Pathinfo => {
                 self.path_part(builtin, &name, &args, line)
             }
@@ -1244,6 +1259,15 @@ impl Runtime {
                 };
                 Ok(Value::String(kind.as_bytes().to_vec().into()))
             }
+            Builtin::Is("numeric") => Ok(Value::Bool(match first {
+                Value::Int(_) | Value::Float(_) => true,
+                Value::String(bytes) => crate::value::numeric_string(&bytes.bytes()).is_some(),
+                _ => false,
+            })),
+            Builtin::Is("scalar") => Ok(Value::Bool(matches!(
+                first,
+                Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::String(_)
+            ))),
             Builtin::Is(kind) => Ok(Value::Bool(
                 (debug_type(first) == kind
                     && !matches!(first, Value::Resource(resource) if !resource.is_open()))

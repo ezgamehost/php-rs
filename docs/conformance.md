@@ -1834,6 +1834,29 @@ Windows path rules, non-ASCII-compatible locales, PHP memory limits, and allocat
 failure diagnostics remain unfinished. The adaptations retain PHP/Zend notices
 and licenses.
 
+The [scalar-value slice](conformance/php-8.5.0-scalar-values-hillclimb.txt) adds
+**14 upstream passes**: three Zend, one array, five strings, and five dedicated
+conversion fixtures. `intval`, `floatval`/`doubleval`, `boolval`, and `strval` reuse
+native cast behavior, including Stringable calls, object/array/resource conversion,
+NaN and overflow warnings, and negative zero. `intval` parses non-decimal strings
+with sign/prefix/base handling, saturates at signed integer limits, validates the
+base before conversion, and preserves the native long-to-C-int base narrowing.
+`is_numeric` and `is_scalar` inspect values without invoking Stringable conversion.
+The shared numeric parser now includes vertical tabs in leading and trailing
+whitespace, also correcting ordinary casts and numeric-string classification.
+
+Zend reaches **2129 / 2719 / 408**, arrays **722 / 66 / 52**, and strings
+**390 / 188 / 152**. Reflection, SPL, and math are unchanged; no regressions occur
+across the six tracked suites. The dedicated conversion selection improves from
+**0 / 5 / 3** to **5 / 0 / 3**. The two predicate fixtures remain failing because
+they require `opendir`; they are not counted as passes. All 797 existing Rust tests,
+57 reference-checked project PHPT, formatting, and Clippy pass. A short reference
+probe matches radix overflow, exponent/base differences, whitespace, NaN, negative
+zero, named arguments, validation order, Stringable side effects, and open/closed
+resources. No custom tests or generated matrices were added. PHP configuration,
+unsupported internal-object conversion handlers, memory limits, and 32-bit platform
+behavior remain unfinished. Prefix-rule adaptations retain PHP notices/license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1841,13 +1864,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2126 | 2722 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2129 | 2719 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 722 | 66 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 385 | 193 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 390 | 188 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

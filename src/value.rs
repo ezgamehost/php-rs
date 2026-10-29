@@ -261,7 +261,7 @@ pub(crate) fn numeric_string(bytes: &[u8]) -> Option<Value> {
 
 pub(crate) fn numeric_prefix(bytes: &[u8]) -> Option<(Value, bool)> {
     let mut pos = 0;
-    while bytes.get(pos).is_some_and(u8::is_ascii_whitespace) {
+    while bytes.get(pos).is_some_and(numeric_whitespace) {
         pos += 1;
     }
     let start = pos;
@@ -303,7 +303,11 @@ pub(crate) fn numeric_prefix(bytes: &[u8]) -> Option<(Value, bool)> {
         .map(Value::Int)
         .ok()
         .or_else(|| text.parse::<f64>().map(Value::Float).ok())?;
-    Some((value, bytes[pos..].iter().all(u8::is_ascii_whitespace)))
+    Some((value, bytes[pos..].iter().all(numeric_whitespace)))
+}
+
+pub(crate) fn numeric_whitespace(byte: &u8) -> bool {
+    matches!(*byte, b' ' | b'\t'..=b'\r')
 }
 
 fn format_float(n: f64) -> String {

@@ -45,6 +45,9 @@ new request. The CLI returns the low eight bits of the requested status.
   NaN comparisons remain silent and unordered against numbers and strings.
 - Explicit scalar, array, and object casts, cast-alias deprecations, and PHP 8.5 `(void)`
   result discarding in statements and permitted `for` clauses.
+- `intval`, `floatval`/`doubleval`, `boolval`, and `strval` share native conversion
+  behavior; `intval` also supports radix prefixes and saturating string parsing.
+  `is_numeric` and `is_scalar` inspect values without invoking Stringable code.
 - Global `const` declarations, `define`/`defined`/`constant`, qualified lookup,
   and core numeric, version, separator, and error-level constants.
 - Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
