@@ -253,7 +253,9 @@ definition of completion.
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Array membership/search support strict or loose
    comparison and first matching keys; sum/product preserve numeric promotion and
-   unsupported-entry warnings/fallbacks. Resource and extension-object numeric casts
+   unsupported-entry warnings/fallbacks. Min/max support array and variadic forms,
+   exact integer comparisons, numeric fast-path transitions, and direct two-argument
+   tie/NaN behavior. Resource and extension-object numeric casts
    remain incomplete. First/last values and keys, list detection, flipping, value
    counting, and array combination support insertion order, key conversion, duplicates,
    and reference copying. Array merge/replace and recursive variants support

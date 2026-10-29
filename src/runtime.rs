@@ -36,6 +36,7 @@ mod destructuring;
 mod diagnostic_display;
 mod enums;
 mod exporting;
+mod extrema;
 mod foreach;
 mod formatting;
 mod function_arguments;

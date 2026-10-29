@@ -86,6 +86,8 @@ new request. The CLI returns the low eight bits of the requested status.
   cursors, copy-on-write separation, and deprecated object-property traversal.
 - `array_walk` and `array_walk_recursive` invoke callbacks on live entry references,
   follow input mutations/replacement, and enforce typed-property constraints.
+- `min` and `max` accept arrays or variadic values, preserve result types, and
+  follow PHP's numeric comparison paths, tie-breaking, and NaN behavior.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

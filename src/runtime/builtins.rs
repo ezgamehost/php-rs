@@ -91,6 +91,7 @@ pub(super) enum Builtin {
     ArrayReplace(bool),
     ArrayCursor(crate::array::Cursor),
     ArrayWalk(bool),
+    MinMax(bool),
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -284,6 +285,8 @@ impl Builtin {
             b"array_replace_recursive" => Self::ArrayReplace(true),
             b"array_walk" => Self::ArrayWalk(false),
             b"array_walk_recursive" => Self::ArrayWalk(true),
+            b"min" => Self::MinMax(false),
+            b"max" => Self::MinMax(true),
             b"current" | b"pos" => Self::ArrayCursor(crate::array::Cursor::Current),
             b"key" => Self::ArrayCursor(crate::array::Cursor::Key),
             b"reset" => Self::ArrayCursor(crate::array::Cursor::Reset),
@@ -456,6 +459,7 @@ impl Builtin {
             Self::ArrayMerge(_) => &[("arrays", false, true)],
             Self::ArrayReplace(_) => &[("array", false, false), ("replacements", false, true)],
             Self::ArrayCursor(_) => &[("array", false, false)],
+            Self::MinMax(_) => &[("value", false, false), ("values", false, true)],
             Self::ArrayWalk(_) => &[
                 ("array", false, false),
                 ("callback", false, false),
@@ -717,6 +721,9 @@ impl Runtime {
         }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
+            Builtin::MinMax(maximum) => {
+                self.extremum(maximum, &name, first, &extra, direct_positional, line)
+            }
             Builtin::StrReplace(insensitive) => {
                 self.string_replace(insensitive, &args, &references, line)
             }

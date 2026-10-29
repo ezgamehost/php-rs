@@ -1264,6 +1264,33 @@ the report and is not claimed as a pass. Remaining targeted fixtures require `mi
 tests or generated matrices were added. PHP 8.5.0 array/hash-table implementations,
 native signatures, upstream fixtures, and reference execution establish the behavior.
 
+The [minimum/maximum slice](conformance/php-8.5.0-extrema-hillclimb.txt) adds **11 upstream
+passes**: eight array fixtures and three Zend fixtures, with no regressions across Zend,
+reflection, SPL, strings, arrays, or math. `min` and `max` accept a single nonempty array
+or multiple mixed values and return the selected value with its original type. Array
+entries are dereferenced on return. Empty arrays, invalid single inputs, missing arguments,
+and unknown named variadic arguments follow PHP's errors.
+
+Array extrema compare the incumbent against each candidate; generic variadic extrema
+compare in the opposite order. PHP's uncomparable result is retained, including object
+and NaN cases. Numeric variadic scans use exact integer comparison, switch to floating
+comparison only when the integer round-trips exactly, and remain in generic comparison
+after a fallback. Direct positional two-argument calls preserve PHP's optimized behavior:
+`min` selects the right argument on a tie while `max` keeps the left, and numeric NaN
+selects the right argument. Dynamic and unpacked calls use the ordinary variadic path.
+Stringable comparison exceptions retain the native function frame.
+
+Arrays reach **305 / 483 / 52**, and Zend **2068 / 2780 / 408**. All 797 existing Rust
+tests, 57 reference-checked project fixtures, formatting, and Clippy pass. Six existing
+INI/SKIPIF fixture FILE programs match reference PHP when executed directly on the
+64-bit host, with `precision=14` for the two INI cases. Their PHPT fixtures remain
+unsupported and add no claimed passes. A short reference comparison confirms tie result
+types, direct/dynamic/unpacked calls, NaN, uncomparable objects, and exception frames.
+No custom tests or generated matrices were added. PHP 8.5.0 array/hash-table implementations,
+native signatures, upstream fixtures, and reference execution establish the behavior.
+Resource/extension-object comparisons, complete native reflection metadata, and
+INI/SKIPIF harness support remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1271,11 +1298,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2065 | 2783 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2068 | 2780 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 297 | 491 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 305 | 483 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
