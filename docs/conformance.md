@@ -1623,7 +1623,7 @@ limits, and complete native metadata remain incomplete. PHP 8.5.0 array source,
 native signatures, upstream PHPT, and reference execution establish these behaviors.
 
 The [array transformation slice](conformance/php-8.5.0-array-transform-hillclimb.txt)
-adds **22 upstream passes**: 19 array and three Zend fixtures, without regressions
+adds **23 upstream passes**: 19 array, three Zend, and one reflection fixture, without regressions
 across the six suites. `array_unique` retains first occurrences using PHP's string
 hash-set path or Zend's unstable comparison order followed by original-index
 selection. It supports regular, numeric, string, natural, case-insensitive, and
@@ -1635,8 +1635,8 @@ reference bindings, and overwrites colliding keys without moving their original
 slots. Any nonzero integer case argument selects uppercase. `CASE_LOWER` and
 `CASE_UPPER` are available as standard-extension constants.
 
-Arrays reach **712 / 76 / 52** and Zend **2118 / 2730 / 408**; reflection, SPL,
-strings, and math retain their prior totals. All 797 existing Rust tests, 57
+Arrays reach **712 / 76 / 52**, Zend **2118 / 2730 / 408**, and reflection
+**279 / 176 / 37**; SPL, strings, and math retain their prior totals. All 797 existing Rust tests, 57
 reference-checked project PHPT cases, formatting, and Clippy pass. A short reference
 probe matches comparison modes, first-occurrence selection, reference sharing,
 key collisions, non-ASCII bytes, cursor/append-index state, conversion order,
@@ -1655,7 +1655,7 @@ measurements reported by their individual slices.
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2118 | 2730 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 279 | 176 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 712 | 76 | 52 |

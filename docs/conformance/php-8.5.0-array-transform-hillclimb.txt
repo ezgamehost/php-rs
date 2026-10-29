@@ -200,7 +200,7 @@ Unsupported section combinations:
 20: INI, SKIPIF
 
 VALIDATION
-22 newly passing upstream fixtures: 19 array and 3 Zend; zero regressions.
+23 newly passing upstream fixtures: 19 array, 3 Zend, and 1 reflection; zero regressions.
 797 existing Rust tests and 57 project PHPT pass; project passing cases are
 checked against the PHP reference. Formatting, Clippy, and diff checks pass.
 Reference probe: MATCH exit=0/0. Covers string, regular, numeric, natural,
