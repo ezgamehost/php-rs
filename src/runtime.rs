@@ -44,6 +44,7 @@ mod enums;
 mod exporting;
 mod extract;
 mod extrema;
+mod file_contents;
 mod foreach;
 mod formatting;
 mod function_arguments;

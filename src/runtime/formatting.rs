@@ -10,10 +10,18 @@ impl Runtime {
         extra: &PhpArray,
         line: usize,
     ) -> Result<Value, Error> {
-        let format = self.native_string(args[0].as_ref().unwrap(), name, 1, line)?;
-        let array_arguments = matches!(builtin, Builtin::Vprintf | Builtin::Vsprintf);
+        let stream = matches!(builtin, Builtin::Fprintf | Builtin::Vfprintf);
+        let offset = usize::from(stream);
+        if stream {
+            self.validate_stream(args[0].as_ref().unwrap(), name, line)?;
+        }
+        let format = self.native_string(args[offset].as_ref().unwrap(), name, offset + 1, line)?;
+        let array_arguments = matches!(
+            builtin,
+            Builtin::Vprintf | Builtin::Vsprintf | Builtin::Vfprintf
+        );
         let values = if array_arguments {
-            builtins::require_array(args[1].as_ref().unwrap(), name, 2, line)?
+            builtins::require_array(args[offset + 1].as_ref().unwrap(), name, offset + 2, line)?
         } else {
             if extra
                 .entries()
@@ -33,205 +41,245 @@ impl Runtime {
             .iter()
             .map(|(_, value)| value.dereferenced())
             .collect();
-        let mut parser = FormatParser {
-            bytes: &format,
-            pos: 0,
-            next: 0,
-            missing: 0,
-            line,
-        };
-        let mut output = Vec::new();
-        while parser.pos < format.len() {
-            let byte = format[parser.pos];
-            parser.pos += 1;
-            if byte != b'%' {
-                output.push(byte);
-                continue;
-            }
-            if parser.peek() == Some(b'%') {
-                output.push(b'%');
-                parser.pos += 1;
-                continue;
-            }
-            let index = parser.position()?;
-            let mut left = false;
-            let mut plus = false;
-            let mut pad = b' ';
-            loop {
-                match parser.peek() {
-                    Some(b' ' | b'0') => pad = format[parser.pos],
-                    Some(b'-') => left = true,
-                    Some(b'+') => plus = true,
-                    Some(b'\'') => {
-                        parser.pos += 1;
-                        pad = parser
-                            .peek()
-                            .ok_or_else(|| parser.error("Missing padding character"))?;
-                    }
-                    _ => break,
-                }
-                parser.pos += 1;
-            }
-            let Some(width) = parser.dimension(&values, false)? else {
-                continue;
+        let mut pending = None;
+        let result = (|| {
+            let mut parser = FormatParser {
+                bytes: &format,
+                pos: 0,
+                next: 0,
+                missing: 0,
+                line,
             };
-            let mut precision = None;
-            let mut explicit = false;
-            if parser.peek() == Some(b'.') {
+            let mut output = Vec::new();
+            while parser.pos < format.len() {
+                let byte = format[parser.pos];
                 parser.pos += 1;
-                explicit = parser
-                    .peek()
-                    .is_some_and(|c| c == b'*' || c.is_ascii_digit());
-                let Some(value) = parser.dimension(&values, true)? else {
+                if byte != b'%' {
+                    output.push(byte);
+                    continue;
+                }
+                if parser.peek() == Some(b'%') {
+                    output.push(b'%');
+                    parser.pos += 1;
+                    continue;
+                }
+                let index = parser.position()?;
+                let mut left = false;
+                let mut plus = false;
+                let mut pad = b' ';
+                loop {
+                    match parser.peek() {
+                        Some(b' ' | b'0') => pad = format[parser.pos],
+                        Some(b'-') => left = true,
+                        Some(b'+') => plus = true,
+                        Some(b'\'') => {
+                            parser.pos += 1;
+                            pad = parser
+                                .peek()
+                                .ok_or_else(|| parser.error("Missing padding character"))?;
+                        }
+                        _ => break,
+                    }
+                    parser.pos += 1;
+                }
+                let Some(width) = parser.dimension(&values, false)? else {
                     continue;
                 };
-                precision = Some(value);
-            }
-            if parser.peek() == Some(b'l') {
-                parser.pos += 1;
-            }
-            let index = parser.argument(index);
-            let Some(value) = values.get(index) else {
-                parser.missing = parser.missing.max(index + 1);
-                continue;
-            };
-            let spec = parser
-                .peek()
-                .ok_or_else(|| parser.error("Missing format specifier at end of string"))?;
-            parser.pos += 1;
-            if precision == Some(-1) && !b"gGhH".contains(&spec) {
-                return Err(parser.error("Precision -1 is only supported for %g, %G, %h and %H"));
-            }
-            let mut signed = false;
-            let mut field_width = width as usize;
-            let mut bytes = match spec {
-                b's' => {
-                    let mut bytes = self.string_bytes(value, line)?;
-                    if explicit {
-                        bytes.truncate(precision.unwrap() as usize);
-                    }
-                    bytes
-                }
-                b'd' | b'u' | b'b' | b'o' | b'x' | b'X' | b'c' => {
-                    let integer =
-                        casting::cast(CastKind::Int, value.clone(), line, &mut self.diagnostics)?;
-                    let Value::Int(n) = integer else {
-                        unreachable!()
+                let mut precision = None;
+                let mut explicit = false;
+                if parser.peek() == Some(b'.') {
+                    parser.pos += 1;
+                    explicit = parser
+                        .peek()
+                        .is_some_and(|c| c == b'*' || c.is_ascii_digit());
+                    let Some(value) = parser.dimension(&values, true)? else {
+                        continue;
                     };
-                    if spec == b'c' {
-                        field_width = 0;
-                        vec![n as u8]
-                    } else {
-                        if matches!(spec, b'd' | b'u') && left && pad == b'0' {
-                            pad = b' ';
-                        }
-                        signed = spec == b'd' && (n < 0 || plus);
-                        let text = match spec {
-                            b'd' if plus => format!("{n:+}"),
-                            b'd' => n.to_string(),
-                            b'u' => (n as u64).to_string(),
-                            b'b' => format!("{:b}", n as u64),
-                            b'o' => format!("{:o}", n as u64),
-                            b'x' => format!("{:x}", n as u64),
-                            b'X' => format!("{:X}", n as u64),
-                            _ => unreachable!(),
-                        };
-                        // Zend's base conversion passes explicit precision with a zero length.
-                        if explicit && b"boxX".contains(&spec) {
-                            Vec::new()
-                        } else {
-                            text.into_bytes()
-                        }
-                    }
+                    precision = Some(value);
                 }
-                b'e' | b'E' | b'f' | b'F' | b'g' | b'G' | b'h' | b'H' => {
-                    let number =
-                        casting::cast(CastKind::Float, value.clone(), line, &mut self.diagnostics)?
-                            .as_float();
-                    let mut precision = precision.unwrap_or(6);
-                    if precision > 53 {
-                        self.diagnostics.push(format!("Notice: {name}(): Requested precision of {precision} digits was truncated to PHP maximum of 53 digits on line {line}"));
-                        precision = 53;
-                    }
-                    if !number.is_finite() {
-                        field_width = 0;
-                        if number.is_nan() {
-                            b"NaN".to_vec()
-                        } else if number.is_sign_negative() {
-                            b"-INF".to_vec()
-                        } else {
-                            b"INF".to_vec()
-                        }
-                    } else {
-                        let text = format_double(number, spec, precision);
-                        signed = text.starts_with('-') || plus;
-                        if plus && !text.starts_with('-') {
-                            format!("+{text}").into_bytes()
-                        } else {
-                            text.into_bytes()
-                        }
-                    }
+                if parser.peek() == Some(b'l') {
+                    parser.pos += 1;
                 }
-                b'%' => {
-                    field_width = 0;
-                    vec![b'%']
-                }
-                _ => {
+                let index = parser.argument(index);
+                let Some(value) = values.get(index) else {
+                    parser.missing = parser.missing.max(index + 1);
+                    continue;
+                };
+                let spec = parser
+                    .peek()
+                    .ok_or_else(|| parser.error("Missing format specifier at end of string"))?;
+                parser.pos += 1;
+                if precision == Some(-1) && !b"gGhH".contains(&spec) {
                     return Err(
-                        parser.error(format!("Unknown format specifier \"{}\"", char::from(spec)))
+                        parser.error("Precision -1 is only supported for %g, %G, %h and %H")
                     );
                 }
-            };
-            let padding = field_width.saturating_sub(bytes.len());
-            let length = output.len().checked_add(bytes.len().max(field_width));
-            if length.is_none_or(|len| len >= i32::MAX as usize) {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    format!("Field width {field_width} is too long"),
-                    line,
-                ));
-            }
-            output
-                .try_reserve(bytes.len().max(field_width))
-                .map_err(|_| {
-                    Error::new(ErrorKind::Error, "Unable to allocate string storage", line)
-                })?;
-            if !left {
-                if pad == b'0' && signed && !bytes.is_empty() {
-                    output.push(bytes.remove(0));
+                let mut signed = false;
+                let mut field_width = width as usize;
+                let mut bytes = match spec {
+                    b's' => {
+                        let mut bytes = self.set_string(value, line, &mut pending);
+                        if pending
+                            .as_ref()
+                            .is_some_and(|error| error.kind == ErrorKind::UnwindExit)
+                        {
+                            return Err(pending.take().unwrap());
+                        }
+                        if explicit {
+                            bytes.truncate(precision.unwrap() as usize);
+                        }
+                        bytes
+                    }
+                    b'd' | b'u' | b'b' | b'o' | b'x' | b'X' | b'c' => {
+                        let integer = casting::cast(
+                            CastKind::Int,
+                            value.clone(),
+                            line,
+                            &mut self.diagnostics,
+                        )?;
+                        let Value::Int(n) = integer else {
+                            unreachable!()
+                        };
+                        if spec == b'c' {
+                            field_width = 0;
+                            vec![n as u8]
+                        } else {
+                            if matches!(spec, b'd' | b'u') && left && pad == b'0' {
+                                pad = b' ';
+                            }
+                            signed = spec == b'd' && (n < 0 || plus);
+                            let text = match spec {
+                                b'd' if plus => format!("{n:+}"),
+                                b'd' => n.to_string(),
+                                b'u' => (n as u64).to_string(),
+                                b'b' => format!("{:b}", n as u64),
+                                b'o' => format!("{:o}", n as u64),
+                                b'x' => format!("{:x}", n as u64),
+                                b'X' => format!("{:X}", n as u64),
+                                _ => unreachable!(),
+                            };
+                            // Zend's base conversion passes explicit precision with a zero length.
+                            if explicit && b"boxX".contains(&spec) {
+                                Vec::new()
+                            } else {
+                                text.into_bytes()
+                            }
+                        }
+                    }
+                    b'e' | b'E' | b'f' | b'F' | b'g' | b'G' | b'h' | b'H' => {
+                        let number = casting::cast(
+                            CastKind::Float,
+                            value.clone(),
+                            line,
+                            &mut self.diagnostics,
+                        )?
+                        .as_float();
+                        let mut precision = precision.unwrap_or(6);
+                        if precision > 53 {
+                            self.diagnostics.push(format!("Notice: {name}(): Requested precision of {precision} digits was truncated to PHP maximum of 53 digits on line {line}"));
+                            precision = 53;
+                        }
+                        if !number.is_finite() {
+                            field_width = 0;
+                            if number.is_nan() {
+                                b"NaN".to_vec()
+                            } else if number.is_sign_negative() {
+                                b"-INF".to_vec()
+                            } else {
+                                b"INF".to_vec()
+                            }
+                        } else {
+                            let text = format_double(number, spec, precision);
+                            signed = text.starts_with('-') || plus;
+                            if plus && !text.starts_with('-') {
+                                format!("+{text}").into_bytes()
+                            } else {
+                                text.into_bytes()
+                            }
+                        }
+                    }
+                    b'%' => {
+                        field_width = 0;
+                        vec![b'%']
+                    }
+                    _ => {
+                        return Err(parser
+                            .error(format!("Unknown format specifier \"{}\"", char::from(spec))));
+                    }
+                };
+                let padding = field_width.saturating_sub(bytes.len());
+                let length = output.len().checked_add(bytes.len().max(field_width));
+                if length.is_none_or(|len| len >= i32::MAX as usize) {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        format!("Field width {field_width} is too long"),
+                        line,
+                    ));
                 }
-                output.resize(output.len() + padding, pad);
+                output
+                    .try_reserve(bytes.len().max(field_width))
+                    .map_err(|_| {
+                        Error::new(ErrorKind::Error, "Unable to allocate string storage", line)
+                    })?;
+                if !left {
+                    if pad == b'0' && signed && !bytes.is_empty() {
+                        output.push(bytes.remove(0));
+                    }
+                    output.resize(output.len() + padding, pad);
+                }
+                output.extend(bytes);
+                if left {
+                    output.resize(output.len() + padding, pad);
+                }
             }
-            output.extend(bytes);
-            if left {
-                output.resize(output.len() + padding, pad);
+            if parser.missing > 0 {
+                return Err(if array_arguments {
+                    parser.error(format!(
+                        "The arguments array must contain {} items, {} given",
+                        parser.missing,
+                        values.len()
+                    ))
+                } else {
+                    Error::new(
+                        ErrorKind::ArgumentCountError,
+                        format!(
+                            "{} arguments are required, {} given",
+                            parser.missing + offset + 1,
+                            values.len() + offset + 1
+                        ),
+                        line,
+                    )
+                });
             }
-        }
-        if parser.missing > 0 {
-            return Err(if array_arguments {
-                parser.error(format!(
-                    "The arguments array must contain {} items, {} given",
-                    parser.missing,
-                    values.len()
-                ))
-            } else {
-                Error::new(
-                    ErrorKind::ArgumentCountError,
-                    format!(
-                        "{} arguments are required, {} given",
-                        parser.missing + 1,
-                        values.len() + 1
-                    ),
+            if stream {
+                let length = output.len();
+                self.stream_operation(
+                    streams::Operation::Write,
+                    name,
+                    &[args[0].clone(), Some(Value::String(output.into())), None],
                     line,
-                )
-            });
-        }
-        if matches!(builtin, Builtin::Printf | Builtin::Vprintf) {
-            let length = output.len();
-            self.emit_output(&output)?;
-            Ok(Value::Int(length as i64))
-        } else {
-            Ok(Value::String(output.into()))
+                )?;
+                // PHP reports the formatted length even if the underlying write
+                // returns false or writes fewer bytes.
+                Ok(Value::Int(length as i64))
+            } else if matches!(builtin, Builtin::Printf | Builtin::Vprintf) {
+                let length = output.len();
+                self.emit_output(&output)?;
+                Ok(Value::Int(length as i64))
+            } else {
+                Ok(Value::String(output.into()))
+            }
+        })();
+        match (result, pending) {
+            (Err(error), Some(previous)) => {
+                let error = self.materialize_error(error);
+                if let (Some(current), Some(previous)) = (&error.throwable, previous.throwable) {
+                    throwables::append_previous(current, &previous);
+                }
+                Err(error)
+            }
+            (Ok(_), Some(error)) => Err(error),
+            (result, None) => result,
         }
     }
 }

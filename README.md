@@ -128,6 +128,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
   spill-to-disk, context configuration, and general
   wrapper registration remain unfinished.
+- `file_get_contents` reads local files and supported wrappers, with include-path
+  lookup, positive/negative offsets, length limits, and native read diagnostics.
 - `STDIN`, `STDOUT`, `STDERR`, and their `php://` wrappers preserve resource identity,
   alias close state, pipe positions, and interleaved output. Input uses bounded
   buffered reads; closing stdout terminates later ordinary output. Redirected output
@@ -398,10 +400,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Heredoc delimiters and indentation respect nested interpolated PHP expressions.
 - Byte string offset reads and writes, negative indexes, space padding, and
   string offset checks with `isset`, `empty`, and null coalescing.
-- `printf`, `sprintf`, `vprintf`, and `vsprintf` share byte-oriented formatting,
+- `printf`, `sprintf`, `vprintf`, `vsprintf`, `fprintf`, and `vfprintf` share byte-oriented formatting,
   positional arguments, dynamic width/precision, custom padding, integer bases,
-  floating-point formats, and PHP's format-validation errors. Printing occurs
-  after successful formatting and returns the emitted byte count.
+  floating-point formats, and PHP's format-validation errors. String-conversion
+  exceptions preserve PHP's partial formatted output. Stream variants report the
+  formatted length even when the underlying write fails.
 - Binary-safe `str_repeat`, `strrev`, `chr`, and `ord`, with scalar/Stringable
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 - ASCII `strtolower`/`strtoupper`, lowercase `bin2hex` encoding, and

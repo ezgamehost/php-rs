@@ -1700,6 +1700,34 @@ support remain unfinished. Captured output handles currently remain nonseekable 
 when their host descriptor is redirected to a regular file. PHP 8.5.0 CLI and stream
 source, upstream PHPT, and reference execution establish these behaviors.
 
+The [formatted-stream/file-read slice](conformance/php-8.5.0-formatted-streams-hillclimb.txt)
+adds **14 upstream string passes**, without regressions across the six suites.
+`fprintf` and `vfprintf` validate streams before later arguments, share the existing
+binary-safe formatter, and return the formatted byte length even when the underlying
+write fails. String-conversion exceptions retain the completed partial format buffer,
+which is printed or written before the exception propagates. A subsequent format
+error aborts the write and chains the earlier conversion error.
+
+`file_get_contents` supports local files and implemented wrappers, include-path
+lookup, positive/negative offsets, and nullable length limits. Argument parsing and
+context validation follow native order. Reads use PHP's stat-based buffer sizing,
+return partial or empty strings after read errors, return false on open/seek failure,
+and release their temporary stream. These reads complete the existing formatted-file
+round-trip fixtures, including float, integer, character, octal, and hex formats.
+
+Strings reach **349 / 229 / 152**; the other five suite totals remain unchanged.
+All 797 existing Rust tests, 57 reference-checked project PHPT cases, formatting,
+and Clippy pass. A short reference probe matches binary output, positional/array
+formats, readonly and closed streams, argument-error ordering, conversion side effects,
+pending/chained exceptions, file offsets and limits, and open/read/seek diagnostics.
+The dedicated file-read selection reports **0 / 1 / 21** across 22 fixtures: its
+failure needs stream contexts/custom URI parsing, and unsupported cases are not
+counted as passes. No custom tests or generated matrices were added. General URL/user
+wrappers, configurable contexts/include paths, memory limits, complete filtering and
+buffering parity, and native metadata remain incomplete. PHP 8.5.0 formatting/file/
+stream source, native signatures, upstream PHPT, and reference execution establish
+these behaviors; adapted read code retains PHP's notices and license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1713,7 +1741,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 349 | 229 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

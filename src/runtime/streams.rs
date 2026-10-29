@@ -18,6 +18,25 @@ pub(super) enum Operation {
 }
 
 impl Runtime {
+    pub(super) fn validate_stream(
+        &self,
+        value: &Value,
+        name: &str,
+        line: usize,
+    ) -> Result<(), Error> {
+        let Value::Resource(resource) = value else {
+            return Err(builtins::type_error(value, name, 1, "resource", line));
+        };
+        if !matches!(*resource.kind.borrow(), Kind::Stream(_)) {
+            return Err(Error::new(
+                ErrorKind::TypeError,
+                format!("{name}(): Argument #1 ($stream) must be an open stream resource"),
+                line,
+            ));
+        }
+        Ok(())
+    }
+
     pub(super) fn fopen(&mut self, args: &[Option<Value>], line: usize) -> Result<Value, Error> {
         let filename = self.native_string(args[0].as_ref().unwrap(), "fopen", 1, line)?;
         if filename.contains(&0) {
@@ -41,10 +60,10 @@ impl Runtime {
                 line,
             ));
         }
-        self.open_stream(&filename, &mode, include, line)
+        self.open_stream("fopen", &filename, &mode, include, line)
     }
 
-    fn stream_context(
+    pub(super) fn stream_context(
         &mut self,
         value: Option<&Value>,
         name: &str,
@@ -125,8 +144,9 @@ impl Runtime {
         }
     }
 
-    fn open_stream(
+    pub(super) fn open_stream(
         &mut self,
+        name: &str,
         filename: &[u8],
         mode: &[u8],
         include: bool,
@@ -154,7 +174,7 @@ impl Runtime {
                     self.resources.allocate(Kind::Stream(stream)),
                 )),
                 None => {
-                    self.open_warning(filename, "operation failed", line);
+                    self.open_warning(name, filename, "operation failed", line);
                     Ok(Value::Bool(false))
                 }
             };
@@ -165,6 +185,7 @@ impl Runtime {
         // ordinary files validate the leading mode character.
         if !memory && !matches!(first, b'r' | b'w' | b'a' | b'x' | b'c') {
             self.open_warning(
+                name,
                 filename,
                 &format!(
                     "`{}' is not a valid mode for fopen",
@@ -205,7 +226,7 @@ impl Runtime {
             match options.open(resolved) {
                 Ok(file) => Backend::File(file),
                 Err(error) => {
-                    self.open_warning(filename, &io_message(&error), line);
+                    self.open_warning(name, filename, &io_message(&error), line);
                     return Ok(Value::Bool(false));
                 }
             }
@@ -237,9 +258,9 @@ impl Runtime {
         Ok(Value::Resource(resource))
     }
 
-    fn open_warning(&mut self, filename: &[u8], message: &str, line: usize) {
+    fn open_warning(&mut self, name: &str, filename: &[u8], message: &str, line: usize) {
         self.diagnostics.push(format!(
-            "fopen({}): Failed to open stream: {message} on line {line}",
+            "{name}({}): Failed to open stream: {message} on line {line}",
             String::from_utf8_lossy(filename)
         ));
     }
@@ -252,8 +273,9 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let first = args[0].as_ref().unwrap();
+        self.validate_stream(first, name, line)?;
         let Value::Resource(resource) = first else {
-            return Err(builtins::type_error(first, name, 1, "resource", line));
+            unreachable!("validated stream resource")
         };
         let invalid = || {
             Error::new(
@@ -262,9 +284,6 @@ impl Runtime {
                 line,
             )
         };
-        if !matches!(*resource.kind.borrow(), Kind::Stream(_)) {
-            return Err(invalid());
-        }
         // Coercion may run user code, so do not hold a resource borrow across it.
         let mut data = Vec::new();
         let mut length = 0;
@@ -452,7 +471,7 @@ impl Runtime {
     }
 }
 
-fn io_message(error: &std::io::Error) -> String {
+pub(super) fn io_message(error: &std::io::Error) -> String {
     let message = error.to_string();
     message
         .split(" (os error ")

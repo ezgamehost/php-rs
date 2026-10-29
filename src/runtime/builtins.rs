@@ -41,6 +41,8 @@ pub(super) enum Builtin {
     PrintR,
     VarExport,
     Printf,
+    Fprintf,
+    Vfprintf,
     Sprintf,
     Vprintf,
     Vsprintf,
@@ -49,6 +51,7 @@ pub(super) enum Builtin {
     ResourceInfo(bool),
     Fopen,
     FileExists,
+    FileGetContents,
     Unlink,
     Stream(streams::Operation),
     GetClass,
@@ -199,6 +202,8 @@ impl Builtin {
             b"print_r" => Self::PrintR,
             b"var_export" => Self::VarExport,
             b"printf" => Self::Printf,
+            b"fprintf" => Self::Fprintf,
+            b"vfprintf" => Self::Vfprintf,
             b"sprintf" => Self::Sprintf,
             b"vprintf" => Self::Vprintf,
             b"vsprintf" => Self::Vsprintf,
@@ -233,6 +238,7 @@ impl Builtin {
             b"get_resource_type" => Self::ResourceInfo(false),
             b"fopen" => Self::Fopen,
             b"file_exists" => Self::FileExists,
+            b"file_get_contents" => Self::FileGetContents,
             b"unlink" => Self::Unlink,
             b"fclose" => Self::Stream(streams::Operation::Close),
             b"fread" => Self::Stream(streams::Operation::Read),
@@ -402,6 +408,13 @@ impl Builtin {
         let definitions: &[(&str, bool, bool)] = match self {
             Self::ResourceInfo(_) => &[("resource", false, false)],
             Self::FileExists => &[("filename", false, false)],
+            Self::FileGetContents => &[
+                ("filename", false, false),
+                ("use_include_path", true, false),
+                ("context", true, false),
+                ("offset", true, false),
+                ("length", true, false),
+            ],
             Self::Unlink => &[("filename", false, false), ("context", true, false)],
             Self::Fopen => &[
                 ("filename", false, false),
@@ -552,6 +565,16 @@ impl Builtin {
             Self::Count => &[("value", false, false), ("mode", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
             Self::Printf | Self::Sprintf => &[("format", false, false), ("values", false, true)],
+            Self::Fprintf => &[
+                ("stream", false, false),
+                ("format", false, false),
+                ("values", false, true),
+            ],
+            Self::Vfprintf => &[
+                ("stream", false, false),
+                ("format", false, false),
+                ("values", false, false),
+            ],
             Self::Vprintf | Self::Vsprintf => &[("format", false, false), ("values", false, false)],
             Self::PrintR | Self::VarExport => &[("value", false, false), ("return", true, false)],
             Self::GetType | Self::GetDebugType | Self::Is(_) => &[("value", false, false)],
@@ -733,7 +756,10 @@ impl Builtin {
                             }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Range, "step") => Value::Int(1),
-                            (Self::Fopen, "use_include_path") => Value::Bool(false),
+                            (Self::Fopen | Self::FileGetContents, "use_include_path") => {
+                                Value::Bool(false)
+                            }
+                            (Self::FileGetContents, "offset") => Value::Int(0),
                             (Self::Stream(streams::Operation::Seek), "whence") => Value::Int(0),
                             (Self::ArraySort(_) | Self::Extract, "flags") => Value::Int(0),
                             (Self::ArrayUnique, "flags") => Value::Int(2),
@@ -913,6 +939,7 @@ impl Runtime {
         match builtin {
             Builtin::Fopen => self.fopen(&args, line),
             Builtin::FileExists => self.file_path_operation(false, &args, line),
+            Builtin::FileGetContents => self.file_get_contents(&args, line),
             Builtin::Unlink => self.file_path_operation(true, &args, line),
             Builtin::Stream(operation) => self.stream_operation(operation, &name, &args, line),
             Builtin::ResourceInfo(id) => {
@@ -1167,9 +1194,12 @@ impl Runtime {
             Builtin::VarExport => self.var_export(&args, line),
             Builtin::IsCallable => self.inspect_callable(&args, &references, line),
             Builtin::DebugBacktrace | Builtin::DebugPrintBacktrace => unreachable!(),
-            Builtin::Printf | Builtin::Sprintf | Builtin::Vprintf | Builtin::Vsprintf => {
-                self.formatted_print(builtin, &name, &args, &extra, line)
-            }
+            Builtin::Printf
+            | Builtin::Sprintf
+            | Builtin::Vprintf
+            | Builtin::Vsprintf
+            | Builtin::Fprintf
+            | Builtin::Vfprintf => self.formatted_print(builtin, &name, &args, &extra, line),
             Builtin::VarDump => {
                 if extra
                     .entries()

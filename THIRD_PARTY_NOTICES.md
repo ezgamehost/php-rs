@@ -176,8 +176,15 @@ SUCH DAMAGE.
 `src/runtime/array_transform.rs` contain altered Rust adaptations of operations in
 PHP 8.5.0's `ext/standard/array.c`, copyright (c) The PHP Group. The source lists
 Andi Gutmans, Zeev Suraski, Rasmus Lerdorf, Andrei Zmievski, Stig Venaas, and
-Jason Greene as authors. This product includes PHP software, freely available
-from <http://www.php.net/software/>. Its license follows:
+Jason Greene as authors.
+
+`src/runtime/file_contents.rs` contains an altered Rust adaptation of PHP 8.5.0's
+`ext/standard/file.c` and `main/streams/streams.c`, copyright (c) The PHP Group.
+Their authors include Rasmus Lerdorf, Stig Bakken, Andi Gutmans, Zeev Suraski,
+Thies C. Arntzen, Wez Furlong, and Jim Winstead.
+
+This product includes PHP software, freely available from
+<http://www.php.net/software/>. The PHP license for these files follows:
 
 --------------------------------------------------------------------
                   The PHP License, version 3.01
