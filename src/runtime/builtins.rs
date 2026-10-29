@@ -20,6 +20,7 @@ pub(super) enum Builtin {
     Dirname,
     Pathinfo,
     ScalarValue(crate::ast::CastKind),
+    Settype,
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -171,6 +172,7 @@ impl Builtin {
             b"floatval" | b"doubleval" => Self::ScalarValue(crate::ast::CastKind::Float),
             b"boolval" => Self::ScalarValue(crate::ast::CastKind::Bool),
             b"strval" => Self::ScalarValue(crate::ast::CastKind::String),
+            b"settype" => Self::Settype,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -524,6 +526,7 @@ impl Builtin {
                 &[("value", false, false), ("base", true, false)]
             }
             Self::ScalarValue(_) => &[("value", false, false)],
+            Self::Settype => &[("var", false, false), ("type", false, false)],
             Self::StrGetCsv => &[
                 ("string", false, false),
                 ("separator", true, false),
@@ -770,6 +773,7 @@ impl Builtin {
             .map(|(name, optional, variadic)| Parameter {
                 attributes: Vec::new(),
                 by_reference: matches!(self, Self::ArrayMultisort)
+                    || (matches!(self, Self::Settype) && *name == "var")
                     || (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
                     || matches!(self, Self::ArrayCursor(action) if action.moves())
@@ -981,6 +985,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::Extract) {
             return self.extract_variables(args, references, dynamic, line);
+        }
+        if matches!(builtin, Builtin::Settype) {
+            return self.settype(args, references, line);
         }
         if matches!(builtin, Builtin::ArraySplice) {
             return self.array_splice(args, references, line, result_used);
@@ -1347,6 +1354,7 @@ impl Runtime {
             }
             Builtin::ArrayCursor(_) => unreachable!(),
             Builtin::ArrayWalk(_)
+            | Builtin::Settype
             | Builtin::ArraySort(_)
             | Builtin::ArrayUserSort(_)
             | Builtin::ArrayMultisort

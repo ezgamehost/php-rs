@@ -199,7 +199,7 @@ contain altered Rust adaptations of PHP 8.5.0's `ext/standard/string.c`, copyrig
 (c) The PHP Group. The source lists
 Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 
-`src/runtime/scalar_values.rs` adapts integer-prefix rules from PHP 8.5.0's
+`src/runtime/scalar_values.rs` adapts integer-prefix and `settype` rules from PHP 8.5.0's
 `ext/standard/type.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf as author.
 

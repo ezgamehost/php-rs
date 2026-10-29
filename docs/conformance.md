@@ -1857,6 +1857,28 @@ resources. No custom tests or generated matrices were added. PHP configuration,
 unsupported internal-object conversion handlers, memory limits, and 32-bit platform
 behavior remain unfinished. Prefix-rule adaptations retain PHP notices/license.
 
+The [settype slice](conformance/php-8.5.0-settype-hillclimb.txt) adds
+**ten upstream passes**: eight Zend fixtures, one array fixture, and the dedicated
+typed-property fixture. `settype` mutates its reference with native case-insensitive
+type names and aliases, rejects resource/invalid target names, and preserves
+PHP 8.5 NaN warnings, including conversion to null. Type-name coercion completes
+before the current referenced value is read. Typed assignments use the caller's
+strictness, allowing weak coercion back to a property's type and rejecting
+incompatible conversions without replacing its value.
+
+Failed string conversion still attempts assignment of an empty string before
+propagating the exception. If typed assignment also fails, the new error chains
+the conversion exception. Reference probes match this behavior, mutation during
+Stringable calls, aliases, named arguments, and weak/strict typed-property handling.
+Zend reaches **2137 / 2711 / 408**, arrays **723 / 65 / 52**; the other four
+tracked suite totals are unchanged and no regressions occur. The focused selection
+reports **9 / 18 / 1**: its failures require `set_error_handler`, and its unsupported
+fixture requires INI handling. Neither group is counted as passing. All 797 existing
+Rust tests, 57 reference-checked project PHPT, formatting, and Clippy pass. No custom
+tests or generated matrices were added. Error-handler callbacks, destruction timing,
+unsupported internal-object handlers, PHP configuration, and memory-limit behavior
+remain unfinished. Adapted conversion rules retain PHP notices/license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1864,11 +1886,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2129 | 2719 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2137 | 2711 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 722 | 66 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 723 | 65 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 390 | 188 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

@@ -1,10 +1,85 @@
-// Integer-prefix rules adapted from PHP 8.5.0 ext/standard/type.c.
+// Integer-prefix and settype rules adapted from PHP 8.5.0 ext/standard/type.c.
 // Copyright (c) The PHP Group. Altered Rust implementation; see
 // THIRD_PARTY_NOTICES.md for the PHP license.
 use super::*;
 use crate::{ast::CastKind, value::numeric_whitespace};
 
 impl Runtime {
+    pub(super) fn settype(
+        &mut self,
+        args: Vec<Option<Value>>,
+        references: Vec<Option<variables::Cell>>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let mut args = args.into_iter();
+        let first = args.next().unwrap().unwrap();
+        let reference = if let Some(reference) = &references[0] {
+            drop(first);
+            reference.clone()
+        } else {
+            cell(first)
+        };
+        let type_value = args.next().unwrap().unwrap();
+        let name = self.native_string(&type_value, "settype", 2, line)?;
+        drop(type_value);
+        let kind = match name.to_ascii_lowercase().as_slice() {
+            b"int" | b"integer" => CastKind::Int,
+            b"float" | b"double" => CastKind::Float,
+            b"string" => CastKind::String,
+            b"array" => CastKind::Array,
+            b"object" => CastKind::Object,
+            b"bool" | b"boolean" => CastKind::Bool,
+            b"null" => CastKind::Void,
+            name => {
+                return Err(Error::new(
+                    ErrorKind::ValueError,
+                    if name == b"resource" {
+                        "Cannot convert to resource type"
+                    } else {
+                        "settype(): Argument #2 ($type) must be a valid type"
+                    },
+                    line,
+                ));
+            }
+        };
+        // Type-name coercion may mutate the variable. Read its current value
+        // afterwards and release the borrow before invoking Stringable code.
+        let value = reference.borrow().dereferenced();
+        let mut pending = None;
+        let converted = match kind {
+            CastKind::String => match self.string_bytes(&value, line) {
+                Ok(bytes) => Value::String(bytes.into()),
+                Err(error) if error.kind == ErrorKind::UnwindExit => return Err(error),
+                Err(error) => {
+                    // Native convert_to_string installs an empty string even
+                    // when conversion throws, then attempts typed assignment.
+                    pending = Some(self.materialize_error(error));
+                    Value::String(Vec::new().into())
+                }
+            },
+            CastKind::Object => self.cast_object(value, line),
+            CastKind::Void => {
+                value.warn_nan("null", line, &mut self.diagnostics);
+                Value::Null
+            }
+            _ => casting::cast(kind, value, line, &mut self.diagnostics)?,
+        };
+        let result = self
+            .write_reference_value(&reference, converted, self.strict_types, line)
+            .map(|_| Value::Bool(true));
+        match (result, pending) {
+            (Err(error), Some(previous)) => {
+                let error = self.materialize_error(error);
+                if let (Some(current), Some(previous)) = (&error.throwable, previous.throwable) {
+                    throwables::append_previous(current, &previous);
+                }
+                Err(error)
+            }
+            (Ok(_), Some(error)) => Err(error),
+            (result, None) => result,
+        }
+    }
+
     pub(super) fn scalar_value(
         &mut self,
         kind: CastKind,

@@ -48,6 +48,8 @@ new request. The CLI returns the low eight bits of the requested status.
 - `intval`, `floatval`/`doubleval`, `boolval`, and `strval` share native conversion
   behavior; `intval` also supports radix prefixes and saturating string parsing.
   `is_numeric` and `is_scalar` inspect values without invoking Stringable code.
+- `settype` mutates references using native type aliases and conversion rules,
+  enforces typed-property assignments, and preserves conversion-exception effects.
 - Global `const` declarations, `define`/`defined`/`constant`, qualified lookup,
   and core numeric, version, separator, and error-level constants.
 - Ordered arrays, PHP key coercion, copy-on-write assignment, nested indexed
