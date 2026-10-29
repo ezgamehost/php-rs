@@ -26,6 +26,7 @@ mod array_user_sets;
 mod array_walk;
 mod attributes;
 mod autoload;
+mod base64;
 mod base_conversion;
 mod builtins;
 mod callable_inspection;

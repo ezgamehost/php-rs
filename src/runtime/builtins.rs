@@ -11,6 +11,8 @@ pub(super) enum Builtin {
     StrLower,
     StrUpper,
     Bin2Hex,
+    Base64(bool),
+    Rot13,
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -149,6 +151,9 @@ impl Builtin {
             b"strtolower" => Self::StrLower,
             b"strtoupper" => Self::StrUpper,
             b"bin2hex" => Self::Bin2Hex,
+            b"base64_encode" => Self::Base64(true),
+            b"base64_decode" => Self::Base64(false),
+            b"str_rot13" => Self::Rot13,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -488,7 +493,10 @@ impl Builtin {
             }
             Self::SlashEscape(..) => &[("string", false, false)],
             Self::StripTags => &[("string", false, false), ("allowed_tags", true, false)],
-            Self::Hex2Bin | Self::FirstCase(_) => &[("string", false, false)],
+            Self::Hex2Bin | Self::FirstCase(_) | Self::Rot13 | Self::Base64(true) => {
+                &[("string", false, false)]
+            }
+            Self::Base64(false) => &[("string", false, false), ("strict", true, false)],
             Self::Ucwords => &[("string", false, false), ("separators", true, false)],
             Self::Nl2Br => &[("string", false, false), ("use_xhtml", true, false)],
             Self::CountChars => &[("string", false, false), ("mode", true, false)],
@@ -755,6 +763,7 @@ impl Builtin {
                                 Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
                             }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
+                            (Self::Base64(false), "strict") => Value::Bool(false),
                             (Self::Range, "step") => Value::Int(1),
                             (Self::Fopen | Self::FileGetContents, "use_include_path") => {
                                 Value::Bool(false)
@@ -976,7 +985,9 @@ impl Runtime {
             Builtin::StrTranslate => self.translate_string(&args, line),
             Builtin::SlashEscape(add, c_style) => self.escape_slashes(add, c_style, &args, line),
             Builtin::StripTags => self.strip_tags(&args, line),
+            Builtin::Base64(encode) => self.base64(encode, &name, &args, line),
             Builtin::Hex2Bin
+            | Builtin::Rot13
             | Builtin::FirstCase(_)
             | Builtin::Ucwords
             | Builtin::Nl2Br

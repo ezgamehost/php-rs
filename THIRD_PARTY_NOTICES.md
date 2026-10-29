@@ -183,6 +183,10 @@ Jason Greene as authors.
 Their authors include Rasmus Lerdorf, Stig Bakken, Andi Gutmans, Zeev Suraski,
 Thies C. Arntzen, Wez Furlong, and Jim Winstead.
 
+`src/runtime/base64.rs` adapts decoding rules from PHP 8.5.0's
+`ext/standard/base64.c`, copyright (c) The PHP Group. The source lists
+Jim Winstead and Xinchen Hui as authors.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

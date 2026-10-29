@@ -1728,6 +1728,28 @@ buffering parity, and native metadata remain incomplete. PHP 8.5.0 formatting/fi
 stream source, native signatures, upstream PHPT, and reference execution establish
 these behaviors; adapted read code retains PHP's notices and license.
 
+The [Base64/ROT13 slice](conformance/php-8.5.0-base64-hillclimb.txt) adds
+**11 upstream passes**: eight string fixtures and three dedicated Base64 fixtures.
+`base64_encode` produces padded byte encodings; `base64_decode` supports permissive
+character skipping and strict validation. Strict mode permits omitted padding,
+accepts only space/tab/CR/LF as whitespace, rejects data after padding and malformed
+padding lengths, and rejects a single trailing alphabet character. Unused final
+bits are accepted as in PHP. `str_rot13` transforms ASCII letters and preserves
+all other bytes. Native parameter binding handles named arguments, scalar/Stringable
+coercion, and nullable-scalar deprecations.
+
+Strings reach **357 / 221 / 152**. The other five tracked suites are unchanged,
+with zero regressions across all six. The six dedicated Base64 fixtures improve
+from **0 / 6 / 0** to **3 / 3 / 0**; the remaining failures depend on missing
+`pack` or `json_encode`, and are not counted as passes. All 797 existing Rust tests
+and 57 reference-checked project PHPT pass. A short reference probe matches padding,
+non-alphabet bytes, whitespace, binary output, coercion side effects, argument-error
+order, and named arguments. No custom tests or generated matrices were added.
+Encoding/decoding uses scalar Rust loops; SIMD acceleration and PHP memory-limit
+configuration remain unimplemented. PHP 8.5.0 source, native signatures, upstream
+PHPT, and reference execution establish these behaviors; the decoding adaptation
+retains PHP's notices and license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1741,7 +1763,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 349 | 229 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 357 | 221 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

@@ -9,6 +9,7 @@ impl Runtime {
     ) -> Result<Value, Error> {
         let name = match builtin {
             Builtin::Hex2Bin => "hex2bin",
+            Builtin::Rot13 => "str_rot13",
             Builtin::FirstCase(true) => "ucfirst",
             Builtin::FirstCase(false) => "lcfirst",
             Builtin::Ucwords => "ucwords",
@@ -20,6 +21,16 @@ impl Runtime {
         };
         let mut bytes = self.native_string(args[0].as_ref().unwrap(), name, 1, line)?;
         match builtin {
+            Builtin::Rot13 => {
+                for byte in &mut bytes {
+                    *byte = match *byte {
+                        b'A'..=b'M' | b'a'..=b'm' => *byte + 13,
+                        b'N'..=b'Z' | b'n'..=b'z' => *byte - 13,
+                        _ => *byte,
+                    };
+                }
+                Ok(Value::String(bytes.into()))
+            }
             Builtin::Hex2Bin => {
                 let (pairs, remainder) = bytes.as_chunks::<2>();
                 if !remainder.is_empty() {
