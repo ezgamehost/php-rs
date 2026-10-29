@@ -15,6 +15,7 @@ pub(super) enum Builtin {
     Rot13,
     Wordwrap,
     Strtok,
+    StrGetCsv,
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -158,6 +159,7 @@ impl Builtin {
             b"str_rot13" => Self::Rot13,
             b"wordwrap" => Self::Wordwrap,
             b"strtok" => Self::Strtok,
+            b"str_getcsv" => Self::StrGetCsv,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -502,6 +504,12 @@ impl Builtin {
             }
             Self::Base64(false) => &[("string", false, false), ("strict", true, false)],
             Self::Strtok => &[("string", false, false), ("token", true, false)],
+            Self::StrGetCsv => &[
+                ("string", false, false),
+                ("separator", true, false),
+                ("enclosure", true, false),
+                ("escape", true, false),
+            ],
             Self::Wordwrap => &[
                 ("string", false, false),
                 ("width", true, false),
@@ -778,6 +786,9 @@ impl Builtin {
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
+                            (Self::StrGetCsv, "separator") => Value::String(b",".to_vec().into()),
+                            (Self::StrGetCsv, "enclosure") => Value::String(b"\"".to_vec().into()),
+                            (Self::StrGetCsv, "escape") => Value::String(b"\\".to_vec().into()),
                             (Self::Range, "step") => Value::Int(1),
                             (Self::Fopen | Self::FileGetContents, "use_include_path") => {
                                 Value::Bool(false)
@@ -1002,6 +1013,7 @@ impl Runtime {
             Builtin::Base64(encode) => self.base64(encode, &name, &args, line),
             Builtin::Wordwrap => self.wordwrap(&args, line),
             Builtin::Strtok => self.string_token(&args, line),
+            Builtin::StrGetCsv => self.str_getcsv(&args, line),
             Builtin::Hex2Bin
             | Builtin::Rot13
             | Builtin::FirstCase(_)

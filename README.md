@@ -413,6 +413,9 @@ new request. The CLI returns the low eight bits of the requested status.
   existing separators, and PHP's zero/negative-width behavior.
 - `strtok` keeps request-local tokenization state, supports changing byte delimiters,
   and preserves PHP's continuation, exhaustion, and restart behavior.
+- `str_getcsv` parses quoted and unquoted fields, doubled quotes, configurable
+  single-byte separators/enclosures/escapes, and PHP's unterminated-field behavior.
+  It follows UTF-8 character scanning; configurable character locales are unfinished.
 - ASCII `strtolower`/`strtoupper`, lowercase `bin2hex` encoding, and
   `trim`/`ltrim`/`rtrim`/`chop` with binary character lists and inclusive ranges.
 - `str_replace`/`str_ireplace` support binary strings and arrays, sequential searches,

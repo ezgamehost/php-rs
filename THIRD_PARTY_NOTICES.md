@@ -178,8 +178,9 @@ PHP 8.5.0's `ext/standard/array.c`, copyright (c) The PHP Group. The source list
 Andi Gutmans, Zeev Suraski, Rasmus Lerdorf, Andrei Zmievski, Stig Venaas, and
 Jason Greene as authors.
 
-`src/runtime/file_contents.rs` contains an altered Rust adaptation of PHP 8.5.0's
-`ext/standard/file.c` and `main/streams/streams.c`, copyright (c) The PHP Group.
+`src/runtime/file_contents.rs` and `src/runtime/csv.rs` contain altered Rust
+adaptations of PHP 8.5.0's `ext/standard/file.c` and `main/streams/streams.c`,
+copyright (c) The PHP Group.
 Their authors include Rasmus Lerdorf, Stig Bakken, Andi Gutmans, Zeev Suraski,
 Thies C. Arntzen, Wez Furlong, and Jim Winstead.
 
@@ -187,8 +188,9 @@ Thies C. Arntzen, Wez Furlong, and Jim Winstead.
 `ext/standard/base64.c`, copyright (c) The PHP Group. The source lists
 Jim Winstead and Xinchen Hui as authors.
 
-`src/runtime/wordwrap.rs` and `src/runtime/string_token.rs` contain altered Rust
-adaptations of PHP 8.5.0's `ext/standard/string.c`, copyright (c) The PHP Group. The source lists
+`src/runtime/wordwrap.rs`, `src/runtime/string_token.rs`, and `src/runtime/csv.rs`
+contain altered Rust adaptations of PHP 8.5.0's `ext/standard/string.c`, copyright
+(c) The PHP Group. The source lists
 Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 
 This product includes PHP software, freely available from

@@ -39,6 +39,7 @@ mod cloning;
 mod closures;
 mod comparison;
 mod constants;
+mod csv;
 mod destructuring;
 mod diagnostic_display;
 mod enums;

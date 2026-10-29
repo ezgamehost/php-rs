@@ -1789,6 +1789,27 @@ No custom tests or generated matrices were added. As with other string operation
 PHP memory limits and allocation-failure diagnostics remain incomplete. The native
 string.c adaptation retains PHP's notices/license.
 
+The [CSV string slice](conformance/php-8.5.0-csv-hillclimb.txt) adds
+**seven upstream string passes**, with zero regressions across the six tracked suites.
+`str_getcsv` handles quoted/unquoted fields, doubled enclosures, retained escape
+bytes, whitespace before opening enclosures, trailing CR/LF removal, empty records,
+and unterminated fields. The parser preserves the native terminating-NUL behavior
+when NUL is the escape character, including GH-11982/GH-12151 and oss-fuzz #57392.
+UTF-8 scanning preserves multi-byte characters and resets on invalid bytes;
+trailing-line-ending detection follows the native remembered-character behavior.
+
+All arguments are converted before separator/enclosure/escape length validation.
+Omitting escape emits PHP 8.5's deprecation; an explicit empty escape disables
+escaping. Strings reach **376 / 202 / 152**; the other five suite totals are
+unchanged. The focused selection reports **7 / 1 / 0**: bug65947 now reaches its
+missing `basename` dependency. All 797 existing Rust tests, 57 reference-checked
+project PHPT, formatting, and Clippy pass. A short reference probe matches line
+endings, binary/UTF-8 fields, invalid bytes, quoting, named arguments, Stringable
+side effects, validation order, and deprecations. No custom tests or generated
+matrices were added. Configurable character locales, stream CSV APIs, PHP memory
+limits, and allocation-failure diagnostics remain unfinished. The parser adaptation
+retains PHP's notices/license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1802,7 +1823,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 369 | 209 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 376 | 202 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
