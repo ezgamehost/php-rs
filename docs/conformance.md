@@ -1622,6 +1622,31 @@ were added. Error handlers, destructors, physical sparse-table history, PHP memo
 limits, and complete native metadata remain incomplete. PHP 8.5.0 array source,
 native signatures, upstream PHPT, and reference execution establish these behaviors.
 
+The [array transformation slice](conformance/php-8.5.0-array-transform-hillclimb.txt)
+adds **22 upstream passes**: 19 array and three Zend fixtures, without regressions
+across the six suites. `array_unique` retains first occurrences using PHP's string
+hash-set path or Zend's unstable comparison order followed by original-index
+selection. It supports regular, numeric, string, natural, case-insensitive, and
+C-locale comparison. Empty/singleton inputs return early, and each path preserves
+its native cursor and append-index behavior. Shared reference cells survive.
+
+`array_change_key_case` converts ASCII string keys, preserves numeric keys and
+reference bindings, and overwrites colliding keys without moving their original
+slots. Any nonzero integer case argument selects uppercase. `CASE_LOWER` and
+`CASE_UPPER` are available as standard-extension constants.
+
+Arrays reach **712 / 76 / 52** and Zend **2118 / 2730 / 408**; reflection, SPL,
+strings, and math retain their prior totals. All 797 existing Rust tests, 57
+reference-checked project PHPT cases, formatting, and Clippy pass. A short reference
+probe matches comparison modes, first-occurrence selection, reference sharing,
+key collisions, non-ASCII bytes, cursor/append-index state, conversion order,
+pending exceptions, and invalid arguments. `array_unique_variation3` still fails
+at its missing `STDERR` setup. No custom tests or generated matrices were added.
+Locale configuration beyond C, standard-stream constants, error handlers,
+destructors, physical sparse-table history, PHP memory limits, and complete native
+metadata remain incomplete. PHP 8.5.0 array source, native signatures, upstream
+PHPT, and reference execution establish these behaviors.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1629,11 +1654,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2115 | 2733 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2118 | 2730 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 693 | 95 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 712 | 76 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

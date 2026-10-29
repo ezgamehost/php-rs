@@ -46,6 +46,8 @@ impl Runtime {
             name,
             b"COUNT_NORMAL"
                 | b"COUNT_RECURSIVE"
+                | b"CASE_LOWER"
+                | b"CASE_UPPER"
                 | b"ARRAY_FILTER_USE_BOTH"
                 | b"ARRAY_FILTER_USE_KEY"
                 | b"STR_PAD_LEFT"
@@ -218,7 +220,8 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"PHP_VERSION_ID" => Value::Int(80500),
         b"PHP_MAJOR_VERSION" | b"PHP_INT_SIZE" => Value::Int(8),
         b"PHP_MINOR_VERSION" => Value::Int(5),
-        b"PHP_RELEASE_VERSION" | b"COUNT_NORMAL" | b"STR_PAD_LEFT" => Value::Int(0),
+        b"PHP_RELEASE_VERSION" | b"COUNT_NORMAL" | b"STR_PAD_LEFT" | b"CASE_LOWER" => Value::Int(0),
+        b"CASE_UPPER" => Value::Int(1),
         b"PHP_EXTRA_VERSION" => Value::String(Vec::new().into()),
         b"PHP_INT_MAX" => Value::Int(i64::MAX),
         b"PHP_INT_MIN" => Value::Int(i64::MIN),

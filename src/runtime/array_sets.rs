@@ -275,7 +275,12 @@ impl Runtime {
         a.cmp(&b)
     }
 
-    fn set_string(&mut self, value: &Value, line: usize, pending: &mut Option<Error>) -> Vec<u8> {
+    pub(super) fn set_string(
+        &mut self,
+        value: &Value,
+        line: usize,
+        pending: &mut Option<Error>,
+    ) -> Vec<u8> {
         let value = value.dereferenced();
         if pending
             .as_ref()

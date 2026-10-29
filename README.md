@@ -116,6 +116,9 @@ new request. The CLI returns the low eight bits of the requested status.
   preserve input keys/references and follow PHP's string comparison and conversion
   order. Their user-comparator variants support value/key callbacks, separate
   comparators, reference arguments, return coercion, and boolean retry semantics.
+- `array_unique` retains the first duplicate under PHP's string, numeric, regular,
+  natural, or case-insensitive comparisons. `array_change_key_case` converts ASCII
+  keys, preserving reference bindings and the position of colliding keys.
 - Resource values preserve handle identity and closed state across aliases, with
   `is_resource`, `get_resource_id`, `get_resource_type`, inspection, casts, and key conversion.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fwrite`/`fputs`, `feof`,

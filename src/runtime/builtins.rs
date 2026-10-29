@@ -79,6 +79,8 @@ pub(super) enum Builtin {
     ArraySlice,
     ArraySplice,
     ArrayColumn,
+    ArrayUnique,
+    ArrayChangeKeyCase,
     ArraySet(array_sets::Operation),
     ArrayUserSet(array_user_sets::Operation),
     ArrayStack(array_stack::Action),
@@ -286,6 +288,8 @@ impl Builtin {
             b"array_slice" => Self::ArraySlice,
             b"array_splice" => Self::ArraySplice,
             b"array_column" => Self::ArrayColumn,
+            b"array_unique" => Self::ArrayUnique,
+            b"array_change_key_case" => Self::ArrayChangeKeyCase,
             b"array_diff" => Self::ArraySet(array_sets::Operation::Difference),
             b"array_intersect" => Self::ArraySet(array_sets::Operation::Intersection),
             b"array_diff_key" => Self::ArraySet(array_sets::Operation::DifferenceKey),
@@ -552,6 +556,8 @@ impl Builtin {
                 ("strict", true, false),
             ],
             Self::ArrayValues => &[("array", false, false)],
+            Self::ArrayUnique => &[("array", false, false), ("flags", true, false)],
+            Self::ArrayChangeKeyCase => &[("array", false, false), ("case", true, false)],
             Self::ArrayNumeric(_) => &[("array", false, false)],
             Self::ArrayEdge(..) | Self::ArrayIsList | Self::ArrayFlip | Self::ArrayCountValues => {
                 &[("array", false, false)]
@@ -724,6 +730,8 @@ impl Builtin {
                             (Self::Fopen, "use_include_path") => Value::Bool(false),
                             (Self::Stream(streams::Operation::Seek), "whence") => Value::Int(0),
                             (Self::ArraySort(_) | Self::Extract, "flags") => Value::Int(0),
+                            (Self::ArrayUnique, "flags") => Value::Int(2),
+                            (Self::ArrayChangeKeyCase, "case") => Value::Int(0),
                             (Self::Extract, "prefix") => Value::String(Vec::new().into()),
                             (Self::ArraySplice, "replacement") => {
                                 Value::Array(Rc::new(PhpArray::default()))
@@ -912,6 +920,8 @@ impl Runtime {
                 })
             }
             Builtin::ArrayColumn => self.array_column(&args, line),
+            Builtin::ArrayUnique => self.array_unique(&args, line),
+            Builtin::ArrayChangeKeyCase => self.array_change_key_case(&args, line),
             Builtin::MinMax(maximum) => {
                 self.extremum(maximum, &name, first, &extra, direct_positional, line)
             }

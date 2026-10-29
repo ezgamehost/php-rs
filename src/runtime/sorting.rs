@@ -106,7 +106,7 @@ impl Runtime {
         }
     }
 
-    fn sort_compare(
+    pub(super) fn sort_compare(
         &mut self,
         a: &Value,
         b: &Value,

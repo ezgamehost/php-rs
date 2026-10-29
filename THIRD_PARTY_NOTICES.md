@@ -172,8 +172,8 @@ SUCH DAMAGE.
   3. This notice may not be removed or altered from any source distribution.
 */
 
-`src/runtime/array_sets.rs` and `src/runtime/array_user_sets.rs` contain altered
-Rust adaptations of the set operations in
+`src/runtime/array_sets.rs`, `src/runtime/array_user_sets.rs`, and
+`src/runtime/array_transform.rs` contain altered Rust adaptations of operations in
 PHP 8.5.0's `ext/standard/array.c`, copyright (c) The PHP Group. The source lists
 Andi Gutmans, Zeev Suraski, Rasmus Lerdorf, Andrei Zmievski, Stig Venaas, and
 Jason Greene as authors. This product includes PHP software, freely available
