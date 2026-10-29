@@ -112,6 +112,9 @@ new request. The CLI returns the low eight bits of the requested status.
   Pop/shift return values without retaining the removed element’s reference binding.
 - `array_column` extracts array entries or visible/magic object properties, supports
   optional index columns, preserves null values, and returns dereferenced values.
+- `array_diff` and `array_intersect`, including their `_key` and `_assoc` variants,
+  preserve input keys/references and follow PHP's string comparison and conversion
+  order. User-comparator variants remain unfinished.
 - Resource values preserve handle identity and closed state across aliases, with
   `is_resource`, `get_resource_id`, `get_resource_type`, inspection, casts, and key conversion.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fwrite`/`fputs`, `feof`,

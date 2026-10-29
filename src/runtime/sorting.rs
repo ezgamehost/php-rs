@@ -1,5 +1,5 @@
 use super::*;
-mod algorithm;
+pub(super) mod algorithm;
 mod natural;
 
 #[derive(Debug, Clone, Copy)]

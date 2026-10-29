@@ -18,6 +18,7 @@ mod array_cursor;
 mod array_inspection;
 mod array_join;
 mod array_segments;
+mod array_sets;
 mod array_splice;
 mod array_stack;
 mod array_walk;

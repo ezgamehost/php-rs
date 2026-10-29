@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 
 // Preserve PHP's comparison order even for non-transitive PHP comparisons.
 // Rust's slice sorting requires a total order and cannot be used here.
-pub(super) fn sort<T>(values: &mut [T], compare: &mut impl FnMut(&T, &T) -> Ordering) {
+pub(in crate::runtime) fn sort<T>(values: &mut [T], compare: &mut impl FnMut(&T, &T) -> Ordering) {
     let mut values = values;
     loop {
         let len = values.len();

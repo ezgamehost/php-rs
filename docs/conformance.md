@@ -1570,6 +1570,33 @@ URL/user wrappers, socket behavior, temporary-file spill thresholds, buffering p
 and PHP memory limits remain incomplete. PHP 8.5.0 stream/operator source, native
 signatures, upstream PHPT, and reference execution establish the implemented behavior.
 
+The [built-in array set slice](conformance/php-8.5.0-array-sets-hillclimb.txt) adds
+**60 upstream passes**: 58 array and two Zend fixtures, with no regressions across
+the six suites. `array_diff`, `array_intersect`, and their `_key` and `_assoc`
+variants preserve first-array keys and shared reference cells. Value comparisons
+use PHP byte strings, including numeric, null, boolean, resource, array-warning,
+and Stringable conversions. Key variants use exact normalized-key lookup.
+
+`array_diff` follows PHP's empty, singleton, and exclusion-map paths, including
+conversion before later argument validation for singleton input and early candidate
+termination after a match. `array_intersect` sorts each input with Zend's comparison
+order and scans the sorted lists, preserving duplicate values and the first array's
+original order. It validates each next argument after sorting the previous array.
+Pending exceptions suppress further object conversions, retain the first exception,
+and allow subsequent scalar-conversion warnings. Empty-array append indices and
+cursor behavior follow each function's native copy/rebuild path.
+
+Arrays reach **625 / 163 / 52** and Zend **2115 / 2733 / 408**; reflection, SPL,
+strings, and math retain their prior totals. All 797 existing Rust tests and 57
+reference-checked project PHPT cases pass, along with formatting and Clippy. A short
+reference probe matches key/reference preservation, cursor and append-index state,
+conversion order, singleton and empty arrays, invalid/named arguments, and pending
+exception behavior. No custom tests or generated matrices were added. User-comparator
+variants, error handlers, destructors, physical sparse-table history, PHP memory
+limits, and complete native metadata remain incomplete. PHP 8.5.0 array/operator
+source, native signatures, upstream PHPT, and reference execution establish these
+behaviors; the adapted set algorithms retain PHP's notices and license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1577,11 +1604,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2113 | 2735 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2115 | 2733 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 567 | 221 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 625 | 163 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

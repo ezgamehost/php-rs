@@ -79,6 +79,7 @@ pub(super) enum Builtin {
     ArraySlice,
     ArraySplice,
     ArrayColumn,
+    ArraySet(array_sets::Operation),
     ArrayStack(array_stack::Action),
     ArrayReverse,
     ArrayChunk,
@@ -284,6 +285,12 @@ impl Builtin {
             b"array_slice" => Self::ArraySlice,
             b"array_splice" => Self::ArraySplice,
             b"array_column" => Self::ArrayColumn,
+            b"array_diff" => Self::ArraySet(array_sets::Operation::Difference),
+            b"array_intersect" => Self::ArraySet(array_sets::Operation::Intersection),
+            b"array_diff_key" => Self::ArraySet(array_sets::Operation::DifferenceKey),
+            b"array_diff_assoc" => Self::ArraySet(array_sets::Operation::DifferenceAssoc),
+            b"array_intersect_key" => Self::ArraySet(array_sets::Operation::IntersectionKey),
+            b"array_intersect_assoc" => Self::ArraySet(array_sets::Operation::IntersectionAssoc),
             b"array_push" => Self::ArrayStack(array_stack::Action::Push),
             b"array_pop" => Self::ArrayStack(array_stack::Action::Pop),
             b"array_shift" => Self::ArrayStack(array_stack::Action::Shift),
@@ -595,6 +602,7 @@ impl Builtin {
                 ("column_key", false, false),
                 ("index_key", true, false),
             ],
+            Self::ArraySet(_) => &[("array", false, false), ("arrays", false, true)],
             Self::ArrayStack(array_stack::Action::Push | array_stack::Action::Unshift) => {
                 &[("array", false, false), ("values", false, true)]
             }
@@ -836,6 +844,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_)) {
             return self.array_join(builtin, &name, &args, &extra, line);
+        }
+        if let Builtin::ArraySet(operation) = builtin {
+            return self.array_set(operation, &name, args[0].as_ref().unwrap(), &extra, line);
         }
         if let Builtin::ArrayCursor(action) = builtin {
             return self.array_cursor(action, &name, args, references, line, result_used);
@@ -1174,7 +1185,9 @@ impl Runtime {
             | Builtin::ArrayFlip
             | Builtin::ArrayCountValues
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
-            Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) => unreachable!(),
+            Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) | Builtin::ArraySet(_) => {
+                unreachable!()
+            }
             Builtin::ArrayCursor(_) => unreachable!(),
             Builtin::ArrayWalk(_)
             | Builtin::ArraySort(_)
