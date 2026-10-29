@@ -1055,6 +1055,40 @@ follows PHP 8.5.0 `ext/standard/math.c`, native stubs, and upstream fixtures. St
 variation fixtures, INI/SKIPIF harness support, complete native reflection type metadata,
 rounding, number formatting, and transcendental math remain unfinished.
 
+The [rounding and number formatting slice](conformance/php-8.5.0-rounding-hillclimb.txt)
+adds **29 upstream passes**: 25 math fixtures and four string fixtures. No passes regress
+across Zend, reflection, SPL, arrays, strings, or math. `round` implements eight modes
+through the native `RoundingMode` enum or integer arguments, with the four legacy
+`PHP_ROUND_HALF_*` constants. Decimal boundary correction, exact small powers of ten,
+large-precision decimal conversion, signed zero, and nonfinite inputs follow PHP 8.5.0.
+All parameters are converted before mode validation; large precision arguments clamp to
+PHP's integer precision bounds. The default mode is represented as an enum-case expression
+and resolves to the same singleton exposed by `RoundingMode::cases()` and reflection.
+
+`number_format` preserves exact integer input, including minimum/maximum integer values
+and negative decimal-place rounding. Large integral floats use the integer path when
+they fit PHP integers. Other floats use half-away-from-zero decimal rounding followed by
+fixed conversion, with PHP's 318-place conversion limit and zero padding. Grouping and
+decimal separators support multiple bytes, empty strings, and nullable defaults; rounded
+negative zero loses its minus sign. Nonfinite results use PHP's lowercase `inf`/`nan`
+spelling. Checked sizes and fallible allocation retain the runtime's existing allocation
+error handling; PHP memory limits and exact fatal allocation semantics remain incomplete.
+
+An upstream rounding program exposed a shared native integer-coercion issue: fractional
+numeric strings now report PHP's `float-string` deprecation with the original string,
+rather than reporting a float. This also fixes three base-conversion fixtures. The full
+math suite reaches **43 / 11 / 117**, and strings **323 / 255 / 152**. Zend remains
+**2043 / 2805 / 408**, arrays **154 / 634 / 52**, reflection **274 / 181 / 37**, and
+SPL **22 / 662 / 94**. All 797 existing Rust tests, 57 reference-checked project fixtures,
+formatting, and Clippy pass. Five additional existing INI/SKIPIF-bearing upstream programs
+match PHP directly with their settings; these remain unsupported in the harness and do
+not count as passes. A short reference probe also matches enum identity/default reflection,
+named calls, and special floating-point formatting. No custom tests or generated matrices
+were added. Evidence comes from PHP 8.5.0 math/argument-conversion code, stubs, upstream
+fixtures, and the reference executable. Remaining math failures require streams, execution
+timeouts, trigonometric/logarithmic functions, constants, random functions, or serialization.
+Configurable precision and complete native reflection types remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1067,8 +1101,8 @@ measurements reported by their individual slices.
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 154 | 634 | 52 |
-| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 18 | 36 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 319 | 259 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 43 | 11 | 117 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 323 | 255 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

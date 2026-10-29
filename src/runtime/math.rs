@@ -107,7 +107,7 @@ impl Runtime {
             .map(|n| n.as_float())
     }
 
-    fn native_number(
+    pub(super) fn native_number(
         &mut self,
         value: &Value,
         name: &str,

@@ -104,6 +104,7 @@ impl Runtime {
         if self.classes.contains_key(&name)
             || name == b"stdclass"
             || name == b"closure"
+            || name == b"roundingmode"
             || self.builtin_throwable_class(&name).is_some()
         {
             return Err(Error::new(
@@ -310,6 +311,9 @@ impl Runtime {
         }
         if let Some(class) = self.builtin_throwable_class(&name) {
             return Some(class);
+        }
+        if name == b"roundingmode" {
+            return Some(self.rounding_mode_class());
         }
         if name == b"stdclass" {
             let class = Rc::new(Class {

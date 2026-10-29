@@ -65,6 +65,9 @@ new request. The CLI returns the low eight bits of the requested status.
   `pow` and `**` share integer overflow promotion and PHP 8.5 zero-base deprecations.
 - `base_convert`, `bindec`, `octdec`, `hexdec`, `decbin`, `decoct`, and `dechex`
   support prefixes, invalid-character diagnostics, overflow, and negative integer encoding.
+- `round` supports all eight `RoundingMode` enum cases, legacy integer modes,
+  signed zero, and decimal precision correction. `number_format` supports exact
+  integer rounding, negative decimal places, and binary string separators.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.

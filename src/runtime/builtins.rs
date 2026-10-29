@@ -66,6 +66,8 @@ pub(super) enum Builtin {
     Is(&'static str),
     Range,
     Math(math::Math),
+    Round,
+    NumberFormat,
     BaseConvert,
     BaseDecode(u8),
     BaseEncode(u8),
@@ -208,6 +210,8 @@ impl Builtin {
             b"is_finite" => Self::Math(math::Math::IsFinite),
             b"is_infinite" => Self::Math(math::Math::IsInfinite),
             b"is_nan" => Self::Math(math::Math::IsNan),
+            b"round" => Self::Round,
+            b"number_format" => Self::NumberFormat,
             b"base_convert" => Self::BaseConvert,
             b"bindec" => Self::BaseDecode(2),
             b"octdec" => Self::BaseDecode(8),
@@ -393,6 +397,17 @@ impl Builtin {
                 ("step", true, false),
             ],
             Self::Math(kind) => kind.parameters(),
+            Self::Round => &[
+                ("num", false, false),
+                ("precision", true, false),
+                ("mode", true, false),
+            ],
+            Self::NumberFormat => &[
+                ("num", false, false),
+                ("decimals", true, false),
+                ("decimal_separator", true, false),
+                ("thousands_separator", true, false),
+            ],
             Self::BaseConvert => &[
                 ("num", false, false),
                 ("from_base", false, false),
@@ -469,37 +484,52 @@ impl Builtin {
                 name: name.as_bytes().to_vec(),
                 ty: None,
                 implicit_nullable: false,
-                default: optional.then_some(Expr {
-                    kind: ExprKind::Literal(match (self, *name) {
-                        (Self::Ucwords, "separators") => {
-                            Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
-                        }
-                        (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
-                        (Self::Range, "step") => Value::Int(1),
-                        (
-                            Self::ArraySlice | Self::ArrayReverse | Self::ArrayChunk,
-                            "preserve_keys",
-                        ) => Value::Bool(false),
-                        (Self::CountChars, "mode") => Value::Int(0),
-                        (Self::StrPad, "pad_string") => Value::String(b" ".to_vec().into()),
-                        (Self::StrPad, "pad_type") => Value::Int(1),
-                        (Self::Explode, "limit") => Value::Int(i64::MAX),
-                        (Self::StrSplit, "length") => Value::Int(1),
-                        (Self::ChunkSplit, "length") => Value::Int(76),
-                        (Self::ChunkSplit, "separator") => Value::String(b"\r\n".to_vec().into()),
-                        (Self::StringSearch(_), "offset") => Value::Int(0),
-                        (Self::SubstrCount | Self::StrSpan(_), "offset") => Value::Int(0),
-                        (Self::SubstrCompare, "case_insensitive") => Value::Bool(false),
-                        (Self::StringSearch(_), "before_needle") => Value::Bool(false),
-                        (Self::Trim(..), "characters") => {
-                            Value::String(b" \n\r\t\x0b\0".to_vec().into())
-                        }
-                        (Self::IsCallable, "syntax_only") => Value::Bool(false),
-                        (Self::DebugBacktrace, "options") => Value::Int(1),
-                        (Self::DebugBacktrace | Self::DebugPrintBacktrace, _) => Value::Int(0),
-                        _ => Value::Null,
-                    }),
-                    line: 0,
+                default: optional.then(|| {
+                    if matches!((self, *name), (Self::Round, "mode")) {
+                        return rounding::default_mode();
+                    }
+                    Expr {
+                        kind: ExprKind::Literal(match (self, *name) {
+                            (Self::Ucwords, "separators") => {
+                                Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
+                            }
+                            (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
+                            (Self::Range, "step") => Value::Int(1),
+                            (Self::Round, "precision") => Value::Int(0),
+                            (Self::NumberFormat, "decimals") => Value::Int(0),
+                            (Self::NumberFormat, "decimal_separator") => {
+                                Value::String(b".".to_vec().into())
+                            }
+                            (Self::NumberFormat, "thousands_separator") => {
+                                Value::String(b",".to_vec().into())
+                            }
+                            (
+                                Self::ArraySlice | Self::ArrayReverse | Self::ArrayChunk,
+                                "preserve_keys",
+                            ) => Value::Bool(false),
+                            (Self::CountChars, "mode") => Value::Int(0),
+                            (Self::StrPad, "pad_string") => Value::String(b" ".to_vec().into()),
+                            (Self::StrPad, "pad_type") => Value::Int(1),
+                            (Self::Explode, "limit") => Value::Int(i64::MAX),
+                            (Self::StrSplit, "length") => Value::Int(1),
+                            (Self::ChunkSplit, "length") => Value::Int(76),
+                            (Self::ChunkSplit, "separator") => {
+                                Value::String(b"\r\n".to_vec().into())
+                            }
+                            (Self::StringSearch(_), "offset") => Value::Int(0),
+                            (Self::SubstrCount | Self::StrSpan(_), "offset") => Value::Int(0),
+                            (Self::SubstrCompare, "case_insensitive") => Value::Bool(false),
+                            (Self::StringSearch(_), "before_needle") => Value::Bool(false),
+                            (Self::Trim(..), "characters") => {
+                                Value::String(b" \n\r\t\x0b\0".to_vec().into())
+                            }
+                            (Self::IsCallable, "syntax_only") => Value::Bool(false),
+                            (Self::DebugBacktrace, "options") => Value::Int(1),
+                            (Self::DebugBacktrace | Self::DebugPrintBacktrace, _) => Value::Int(0),
+                            _ => Value::Null,
+                        }),
+                        line: 0,
+                    }
                 }),
                 variadic: *variadic,
             })
@@ -715,6 +745,8 @@ impl Runtime {
             }
             Builtin::Range => self.range(&args, line),
             Builtin::Math(kind) => self.math(kind, &name, &args, line),
+            Builtin::Round => self.round(&args, line),
+            Builtin::NumberFormat => self.number_format(&args, line),
             Builtin::BaseConvert | Builtin::BaseDecode(_) | Builtin::BaseEncode(_) => {
                 self.base_conversion(builtin, &name, &args, line)
             }
@@ -911,6 +943,17 @@ impl Runtime {
         position: usize,
         line: usize,
     ) -> Result<Vec<u8>, Error> {
+        self.native_string_type(value, function, position, line, "string")
+    }
+
+    pub(super) fn native_string_type(
+        &mut self,
+        value: &Value,
+        function: &str,
+        position: usize,
+        line: usize,
+        kind: &str,
+    ) -> Result<Vec<u8>, Error> {
         if !self.strict_types && self.can_stringify(value) {
             return self.string_bytes(value, line);
         }
@@ -919,9 +962,9 @@ impl Runtime {
             Value::Array(_) | Value::Closure(_) | Value::Object(_)
         ) || (self.strict_types && !matches!(value, Value::String(_)))
         {
-            return Err(type_error(value, function, position, "string", line));
+            return Err(type_error(value, function, position, kind, line));
         }
-        self.warn_null(value, function, position, "string", line);
+        self.warn_null(value, function, position, kind, line);
         value.warn_nan("string", line, &mut self.diagnostics);
         Ok(value.to_bytes())
     }
@@ -990,6 +1033,16 @@ impl Runtime {
             && (!n.is_finite() || !(-9223372036854775808.0..9223372036854775808.0).contains(&n))
         {
             return Err(type_error(value, function, position, kind, line));
+        }
+        if let (Value::String(bytes), Value::Float(n)) = (value, &number) {
+            let converted = *n as i64;
+            if *n != converted as f64 {
+                self.diagnostics.push(format!(
+                    "Deprecated: Implicit conversion from float-string \"{}\" to int loses precision on line {line}",
+                    String::from_utf8_lossy(&bytes.bytes())
+                ));
+            }
+            return Ok(converted);
         }
         self.warn_null(value, function, position, kind, line);
         value.integer(line, &mut self.diagnostics)

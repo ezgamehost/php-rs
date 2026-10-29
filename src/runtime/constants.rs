@@ -55,6 +55,10 @@ impl Runtime {
                 | b"PATH_SEPARATOR"
                 | b"INF"
                 | b"NAN"
+                | b"PHP_ROUND_HALF_UP"
+                | b"PHP_ROUND_HALF_DOWN"
+                | b"PHP_ROUND_HALF_EVEN"
+                | b"PHP_ROUND_HALF_ODD"
         ) {
             "standard"
         } else {
@@ -190,6 +194,10 @@ fn predefined(name: &[u8]) -> Option<Value> {
         }
         b"E_WARNING" | b"ARRAY_FILTER_USE_KEY" | b"STR_PAD_BOTH" => Value::Int(2),
         b"E_PARSE" => Value::Int(4),
+        b"PHP_ROUND_HALF_UP" => Value::Int(1),
+        b"PHP_ROUND_HALF_DOWN" => Value::Int(2),
+        b"PHP_ROUND_HALF_EVEN" => Value::Int(3),
+        b"PHP_ROUND_HALF_ODD" => Value::Int(4),
         b"E_NOTICE" => Value::Int(8),
         b"E_CORE_ERROR" => Value::Int(16),
         b"E_CORE_WARNING" => Value::Int(32),

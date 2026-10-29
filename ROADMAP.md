@@ -241,8 +241,11 @@ definition of completion.
    finite/infinite/NaN predicates. Pow and exponentiation share integer promotion,
    operand conversion errors, and zero-base deprecations. Base conversion supports
    bases 2–36, numeric prefixes, ignored-character deprecations, float promotion,
-   and full-width negative integer encoding. Rounding modes, number formatting,
-   and transcendental functions remain unfinished.
+   and full-width negative integer encoding. Round supports eight native RoundingMode
+   cases, legacy modes, signed zero, and decimal boundary correction. Number formatting
+   preserves integer precision, rounds negative decimal places, and inserts custom byte
+   separators. Native integer coercion distinguishes fractional float-string deprecations.
+   Transcendental functions, configurable precision, and memory limits remain unfinished.
    Array map/filter/reduce support available callables,
    key preservation, zipped arrays, filter modes, initial carry values, and
    internal callback argument coercion. Callable inspection supports syntax-only
