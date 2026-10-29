@@ -74,6 +74,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `array_map`, `array_filter`, and `array_reduce`, including multiple-array zip
   behavior, null callbacks where allowed, filter key modes, initial reduction
   values, and PHP's weak scalar coercion for internally invoked callbacks.
+- `in_array` and `array_search` support loose/strict comparisons, referenced entries,
+  and the first matching key. `array_sum` and `array_product` preserve numeric types,
+  overflow promotion, and warnings/fallbacks for unsupported entries.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

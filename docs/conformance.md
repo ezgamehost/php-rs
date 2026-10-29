@@ -1119,6 +1119,34 @@ and reference execution establish these behaviors. The five remaining executable
 fixtures require streams, execution timeouts, random functions, or serialization.
 INI/SKIPIF support, complete native reflection types, and resource limits remain incomplete.
 
+The [array search and numeric reduction slice](conformance/php-8.5.0-array-search-hillclimb.txt)
+adds **28 upstream passes**: 25 array fixtures and three Zend fixtures. No passes regress
+across arrays, Zend, reflection, SPL, strings, or math. `in_array` and `array_search`
+validate their array and optional strict flag before iteration, reuse the runtime's
+loose/strict PHP comparisons, and inspect entries in insertion order. Search returns
+the first matching integer or binary string key, including key zero, or false. Referenced
+entries and `$GLOBALS` entries retain their values during comparison. Native parameter
+names and a false strict default support named calls and reflection defaults.
+
+`array_sum` and `array_product` start with integer zero and one, respectively, apply
+arithmetic in entry order, preserve numeric strings and referenced variables, and promote
+overflow to float. Unsupported arrays and ordinary objects produce PHP warnings and are
+skipped. Direct nonnumeric strings retain PHP's zero fallback; references to nonnumeric
+strings are warned about and skipped, matching the native entry-type check. Leading-numeric
+strings retain arithmetic conversion warnings. Resource IDs and extension-specific numeric
+object casts remain unsupported because those runtime value/extension types are unfinished.
+
+Arrays reach **179 / 609 / 52**, and Zend **2050 / 2798 / 408**; all other suite totals
+are unchanged. All 797 existing Rust tests, 57 reference-checked project fixtures,
+formatting, and Clippy pass. The existing INI-bearing large-array sum program matches PHP
+when run directly, but remains unsupported and is not counted as a pass. A short reference
+probe also matches direct/reference string fallbacks, invalid entries, warning order, and
+unchanged input strings. No custom tests or generated matrices were added. PHP 8.5.0
+array implementations, native signatures, upstream fixtures, and reference execution
+establish these behaviors. Remaining targeted failures require streams/resources and
+extension numeric types; further array APIs, error handlers, complete native reflection
+types, and INI/SKIPIF harness support remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1126,11 +1154,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2047 | 2801 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2050 | 2798 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 154 | 634 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 179 | 609 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

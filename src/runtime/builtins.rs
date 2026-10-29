@@ -80,6 +80,8 @@ pub(super) enum Builtin {
     ArrayKeys,
     ArrayValues,
     ArrayKeyExists,
+    ArraySearch(bool),
+    ArrayNumeric(bool),
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -255,6 +257,10 @@ impl Builtin {
             b"call_user_func" => Self::CallUserFunc,
             b"call_user_func_array" => Self::CallUserFuncArray,
             b"array_key_exists" | b"key_exists" => Self::ArrayKeyExists,
+            b"in_array" => Self::ArraySearch(false),
+            b"array_search" => Self::ArraySearch(true),
+            b"array_sum" => Self::ArrayNumeric(false),
+            b"array_product" => Self::ArrayNumeric(true),
             b"function_exists" => Self::FunctionExists,
             b"is_callable" => Self::IsCallable,
             b"debug_backtrace" => Self::DebugBacktrace,
@@ -413,6 +419,7 @@ impl Builtin {
                 ("strict", true, false),
             ],
             Self::ArrayValues => &[("array", false, false)],
+            Self::ArrayNumeric(_) => &[("array", false, false)],
             Self::Range => &[
                 ("start", false, false),
                 ("end", false, false),
@@ -478,6 +485,11 @@ impl Builtin {
                 ("initial", true, false),
             ],
             Self::ArrayKeyExists => &[("key", false, false), ("array", false, false)],
+            Self::ArraySearch(_) => &[
+                ("needle", false, false),
+                ("haystack", false, false),
+                ("strict", true, false),
+            ],
             Self::CallUserFunc => &[("callback", false, false), ("args", false, true)],
             Self::CallUserFuncArray => &[("callback", false, false), ("args", false, false)],
             Self::DebugBacktrace | Self::DebugPrintBacktrace => {
@@ -524,6 +536,7 @@ impl Builtin {
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Range, "step") => Value::Int(1),
                             (Self::Round, "precision") => Value::Int(0),
+                            (Self::ArraySearch(_), "strict") => Value::Bool(false),
                             (Self::NumberFormat, "decimals") => Value::Int(0),
                             (Self::NumberFormat, "decimal_separator") => {
                                 Value::String(b".".to_vec().into())
@@ -954,6 +967,63 @@ impl Runtime {
                 let array = require_array(args[1].as_ref().unwrap(), &name, 2, line)?;
                 let key = ArrayKey::from_value(first, line, &mut self.diagnostics)?;
                 Ok(Value::Bool(array.get(&key).is_some()))
+            }
+            Builtin::ArraySearch(return_key) => {
+                let array = require_array(args[1].as_ref().unwrap(), &name, 2, line)?;
+                let strict = args[2]
+                    .as_ref()
+                    .map_or(Ok(false), |value| self.native_bool(value, &name, 3, line))?;
+                for (key, value) in array.entries() {
+                    let matches = if strict {
+                        first.identical(value, line)?
+                    } else {
+                        self.compare(first, value, line)? == Some(Ordering::Equal)
+                    };
+                    if matches {
+                        return Ok(if return_key {
+                            key.to_value()
+                        } else {
+                            Value::Bool(true)
+                        });
+                    }
+                }
+                Ok(Value::Bool(false))
+            }
+            Builtin::ArrayNumeric(product) => {
+                let array = require_array(first, &name, 1, line)?;
+                let op = if product { "*" } else { "+" };
+                let operation = if product {
+                    "Multiplication"
+                } else {
+                    "Addition"
+                };
+                let mut total = Value::Int(i64::from(product));
+                for (_, value) in array.entries() {
+                    match binary(
+                        op,
+                        total.clone(),
+                        value.clone(),
+                        line,
+                        &mut self.diagnostics,
+                    ) {
+                        Ok(result) => total = result,
+                        Err(error) if error.kind == ErrorKind::TypeError => {
+                            // PHP keeps its historical zero fallback for direct
+                            // nonnumeric strings, while other invalid entries
+                            // (including references to those strings) are skipped.
+                            if matches!(value, Value::String(_)) {
+                                total =
+                                    binary(op, total, Value::Int(0), line, &mut self.diagnostics)?;
+                            }
+                            self.diagnostics.push(format!(
+                                "{name}(): {operation} is not supported on type {} on line {line}",
+                                debug_type(&value.dereferenced())
+                            ));
+                        }
+                        Err(error) => return Err(error),
+                    }
+                }
+                Ok(total)
             }
             Builtin::FunctionExists => {
                 let bytes = self.native_string(first, &name, 1, line)?;
