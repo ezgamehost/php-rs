@@ -254,7 +254,9 @@ definition of completion.
    internal callback argument coercion. Array membership/search support strict or loose
    comparison and first matching keys; sum/product preserve numeric promotion and
    unsupported-entry warnings/fallbacks. Resource and extension-object numeric casts
-   remain incomplete. Callable inspection supports syntax-only
+   remain incomplete. First/last values and keys, list detection, flipping, value
+   counting, and array combination support insertion order, key conversion, duplicates,
+   and reference copying. Callable inspection supports syntax-only
    checks, autoloading, scoped/abstract/magic methods, descriptive output names,
    and typed reference output assignments. Native dispatch retains argument cells.
    Protected method access follows the original non-private prototype. Debug backtrace

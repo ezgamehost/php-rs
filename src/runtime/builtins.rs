@@ -82,6 +82,11 @@ pub(super) enum Builtin {
     ArrayKeyExists,
     ArraySearch(bool),
     ArrayNumeric(bool),
+    ArrayEdge(bool, bool),
+    ArrayIsList,
+    ArrayFlip,
+    ArrayCountValues,
+    ArrayCombine,
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -261,6 +266,14 @@ impl Builtin {
             b"array_search" => Self::ArraySearch(true),
             b"array_sum" => Self::ArrayNumeric(false),
             b"array_product" => Self::ArrayNumeric(true),
+            b"array_key_first" => Self::ArrayEdge(false, true),
+            b"array_key_last" => Self::ArrayEdge(true, true),
+            b"array_first" => Self::ArrayEdge(false, false),
+            b"array_last" => Self::ArrayEdge(true, false),
+            b"array_is_list" => Self::ArrayIsList,
+            b"array_flip" => Self::ArrayFlip,
+            b"array_count_values" => Self::ArrayCountValues,
+            b"array_combine" => Self::ArrayCombine,
             b"function_exists" => Self::FunctionExists,
             b"is_callable" => Self::IsCallable,
             b"debug_backtrace" => Self::DebugBacktrace,
@@ -420,6 +433,10 @@ impl Builtin {
             ],
             Self::ArrayValues => &[("array", false, false)],
             Self::ArrayNumeric(_) => &[("array", false, false)],
+            Self::ArrayEdge(..) | Self::ArrayIsList | Self::ArrayFlip | Self::ArrayCountValues => {
+                &[("array", false, false)]
+            }
+            Self::ArrayCombine => &[("keys", false, false), ("values", false, false)],
             Self::Range => &[
                 ("start", false, false),
                 ("end", false, false),
@@ -937,6 +954,11 @@ impl Runtime {
                 }
                 Ok(Value::Array(Rc::new(result)))
             }
+            Builtin::ArrayEdge(..)
+            | Builtin::ArrayIsList
+            | Builtin::ArrayFlip
+            | Builtin::ArrayCountValues
+            | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
             Builtin::ArrayKeys => {
                 if args[1].is_none() && args[2].is_some() {
                     return Err(Error::new(

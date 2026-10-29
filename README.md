@@ -77,6 +77,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `in_array` and `array_search` support loose/strict comparisons, referenced entries,
   and the first matching key. `array_sum` and `array_product` preserve numeric types,
   overflow promotion, and warnings/fallbacks for unsupported entries.
+- `array_first`/`array_last`, first/last keys, and list detection inspect insertion
+  order. `array_flip`, `array_count_values`, and `array_combine` support PHP key
+  conversion, duplicate handling, and reference-aware value copying.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

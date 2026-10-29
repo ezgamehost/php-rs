@@ -13,6 +13,7 @@ use std::{
 
 mod array_access;
 mod array_callbacks;
+mod array_inspection;
 mod array_segments;
 mod attributes;
 mod autoload;

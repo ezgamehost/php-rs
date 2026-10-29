@@ -1147,6 +1147,32 @@ establish these behaviors. Remaining targeted failures require streams/resources
 extension numeric types; further array APIs, error handlers, complete native reflection
 types, and INI/SKIPIF harness support remain unfinished.
 
+The [array inspection and construction slice](conformance/php-8.5.0-array-inspection-hillclimb.txt)
+adds **19 upstream passes**: 18 array fixtures and one Zend fixture, with no regressions
+across the six measured suites. PHP 8.5 `array_first` and `array_last` return dereferenced
+values, while `array_key_first` and `array_key_last` return insertion-order keys; all four
+return null for empty arrays and leave array state unchanged. `array_is_list` checks for
+ordered consecutive integer keys starting at zero, including empty arrays.
+
+`array_flip` and `array_count_values` accept integer/string entries, apply numeric-string
+key conversion, preserve the first insertion position of duplicate keys, and warn/skip
+other value types. Flipping retains the final source key for duplicate values; counting
+increments frequency. `array_combine` validates equal counts, ignores the input arrays'
+keys, converts key values using ordinary PHP string conversion where needed, and copies
+values with PHP's shared/unshared reference rules. Duplicate keys replace their value
+without moving their position. Empty input arrays produce an empty result.
+
+Arrays reach **197 / 591 / 52**, and Zend **2051 / 2797 / 408**; other suite totals are
+unchanged. All 797 existing Rust tests, 57 reference-checked project fixtures, formatting,
+and Clippy pass. A short reference comparison confirms shared and unshared reference
+copying, dereferenced first/last results, empty arrays, list order, Stringable keys, and
+duplicate overwrite behavior. The additional general-functions `array_is_list` fixture
+still fails because it requires `json_encode`; it adds no claimed pass. No custom tests or
+generated matrices were added. PHP 8.5.0 array implementations, native signatures, upstream
+fixtures, and reference execution establish these behaviors. Remaining targeted fixtures
+require streams, JSON, or internal array-pointer functions. Complete native reflection
+types, configurable memory limits, and INI/SKIPIF harness support remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1154,11 +1180,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2050 | 2798 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2051 | 2797 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 179 | 609 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 197 | 591 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
