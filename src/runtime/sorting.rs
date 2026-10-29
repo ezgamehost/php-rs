@@ -346,3 +346,179 @@ fn bucket_argument(value: &Value) -> Value {
         _ => value.clone(),
     }
 }
+
+struct MultisortColumn {
+    source: variables::Cell,
+    flags: i64,
+    reverse: bool,
+    order_set: bool,
+    type_set: bool,
+}
+
+impl Runtime {
+    pub(super) fn array_multisort(
+        &mut self,
+        args: Vec<Option<Value>>,
+        references: Vec<Option<variables::Cell>>,
+        extra: PhpArray,
+        line: usize,
+    ) -> Result<Value, Error> {
+        if extra
+            .entries()
+            .iter()
+            .any(|(key, _)| matches!(key, ArrayKey::String(_)))
+        {
+            return Err(Error::new(
+                ErrorKind::ArgumentCountError,
+                "array_multisort() does not accept unknown named parameters",
+                line,
+            ));
+        }
+        let first = args.into_iter().next().unwrap().unwrap();
+        let first = if let Some(reference) = &references[0] {
+            drop(first);
+            reference.clone()
+        } else {
+            cell(first)
+        };
+        let mut arguments = vec![first];
+        arguments.extend(extra.entries().iter().map(|(_, value)| {
+            if let Value::Reference(reference) = value {
+                reference.clone()
+            } else {
+                cell(value.clone())
+            }
+        }));
+        drop(extra);
+        let mut columns: Vec<MultisortColumn> = Vec::new();
+        for (index, source) in arguments.into_iter().enumerate() {
+            // Separate each array during argument parsing, before capturing
+            // comparison snapshots. Repeated references to one table stay one.
+            if with_array(&mut source.borrow_mut(), |array| {
+                Rc::make_mut(array);
+            })
+            .is_some()
+            {
+                columns.push(MultisortColumn {
+                    source,
+                    flags: 0,
+                    reverse: false,
+                    order_set: false,
+                    type_set: false,
+                });
+                continue;
+            }
+            let argument_error = |kind, message| {
+                Error::new(
+                    kind,
+                    format!(
+                        "array_multisort(): Argument #{}{} {message}",
+                        index + 1,
+                        if index == 0 { " ($array)" } else { "" },
+                    ),
+                    line,
+                )
+            };
+            let value = source.borrow().dereferenced();
+            let Value::Int(flag) = value else {
+                return Err(argument_error(
+                    ErrorKind::TypeError,
+                    "must be an array or a sort flag",
+                ));
+            };
+            let order_flag = match flag & !8 {
+                3 | 4 => true,
+                0 | 1 | 2 | 5 | 6 => false,
+                _ => {
+                    return Err(argument_error(
+                        ErrorKind::ValueError,
+                        "must be a valid sort flag",
+                    ));
+                }
+            };
+            let Some(column) = columns.last_mut() else {
+                return Err(argument_error(
+                    ErrorKind::TypeError,
+                    "must be an array or a sort flag that has not already been specified",
+                ));
+            };
+            if if order_flag {
+                column.order_set
+            } else {
+                column.type_set
+            } {
+                return Err(argument_error(
+                    ErrorKind::TypeError,
+                    "must be an array or a sort flag that has not already been specified",
+                ));
+            }
+            if order_flag {
+                column.reverse = flag == 3;
+                column.order_set = true;
+            } else {
+                column.flags = flag;
+                column.type_set = true;
+            }
+        }
+        let arrays: Vec<_> = columns
+            .iter()
+            .map(|column| {
+                with_array(&mut column.source.borrow_mut(), |array| array.clone()).unwrap()
+            })
+            .collect();
+        let size = arrays[0].len();
+        if arrays.iter().any(|array| array.len() != size) {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                "Array sizes are inconsistent",
+                line,
+            ));
+        }
+        if size == 0 {
+            return Ok(Value::Bool(true));
+        }
+        let mut order: Vec<_> = (0..size).collect();
+        let mut error = None;
+        algorithm::sort(&mut order, &mut |&a, &b| {
+            for (column, array) in columns.iter().zip(&arrays) {
+                let comparison = self.sort_compare(
+                    &array.entries()[a].1,
+                    &array.entries()[b].1,
+                    column.flags,
+                    line,
+                    &mut error,
+                );
+                if comparison != Ordering::Equal {
+                    return if column.reverse {
+                        comparison.reverse()
+                    } else {
+                        comparison
+                    };
+                }
+            }
+            a.cmp(&b)
+        });
+        // Unlike individual sorts, multisort leaves the original order intact
+        // if comparison raised an exception.
+        if let Some(error) = error {
+            return Err(error);
+        }
+        let identities: Vec<_> = arrays
+            .iter()
+            .map(|array| Rc::as_ptr(array) as usize)
+            .collect();
+        drop(arrays);
+        let mut reordered = HashSet::new();
+        for (column, identity) in columns.into_iter().zip(identities) {
+            if !reordered.insert(identity) {
+                continue;
+            }
+            with_array(&mut column.source.borrow_mut(), |array| {
+                if Rc::as_ptr(array) as usize == identity {
+                    Rc::make_mut(array).reorder_multisort(&order);
+                }
+            });
+        }
+        Ok(Value::Bool(true))
+    }
+}

@@ -1360,6 +1360,33 @@ The remaining named `usort` fixture requires `shuffle`; a Zend fixture stops at 
 metadata, and reentrant live-table observation in built-in comparison modes remain
 unfinished.
 
+The [multisort slice](conformance/php-8.5.0-multisort-hillclimb.txt) adds **24 upstream
+passes**: 19 array fixtures and five Zend fixtures, with no regressions across the six
+suites. `array_multisort` parses per-array direction and comparison flags, rejects repeated
+or invalid flags, requires equal row counts, and compares columns lexicographically.
+Stable ties use original row positions only after all columns compare equal. It reuses
+PHP's comparison order and the existing regular, numeric, string, natural, case-folded,
+and C-locale comparison modes. Nested sorting calls keep their own column configuration.
+
+Native preferred-reference binding accepts literal arrays, flags, and expression results
+without by-reference errors or notices, while writable inputs and actual references
+retain their cells. This behavior also applies to indirect calls, unpacking, and pipe
+calls. Array separation happens while arguments are parsed, before comparison snapshots
+are retained. Repeated aliases to the same input are reordered once. Output preserves
+string keys, renumbers only integer keys, resets the cursor even for one-element inputs,
+and sets the next append index from the complete row count. If a comparison throws,
+multisort propagates the exception without installing the permutation.
+
+Arrays reach **448 / 340 / 52**, and Zend **2076 / 2772 / 408**. All 797 existing Rust
+tests, 57 reference-checked project fixtures, formatting, and Clippy pass. A short
+reference comparison matches multiple columns, aliases and copies, mixed-key append
+behavior, one-element cursors, literal and indirect arguments, unpacking, invalid flags,
+named-argument rejection, and comparison exceptions. No custom tests or generated matrices
+were added. PHP 8.5.0 source, native signatures, upstream PHPT, and reference execution
+establish the behavior. Remaining multisort fixtures stop at missing `set_error_handler`
+or `DateTime`; resources, locale configuration, complete native reflection metadata,
+and reentrant observation/mutation of native sorting tables remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1367,11 +1394,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2071 | 2777 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2076 | 2772 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 277 | 178 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 429 | 359 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 448 | 340 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

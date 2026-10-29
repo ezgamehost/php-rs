@@ -165,6 +165,26 @@ impl PhpArray {
         self.cursor = 0;
     }
 
+    pub(crate) fn reorder_multisort(&mut self, order: &[usize]) {
+        if self.is_empty() {
+            return;
+        }
+        self.reorder(order, false);
+        self.positions.clear();
+        let mut numeric = 0;
+        for (position, (key, _)) in self.entries.iter_mut().enumerate() {
+            if matches!(key, ArrayKey::Int(_)) {
+                *key = ArrayKey::Int(numeric);
+                numeric += 1;
+            }
+            self.positions.insert(key.clone(), position);
+        }
+        // PHP reserves the next append index using the entire row count,
+        // including string keys, rather than just the renumbered integers.
+        self.next_index = Some(self.len() as i64);
+        self.cursor = 0;
+    }
+
     pub(crate) fn cursor_entry(&self) -> Option<&(ArrayKey, Value)> {
         self.entries.get(self.cursor)
     }

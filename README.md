@@ -95,6 +95,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `usort`, `uasort`, and `uksort` invoke comparators on a separate sorting copy,
   preserve stable ties, support PHP's return coercion and boolean retry behavior,
   and install the resulting array even when a callback throws or replaces the input.
+- `array_multisort` applies stable lexicographic row ordering with independent
+  comparison/direction flags, preserves string keys, renumbers numeric keys, and
+  supports PHP's preferred-reference arguments and repeated input aliases.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

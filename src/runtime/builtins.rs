@@ -94,6 +94,7 @@ pub(super) enum Builtin {
     MinMax(bool),
     ArraySort(sorting::Sort),
     ArrayUserSort(sorting::UserSort),
+    ArrayMultisort,
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -287,6 +288,7 @@ impl Builtin {
             b"array_replace_recursive" => Self::ArrayReplace(true),
             b"array_walk" => Self::ArrayWalk(false),
             b"array_walk_recursive" => Self::ArrayWalk(true),
+            b"array_multisort" => Self::ArrayMultisort,
             b"usort" => Self::ArrayUserSort(sorting::UserSort::Values),
             b"uasort" => Self::ArrayUserSort(sorting::UserSort::Associative),
             b"uksort" => Self::ArrayUserSort(sorting::UserSort::Keys),
@@ -476,6 +478,7 @@ impl Builtin {
                 &[("array", false, false)]
             }
             Self::ArraySort(_) => &[("array", false, false), ("flags", true, false)],
+            Self::ArrayMultisort => &[("array", false, false), ("rest", false, true)],
             Self::ArrayUserSort(_) => &[("array", false, false), ("callback", false, false)],
             Self::MinMax(_) => &[("value", false, false), ("values", false, true)],
             Self::ArrayWalk(_) => &[
@@ -575,7 +578,8 @@ impl Builtin {
             .iter()
             .map(|(name, optional, variadic)| Parameter {
                 attributes: Vec::new(),
-                by_reference: (matches!(self, Self::IsCallable) && *name == "callable_name")
+                by_reference: matches!(self, Self::ArrayMultisort)
+                    || (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
                     || matches!(self, Self::ArrayCursor(action) if action.moves())
                     || (matches!(
@@ -737,6 +741,9 @@ impl Runtime {
         }
         if let Builtin::ArrayCursor(action) = builtin {
             return self.array_cursor(action, &name, args, references, line, result_used);
+        }
+        if matches!(builtin, Builtin::ArrayMultisort) {
+            return self.array_multisort(args, references, extra, line);
         }
         if let Builtin::ArrayUserSort(kind) = builtin {
             return self.array_user_sort(kind, &name, args, references, line);
@@ -1032,7 +1039,10 @@ impl Runtime {
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
             Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) => unreachable!(),
             Builtin::ArrayCursor(_) => unreachable!(),
-            Builtin::ArrayWalk(_) | Builtin::ArraySort(_) | Builtin::ArrayUserSort(_) => {
+            Builtin::ArrayWalk(_)
+            | Builtin::ArraySort(_)
+            | Builtin::ArrayUserSort(_)
+            | Builtin::ArrayMultisort => {
                 unreachable!()
             }
             Builtin::ArrayKeys => {

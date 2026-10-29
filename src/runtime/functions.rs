@@ -550,11 +550,15 @@ impl Runtime {
         } else {
             format!(" (${})", String::from_utf8_lossy(&parameter.name))
         };
+        let prefer_reference = matches!(target.builtin, Some(Builtin::ArrayMultisort));
         if target.reference_values {
             if let ExprKind::Literal(Value::Reference(reference)) = &expr.kind {
                 return Ok((reference.borrow().clone(), Some(reference.clone())));
             }
             let value = self.eval(expr)?;
+            if prefer_reference {
+                return Ok((value, None));
+            }
             self.diagnostics.push(format!(
                 "{}(): Argument #{}{label} must be passed by reference, value given on line {line}",
                 String::from_utf8_lossy(&target.name),
@@ -585,6 +589,9 @@ impl Runtime {
         if let Value::Reference(reference) = value {
             let value = reference.borrow().clone();
             return Ok((value, Some(reference)));
+        }
+        if prefer_reference {
+            return Ok((value, None));
         }
         if matches!(expr.kind, ExprKind::Call(_, _) | ExprKind::New(_, _)) {
             self.diagnostics.push(format!(
