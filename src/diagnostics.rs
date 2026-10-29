@@ -19,6 +19,7 @@ pub(crate) struct Diagnostics {
     pub source: std::rc::Rc<crate::source::Source>,
     pub output_position: usize,
     pub events: Vec<Diagnostic>,
+    pub stderr_closed: bool,
 }
 
 impl Default for Diagnostics {
@@ -30,13 +31,14 @@ impl Default for Diagnostics {
             source: Default::default(),
             output_position: 0,
             events: Vec::new(),
+            stderr_closed: false,
         }
     }
 }
 
 impl Diagnostics {
     pub fn display(&mut self, level: i64, label: &str, message: &[u8], file: &[u8], line: i64) {
-        if self.reporting & level == 0 {
+        if self.reporting & level == 0 || self.stderr_closed {
             return;
         }
         let mut rendered = format!("{label}: ").into_bytes();
@@ -47,6 +49,7 @@ impl Diagnostics {
         self.events.push(Diagnostic {
             position: self.output_position,
             rendered,
+            leading_newline: true,
         });
     }
 
@@ -102,4 +105,5 @@ impl WarningSink for Diagnostics {
 pub(crate) struct Diagnostic {
     pub position: usize,
     pub rendered: Vec<u8>,
+    pub leading_newline: bool,
 }

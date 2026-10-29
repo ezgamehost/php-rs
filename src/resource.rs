@@ -1,7 +1,7 @@
 use std::{
     cell::RefCell,
     fs::File,
-    io::{self, Cursor, Read, Seek, SeekFrom, Write},
+    io::{self, BufReader, Cursor, Read, Seek, SeekFrom, Write},
     rc::Rc,
 };
 
@@ -29,6 +29,8 @@ pub(crate) struct Stream {
 #[derive(Debug)]
 pub(crate) enum Backend {
     File(File),
+    StandardInput(BufReader<File>),
+    StandardOutput(bool),
     Memory(Cursor<Vec<u8>>),
     Temporary(Rc<PhpResource>),
 }
@@ -37,6 +39,8 @@ impl Read for Backend {
     fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
         match self {
             Self::File(file) => file.read(bytes),
+            Self::StandardInput(file) => file.read(bytes),
+            Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(9)),
             Self::Memory(buffer) => buffer.read(bytes),
             Self::Temporary(resource) => resource.with_stream(|stream| {
                 let count = stream.backend.read(bytes)?;
@@ -51,6 +55,10 @@ impl Write for Backend {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         match self {
             Self::File(file) => file.write(bytes),
+            Self::StandardInput(file) => file.get_mut().write(bytes),
+            // Captured standard output is emitted by the runtime, which also
+            // preserves its order relative to diagnostics and ordinary echo.
+            Self::StandardOutput(_) => Err(io::Error::from(io::ErrorKind::Unsupported)),
             Self::Memory(buffer) => {
                 let end = usize::try_from(buffer.position())
                     .ok()
@@ -75,6 +83,8 @@ impl Write for Backend {
     fn flush(&mut self) -> io::Result<()> {
         match self {
             Self::File(file) => file.flush(),
+            Self::StandardInput(file) => file.get_mut().flush(),
+            Self::StandardOutput(_) => Ok(()),
             Self::Memory(buffer) => buffer.flush(),
             Self::Temporary(resource) => resource.with_stream(|stream| stream.backend.flush()),
         }
@@ -84,6 +94,8 @@ impl Seek for Backend {
     fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
         match self {
             Self::File(file) => file.seek(position),
+            Self::StandardInput(file) => file.seek(position),
+            Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(29)),
             Self::Memory(buffer) => buffer.seek(position),
             Self::Temporary(resource) => resource.with_stream(|stream| {
                 let position = stream.backend.seek(position)?;
@@ -125,17 +137,40 @@ impl PhpResource {
 pub(crate) struct Store {
     next_id: i64,
     default_context: Option<Rc<PhpResource>>,
+    standard: Option<[Rc<PhpResource>; 3]>,
 }
 impl Default for Store {
     fn default() -> Self {
-        // PHP CLI reserves resource handles 1..=3 for its standard streams.
+        let standard = (|| {
+            let mut streams = Vec::new();
+            for index in 0..3 {
+                streams.push(standard_stream(index).ok()?);
+            }
+            Some(std::array::from_fn(|index| {
+                Rc::new(PhpResource {
+                    id: index as i64 + 1,
+                    kind: RefCell::new(Kind::Stream(streams.remove(0))),
+                })
+            }))
+        })();
         Self {
-            next_id: 4,
+            next_id: if standard.is_some() { 4 } else { 1 },
             default_context: None,
+            standard,
         }
     }
 }
 impl Store {
+    pub(crate) fn standard(&self, name: &[u8]) -> Option<Rc<PhpResource>> {
+        let index = match name {
+            b"STDIN" => 0,
+            b"STDOUT" => 1,
+            b"STDERR" => 2,
+            _ => return None,
+        };
+        self.standard.as_ref().map(|streams| streams[index].clone())
+    }
+
     pub(crate) fn allocate(&mut self, kind: Kind) -> Rc<PhpResource> {
         let id = self.next_id;
         self.next_id += 1;
@@ -150,4 +185,38 @@ impl Store {
         }
         self.default_context.as_ref().unwrap().clone()
     }
+}
+
+pub(crate) fn standard_stream(index: usize) -> io::Result<Stream> {
+    // Duplicate host handles: a PHP request must not close the embedding
+    // application's descriptors. Runtime state models explicit PHP closes.
+    #[cfg(unix)]
+    let mut file = {
+        use std::os::fd::AsFd;
+        File::from(match index {
+            0 => io::stdin().as_fd().try_clone_to_owned()?,
+            1 => io::stdout().as_fd().try_clone_to_owned()?,
+            _ => io::stderr().as_fd().try_clone_to_owned()?,
+        })
+    };
+    #[cfg(windows)]
+    let mut file = {
+        use std::os::windows::io::AsHandle;
+        File::from(match index {
+            0 => io::stdin().as_handle().try_clone_to_owned()?,
+            1 => io::stdout().as_handle().try_clone_to_owned()?,
+            _ => io::stderr().as_handle().try_clone_to_owned()?,
+        })
+    };
+    let position = file.stream_position().unwrap_or(u64::MAX);
+    Ok(Stream {
+        backend: if index == 0 {
+            Backend::StandardInput(BufReader::with_capacity(8192, file))
+        } else {
+            Backend::StandardOutput(index == 2)
+        },
+        writable: index != 0,
+        eof: false,
+        position,
+    })
 }

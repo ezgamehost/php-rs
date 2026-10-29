@@ -228,7 +228,7 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::Printf | Builtin::Vprintf) {
             let length = output.len();
-            self.emit_output(&output);
+            self.emit_output(&output)?;
             Ok(Value::Int(length as i64))
         } else {
             Ok(Value::String(output.into()))

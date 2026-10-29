@@ -126,8 +126,12 @@ new request. The CLI returns the low eight bits of the requested status.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fwrite`/`fputs`, `feof`,
   `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
-  spill-to-disk, standard-stream constants, context configuration, and general
+  spill-to-disk, context configuration, and general
   wrapper registration remain unfinished.
+- `STDIN`, `STDOUT`, `STDERR`, and their `php://` wrappers preserve resource identity,
+  alias close state, pipe positions, and interleaved output. Input uses bounded
+  buffered reads; closing stdout terminates later ordinary output. Redirected output
+  seeks and nonblocking stream configuration remain unfinished.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

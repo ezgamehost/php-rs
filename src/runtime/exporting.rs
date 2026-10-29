@@ -22,7 +22,7 @@ impl Runtime {
         if return_output {
             Ok(Value::String(output.into()))
         } else {
-            self.emit_output(&output);
+            self.emit_output(&output)?;
             Ok(Value::Null)
         }
     }

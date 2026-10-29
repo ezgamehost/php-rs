@@ -225,7 +225,7 @@ impl Runtime {
         // successful requested trace. Zero means no frame limit.
         let trace = self.capture_trace_frames(1, options, limit);
         if print {
-            self.emit_output(&format_trace(&trace, false));
+            self.emit_output(&format_trace(&trace, false))?;
             Ok(Value::Null)
         } else {
             Ok(Value::Array(trace))

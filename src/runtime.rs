@@ -176,15 +176,18 @@ impl Flow {
     }
 }
 impl Runtime {
-    /// Ordinary output with displayed diagnostics interleaved, using PHP's
-    /// display_errors=1 format. The public output and warnings remain separate.
+    /// Ordinary output, explicit stderr writes, and displayed diagnostics in
+    /// emission order, using PHP's display_errors=1 diagnostic format.
+    /// The public output and warnings remain separate.
     pub fn output_with_diagnostics(&self) -> Vec<u8> {
         let mut result = Vec::new();
         let mut position = 0;
         for event in &self.diagnostics.events {
             let end = event.position.clamp(position, self.output.len());
             result.extend_from_slice(&self.output[position..end]);
-            result.push(b'\n');
+            if event.leading_newline {
+                result.push(b'\n');
+            }
             result.extend_from_slice(&event.rendered);
             position = end;
         }
@@ -192,7 +195,7 @@ impl Runtime {
         result
     }
 
-    /// Write separate CLI output/error streams in diagnostic emission order.
+    /// Write separate CLI output/error streams in emission order.
     pub fn write_output(
         &self,
         output: &mut impl std::io::Write,
@@ -211,7 +214,37 @@ impl Runtime {
         output.flush()
     }
 
-    fn emit_output(&mut self, bytes: &[u8]) {
+    fn require_stdout(&mut self) -> Result<(), Error> {
+        if self
+            .resources
+            .standard(b"STDOUT")
+            .is_some_and(|stream| !stream.is_open())
+        {
+            self.exit_status = Some(255);
+            return Err(Error::new(ErrorKind::UnwindExit, "", 0));
+        }
+        Ok(())
+    }
+
+    fn emit_output(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        if !bytes.is_empty() {
+            self.require_stdout()?;
+        }
+        self.emit_stream_output(bytes, false);
+        Ok(())
+    }
+
+    fn emit_stream_output(&mut self, bytes: &[u8], stderr: bool) {
+        if stderr {
+            self.diagnostics
+                .events
+                .push(crate::diagnostics::Diagnostic {
+                    position: self.output.len(),
+                    rendered: bytes.to_vec(),
+                    leading_newline: false,
+                });
+            return;
+        }
         self.output.extend_from_slice(bytes);
         self.diagnostics.output_position = self.output.len();
     }
@@ -266,12 +299,12 @@ impl Runtime {
             Stmt::Function(function) => {
                 self.register_function(function.clone())?;
             }
-            Stmt::Text(text) => self.emit_output(text),
+            Stmt::Text(text) => self.emit_output(text)?,
             Stmt::Echo(values) => {
                 for value in values {
                     let v = self.eval(value)?;
                     let bytes = self.string_bytes(&v, value.line)?;
-                    self.emit_output(&bytes);
+                    self.emit_output(&bytes)?;
                 }
             }
             Stmt::Expr(expr) => {
@@ -810,7 +843,7 @@ impl Runtime {
             ExprKind::Print(operand) => {
                 let value = self.eval(operand)?;
                 let bytes = self.string_bytes(&value, line)?;
-                self.emit_output(&bytes);
+                self.emit_output(&bytes)?;
                 Ok(Value::Int(1))
             }
             ExprKind::Binary(op, value, class) if op == "instanceof" => {

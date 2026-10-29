@@ -25,6 +25,7 @@ impl Runtime {
         self.constants
             .get(&key(name))
             .map(|constant| constant.value.clone())
+            .or_else(|| self.resources.standard(name).map(Value::Resource))
             .or_else(|| predefined(name))
     }
 
@@ -33,7 +34,11 @@ impl Runtime {
         if let Some(constant) = self.constants.get(&key(name)) {
             return Some(constant.clone());
         }
-        let value = predefined(name)?;
+        let value = self
+            .resources
+            .standard(name)
+            .map(Value::Resource)
+            .or_else(|| predefined(name))?;
         let canonical = if [b"true".as_slice(), b"false", b"null"]
             .iter()
             .any(|n| name.eq_ignore_ascii_case(n))

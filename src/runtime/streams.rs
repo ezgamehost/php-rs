@@ -2,7 +2,7 @@ use super::*;
 use crate::resource::{Backend, Kind, Stream};
 use std::{
     fs::OpenOptions,
-    io::{Cursor, Read, Seek, SeekFrom, Write},
+    io::{BufRead, Cursor, Read, Seek, SeekFrom, Write},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -133,6 +133,32 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let mode = mode.split(|byte| *byte == 0).next().unwrap();
+        let standard = match filename {
+            b"php://stdin" => Some((0, b"STDIN".as_slice())),
+            b"php://stdout" => Some((1, b"STDOUT".as_slice())),
+            b"php://stderr" => Some((2, b"STDERR".as_slice())),
+            _ => None,
+        };
+        if let Some((index, constant)) = standard {
+            let stream = if self
+                .resources
+                .standard(constant)
+                .is_some_and(|stream| !stream.is_open())
+            {
+                None
+            } else {
+                crate::resource::standard_stream(index).ok()
+            };
+            return match stream {
+                Some(stream) => Ok(Value::Resource(
+                    self.resources.allocate(Kind::Stream(stream)),
+                )),
+                None => {
+                    self.open_warning(filename, "operation failed", line);
+                    Ok(Value::Bool(false))
+                }
+            };
+        }
         let memory = filename == b"php://memory" || filename == b"php://temp";
         let first = mode.first().copied().unwrap_or(0);
         // These wrappers only distinguish read-only mode from writable mode;
@@ -276,14 +302,55 @@ impl Runtime {
         let Kind::Stream(stream) = &mut *kind else {
             return Err(invalid());
         };
+        if matches!(operation, Operation::Read)
+            && let Backend::StandardInput(reader) = &mut stream.backend
+        {
+            // php://stdin drains any buffered bytes, then fills at most one
+            // additional chunk. It must not wait for the entire requested
+            // length on an open pipe.
+            let mut bytes = Vec::new();
+            let take = reader.buffer().len().min(length as usize);
+            bytes.extend_from_slice(&reader.buffer()[..take]);
+            reader.consume(take);
+            if bytes.len() < length as usize {
+                match reader.fill_buf() {
+                    Ok(buffer) => {
+                        stream.eof = buffer.is_empty();
+                        let take = buffer.len().min(length as usize - bytes.len());
+                        bytes.extend_from_slice(&buffer[..take]);
+                        reader.consume(take);
+                    }
+                    Err(error) => {
+                        self.diagnostics.push(format!("Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)));
+                        return Ok(Value::Bool(false));
+                    }
+                }
+            }
+            stream.position = stream.position.wrapping_add(bytes.len() as u64);
+            return Ok(Value::String(bytes.into()));
+        }
         Ok(match operation {
             Operation::Close => {
+                if resource.id == 3
+                    && self
+                        .resources
+                        .standard(b"STDERR")
+                        .is_some_and(|standard| Rc::ptr_eq(&standard, resource))
+                {
+                    self.diagnostics.stderr_closed = true;
+                }
                 *kind = Kind::Closed;
                 Value::Bool(true)
             }
             Operation::Eof => Value::Bool(stream.eof),
             Operation::Flush => Value::Bool(stream.backend.flush().is_ok()),
-            Operation::Tell => Value::Int(stream.position as i64),
+            Operation::Tell => {
+                if stream.position == u64::MAX {
+                    Value::Bool(false)
+                } else {
+                    Value::Int(stream.position as i64)
+                }
+            }
             Operation::Rewind | Operation::Seek => {
                 let seek = match whence {
                     0 if offset >= 0 => Some(SeekFrom::Start(offset as u64)),
@@ -294,7 +361,17 @@ impl Runtime {
                     2 => Some(SeekFrom::End(offset)),
                     _ => None,
                 };
-                let position = seek.and_then(|seek| stream.backend.seek(seek).ok());
+                let position = seek.and_then(|seek| match stream.backend.seek(seek) {
+                    Ok(position) => Some(position),
+                    Err(error) => {
+                        if error.raw_os_error() == Some(29) {
+                            self.diagnostics.push(format!(
+                                "{name}(): Stream does not support seeking on line {line}"
+                            ));
+                        }
+                        None
+                    }
+                });
                 let success = position.is_some();
                 if success {
                     stream.eof = false;
@@ -314,14 +391,20 @@ impl Runtime {
             Operation::Write => {
                 if data.is_empty() {
                     Value::Int(0)
-                } else if !stream.writable && !matches!(stream.backend, Backend::File(_)) {
+                } else if let Backend::StandardOutput(stderr) = stream.backend {
+                    self.emit_stream_output(&data, stderr);
+                    stream.position = stream.position.wrapping_add(data.len() as u64);
+                    Value::Int(data.len() as i64)
+                } else if !stream.writable
+                    && !matches!(stream.backend, Backend::File(_) | Backend::StandardInput(_))
+                {
                     Value::Bool(false)
                 } else {
                     match stream.backend.write(&data) {
                         Ok(count) => {
                             // PHP tracks the logical position separately from
                             // O_APPEND's underlying file offset.
-                            stream.position += count as u64;
+                            stream.position = stream.position.wrapping_add(count as u64);
                             Value::Int(count as i64)
                         }
                         Err(error) => {
@@ -342,7 +425,7 @@ impl Runtime {
                             break;
                         }
                         Ok(count) => {
-                            stream.position += count as u64;
+                            stream.position = stream.position.wrapping_add(count as u64);
                             bytes.try_reserve(count).map_err(|_| {
                                 Error::new(
                                     ErrorKind::Error,
@@ -353,7 +436,12 @@ impl Runtime {
                             bytes.extend_from_slice(&buffer[..count]);
                         }
                         Err(error) => {
-                            self.diagnostics.push(format!("Notice: {name}(): Read of {wanted} bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)));
+                            let reported = if matches!(stream.backend, Backend::StandardOutput(_)) {
+                                8192
+                            } else {
+                                wanted
+                            };
+                            self.diagnostics.push(format!("Notice: {name}(): Read of {reported} bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)));
                             return Ok(Value::Bool(false));
                         }
                     }

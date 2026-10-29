@@ -1182,6 +1182,7 @@ impl Runtime {
                         line,
                     ));
                 }
+                self.require_stdout()?;
                 dump(first, 0, &mut self.output, line, &mut self.diagnostics);
                 for (_, value) in extra.entries() {
                     dump(value, 0, &mut self.output, line, &mut self.diagnostics);

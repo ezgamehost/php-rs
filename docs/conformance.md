@@ -1669,6 +1669,37 @@ matrices were added. Error handlers, destructors, property hooks, PHP memory lim
 and complete native metadata remain incomplete. PHP 8.5.0 array source, native
 signatures, upstream PHPT, and reference execution establish these behaviors.
 
+The [standard-stream slice](conformance/php-8.5.0-stdio-hillclimb.txt) adds
+**seven upstream passes**: three Zend, three array, and one reflection fixture,
+with no regressions across the six suites. `STDIN`, `STDOUT`, and `STDERR` are
+stream resources with IDs 1, 2, and 3; their `php://` wrappers create independent
+handles. Aliases share closed state, existing duplicates survive a standard handle
+close, and reopening a closed original channel fails. Host descriptors are safely
+duplicated so a request cannot close the embedding application's handles.
+
+Input drains buffered data and reads at most one additional 8192-byte chunk, allowing
+`fread` to return available pipe data without waiting for the entire requested length.
+Pipe positions start unknown and advance after I/O. Explicit stderr writes retain
+byte order alongside echo, stdout writes, and diagnostics without adding diagnostic
+prefixes or newlines. Closing stderr suppresses later displayed diagnostics. Closing
+stdout terminates later ordinary output with status 255, while preserving earlier
+captured bytes and writes through still-open duplicates.
+
+Arrays reach **721 / 67 / 52**, Zend **2121 / 2727 / 408**, and reflection
+**280 / 175 / 37**; SPL, strings, and math retain their totals. All 797 existing
+Rust tests, 57 reference-checked project PHPT cases, formatting, and Clippy pass.
+Reference probes match stream identities, positions, buffered reads, EOF, I/O errors,
+merged output order, wrapper modes, duplicate/alias closes, and exit status. A separate
+live-pipe probe verifies prompt reads while the writer remains open. The upstream
+`std_streams.phpt` remains unsupported for `CAPTURE_STDIO` and `SKIPIF`, and is not
+counted as a pass. No custom tests or generated matrices were added.
+
+Redirected stdout/stderr seeking, full buffer-relative seeking, nonblocking settings,
+filters, descriptor inheritance, PHP memory limits, and complete wrapper/context
+support remain unfinished. Captured output handles currently remain nonseekable even
+when their host descriptor is redirected to a regular file. PHP 8.5.0 CLI and stream
+source, upstream PHPT, and reference execution establish these behaviors.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1676,11 +1707,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2118 | 2730 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 279 | 176 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2121 | 2727 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 718 | 70 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 721 | 67 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
