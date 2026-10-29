@@ -675,6 +675,29 @@ impl Runtime {
                     line,
                 )
             };
+            if let Some(Builtin::ArrayUserSet(operation)) = builtin {
+                // Legacy variadic parsing rejects extra named arguments before
+                // checking its callback-dependent minimum argument count.
+                if bound
+                    .extra
+                    .entries()
+                    .iter()
+                    .any(|(key, _)| matches!(key, ArrayKey::String(_)))
+                {
+                    return Err(Error::new(
+                        ErrorKind::ArgumentCountError,
+                        format!(
+                            "{}() does not accept unknown named parameters",
+                            String::from_utf8_lossy(&name)
+                        ),
+                        line,
+                    ));
+                }
+                let minimum = operation.callbacks() + 1;
+                if supplied < minimum {
+                    return Err(count_error(minimum, "at least"));
+                }
+            }
             for (index, param) in parameters.iter().enumerate() {
                 if !param.variadic && param.default.is_none() && bound.fixed[index].is_none() {
                     if index >= supplied_fixed && supplied < required {

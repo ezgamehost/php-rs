@@ -80,6 +80,7 @@ pub(super) enum Builtin {
     ArraySplice,
     ArrayColumn,
     ArraySet(array_sets::Operation),
+    ArrayUserSet(array_user_sets::Operation),
     ArrayStack(array_stack::Action),
     ArrayReverse,
     ArrayChunk,
@@ -291,6 +292,24 @@ impl Builtin {
             b"array_diff_assoc" => Self::ArraySet(array_sets::Operation::DifferenceAssoc),
             b"array_intersect_key" => Self::ArraySet(array_sets::Operation::IntersectionKey),
             b"array_intersect_assoc" => Self::ArraySet(array_sets::Operation::IntersectionAssoc),
+            b"array_diff_ukey" => Self::ArrayUserSet(array_user_sets::Operation::DiffKeys),
+            b"array_intersect_ukey" => {
+                Self::ArrayUserSet(array_user_sets::Operation::IntersectKeys)
+            }
+            b"array_diff_uassoc" => Self::ArrayUserSet(array_user_sets::Operation::DiffAssoc),
+            b"array_intersect_uassoc" => {
+                Self::ArrayUserSet(array_user_sets::Operation::IntersectAssoc)
+            }
+            b"array_udiff" => Self::ArrayUserSet(array_user_sets::Operation::DiffValues),
+            b"array_uintersect" => Self::ArrayUserSet(array_user_sets::Operation::IntersectValues),
+            b"array_udiff_assoc" => Self::ArrayUserSet(array_user_sets::Operation::DiffAssocValues),
+            b"array_uintersect_assoc" => {
+                Self::ArrayUserSet(array_user_sets::Operation::IntersectAssocValues)
+            }
+            b"array_udiff_uassoc" => Self::ArrayUserSet(array_user_sets::Operation::DiffBoth),
+            b"array_uintersect_uassoc" => {
+                Self::ArrayUserSet(array_user_sets::Operation::IntersectBoth)
+            }
             b"array_push" => Self::ArrayStack(array_stack::Action::Push),
             b"array_pop" => Self::ArrayStack(array_stack::Action::Pop),
             b"array_shift" => Self::ArrayStack(array_stack::Action::Shift),
@@ -603,6 +622,7 @@ impl Builtin {
                 ("index_key", true, false),
             ],
             Self::ArraySet(_) => &[("array", false, false), ("arrays", false, true)],
+            Self::ArrayUserSet(_) => &[("array", false, false), ("rest", false, true)],
             Self::ArrayStack(array_stack::Action::Push | array_stack::Action::Unshift) => {
                 &[("array", false, false), ("values", false, true)]
             }
@@ -847,6 +867,9 @@ impl Runtime {
         }
         if let Builtin::ArraySet(operation) = builtin {
             return self.array_set(operation, &name, args[0].as_ref().unwrap(), &extra, line);
+        }
+        if let Builtin::ArrayUserSet(operation) = builtin {
+            return self.array_user_set(operation, &name, args[0].as_ref().unwrap(), &extra, line);
         }
         if let Builtin::ArrayCursor(action) = builtin {
             return self.array_cursor(action, &name, args, references, line, result_used);
@@ -1185,7 +1208,10 @@ impl Runtime {
             | Builtin::ArrayFlip
             | Builtin::ArrayCountValues
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
-            Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) | Builtin::ArraySet(_) => {
+            Builtin::ArrayMerge(_)
+            | Builtin::ArrayReplace(_)
+            | Builtin::ArraySet(_)
+            | Builtin::ArrayUserSet(_) => {
                 unreachable!()
             }
             Builtin::ArrayCursor(_) => unreachable!(),

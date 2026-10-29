@@ -1597,6 +1597,31 @@ limits, and complete native metadata remain incomplete. PHP 8.5.0 array/operator
 source, native signatures, upstream PHPT, and reference execution establish these
 behaviors; the adapted set algorithms retain PHP's notices and license.
 
+The [user-comparator array set slice](conformance/php-8.5.0-array-user-sets-hillclimb.txt)
+adds **68 upstream array passes**, with no regressions across the six suites. All ten
+callback variants are implemented: `_ukey`, `_uassoc`, `array_udiff`/`array_uintersect`,
+and their `_assoc` and `_uassoc` forms. Sorted variants follow Zend's unstable
+comparison order and native list scans; key-comparator differences restart their
+search in each other array. Separate key and value callbacks retain their native
+argument order. Exact-key associative value-callback variants use direct lookup and
+cast comparator returns without the boolean retry/deprecation used by sorted variants.
+
+Callback validation precedes array validation, and unknown named arguments precede
+minimum-arity checks. Shared element references remain visible to callback reference
+parameters and returned arrays. Pending exceptions suppress later callbacks while
+preserving scalar-conversion diagnostics. The request-wide boolean-comparator
+deprecation flag follows nested-call resets, including ordinary `array_intersect`.
+
+Arrays reach **693 / 95 / 52**; Zend remains **2115 / 2733 / 408**, and reflection,
+SPL, strings, and math retain their prior totals. All 797 existing Rust tests, 57
+reference-checked project PHPT cases, formatting, and Clippy pass. A short reference
+probe matches all ten variants, comparison order, reference mutations, argument-error
+ordering, boolean and reference-returned comparator results, nested resets, pending
+exceptions, and distinct key/data callbacks. No custom tests or generated matrices
+were added. Error handlers, destructors, physical sparse-table history, PHP memory
+limits, and complete native metadata remain incomplete. PHP 8.5.0 array source,
+native signatures, upstream PHPT, and reference execution establish these behaviors.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1608,7 +1633,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 625 | 163 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 693 | 95 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 335 | 243 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

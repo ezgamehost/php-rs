@@ -301,7 +301,7 @@ impl Runtime {
         }
     }
 
-    fn user_sort_compare(
+    pub(super) fn user_sort_compare(
         &mut self,
         callback: &functions::CallTarget,
         mut values: [Value; 2],
@@ -323,7 +323,11 @@ impl Runtime {
         self.user_sort_result(result, line)
     }
 
-    fn user_sort_result(&mut self, result: Value, line: usize) -> Result<Ordering, Error> {
+    pub(super) fn user_sort_result(
+        &mut self,
+        result: Value,
+        line: usize,
+    ) -> Result<Ordering, Error> {
         // zval_get_long_func(..., false) accepts every value, truncates fractional
         // returns without a precision deprecation, and retains overflow warnings.
         let Value::Int(result) = casting::cast(

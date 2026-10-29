@@ -32,6 +32,9 @@ impl Runtime {
                 line,
             ));
         }
+        if matches!(operation, Operation::Intersection) {
+            self.sort_compare_deprecated = false;
+        }
         let input = builtins::require_array(first, name, 1, line)?;
         let mut pending = None;
         if matches!(operation, Operation::Difference) {
@@ -260,7 +263,7 @@ impl Runtime {
         pending.map_or_else(|| Ok(Value::Array(Rc::new(output))), Err)
     }
 
-    fn set_compare(
+    pub(super) fn set_compare(
         &mut self,
         a: &Value,
         b: &Value,
@@ -290,7 +293,7 @@ impl Runtime {
         }
     }
 
-    fn set_error(&mut self, error: Error, pending: &mut Option<Error>) {
+    pub(super) fn set_error(&mut self, error: Error, pending: &mut Option<Error>) {
         // Native argument checks and object casts leave an existing exception
         // intact while the surrounding C loop finishes.
         if pending.is_none() {

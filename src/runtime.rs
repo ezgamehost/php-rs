@@ -21,6 +21,7 @@ mod array_segments;
 mod array_sets;
 mod array_splice;
 mod array_stack;
+mod array_user_sets;
 mod array_walk;
 mod attributes;
 mod autoload;
