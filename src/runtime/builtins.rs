@@ -13,6 +13,7 @@ pub(super) enum Builtin {
     Bin2Hex,
     Base64(bool),
     Rot13,
+    Wordwrap,
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -154,6 +155,7 @@ impl Builtin {
             b"base64_encode" => Self::Base64(true),
             b"base64_decode" => Self::Base64(false),
             b"str_rot13" => Self::Rot13,
+            b"wordwrap" => Self::Wordwrap,
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -497,6 +499,12 @@ impl Builtin {
                 &[("string", false, false)]
             }
             Self::Base64(false) => &[("string", false, false), ("strict", true, false)],
+            Self::Wordwrap => &[
+                ("string", false, false),
+                ("width", true, false),
+                ("break", true, false),
+                ("cut_long_words", true, false),
+            ],
             Self::Ucwords => &[("string", false, false), ("separators", true, false)],
             Self::Nl2Br => &[("string", false, false), ("use_xhtml", true, false)],
             Self::CountChars => &[("string", false, false), ("mode", true, false)],
@@ -764,6 +772,9 @@ impl Builtin {
                             }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Base64(false), "strict") => Value::Bool(false),
+                            (Self::Wordwrap, "width") => Value::Int(75),
+                            (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
+                            (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
                             (Self::Range, "step") => Value::Int(1),
                             (Self::Fopen | Self::FileGetContents, "use_include_path") => {
                                 Value::Bool(false)
@@ -986,6 +997,7 @@ impl Runtime {
             Builtin::SlashEscape(add, c_style) => self.escape_slashes(add, c_style, &args, line),
             Builtin::StripTags => self.strip_tags(&args, line),
             Builtin::Base64(encode) => self.base64(encode, &name, &args, line),
+            Builtin::Wordwrap => self.wordwrap(&args, line),
             Builtin::Hex2Bin
             | Builtin::Rot13
             | Builtin::FirstCase(_)

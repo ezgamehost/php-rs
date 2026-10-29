@@ -409,6 +409,8 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion where applicable and PHP 8.5 byte-range/length deprecations.
 - Binary-safe `base64_encode`, permissive/strict `base64_decode`, and ASCII
   `str_rot13`, with native argument coercion and padding validation.
+- Byte-oriented `wordwrap` supports custom breaks, optional long-word cutting,
+  existing separators, and PHP's zero/negative-width behavior.
 - ASCII `strtolower`/`strtoupper`, lowercase `bin2hex` encoding, and
   `trim`/`ltrim`/`rtrim`/`chop` with binary character lists and inclusive ranges.
 - `str_replace`/`str_ireplace` support binary strings and arrays, sequential searches,

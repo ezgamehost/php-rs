@@ -95,6 +95,7 @@ mod typed_properties;
 mod types;
 mod variable_inspection;
 mod variables;
+mod wordwrap;
 use offsets::{Access, Offset};
 use reference_paths::{unset as unset_path, write as write_path};
 use variables::{Scope, cell};
