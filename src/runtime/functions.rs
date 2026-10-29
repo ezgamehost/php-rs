@@ -362,6 +362,7 @@ impl Runtime {
                 &target,
                 &parameters,
                 &bound.fixed,
+                &bound.references,
                 &bound.extra,
                 if internal { None } else { Some(line) },
             ));

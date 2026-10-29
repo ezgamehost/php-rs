@@ -64,6 +64,7 @@ pub(crate) mod reflection;
 mod rounding;
 mod scope_slots;
 mod sensitive_parameters;
+mod sorting;
 mod static_members;
 mod string_builtins;
 mod string_bytes;

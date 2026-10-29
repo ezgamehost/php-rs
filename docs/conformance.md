@@ -1291,6 +1291,43 @@ native signatures, upstream fixtures, and reference execution establish the beha
 Resource/extension-object comparisons, complete native reflection metadata, and
 INI/SKIPIF harness support remain unfinished.
 
+The [array-sorting slice](conformance/php-8.5.0-sorting-hillclimb.txt) adds **99 upstream
+passes**: 92 array fixtures, three Zend fixtures, three reflection fixtures, and one
+string fixture, with no regressions across the six suites. It implements `sort`,
+`rsort`, `asort`, `arsort`, `ksort`, `krsort`, `natsort`, and `natcasesort`, with PHP's
+sorting constants and stable ties in either direction. Numeric key sorting compares
+integer keys exactly; numeric value sorting uses doubles. String and natural modes
+support case folding, and unknown modes fall back to regular comparison. Natural
+comparison handles whitespace, leading zeroes, and digit runs. Locale sorting currently
+implements the C locale only.
+
+The sorting algorithm follows PHP's bucket comparison order, including small-array
+insertion sorting and median-pivot quicksort, so non-transitive comparisons and conversion
+warnings do not depend on Rust's total-order sorting contract. Reordering preserves
+reference cells and live foreach offsets; key-preserving sorts retain the append counter,
+while renumbering sorts reset it. Internal cursors reset only when PHP actually reorders
+buckets. Active call frames retain by-reference argument cells instead of artificial
+array snapshots, fixing unnecessary copy-on-write and exhausted-cursor changes. Failed
+string conversions record the exception and finish sorting with empty strings while
+suppressing subsequent user conversions. Regular object/string comparisons retain PHP's
+failed-cast ordering. The translated algorithms' original notices and licenses are in
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
+Arrays reach **397 / 391 / 52**, Zend **2071 / 2777 / 408**, reflection **277 / 178 / 37**,
+and strings **325 / 253 / 152**. All 797 existing Rust tests, 57 reference-checked project
+fixtures, formatting, and Clippy pass. Direct reference execution matches stable numeric
+ties, copied/shared references, one-element cursors, active foreach, NaN string warnings,
+regular/string conversion exceptions, and replacement of the input during conversion.
+Two existing INI fixture FILE programs match with `precision=14`; their fixtures remain
+unsupported and add no claimed passes. A separate reference probe confirms an outstanding
+reentrant-copy limitation: a copy captured inside `__toString()` retains its original
+order here, while PHP exposes its live sorting table and updates that copy's order too.
+This mismatch is recorded rather than counted as a pass. Callback sorting, `array_multisort`,
+locale configuration, resource values, live-table observation during conversions, and
+complete native reflection metadata remain unfinished. No custom tests or generated
+matrices were added. PHP 8.5.0 source, native signatures, upstream PHPT, and reference
+execution establish the implemented behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1298,13 +1335,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2068 | 2780 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2071 | 2777 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 277 | 178 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 305 | 483 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 397 | 391 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

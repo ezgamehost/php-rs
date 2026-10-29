@@ -33,6 +33,7 @@ impl TraceFrame {
         target: &CallTarget,
         parameters: &[Parameter],
         fixed: &[Option<Value>],
+        references: &[Option<variables::Cell>],
         extra: &PhpArray,
         site: Option<usize>,
     ) -> Self {
@@ -80,7 +81,13 @@ impl TraceFrame {
         for (index, value) in fixed.iter().take(supplied).enumerate() {
             arguments.insert(
                 ArrayKey::Int(index as i64),
-                value.clone().unwrap_or(Value::Null),
+                // Active by-reference arguments refer to the caller's cell.
+                // Keeping an array snapshot here would cause artificial COW
+                // and reset exhausted cursors during native argument parsing.
+                references[index].as_ref().map_or_else(
+                    || value.clone().unwrap_or(Value::Null),
+                    |reference| Value::Reference(reference.clone()),
+                ),
             );
             frame.fixed.push(parameters[index].name.clone());
         }

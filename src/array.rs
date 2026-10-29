@@ -138,6 +138,33 @@ impl PartialEq for PhpArray {
     }
 }
 impl PhpArray {
+    /// Apply a bucket permutation without copying reference values. PHP leaves
+    /// live foreach positions at their bucket offsets and resets only the IAP.
+    pub(crate) fn reorder(&mut self, order: &[usize], renumber: bool) {
+        if self.len() <= 1 && !(renumber && !self.is_empty()) {
+            return;
+        }
+        let mut old: Vec<_> = std::mem::take(&mut self.entries)
+            .into_iter()
+            .map(Some)
+            .collect();
+        self.positions.clear();
+        for (position, &index) in order.iter().enumerate() {
+            let (key, value) = old[index].take().unwrap();
+            let key = if renumber {
+                ArrayKey::Int(position as i64)
+            } else {
+                key
+            };
+            self.positions.insert(key.clone(), position);
+            self.entries.push((key, value));
+        }
+        if renumber {
+            self.next_index = Some(self.len() as i64);
+        }
+        self.cursor = 0;
+    }
+
     pub(crate) fn cursor_entry(&self) -> Option<&(ArrayKey, Value)> {
         self.entries.get(self.cursor)
     }

@@ -60,6 +60,7 @@ impl Runtime {
                 | b"PHP_ROUND_HALF_EVEN"
                 | b"PHP_ROUND_HALF_ODD"
         ) || math_constant(name).is_some()
+            || sort_constant(name).is_some()
         {
             "standard"
         } else {
@@ -152,7 +153,24 @@ fn key(name: &[u8]) -> Vec<u8> {
     key
 }
 
+fn sort_constant(name: &[u8]) -> Option<Value> {
+    Some(Value::Int(match name {
+        b"SORT_REGULAR" => 0,
+        b"SORT_NUMERIC" => 1,
+        b"SORT_STRING" => 2,
+        b"SORT_DESC" => 3,
+        b"SORT_ASC" => 4,
+        b"SORT_LOCALE_STRING" => 5,
+        b"SORT_NATURAL" => 6,
+        b"SORT_FLAG_CASE" => 8,
+        _ => return None,
+    }))
+}
+
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = sort_constant(name) {
+        return Some(value);
+    }
     if name.eq_ignore_ascii_case(b"true") {
         return Some(Value::Bool(true));
     }

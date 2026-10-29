@@ -1,0 +1,307 @@
+PHP 8.5.0 built-in array sorting hillclimb
+Baseline: cc05619 (minimum/maximum)
+
+ZEND
+Before: 5256 cases; 2068 passed, 2780 failed, 408 unsupported
+After: 5256 cases; 2071 passed, 2777 failed, 408 unsupported
+New passes: 3; regressions: 0
+NEW PASS: Zend/tests/call_user_functions/call_user_func_009.phpt
+NEW PASS: Zend/tests/foreach/foreach_011.phpt
+NEW PASS: Zend/tests/gh16648.phpt
+
+Most frequent remaining failure messages:
+9: Expected "Fatal error: __debuginfo() must return an array in %s
+4: Expected "Parse error: syntax error, unexpected token \"exit\", expecting identifier in %s
+4: Expected "object(Test)#3 (0) {\n}\nobject(Test)#3 (0) {\n}\n", got "object(Test)#3 (0) {\n}\nobject(Test)#2 (0) {\n}\n"
+4: Expected "NULL\n", got "object(Test)#2 (0) {\n}\n"
+4: Expected "Fatal error: Duplicate type Foo is redundant in %s
+3: Expected "Deprecated: Trait DemoTraitA used by DemoClass is deprecated in %s on line %d\n\nDeprecated: Trait DemoTraitB used by DemoClass is deprecated in %s
+2: Expected "Fatal error: C::c() has #[\\Override] attribute, but no matching parent method exists in %s
+2: Expected "Fatal error: P::i() has #[\\Override] attribute, but no matching parent method exists in %s
+2: Expected "Fatal error: C::p() has #[\\Override] attribute, but no matching parent method exists in %s
+2: Expected "Fatal error: C::$c has #[\\Override] attribute, but no matching parent property exists in %s
+2: Expected "Fatal error: C::$p has #[\\Override] attribute, but no matching parent property exists in %s
+2: Expected "Array\n(\n    [0] => 123\n)\nArray\n(\n    [0] => 123\n)\n", got "Array\n(\n    [0] => Array\n *RECURSION*\n)\nArray\n(\n    [0] => 123\n)\n"
+2: Expected "Cannot access offset of type Closure on array\n", got "Illegal offset type\n"
+2: Expected "Warning: Constant __COMPILER_HALT_OFFSET__ already defined, this will be an error in PHP 9 in %s
+2: Expected "Parse error: syntax error, unexpected token \"exit\", expecting \"(\" in %s
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+REFLECTION
+Before: 492 cases; 274 passed, 181 failed, 37 unsupported
+After: 492 cases; 277 passed, 178 failed, 37 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/reflection/tests/001.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getInterfaces_001.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getNamespaceName.phpt
+
+Most frequent remaining failure messages:
+1: Expected "Method [ <user, overwrites Foo, prototype Foo> public method func ] {\n  @@ %s010.php 7 - 8\n}\n", got "\nFatal error: Uncaught Error: Object of class ReflectionMethod co
+1: Expected "ReflectionException\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getClasses() in /private/tmp/php-rs-reference/php-8.5.0/ext/refl
+1: Expected "sleep\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getFunctions() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests
+1: Expected "int(0)\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getConstants() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/test
+1: Expected "Class [ <user> class Foo ] {\n  @@ %s017.php 2-4\n\n  - Constants [1] {\n    Constant [ public string test ] { ok }\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static
+1: Expected "array(2) {\n  [0]=>\n  string(5) \"final\"\n  [1]=>\n  string(9) \"protected\"\n}\n", got "\nFatal error: Uncaught Error: Class \"Reflection\" not found in /private/tmp/p
+1: Expected "string(8) \"standard\"\n", got "\nFatal error: Uncaught ReflectionException: Function sleep() does not exist in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tes
+1: Expected "Object of class [ <user> class C1 ] {\n  @@ %s\n\n  - Constants [0] {\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static methods [0] {\n  }\n\n  - Properties [3] {\n 
+1: Expected "Reflection\n\nReflection => enabled\n\ndate\n\ndate/time support => enabled\ntimelib version => %s\n\"Olson\" Timezone Database Version => %s\nTimezone Database => %s\nDe
+1: Expected "Cannot fetch information from a closed Generator\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/027.php
+1: Expected "object(ReflectionGenerator)#%d (0) {\n}\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/028.php
+1: Expected "Cannot directly instantiate ReflectionAttribute\n", got "\nFatal error: Uncaught ArgumentCountError: ReflectionAttribute::__construct() expects exactly 0 arguments, 3 giv
+1: Expected "Attribute [ Foo ]\nAttribute [ Bar ] {\n  - Arguments [2] {\n    Argument #0 [ a = 'foo' ]\n    Argument #1 [ b = 1234 ]\n  }\n}\nAttribute [ Baz ] {\n  - Arguments [2] {
+1: Expected "int(2)\nConstant [ public int X ] { 2 }\nClass [ <user> class C ] {\n  @@ %s 12-15\n\n  - Constants [2] {\n    Constant [ public int X ] { 2 }\n    Constant [ public int 
+1: Expected "Class [ <user> class A ] {\n  @@ %s 2-5\n\n  - Constants [2] {\n    Constant [ public int A ] { 8 }\n    Constant [ public array B ] { Array }\n  }\n\n  - Static properti
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+SPL
+Before: 778 cases; 22 passed, 662 failed, 94 unsupported
+After: 778 cases; 22 passed, 662 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "Fatal error: Uncaught ArgumentCountError: AppendIterator::__construct() expects exactly 0 arguments, 1 given in %s:%d\nStack trace:\n#0 %s(%d): AppendIterator->__construc
+1: Expected "MyArrayIterator\n", got "\nFatal error: Uncaught Error: Class \"ArrayIterator\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayObject
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "object(ArrayObject)#1 (1) {\n  [\"storage\":\"ArrayObject\":private]=>\n  array(3) {\n    [0]=>\n    int(1)\n    [1]=>\n    int(2)\n    [2]=>\n    int(3)\n  }\n}\n", got 
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Modification of ArrayObject during sorting is prohibited\nobject(ArrayObject)#1 (1) {\n  [\"storage\":\"ArrayObject\":private]=>\n  array(3) {\n    [0]=>\n    int(1)\n   
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Cannot access offset of type array on ArrayObject\nCannot access offset of type array on ArrayObject\nCannot access offset of type array on ArrayObject\nCannot access off
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: Creation of dynamic property ArrayObject::$prop is deprecated in %s on line %d\n\nDeprecated: ArrayObject::__construct(): Using an object as a backing array f
+1: Expected "Done\n", got "\nFatal error: Uncaught Error: Class \"ArrayObject\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayObject_unserialize_
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+STRINGS
+Before: 730 cases; 324 passed, 254 failed, 152 unsupported
+After: 730 cases; 325 passed, 253 failed, 152 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug47481.phpt
+
+Most frequent remaining failure messages:
+1: Expected "shuffle\n1234: [34][0-9][0-9][0-9]: 0.0[3-4][0-9]\n1243: [34][0-9][0-9][0-9]: 0.0[3-4][0-9]\n1324: [34][0-9][0-9][0-9]: 0.0[3-4][0-9]\n1342: [34][0-9][0-9][0-9]: 0.0[3-4]
+1: Expected "Warning: highlight_file(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+1: Expected "string(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\nstring(3) \"bar\"\
+1: Expected "*** Testing basic operations ***\n\n--Iteration 1--\nstring(3) \"bar\"\n\n--Iteration 2--\nstring(3) \"bar\"\n\n--Iteration 3--\nstring(3) \"bar\"\n\n--Iteration 4--\nstr
+1: Expected "*** Testing possible variations in path and suffix ***\n\n--Iteration 1--\nstring(3) \"bar\"\n\n--Iteration 2--\nstring(3) \"bar\"\n\n--Iteration 3--\nstring(3) \"bar\"\n
+1: Expected "delimiter: |\ndelimiter: |\n", got "\nFatal error: Uncaught Error: Call to undefined function set_time_limit() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tes
+1: Expected "1: boo\n2: boo\n3: \n1: boo\n2: boo\n3: obb\n", got "1: boo\n2: boo\n3: \n\nFatal error: Uncaught Error: Call to undefined function str_rot13() in /private/tmp/php-rs-ref
+1: Expected "Length of original string:  130\nLength of break string:     352\nstring(6799) \"1234567890a-very-long-break-string-to-clobber-the-heapa-very-long-break-string-to-clobber
+1: Expected "c3a0c3a1\nc3a0c3a1\n", got "c3a0c3a1\n\nFatal error: Uncaught Error: Call to undefined function htmlspecialchars() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard
+1: Expected "string(0) \"\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strin
+1: Expected "array(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2]=>\n  int(9)\n}\narray(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2
+1: Expected "array(4) {\n  [\"dirname\"]=>\n  string(1) \"%e\"\n  [\"basename\"]=>\n  string(8) \"dsds.asa\"\n  [\"extension\"]=>\n  string(3) \"asa\"\n  [\"filename\"]=>\n  string(4)
+1: Expected "string(100) \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\nstring(100) \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+1: Expected "Warning: Array to string conversion in %s on line %d\na:4:{i:0;s:19:\"This is strung one.\";i:1;s:19:\"This is strung two.\";i:2;s:5:\"Array\";i:3;s:22:\"This is a last s
+1: Expected "string(4) \"&lt;\"\nstring(5) \"&#38;\"\nstring(8) \"&#38;lt;\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/ph
+
+Unsupported section combinations:
+84: SKIPIF
+40: INI
+11: INI, SKIPIF
+7: EXTENSIONS, INI
+5: CLEAN, INI
+3: EXTENSIONS
+2: ENV, SKIPIF
+
+ARRAY
+Before: 840 cases; 305 passed, 483 failed, 52 unsupported
+After: 840 cases; 397 passed, 391 failed, 52 unsupported
+New passes: 92; regressions: 0
+NEW PASS: ext/standard/tests/array/009.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_object1.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_object2.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation3.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/arsort_variation_escape_sequences.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_object1.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_object2.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_stability.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation3.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/asort_variation_escape_sequences.phpt
+NEW PASS: ext/standard/tests/array/sort/bug33382.phpt
+NEW PASS: ext/standard/tests/array/sort/bug44929.phpt
+NEW PASS: ext/standard/tests/array/sort/gh9296.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_object.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation3.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/krsort_variation_escape_sequences.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_object.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation3.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/ksort_variation_escape_sequences.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_object1.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_object2.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/natcasesort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/natsort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_object1.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_object2.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/rsort_variation_escape_sequences.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_basic.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_object1.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_object2.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation10.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation11.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation3.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation4.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation5.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation6.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation7.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation8.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation9.phpt
+NEW PASS: ext/standard/tests/array/sort/sort_variation_escape_sequences.phpt
+
+Most frequent remaining failure messages:
+6: Expected "Exception caught: Array was modified during array_splice operation\n", got "Exception caught: Call to undefined function array_splice()\n"
+1: Expected "*** Testing Error Conditions ***\nNULL\n\n*** Testing with various array inputs ***\n\n-- Input Array for Iteration 1 is --\narray(0) {\n}\n\nOutput after shift is :\nNUL
+1: Expected "fubar\narray(3) {\n  [0]=>\n  string(3) \"foo\"\n  [1]=>\n  string(3) \"bar\"\n  [2]=>\n  string(6) \"foobar\"\n}\nfubar\narray(2) {\n  [3]=>\n  string(3) \"foo\"\n  [4]=
+1: Expected "$a=array (\n  0 => 1,\n  'big' => 2,\n  1 => 3,\n  2 => 6,\n  3 => 3,\n  4 => 5,\n  5 => 3,\n  6 => 3,\n  7 => 3,\n  8 => 3,\n  9 => 3,\n  10 => 3,\n  11 => 3,\n  12 => 3
+1: Expected "-=-=-=-=-=-=-=-=-=-= TEST 1 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n$a=array (\n  0 => 1,\n  'big' => 2,\n  1 => 2,\n  2 => 6,\n  3 => 3,\n  4 => 5,\n  5 => 3,\n  6 => 
+1: Expected "bool(true)\nbool(true)\nbool(false)\nbool(true)\n*** Test Exception after false result ***\nbool(false)\n*** Test aborting with exception ***\nint(1)\nstring(17) \"Catche
+1: Expected "bool(true)\nbool(true)\nbool(false)\nbool(false)\nbool(true)\nbool(false)\n*** Test Exception after true result ***\nbool(true)\n*** Test aborting with exception ***\nint
+1: Expected "*** Testing basic operations ***\n** Iteration 1 **\narray(0) {\n}\narray(0) {\n}\narray(0) {\n}\n\n** Iteration 2 **\narray(1) {\n  [0]=>\n  int(0)\n}\narray(1) {\n  [0]
+1: Expected "array_change_key_case(): Argument #2 ($case) must be of type int, string given\narray(4) {\n  [\"ONE\"]=>\n  int(1)\n  [\"TWO\"]=>\n  int(2)\n  [\"THREE\"]=>\n  int(3)\n 
+1: Expected "*** Testing array_change_key_case() : usage variations ***\n\n-- int data --\narray(4) {\n  [0]=>\n  string(4) \"zero\"\n  [1]=>\n  string(3) \"one\"\n  [12345]=>\n  stri
+1: Expected "*** Testing array_change_key_case() : usage variations ***\n\n-- $sort argument is -5 --\narray(3) {\n  [\"ONE\"]=>\n  string(2) \"un\"\n  [\"TWO\"]=>\n  string(4) \"deux
+1: Expected "*** Testing array_change_key_case() : usage variations ***\n\n-- Call array_change_key_case() --\narray(3) {\n  [\"ONE\"]=>\n  string(2) \"un\"\n  [\"TWO\"]=>\n  string(4
+1: Expected "*** Testing array_change_key_case() : usage variations ***\n\n-- Pass a two-dimensional array as $input argument --\narray(3) {\n  [\"ENGLISH\"]=>\n  array(3) {\n    [\"o
+1: Expected "*** Testing array_change_key_case() : usage variations ***\n\n-- $input argument is a reference to array --\nResult:\narray(3) {\n  [\"ONE\"]=>\n  int(1)\n  [\"TWO\"]=>\n
+1: Expected "*** Testing array_change_key_case() : usage variations ***\n\n-- $case = default --\narray(9) {\n  [\"\\a\"]=>\n  int(3)\n  [\"\\cx\"]=>\n  int(4)\n  [\"\u{1b}\"]=>\n  in
+
+Unsupported section combinations:
+29: INI
+9: SKIPIF
+8: INI, SKIPIF
+5: EXTENSIONS
+1: CLEAN
+
+MATH
+Before: 171 cases; 49 passed, 5 failed, 117 unsupported
+After: 171 cases; 49 passed, 5 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "*** Testing abs() : usage variations ***\n\n-- Iteration 1 --\n\nDeprecated: abs(): Passing null to parameter #1 ($num) of type int|float is deprecated in %s on line %d\n
+1: Expected "*** Testing base_convert() : usage variations ***\n\n-- Iteration 1 --\nstring(1) \"0\"\n\n-- Iteration 2 --\nstring(1) \"1\"\n\n-- Iteration 3 --\nstring(2) \"14\"\n\n--
+1: Expected "string(2775) \"-2,000.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1: Expected "float(1%f)\nstring(%d) \"d:1%s;\"\nfloat(1%f)\nfloat(-1%f)\nstring(%d) \"d:-1%s;\"\nfloat(-1%f)\nfloat(-INF)\nstring(7) \"d:-INF;\"\nfloat(-INF)\nfloat(INF)\nstring(6) \"
+1: Expected "int(%d)\n", got "\nFatal error: Uncaught Error: Call to undefined function getrandmax() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/math/getrandmax_basi
+
+Unsupported section combinations:
+56: INI
+41: SKIPIF
+20: INI, SKIPIF
+
+Local validation: 797 existing Rust tests passed; cargo clippy --all-targets -- -D warnings, cargo fmt --check, git diff --check passed.
+Short reference comparison (stable ties, references, cursor behavior, active foreach, NaN strings, string/regular conversion exceptions, input replacement):
+MATCH
+
+Existing upstream FILE programs executed directly, not counted as PHPT passes:
+internal_sorts_basic: MATCH (FILE only; precision=14; fixture remains unsupported)
+natsort_natcasesort_basics: MATCH (FILE only; precision=14; fixture remains unsupported)
+
+Known reentrant-copy mismatch (not counted as a pass): __toString copies the array during sorting. PHP exposes the live sorting table; the Rust copy keeps the original order.
+MISMATCH
+--- PHP 8.5.0
++++ php-rs
+@@ -9,10 +9,10 @@
+ }
+ array(3) {
+   [0]=>
++  string(1) "z"
++  [1]=>
+   object(ObserveSort)#1 (0) {
+   }
+-  [1]=>
++  [2]=>
+   string(1) "b"
+-  [2]=>
+-  string(1) "z"
+ }
+
+Project PHPT with PHP 8.5.0 reference: 57 passed, 0 failed, 0 unsupported

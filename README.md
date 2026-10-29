@@ -88,6 +88,10 @@ new request. The CLI returns the low eight bits of the requested status.
   follow input mutations/replacement, and enforce typed-property constraints.
 - `min` and `max` accept arrays or variadic values, preserve result types, and
   follow PHP's numeric comparison paths, tie-breaking, and NaN behavior.
+- `sort`/`rsort`, `asort`/`arsort`, `ksort`/`krsort`, `natsort`, and `natcasesort`
+  support stable ordering, numeric/string/natural modes, keys, references, and
+  cursor resets. Locale sorting currently uses the C locale; reentrant copies
+  captured during conversion do not yet observe the live sorting table.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key
@@ -470,3 +474,10 @@ projects' caches. The runtime currently has no third-party Rust dependencies.
 
 The implementation uses a byte-oriented lexer, a precedence parser, and an AST
 interpreter. PHP behavior takes priority over Rust's native type conversions.
+
+## Third-party notices
+
+The sorting implementation adapts PHP/Zend and libc++ algorithms and Martin Pool's
+natural string comparator. This product includes the Zend Engine, freely available
+at http://www.zend.com. The Zend Engine is freely available at http://www.zend.com.
+See [third-party notices and licenses](THIRD_PARTY_NOTICES.md).
