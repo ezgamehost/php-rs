@@ -1328,6 +1328,38 @@ complete native reflection metadata remain unfinished. No custom tests or genera
 matrices were added. PHP 8.5.0 source, native signatures, upstream PHPT, and reference
 execution establish the implemented behavior.
 
+The [callback-sorting slice](conformance/php-8.5.0-user-sort-hillclimb.txt) adds **32
+upstream array passes**, with no regressions across Zend, reflection, SPL, strings,
+arrays, or math. `usort`, `uasort`, and `uksort` validate the callback even for empty
+inputs and sort a duplicate table, leaving the evolving order invisible to callbacks.
+Value comparators retain shared reference arguments; key comparators receive integer
+or string keys. Internally invoked callbacks retain PHP's weak argument coercion and
+by-reference argument warnings. The existing PHP-order sorting algorithm retains stable
+ties; `usort` renumbers keys, while the associative forms preserve keys and append state.
+
+Comparator results are converted using PHP's integer-cast semantics, including fractional
+truncation and out-of-range warnings. Direct boolean returns emit the comparison
+deprecation, and `false` retries the callback with reversed operands. Reference returns
+are dereferenced only for integer conversion, matching PHP's separate boolean handling.
+The deprecation flag follows request state: native entry resets it even for an invalid
+argument count, nested calls may change it, and outer sorts do not restore it. After a
+callback throws, remaining comparisons retain stable tie ordering without calling user
+code; the sorting copy is installed before the exception propagates. Input mutation or
+replacement inside a callback does not replace the sorting copy.
+
+Arrays reach **429 / 359 / 52**. All 797 existing Rust tests, 57 reference-checked project
+fixtures, formatting, and Clippy pass. Short reference comparisons match stable key
+ordering, boolean retries, reference returns, shared reference arguments, exceptions,
+input replacement, active reference foreach, nested deprecation state, and return-value
+overflow/object conversion warnings. The existing INI `user_sort_basics` FILE program
+matches when executed directly with `precision=14`; its PHPT remains unsupported and
+adds no claimed pass. No custom tests or generated matrices were added. PHP 8.5.0 source,
+native signatures, upstream fixtures, and reference execution establish the behavior.
+The remaining named `usort` fixture requires `shuffle`; a Zend fixture stops at missing
+`set_error_handler`. `array_multisort`, resource comparisons, complete native reflection
+metadata, and reentrant live-table observation in built-in comparison modes remain
+unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1339,7 +1371,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 277 | 178 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 397 | 391 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 429 | 359 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

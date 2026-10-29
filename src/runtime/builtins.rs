@@ -93,6 +93,7 @@ pub(super) enum Builtin {
     ArrayWalk(bool),
     MinMax(bool),
     ArraySort(sorting::Sort),
+    ArrayUserSort(sorting::UserSort),
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -286,6 +287,9 @@ impl Builtin {
             b"array_replace_recursive" => Self::ArrayReplace(true),
             b"array_walk" => Self::ArrayWalk(false),
             b"array_walk_recursive" => Self::ArrayWalk(true),
+            b"usort" => Self::ArrayUserSort(sorting::UserSort::Values),
+            b"uasort" => Self::ArrayUserSort(sorting::UserSort::Associative),
+            b"uksort" => Self::ArrayUserSort(sorting::UserSort::Keys),
             b"sort" => Self::ArraySort(sorting::Sort::Values),
             b"rsort" => Self::ArraySort(sorting::Sort::ReverseValues),
             b"asort" => Self::ArraySort(sorting::Sort::Associative),
@@ -472,6 +476,7 @@ impl Builtin {
                 &[("array", false, false)]
             }
             Self::ArraySort(_) => &[("array", false, false), ("flags", true, false)],
+            Self::ArrayUserSort(_) => &[("array", false, false), ("callback", false, false)],
             Self::MinMax(_) => &[("value", false, false), ("values", false, true)],
             Self::ArrayWalk(_) => &[
                 ("array", false, false),
@@ -573,8 +578,10 @@ impl Builtin {
                 by_reference: (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
                     || matches!(self, Self::ArrayCursor(action) if action.moves())
-                    || (matches!(self, Self::ArrayWalk(_) | Self::ArraySort(_))
-                        && *name == "array"),
+                    || (matches!(
+                        self,
+                        Self::ArrayWalk(_) | Self::ArraySort(_) | Self::ArrayUserSort(_)
+                    ) && *name == "array"),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
                 ty: None,
@@ -730,6 +737,9 @@ impl Runtime {
         }
         if let Builtin::ArrayCursor(action) = builtin {
             return self.array_cursor(action, &name, args, references, line, result_used);
+        }
+        if let Builtin::ArrayUserSort(kind) = builtin {
+            return self.array_user_sort(kind, &name, args, references, line);
         }
         if let Builtin::ArraySort(kind) = builtin {
             return self.array_sort(kind, &name, args, references, line);
@@ -1022,7 +1032,9 @@ impl Runtime {
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
             Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) => unreachable!(),
             Builtin::ArrayCursor(_) => unreachable!(),
-            Builtin::ArrayWalk(_) | Builtin::ArraySort(_) => unreachable!(),
+            Builtin::ArrayWalk(_) | Builtin::ArraySort(_) | Builtin::ArrayUserSort(_) => {
+                unreachable!()
+            }
             Builtin::ArrayKeys => {
                 if args[1].is_none() && args[2].is_some() {
                     return Err(Error::new(

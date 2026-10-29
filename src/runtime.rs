@@ -111,6 +111,7 @@ pub struct Runtime {
     in_constant_expression: bool,
     folding_constants: bool,
     checking_trait_values: bool,
+    sort_compare_deprecated: bool,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,

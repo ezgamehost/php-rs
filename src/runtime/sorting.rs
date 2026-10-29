@@ -234,3 +234,115 @@ fn with_array<T>(value: &mut Value, action: impl FnOnce(&mut Rc<PhpArray>) -> T)
         _ => None,
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub(super) enum UserSort {
+    Values,
+    Associative,
+    Keys,
+}
+
+impl Runtime {
+    pub(super) fn array_user_sort(
+        &mut self,
+        kind: UserSort,
+        name: &str,
+        args: Vec<Option<Value>>,
+        references: Vec<Option<variables::Cell>>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let mut args = args.into_iter();
+        let first = args.next().unwrap().unwrap();
+        builtins::require_array(&first, name, 1, line)?;
+        let source = if let Some(reference) = &references[0] {
+            drop(first);
+            reference.clone()
+        } else {
+            cell(first)
+        };
+        let callback = self
+            .native_callback(&args.next().unwrap().unwrap(), name, 2, false, line)?
+            .unwrap();
+        let mut array = with_array(&mut source.borrow_mut(), |array| (**array).clone()).unwrap();
+        if array.is_empty() {
+            return Ok(Value::Bool(true));
+        }
+        // Unlike built-in comparison modes, user sorts always duplicate the
+        // table, hide its evolving order from callbacks, then install the copy.
+        let mut order: Vec<_> = (0..array.len()).collect();
+        let mut error = None;
+        algorithm::sort(&mut order, &mut |&a, &b| {
+            let comparison = if error.is_some() {
+                Ordering::Equal
+            } else {
+                let (a_key, a_value) = &array.entries()[a];
+                let (b_key, b_value) = &array.entries()[b];
+                let values = if matches!(kind, UserSort::Keys) {
+                    [a_key.to_value(), b_key.to_value()]
+                } else {
+                    [bucket_argument(a_value), bucket_argument(b_value)]
+                };
+                match self.user_sort_compare(&callback, values, name, line) {
+                    Ok(order) => order,
+                    Err(failure) => {
+                        error = Some(failure);
+                        Ordering::Equal
+                    }
+                }
+            };
+            comparison.then_with(|| a.cmp(&b))
+        });
+        array.reorder(&order, matches!(kind, UserSort::Values));
+        self.write_reference_value(&source, Value::Array(Rc::new(array)), true, line)?;
+        match error {
+            Some(error) => Err(error),
+            None => Ok(Value::Bool(true)),
+        }
+    }
+
+    fn user_sort_compare(
+        &mut self,
+        callback: &functions::CallTarget,
+        mut values: [Value; 2],
+        name: &str,
+        line: usize,
+    ) -> Result<Ordering, Error> {
+        let result = self.call_callback(callback, &values, line)?;
+        if let Value::Bool(value) = result {
+            if !self.sort_compare_deprecated {
+                self.diagnostics.push(format!("Deprecated: {name}(): Returning bool from comparison function is deprecated, return an integer less than, equal to, or greater than zero on line {line}"));
+                self.sort_compare_deprecated = true;
+            }
+            if !value {
+                values.swap(0, 1);
+                let result = self.call_callback(callback, &values, line)?;
+                return self.user_sort_result(result, line).map(Ordering::reverse);
+            }
+        }
+        self.user_sort_result(result, line)
+    }
+
+    fn user_sort_result(&mut self, result: Value, line: usize) -> Result<Ordering, Error> {
+        // zval_get_long_func(..., false) accepts every value, truncates fractional
+        // returns without a precision deprecation, and retains overflow warnings.
+        let Value::Int(result) = casting::cast(
+            crate::ast::CastKind::Int,
+            result.dereferenced(),
+            line,
+            &mut self.diagnostics,
+        )?
+        else {
+            unreachable!()
+        };
+        Ok(result.cmp(&0))
+    }
+}
+
+// Copying comparator arguments retains existing reference containers, including
+// ones whose other aliases were removed by an earlier callback invocation.
+fn bucket_argument(value: &Value) -> Value {
+    match value {
+        Value::Indirect(slot) => bucket_argument(&slot.borrow()),
+        _ => value.clone(),
+    }
+}

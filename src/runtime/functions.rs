@@ -623,6 +623,11 @@ impl Runtime {
             context,
         } = target;
         if builtin.is_some() || function.as_ref().is_some_and(|f| f.native.is_some()) {
+            if matches!(builtin, Some(Builtin::ArrayUserSort(_))) {
+                // PHP resets this request-wide flag on native entry, including
+                // calls whose argument count fails before callback validation.
+                self.sort_compare_deprecated = false;
+            }
             let supplied_fixed = bound
                 .fixed
                 .iter()
