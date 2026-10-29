@@ -104,6 +104,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `compact` traverses nested variable-name lists with ordered results and recursion
   diagnostics. `get_defined_vars` snapshots the current scope, preserving shared
   references and omitting undefined locals and the implicit `$this` context value.
+- `array_splice` edits arrays by reference, preserves string keys and reference cells,
+  renumbers numeric keys, converts replacements, and resets the internal cursor.
+  Sparse-table iterator history and destructor callbacks remain incomplete.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

@@ -72,6 +72,7 @@ pub(super) enum Builtin {
     BaseDecode(u8),
     BaseEncode(u8),
     ArraySlice,
+    ArraySplice,
     ArrayReverse,
     ArrayChunk,
     ArrayFill,
@@ -260,6 +261,7 @@ impl Builtin {
             b"decoct" => Self::BaseEncode(8),
             b"dechex" => Self::BaseEncode(16),
             b"array_slice" => Self::ArraySlice,
+            b"array_splice" => Self::ArraySplice,
             b"array_reverse" => Self::ArrayReverse,
             b"array_chunk" => Self::ArrayChunk,
             b"array_fill" => Self::ArrayFill,
@@ -533,6 +535,12 @@ impl Builtin {
                 ("length", true, false),
                 ("preserve_keys", true, false),
             ],
+            Self::ArraySplice => &[
+                ("array", false, false),
+                ("offset", false, false),
+                ("length", true, false),
+                ("replacement", true, false),
+            ],
             Self::ArrayReverse => &[("array", false, false), ("preserve_keys", true, false)],
             Self::ArrayChunk => &[
                 ("array", false, false),
@@ -603,6 +611,7 @@ impl Builtin {
                             | Self::ArraySort(_)
                             | Self::ArrayUserSort(_)
                             | Self::Extract
+                            | Self::ArraySplice
                     ) && *name == "array"),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
@@ -627,6 +636,9 @@ impl Builtin {
                             (Self::Range, "step") => Value::Int(1),
                             (Self::ArraySort(_) | Self::Extract, "flags") => Value::Int(0),
                             (Self::Extract, "prefix") => Value::String(Vec::new().into()),
+                            (Self::ArraySplice, "replacement") => {
+                                Value::Array(Rc::new(PhpArray::default()))
+                            }
                             (Self::Round, "precision") => Value::Int(0),
                             (Self::ArraySearch(_), "strict") => Value::Bool(false),
                             (Self::NumberFormat, "decimals") => Value::Int(0),
@@ -769,6 +781,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::Extract) {
             return self.extract_variables(args, references, dynamic, line);
+        }
+        if matches!(builtin, Builtin::ArraySplice) {
+            return self.array_splice(args, references, line, result_used);
         }
         if matches!(builtin, Builtin::ArrayMultisort) {
             return self.array_multisort(args, references, extra, line);
@@ -1073,7 +1088,8 @@ impl Runtime {
             | Builtin::ArraySort(_)
             | Builtin::ArrayUserSort(_)
             | Builtin::ArrayMultisort
-            | Builtin::Extract => {
+            | Builtin::Extract
+            | Builtin::ArraySplice => {
                 unreachable!()
             }
             Builtin::ArrayKeys => {

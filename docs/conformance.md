@@ -1447,6 +1447,31 @@ globals, error handlers, resources, and complete native reflection metadata rema
 unfinished. No custom tests or generated matrices were added. PHP 8.5.0 source, native
 signatures, upstream PHPT, and reference execution establish the implemented behavior.
 
+The [array-splice slice](conformance/php-8.5.0-array-splice-hillclimb.txt) adds
+**8 upstream passes**: six array fixtures and two Zend fixtures, with no regressions
+across the six suites. `array_splice` separates its array argument before parsing
+offset/length, clamps positive and negative ranges, treats omitted/null length as the
+remaining tail, and casts replacement values to arrays. It preserves string keys and
+reference containers in retained/removed entries, ignores replacement keys, renumbers
+numeric keys, and resets the internal cursor and next append index.
+
+Active reference iterators follow the tested packed and mixed table paths, including
+PHP's different tail-position updates when the removed array is consumed versus discarded,
+forward remapping, final-bucket clamping, and removal of expired iterator registrations.
+A short reference probe matches aliases, copy-on-write, self replacement, object/closure/
+scalar replacements, named arguments, invalid index coercion after separation, numeric
+append keys, cursors, and dense numeric/string-key iterator cases. A separate sparse-array
+probe exposes an existing representation limitation: after deleting the first bucket,
+splicing during reference iteration can visit an extra retained value. The runtime does
+not retain PHP's physical bucket history or packed/mixed transitions. That mismatch is
+recorded, and sparse iterator compatibility is not claimed. Destructor-driven mutation
+fixtures and resource replacements also remain failing.
+
+Arrays reach **491 / 297 / 52**, and Zend **2087 / 2761 / 408**. All 797 existing Rust
+tests, 57 reference-checked project PHPT cases, formatting, and Clippy pass. No custom
+tests or generated matrices were added. PHP 8.5.0 `ext/standard/array.c`, native signatures,
+upstream PHPT, and reference execution establish the implemented behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1454,11 +1479,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2085 | 2763 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2087 | 2761 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 485 | 303 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 491 | 297 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

@@ -138,6 +138,78 @@ impl PartialEq for PhpArray {
     }
 }
 impl PhpArray {
+    pub(crate) fn splice(
+        &mut self,
+        start: usize,
+        end: usize,
+        replacement: &Self,
+        result_used: bool,
+        line: usize,
+    ) -> Result<Self, Error> {
+        let mut output = Self::with_capacity(self.len() - (end - start) + replacement.len(), line)?;
+        let mut removed = Self::with_capacity(if result_used { end - start } else { 0 }, line)?;
+        output.iterators = std::mem::take(&mut self.iterators);
+        let iterators = output.iterators.get_mut();
+        iterators.retain(|(token, _)| token.strong_count() != 0);
+        // Dense numeric arrays take PHP's packed-table path. The runtime does
+        // not yet retain the physical bucket history of sparse/mixed tables.
+        let packed = self
+            .entries
+            .iter()
+            .enumerate()
+            .all(|(index, (key, _))| *key == ArrayKey::Int(index as i64));
+        for (_, position) in iterators.iter_mut() {
+            if end == self.len() && end > start && *position >= start {
+                // Deleting the final bucket clamps even exhausted iterators.
+                *position = start;
+            } else if packed && (start..end).contains(position) {
+                *position = end;
+            }
+        }
+        // PHP remaps tail buckets in order. A position shifted forward can be
+        // encountered again. USED_RET also affects the native running position:
+        // copying removed entries advances it, while discarding them does not.
+        let tail_start = if result_used { end } else { start } + replacement.len();
+        let mut next_iterator = iterators
+            .iter()
+            .map(|(_, position)| *position)
+            .filter(|position| *position >= start)
+            .min();
+        for index in end..self.len() {
+            if next_iterator != Some(index) {
+                continue;
+            }
+            for (_, position) in iterators.iter_mut() {
+                if *position == index {
+                    *position = tail_start + index - end;
+                }
+            }
+            next_iterator = iterators
+                .iter()
+                .map(|(_, position)| *position)
+                .filter(|position| *position > index)
+                .min();
+        }
+        let mut entries = std::mem::take(&mut self.entries).into_iter();
+        for (key, value) in entries.by_ref().take(start) {
+            splice_insert(&mut output, key, splice_value(value), line)?;
+        }
+        for (key, value) in entries.by_ref().take(end - start) {
+            if result_used {
+                splice_insert(&mut removed, key, splice_value(value), line)?;
+            }
+        }
+        for (_, value) in replacement.entries() {
+            output.append(splice_value(value.clone()), line)?;
+        }
+        for (key, value) in entries {
+            splice_insert(&mut output, key, splice_value(value), line)?;
+        }
+        // Replacing the table resets the internal pointer and next append index.
+        *self = output;
+        Ok(removed)
+    }
+
     /// Apply a bucket permutation without copying reference values. PHP leaves
     /// live foreach positions at their bucket offsets and resets only the IAP.
     pub(crate) fn reorder(&mut self, order: &[usize], renumber: bool) {
@@ -340,6 +412,30 @@ impl PhpArray {
             for i in index..self.entries.len() {
                 self.positions.insert(self.entries[i].0.clone(), i);
             }
+        }
+    }
+}
+
+// Native splicing preserves reference containers, even when their other aliases
+// have gone away. Indirect cells are only our mutable bucket implementation.
+fn splice_value(value: Value) -> Value {
+    match value {
+        Value::Indirect(slot) => splice_value(slot.borrow().clone()),
+        _ => value,
+    }
+}
+
+fn splice_insert(
+    array: &mut PhpArray,
+    key: ArrayKey,
+    value: Value,
+    line: usize,
+) -> Result<(), Error> {
+    match key {
+        ArrayKey::Int(_) => array.append(value, line),
+        key => {
+            array.insert(key, value);
+            Ok(())
         }
     }
 }
