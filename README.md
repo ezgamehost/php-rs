@@ -101,6 +101,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `extract` supports overwrite, skip, conditional/prefixed extraction, and
   reference rebinding in the current scope, including typed-reference assignments,
   compiled-but-unset locals, name validation, and dynamic-call restrictions.
+- `compact` traverses nested variable-name lists with ordered results and recursion
+  diagnostics. `get_defined_vars` snapshots the current scope, preserving shared
+  references and omitting undefined locals and the implicit `$this` context value.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

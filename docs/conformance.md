@@ -1417,6 +1417,36 @@ generated matrices were added. PHP 8.5.0 source, native signatures, upstream PHP
 reference execution establish the behavior. General variable introspection, destructors,
 error handlers, resources, and complete native reflection metadata remain unfinished.
 
+The [variable-inspection slice](conformance/php-8.5.0-variable-inspection-hillclimb.txt)
+adds **12 upstream passes**: nine array fixtures and three Zend fixtures, with no
+regressions across the six suites. `compact` accepts mixed variadic arguments, recursively
+visits nested name arrays in order, keeps the first insertion position for duplicate
+names, and returns dereferenced values. Invalid entries report their original argument
+position, including nested entries; missing variables warn, while an unavailable `this`
+name is silently omitted. A bound object context can be selected with `compact('this')`.
+Numeric variable names remain string keys in the result.
+
+Recursive name arrays raise errors while the remaining scan continues, retaining PHP's
+warning order. Repeated recursion errors chain the previously pending exception.
+`get_defined_vars` follows current symbol-table order, omits undefined compiled slots and
+the implicit `$this` context value, copies ordinary values, and preserves reference cells
+with other owners. Both functions reject dynamic calls; `compact` also rejects unknown
+named variadic arguments. They inspect the active PHP scope rather than introducing
+synthetic variables inside the builtins.
+
+Arrays reach **485 / 303 / 52**, and Zend **2085 / 2763 / 408**. All 797 existing Rust
+tests, 57 reference-checked project fixtures, formatting, and Clippy pass. A short reference
+comparison matches alias-preserving versus value-copy snapshots, undefined locals, numeric
+names, method contexts, nested invalid names, recursion/warning order, chained errors,
+and dynamic/named-argument failures. The separate upstream
+`general_functions/get_defined_vars_basic` fixture still fails solely because no CLI
+startup globals are present at its initial global-scope snapshot; its subsequent local
+function snapshots match the expected output. `Zend/tests/get_defined_vars` also requires
+CLI `$argc`. These failures remain recorded and are not counted as passes. CLI startup
+globals, error handlers, resources, and complete native reflection metadata remain
+unfinished. No custom tests or generated matrices were added. PHP 8.5.0 source, native
+signatures, upstream PHPT, and reference execution establish the implemented behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1424,11 +1454,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2082 | 2766 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2085 | 2763 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 476 | 312 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 485 | 303 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

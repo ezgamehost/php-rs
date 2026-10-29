@@ -96,6 +96,8 @@ pub(super) enum Builtin {
     ArrayUserSort(sorting::UserSort),
     ArrayMultisort,
     Extract,
+    Compact,
+    GetDefinedVars,
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -289,6 +291,8 @@ impl Builtin {
             b"array_replace_recursive" => Self::ArrayReplace(true),
             b"array_walk" => Self::ArrayWalk(false),
             b"array_walk_recursive" => Self::ArrayWalk(true),
+            b"compact" => Self::Compact,
+            b"get_defined_vars" => Self::GetDefinedVars,
             b"extract" => Self::Extract,
             b"array_multisort" => Self::ArrayMultisort,
             b"usort" => Self::ArrayUserSort(sorting::UserSort::Values),
@@ -360,7 +364,10 @@ impl Builtin {
                 ("property", false, false),
             ],
             Self::Exit => &[("status", true, false)],
-            Self::GetIncludedFiles | Self::FuncNumArgs | Self::FuncGetArgs => &[],
+            Self::GetIncludedFiles
+            | Self::FuncNumArgs
+            | Self::FuncGetArgs
+            | Self::GetDefinedVars => &[],
             Self::FuncGetArg => &[("position", false, false)],
             Self::AutoloadRegister => &[
                 ("callback", true, false),
@@ -480,6 +487,7 @@ impl Builtin {
                 &[("array", false, false)]
             }
             Self::ArraySort(_) => &[("array", false, false), ("flags", true, false)],
+            Self::Compact => &[("var_name", false, false), ("var_names", false, true)],
             Self::Extract => &[
                 ("array", false, false),
                 ("flags", true, false),
@@ -727,6 +735,12 @@ impl Runtime {
                 line,
             );
         }
+        if matches!(builtin, Builtin::GetDefinedVars) {
+            return self.defined_variables(dynamic, line);
+        }
+        if matches!(builtin, Builtin::Compact) {
+            return self.compact_variables(&args, &extra, dynamic, line);
+        }
         if matches!(builtin, Builtin::GetIncludedFiles) {
             let mut paths = PhpArray::default();
             for path in &self.included_files {
@@ -917,6 +931,8 @@ impl Runtime {
             Builtin::Exit
             | Builtin::Math(_)
             | Builtin::GetIncludedFiles
+            | Builtin::GetDefinedVars
+            | Builtin::Compact
             | Builtin::FuncNumArgs
             | Builtin::FuncGetArg
             | Builtin::FuncGetArgs => unreachable!(),

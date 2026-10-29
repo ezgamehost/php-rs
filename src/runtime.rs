@@ -84,6 +84,7 @@ mod traces;
 mod traits;
 mod typed_properties;
 mod types;
+mod variable_inspection;
 mod variables;
 use offsets::{Access, Offset};
 use reference_paths::{unset as unset_path, write as write_path};
