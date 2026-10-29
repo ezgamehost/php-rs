@@ -1,4 +1,5 @@
 use crate::{Error, ErrorKind, Value};
+mod stack;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -383,7 +384,10 @@ impl PhpArray {
         self.entries.push((key, value));
     }
     pub(crate) fn append_key(&self, line: usize) -> Result<ArrayKey, Error> {
-        let key = ArrayKey::Int(self.next_index.unwrap_or(0));
+        // PHP uses LONG_MIN as its initial next-index sentinel. Popping the
+        // only LONG_MIN key can restore that sentinel in a non-new array.
+        let index = self.next_index.filter(|index| *index != i64::MIN);
+        let key = ArrayKey::Int(index.unwrap_or(0));
         if self.positions.contains_key(&key) {
             return Err(Error::new(
                 ErrorKind::Error,

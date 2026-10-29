@@ -1472,6 +1472,36 @@ tests, 57 reference-checked project PHPT cases, formatting, and Clippy pass. No 
 tests or generated matrices were added. PHP 8.5.0 `ext/standard/array.c`, native signatures,
 upstream PHPT, and reference execution establish the implemented behavior.
 
+The [array-stack slice](conformance/php-8.5.0-array-stack-hillclimb.txt) adds
+**44 upstream passes**: 35 array fixtures and nine Zend fixtures, with no regressions
+across the six suites. `array_push` and `array_unshift` accept zero or more values and
+return the resulting element count. Push preserves existing keys and cursor position;
+completed appends survive a later exhausted-index error. Unshift rebuilds the array,
+preserves string keys/reference cells, renumbers numeric keys, advances live iterators,
+and resets the internal pointer even when no values are prepended.
+
+`array_pop` and `array_shift` return null for an empty array and otherwise return the
+removed value without its reference binding. Pop preserves the remaining keys and restores
+the next append index only when the removed integer key immediately precedes it, including
+negative indices and PHP's minimum-integer sentinel. Shift renumbers remaining numeric keys
+and resets the next append index. Both reset the internal cursor on removal. Dense packed
+shift traversal retains PHP's distinction between an exhausted iterator and one pointing
+at a retained element; mixed-array traversal follows its corresponding tested behavior.
+All four operations separate the referenced array before mutation. Push/unshift validate
+and separate the first argument before rejecting unknown named variadic arguments.
+
+Arrays reach **526 / 262 / 52**, and Zend **2096 / 2752 / 408**. All 797 existing Rust
+tests, 57 reference-checked project PHPT cases, formatting, and Clippy pass. A short
+reference probe matches reference aliases, copy-on-write, self arguments, empty prepends,
+minimum/maximum and negative append keys, partial append failures, cursor resets, live
+reference loops, detached return values, callback arguments, and named-error precedence.
+The remaining four supported fixtures specifically named for these operations require
+`fopen`/stream resources; the INI-dependent unshift fixture remains unsupported. Sparse
+physical bucket history, native storage transitions, resources, and complete reflection
+metadata remain incomplete. No custom tests or generated matrices were added. Behavior
+is grounded in PHP 8.5.0 `ext/standard/array.c`/`Zend/zend_hash.c`, native signatures,
+upstream PHPT, and reference execution.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1479,11 +1509,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2087 | 2761 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2096 | 2752 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 278 | 177 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 491 | 297 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 526 | 262 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 325 | 253 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

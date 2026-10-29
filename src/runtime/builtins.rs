@@ -73,6 +73,7 @@ pub(super) enum Builtin {
     BaseEncode(u8),
     ArraySlice,
     ArraySplice,
+    ArrayStack(array_stack::Action),
     ArrayReverse,
     ArrayChunk,
     ArrayFill,
@@ -262,6 +263,10 @@ impl Builtin {
             b"dechex" => Self::BaseEncode(16),
             b"array_slice" => Self::ArraySlice,
             b"array_splice" => Self::ArraySplice,
+            b"array_push" => Self::ArrayStack(array_stack::Action::Push),
+            b"array_pop" => Self::ArrayStack(array_stack::Action::Pop),
+            b"array_shift" => Self::ArrayStack(array_stack::Action::Shift),
+            b"array_unshift" => Self::ArrayStack(array_stack::Action::Unshift),
             b"array_reverse" => Self::ArrayReverse,
             b"array_chunk" => Self::ArrayChunk,
             b"array_fill" => Self::ArrayFill,
@@ -541,6 +546,10 @@ impl Builtin {
                 ("length", true, false),
                 ("replacement", true, false),
             ],
+            Self::ArrayStack(array_stack::Action::Push | array_stack::Action::Unshift) => {
+                &[("array", false, false), ("values", false, true)]
+            }
+            Self::ArrayStack(_) => &[("array", false, false)],
             Self::ArrayReverse => &[("array", false, false), ("preserve_keys", true, false)],
             Self::ArrayChunk => &[
                 ("array", false, false),
@@ -612,6 +621,7 @@ impl Builtin {
                             | Self::ArrayUserSort(_)
                             | Self::Extract
                             | Self::ArraySplice
+                            | Self::ArrayStack(_)
                     ) && *name == "array"),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
@@ -784,6 +794,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::ArraySplice) {
             return self.array_splice(args, references, line, result_used);
+        }
+        if let Builtin::ArrayStack(action) = builtin {
+            return self.array_stack(action, &name, args, references, extra, line);
         }
         if matches!(builtin, Builtin::ArrayMultisort) {
             return self.array_multisort(args, references, extra, line);
@@ -1089,7 +1102,8 @@ impl Runtime {
             | Builtin::ArrayUserSort(_)
             | Builtin::ArrayMultisort
             | Builtin::Extract
-            | Builtin::ArraySplice => {
+            | Builtin::ArraySplice
+            | Builtin::ArrayStack(_) => {
                 unreachable!()
             }
             Builtin::ArrayKeys => {

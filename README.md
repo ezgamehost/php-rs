@@ -107,6 +107,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `array_splice` edits arrays by reference, preserves string keys and reference cells,
   renumbers numeric keys, converts replacements, and resets the internal cursor.
   Sparse-table iterator history and destructor callbacks remain incomplete.
+- `array_push`, `array_pop`, `array_shift`, and `array_unshift` support reference
+  targets, copy-on-write, numeric append-key restoration, and cursor/iterator updates.
+  Pop/shift return values without retaining the removed element’s reference binding.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key
