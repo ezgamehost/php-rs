@@ -89,6 +89,7 @@ pub(super) enum Builtin {
     ArrayCombine,
     ArrayMerge(bool),
     ArrayReplace(bool),
+    ArrayCursor(crate::array::Cursor),
     ArrayMap,
     ArrayFilter,
     ArrayReduce,
@@ -280,6 +281,12 @@ impl Builtin {
             b"array_merge_recursive" => Self::ArrayMerge(true),
             b"array_replace" => Self::ArrayReplace(false),
             b"array_replace_recursive" => Self::ArrayReplace(true),
+            b"current" | b"pos" => Self::ArrayCursor(crate::array::Cursor::Current),
+            b"key" => Self::ArrayCursor(crate::array::Cursor::Key),
+            b"reset" => Self::ArrayCursor(crate::array::Cursor::Reset),
+            b"end" => Self::ArrayCursor(crate::array::Cursor::End),
+            b"next" => Self::ArrayCursor(crate::array::Cursor::Next),
+            b"prev" => Self::ArrayCursor(crate::array::Cursor::Prev),
             b"function_exists" => Self::FunctionExists,
             b"is_callable" => Self::IsCallable,
             b"debug_backtrace" => Self::DebugBacktrace,
@@ -445,6 +452,7 @@ impl Builtin {
             Self::ArrayCombine => &[("keys", false, false), ("values", false, false)],
             Self::ArrayMerge(_) => &[("arrays", false, true)],
             Self::ArrayReplace(_) => &[("array", false, false), ("replacements", false, true)],
+            Self::ArrayCursor(_) => &[("array", false, false)],
             Self::Range => &[
                 ("start", false, false),
                 ("end", false, false),
@@ -538,7 +546,8 @@ impl Builtin {
             .map(|(name, optional, variadic)| Parameter {
                 attributes: Vec::new(),
                 by_reference: (matches!(self, Self::IsCallable) && *name == "callable_name")
-                    || (matches!(self, Self::StrReplace(_)) && *name == "count"),
+                    || (matches!(self, Self::StrReplace(_)) && *name == "count")
+                    || matches!(self, Self::ArrayCursor(action) if action.moves()),
                 promotion: None,
                 name: name.as_bytes().to_vec(),
                 ty: None,
@@ -610,6 +619,7 @@ impl Runtime {
         bound: functions::BoundArguments,
         line: usize,
         dynamic: bool,
+        result_used: bool,
     ) -> Result<Value, Error> {
         let functions::BoundArguments {
             fixed: args,
@@ -689,6 +699,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_)) {
             return self.array_join(builtin, &name, &args, &extra, line);
+        }
+        if let Builtin::ArrayCursor(action) = builtin {
+            return self.array_cursor(action, &name, args, references, line, result_used);
         }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
@@ -971,6 +984,7 @@ impl Runtime {
             | Builtin::ArrayCountValues
             | Builtin::ArrayCombine => self.array_inspection(builtin, &name, &args, line),
             Builtin::ArrayMerge(_) | Builtin::ArrayReplace(_) => unreachable!(),
+            Builtin::ArrayCursor(_) => unreachable!(),
             Builtin::ArrayKeys => {
                 if args[1].is_none() && args[2].is_some() {
                     return Err(Error::new(

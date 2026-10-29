@@ -13,6 +13,7 @@ use std::{
 
 mod array_access;
 mod array_callbacks;
+mod array_cursor;
 mod array_inspection;
 mod array_join;
 mod array_segments;
@@ -260,7 +261,7 @@ impl Runtime {
                 }
             }
             Stmt::Expr(expr) => {
-                self.eval(expr)?;
+                self.eval_discard(expr)?;
             }
             Stmt::Block(stmts) => return self.block(stmts),
             Stmt::If(cond, yes, no) => {
@@ -291,8 +292,8 @@ impl Runtime {
                 }
             },
             Stmt::For(init, cond, step, body) => {
-                self.eval_sequence(init)?;
-                while self.eval_sequence(cond)?.to_bool(
+                self.eval_sequence(init, false)?;
+                while self.eval_sequence(cond, true)?.to_bool(
                     cond.last().map_or(0, |expr| expr.line),
                     &mut self.diagnostics,
                 ) {
@@ -301,7 +302,7 @@ impl Runtime {
                         Flow::Break(1) => break,
                         flow => return Ok(flow.leave_level()),
                     }
-                    self.eval_sequence(step)?;
+                    self.eval_sequence(step, false)?;
                 }
             }
             Stmt::Switch(subject, cases) => {
@@ -425,7 +426,7 @@ impl Runtime {
                     } else if let Some(object) = &location.object {
                         let key = self.instance_property_key(object, &location.name);
                         if location.keys.is_empty() {
-                            object.properties.borrow_mut().remove(&key);
+                            object.remove_property(&key);
                             if let ArrayKey::String(key) = &key {
                                 object.unset_properties.borrow_mut().insert(key.clone());
                             }
@@ -466,10 +467,24 @@ impl Runtime {
         }
         Ok(Flow::Next)
     }
-    fn eval_sequence(&mut self, expressions: &[Expr]) -> Result<Value, Error> {
+    fn eval_discard(&mut self, expression: &Expr) -> Result<(), Error> {
+        match &expression.kind {
+            ExprKind::Group(inner) => self.eval_discard(inner),
+            ExprKind::Call(callee, args) if !expression.has_nullsafe_chain() => {
+                self.call(callee, args, expression.line, false).map(drop)
+            }
+            _ => self.eval(expression).map(drop),
+        }
+    }
+
+    fn eval_sequence(&mut self, expressions: &[Expr], result_used: bool) -> Result<Value, Error> {
         let mut value = Value::Bool(true);
-        for expression in expressions {
-            value = self.eval(expression)?;
+        for (index, expression) in expressions.iter().enumerate() {
+            if result_used && index + 1 == expressions.len() {
+                value = self.eval(expression)?;
+            } else {
+                self.eval_discard(expression)?;
+            }
         }
         Ok(value)
     }
@@ -815,7 +830,7 @@ impl Runtime {
                     Ok(Value::Null)
                 }
             }
-            ExprKind::Call(callee, args) => self.call(callee, args, line),
+            ExprKind::Call(callee, args) => self.call(callee, args, line, true),
             ExprKind::Callable(callee) => self.acquire_callable(callee, line),
             ExprKind::Lambda(lambda) => self.acquire_lambda(lambda),
             ExprKind::Literal(value) => Ok(value.clone()),

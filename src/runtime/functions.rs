@@ -38,12 +38,14 @@ impl Runtime {
         callee: &Expr,
         args: &[Argument],
         line: usize,
+        result_used: bool,
     ) -> Result<Value, Error> {
-        let target = self.resolve_callee(callee, line)?;
+        let mut target = self.resolve_callee(callee, line)?;
+        target.result_used = result_used;
         if let Some(builtin @ (Builtin::CallUserFunc | Builtin::CallUserFuncArray)) = target.builtin
             && self.can_inline_callback(callee, args, builtin)
         {
-            return self.inline_callback(args, builtin, line);
+            return self.inline_callback(args, builtin, line, result_used);
         }
         self.invoke(
             target,
@@ -234,6 +236,7 @@ impl Runtime {
             }
             Value::String(name) => self.resolve_name(name.to_vec(), line),
             Value::Closure(closure) => Ok(CallTarget {
+                result_used: true,
                 reference_values: false,
                 magic_name: closure.magic_name.clone(),
                 this: closure.this.clone(),
@@ -285,6 +288,7 @@ impl Runtime {
             ));
         }
         Ok(CallTarget {
+            result_used: true,
             reference_values: false,
             magic_name: None,
             this: None,
@@ -607,6 +611,7 @@ impl Runtime {
         dynamic: bool,
     ) -> Result<Value, Error> {
         let CallTarget {
+            result_used,
             reference_values: _,
             magic_name: _,
             name,
@@ -675,7 +680,7 @@ impl Runtime {
                 return Err(count_error(maximum, "at most"));
             }
             if let Some(builtin) = builtin {
-                return self.call_builtin(builtin, &name, bound, line, dynamic);
+                return self.call_builtin(builtin, &name, bound, line, dynamic, result_used);
             }
         }
         let function = function.unwrap();
@@ -1062,6 +1067,7 @@ fn diagnose_statements(stmts: &[Stmt], warnings: &mut dyn WarningSink, switches:
 
 #[derive(Clone)]
 pub(super) struct CallTarget {
+    pub result_used: bool,
     pub(super) reference_values: bool,
     pub(super) magic_name: Option<Vec<u8>>,
     pub(super) name: Vec<u8>,

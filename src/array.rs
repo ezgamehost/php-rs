@@ -10,6 +10,36 @@ pub enum ArrayKey {
     Int(i64),
     String(Vec<u8>),
 }
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Cursor {
+    Current,
+    Key,
+    Reset,
+    End,
+    Next,
+    Prev,
+}
+
+impl Cursor {
+    pub(crate) fn moves(self) -> bool {
+        !matches!(self, Self::Current | Self::Key)
+    }
+
+    pub(crate) fn advance(self, position: usize, len: usize) -> usize {
+        if len == 0 {
+            return 0;
+        }
+        match self {
+            Self::Reset => 0,
+            Self::End => len - 1,
+            Self::Next if position < len => position + 1,
+            Self::Prev if position > 0 && position < len => position - 1,
+            Self::Prev => len,
+            _ => position,
+        }
+    }
+}
 impl ArrayKey {
     pub(crate) fn from_value(
         value: &Value,
@@ -61,6 +91,7 @@ pub struct PhpArray {
     entries: Vec<(ArrayKey, Value)>,
     positions: HashMap<ArrayKey, usize>,
     next_index: Option<i64>,
+    cursor: usize,
     /// Each copy keeps its own iterator positions. Weak tokens do not keep an
     /// exited loop alive and allow a loop to resume after copy-on-write.
     iterators: RefCell<Vec<(Weak<()>, usize)>>,
@@ -91,6 +122,12 @@ impl Clone for PhpArray {
                 .collect(),
             positions: self.positions.clone(),
             next_index: self.next_index,
+            // zend_array_dup resets an exhausted internal pointer.
+            cursor: if self.cursor < self.len() {
+                self.cursor
+            } else {
+                0
+            },
             iterators: RefCell::new(iterators),
         }
     }
@@ -101,6 +138,14 @@ impl PartialEq for PhpArray {
     }
 }
 impl PhpArray {
+    pub(crate) fn cursor_entry(&self) -> Option<&(ArrayKey, Value)> {
+        self.entries.get(self.cursor)
+    }
+
+    pub(crate) fn move_cursor(&mut self, action: Cursor) {
+        self.cursor = action.advance(self.cursor, self.len());
+    }
+
     pub(crate) fn with_capacity(capacity: usize, line: usize) -> Result<Self, Error> {
         // PHP's 64-bit HashTable cannot round a larger requested capacity to
         // a valid table size. Reject it before asking the host allocator.
@@ -227,6 +272,9 @@ impl PhpArray {
     pub fn remove(&mut self, key: &ArrayKey) {
         if let Some(index) = self.positions.remove(key) {
             self.entries.remove(index);
+            if self.cursor > index {
+                self.cursor -= 1;
+            }
             for (_, position) in self.iterators.get_mut() {
                 if *position > index {
                     *position -= 1;

@@ -39,6 +39,7 @@ pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str
 
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
+    pub(crate) property_cursor: RefCell<PropertyCursor>,
     pub(crate) reflection: RefCell<Option<crate::runtime::reflection::ReflectionData>>,
     pub(crate) throwable: RefCell<Option<ThrowableData>>,
     pub(crate) class: Rc<Class>,
@@ -49,6 +50,25 @@ pub struct PhpObject {
     pub(crate) object_id: usize,
     // Release the handle after fields that may own other PHP objects.
     pub(crate) _handle: ObjectHandle,
+}
+
+#[derive(Default)]
+pub(crate) struct PropertyCursor {
+    pub keys: Vec<crate::ArrayKey>,
+    pub position: usize,
+}
+
+impl Clone for PropertyCursor {
+    fn clone(&self) -> Self {
+        Self {
+            keys: self.keys.clone(),
+            position: if self.position < self.keys.len() {
+                self.position
+            } else {
+                0
+            },
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -99,6 +119,27 @@ pub(crate) struct ThrowableData {
 }
 impl Eq for PhpObject {}
 impl PhpObject {
+    pub(crate) fn remove_property(&self, key: &crate::ArrayKey) {
+        self.properties.borrow_mut().remove(key);
+        // Declared slots remain in the property table as uninitialized indirect
+        // entries. Dynamic slots disappear, moving later cursor positions back.
+        if self
+            .class
+            .properties
+            .iter()
+            .any(|property| *key == crate::ArrayKey::String(property.storage_name()))
+        {
+            return;
+        }
+        let mut cursor = self.property_cursor.borrow_mut();
+        if let Some(index) = cursor.keys.iter().position(|existing| existing == key) {
+            cursor.keys.remove(index);
+            if cursor.position > index {
+                cursor.position -= 1;
+            }
+        }
+    }
+
     pub(crate) fn hides_properties(&self) -> bool {
         self.class.name == b"SensitiveParameterValue"
     }

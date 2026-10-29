@@ -98,6 +98,7 @@ impl Runtime {
         args: &[Argument],
         builtin: Builtin,
         line: usize,
+        result_used: bool,
     ) -> Result<Value, Error> {
         let Argument::Positional(callback) = &args[0] else {
             unreachable!()
@@ -110,6 +111,7 @@ impl Runtime {
             .native_callback(&callback, name, 1, false, line)?
             .unwrap();
         target.reference_values = true;
+        target.result_used = result_used;
         if matches!(builtin, Builtin::CallUserFunc) {
             self.invoke_at(target, &args[1..], line, true, false)
         } else {

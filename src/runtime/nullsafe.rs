@@ -78,6 +78,7 @@ impl Runtime {
                         },
                         args,
                         expr.line,
+                        true,
                     )
                     .map(Some);
             }

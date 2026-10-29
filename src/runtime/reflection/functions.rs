@@ -195,6 +195,7 @@ impl Runtime {
             .expect("method declaring class");
         Ok(FunctionReflection {
             target: CallTarget {
+                result_used: true,
                 reference_values: false,
                 magic_name: None,
                 name: function.name.clone(),

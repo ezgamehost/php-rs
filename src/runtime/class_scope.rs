@@ -241,6 +241,7 @@ impl Runtime {
             .expect("method declaring class is linked");
         let this = if function.is_static { None } else { this };
         Ok(CallTarget {
+            result_used: true,
             reference_values: false,
             magic_name: None,
             name: function.name.clone(),

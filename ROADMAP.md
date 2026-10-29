@@ -258,7 +258,11 @@ definition of completion.
    counting, and array combination support insertion order, key conversion, duplicates,
    and reference copying. Array merge/replace and recursive variants support
    key collisions, numeric-key handling, nested reference separation, and recursion
-   detection. Native variadic errors omit parameter labels and exclude unknown named
+   detection. Internal array cursors support current/pos, key, reset, end, next, and
+   prev, including copy-on-write and deletion/append behavior. Deprecated object
+   traversal preserves declared slots, skips uninitialized properties, and observes
+   whether a moving call's return value is consumed. Native variadic errors omit
+   parameter labels and exclude unknown named
    arguments from minimum-arity counts. Callable inspection supports syntax-only
    checks, autoloading, scoped/abstract/magic methods, descriptive output names,
    and typed reference output assignments. Native dispatch retains argument cells.

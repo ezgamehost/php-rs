@@ -82,6 +82,8 @@ new request. The CLI returns the low eight bits of the requested status.
   conversion, duplicate handling, and reference-aware value copying.
 - `array_merge`/`array_replace` and their recursive forms support numeric-key
   handling, nested collisions, reference separation, and recursion errors.
+- `current`/`pos`, `key`, `reset`, `end`, `next`, and `prev` support internal array
+  cursors, copy-on-write separation, and deprecated object-property traversal.
 - Value and reference destructuring with `[]` and `list()`, including nested
   patterns, explicit keys, skipped entries, indexed targets, and `foreach`.
   Reference patterns preserve source bindings across self-rebinding and key

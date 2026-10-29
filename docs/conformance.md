@@ -1202,6 +1202,36 @@ fixtures depend on streams, internal array cursors, or array walking. Packed/mix
 metadata, complete native reflection types, memory limits, and INI/SKIPIF harness support
 remain unfinished.
 
+The [internal array cursor slice](conformance/php-8.5.0-array-cursor-hillclimb.txt)
+adds **44 upstream passes**: 33 array fixtures and 11 Zend fixtures, with no regressions
+across Zend, reflection, SPL, strings, arrays, or math. `current` and its `pos` alias return
+the dereferenced current value; `key` returns its key. Missing positions return false
+or null respectively. `reset`, `end`, `next`, and `prev` take references and move the
+internal cursor independently of foreach iterators. Empty arrays, exhaustion, deletion,
+appending at the old end, indirect temporary arguments, and recursive arrays follow the
+upstream cases. Array duplication preserves valid positions and resets exhausted ones;
+cursor mutation separates actual value aliases without treating the native argument
+snapshot as an additional PHP alias.
+
+Object arguments emit PHP's deprecation and traverse property storage, including encoded
+non-public keys and stable declared slots. Uninitialized/unset declared properties are
+skipped in the appropriate direction when fetching a value; dynamic-property deletion
+adjusts later positions. Closure property traversal is empty. Moving calls whose return
+value is discarded do not fetch/skip an uninitialized property. The evaluator now carries
+return-use information through expression statements, for-loop sequences, and directly
+inlined callbacks. Void casts still consume the operand result, as PHP does. Direct
+reference comparisons confirm these distinctions, array sharing/exhaustion, declared
+property order, dynamic deletion/reinsertion, and native property traversal.
+
+Arrays reach **256 / 532 / 52**, and Zend **2063 / 2785 / 408**. All 797 existing Rust
+tests, 57 reference-checked project fixtures, formatting, and Clippy pass. No custom tests
+or generated matrices were added. Direct execution of the existing `end_64bit.phpt` FILE
+program matches through its array cases but fails at missing `fopen`; its INI/SKIPIF
+fixture remains unsupported and is not counted as a pass. PHP 8.5.0 array/hash-table
+implementations, native signatures, upstream fixtures, and reference execution establish
+the behavior. Streams, complete native-object property handlers, packed/mixed table
+metadata, native reflection types, and INI/SKIPIF harness support remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1209,11 +1239,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2052 | 2796 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2063 | 2785 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 274 | 181 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 223 | 565 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 256 | 532 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 49 | 5 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 324 | 254 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

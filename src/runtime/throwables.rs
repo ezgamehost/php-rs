@@ -283,6 +283,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::default(),
+            property_cursor: RefCell::default(),
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
