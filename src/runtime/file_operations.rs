@@ -180,7 +180,7 @@ impl Runtime {
         }))
     }
 
-    fn transfer_open(
+    pub(super) fn transfer_open(
         &mut self,
         path: &[u8],
         mode: &[u8],
@@ -191,14 +191,15 @@ impl Runtime {
     ) -> Result<Value, Error> {
         let wrapper = self.transfer_wrapper(path, name, pending, line)?;
         if wrapper == Some(Wrapper::Php)
-            && !matches!(
-                path,
-                b"php://memory"
-                    | b"php://temp"
-                    | b"php://stdin"
-                    | b"php://stdout"
-                    | b"php://stderr"
-            )
+            && ![
+                b"php://memory".as_slice(),
+                b"php://temp",
+                b"php://stdin",
+                b"php://stdout",
+                b"php://stderr",
+            ]
+            .iter()
+            .any(|name| path.eq_ignore_ascii_case(name))
         {
             self.transfer_warning(
                 format!("{name}(): Invalid php:// URL specified on line {line}"),

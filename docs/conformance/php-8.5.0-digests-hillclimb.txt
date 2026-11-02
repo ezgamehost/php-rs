@@ -1,0 +1,90 @@
+PHP 8.5.0 MD5 and SHA-1 hillclimb
+Baseline: 7196bb53582377b4644ea696fa01e65560cbd381
+
+zend
+Before: 5256 cases; 2589 passed, 2267 failed, 400 unsupported
+After: 5256 cases; 2590 passed, 2266 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/gh19280.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 551 passed, 174 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/spl/tests/DirectoryIterator_getBasename_basic_test.phpt
+NEW PASS: ext/spl/tests/DirectoryIterator_getExtension_basic.phpt
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 431 passed, 147 failed, 152 unsupported
+New passes: 12; regressions: 0
+NEW PASS: ext/standard/tests/strings/md5.phpt
+NEW PASS: ext/standard/tests/strings/md5_basic1.phpt
+NEW PASS: ext/standard/tests/strings/md5_basic2.phpt
+NEW PASS: ext/standard/tests/strings/md5_file.phpt
+NEW PASS: ext/standard/tests/strings/md5raw.phpt
+NEW PASS: ext/standard/tests/strings/sha1.phpt
+NEW PASS: ext/standard/tests/strings/sha1_basic.phpt
+NEW PASS: ext/standard/tests/strings/sha1_file.phpt
+NEW PASS: ext/standard/tests/strings/sha1raw.phpt
+NEW PASS: ext/standard/tests/strings/stristr.phpt
+NEW PASS: ext/standard/tests/strings/strrev.phpt
+NEW PASS: ext/standard/tests/strings/strstr.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 308 passed, 80 failed, 508 unsupported
+After: 896 cases; 311 passed, 77 failed, 508 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/standard/tests/file/fread_basic.phpt
+NEW PASS: ext/standard/tests/file/fread_variation1.phpt
+NEW PASS: ext/standard/tests/file/fwrite_variation1.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 30 passed, 76 failed, 51 unsupported
+After: 157 cases; 30 passed, 76 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,182 passed, 2,933 failed, 1,441 unsupported.
+18 new passes (12 strings, 3 file, 2 SPL, 1 Zend); zero regressions across all ten suites.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+md5/sha1 and their file variants use incremental Rust digest implementations
+with native byte ordering, padding, binary/hex output and argument handling.
+File hashing reuses stream opening and reads, retaining pending wrapper errors
+and MD5-specific EOF requirements. Supported PHP wrapper names are now
+case-insensitive while preserving the original URI. Binary-output reflection
+defaults are false.
+Existing upstream digest vectors, raw output and file fixtures pass. Direct PHP
+comparisons match binary strings, chunked file hashing, directory/stdout read
+errors, resource lifetime, mixed-case wrappers, pending warning exceptions,
+restored warning delivery and reflection defaults.
+General hash-extension APIs and data/custom/network wrappers remain unfinished.
+Final upstream logs: /tmp/php-rs-digests-*3.log.
+Rust validation logs: /tmp/php-rs-digests-{tests,clippy}3.log.

@@ -2,6 +2,7 @@ mod array;
 mod ast;
 mod closure;
 mod diagnostics;
+mod digest;
 mod error;
 mod lexer;
 mod native_directory;

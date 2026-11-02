@@ -69,6 +69,7 @@ mod formatting;
 mod function_arguments;
 mod functions;
 mod garbage_collection;
+mod hashes;
 pub(crate) mod heap;
 mod include_paths;
 mod inheritance;

@@ -680,3 +680,10 @@ PHP 8.5.0's `ext/standard/streamsfuncs.c` and `main/streams/streams.c`, copyrigh
 `src/runtime/file_links.rs` adapts link operations and canonical path resolution
 from PHP 8.5.0's `ext/standard/{link,file}.c`, `main/fopen_wrappers.c`, and
 `Zend/zend_virtual_cwd.c`, copyright (c) The PHP Group.
+
+`src/digest.rs` and `src/runtime/hashes.rs` adapt PHP 8.5.0's
+`ext/standard/{md5,sha1}.c`, copyright (c) The PHP Group. The MD5 compression
+core follows the OpenSSL-compatible implementation written by Solar Designer
+in 2001 and placed in the public domain, without warranty. SHA-1 follows PHP's
+implementation by Stefan Esser. Shared wrapper-opening and read helpers preserve
+native file hashing diagnostics, EOF handling and stream lifetime.

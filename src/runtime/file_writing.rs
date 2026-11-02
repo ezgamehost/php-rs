@@ -392,7 +392,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn read_transfer_chunk(
+    pub(super) fn read_transfer_chunk(
         &mut self,
         resource: &Rc<PhpResource>,
         bytes: &mut [u8],

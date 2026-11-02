@@ -23,6 +23,7 @@ pub(super) enum Builtin {
     StrLower,
     StrUpper,
     Bin2Hex,
+    Digest(crate::digest::Algorithm, bool),
     Base64(bool),
     Rot13,
     Wordwrap,
@@ -222,6 +223,10 @@ impl Builtin {
             b"strtolower" => Self::StrLower,
             b"strtoupper" => Self::StrUpper,
             b"bin2hex" => Self::Bin2Hex,
+            b"md5" => Self::Digest(crate::digest::Algorithm::Md5, false),
+            b"md5_file" => Self::Digest(crate::digest::Algorithm::Md5, true),
+            b"sha1" => Self::Digest(crate::digest::Algorithm::Sha1, false),
+            b"sha1_file" => Self::Digest(crate::digest::Algorithm::Sha1, true),
             b"base64_encode" => Self::Base64(true),
             b"base64_decode" => Self::Base64(false),
             b"str_rot13" => Self::Rot13,
@@ -618,6 +623,10 @@ impl Builtin {
                 &[("target", false, false), ("link", false, false)]
             }
             Self::FileLink(_) => &[("path", false, false)],
+            Self::Digest(_, file) => &[
+                (if file { "filename" } else { "string" }, false, false),
+                ("binary", true, false),
+            ],
             Self::IncludePath(include_paths::Operation::Get) => &[],
             Self::IncludePath(include_paths::Operation::Set) => &[("include_path", false, false)],
             Self::IncludePath(include_paths::Operation::Resolve) => &[("filename", false, false)],
@@ -1142,6 +1151,7 @@ impl Builtin {
                             }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Base64(false), "strict") => Value::Bool(false),
+                            (Self::Digest(_, _), "binary") => Value::Bool(false),
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
@@ -1417,6 +1427,9 @@ impl Runtime {
             Builtin::Fgets => self.fgets(&name, &args, line),
             Builtin::Scan(stream) => self.scanf(stream, &name, &args, extra, line),
             Builtin::StreamGetContents => self.stream_get_contents(&name, &args, line),
+            Builtin::Digest(algorithm, file) => {
+                self.hash_value(algorithm, file, &name, &args, line)
+            }
             Builtin::StreamGetLine => self.stream_get_line(&name, &args, line),
             Builtin::StreamCopy => self.stream_copy(&name, &args, line),
             Builtin::FileLines => self.file_lines(&args, line),

@@ -448,7 +448,12 @@ impl Runtime {
             .as_ref()
             .map_or(filename, |path| path.as_os_str().as_encoded_bytes());
         let mode = mode.split(|byte| *byte == 0).next().unwrap();
-        let standard = match filename {
+        let php_name = filename
+            .get(..6)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(b"php://"))
+            .then(|| filename.to_ascii_lowercase());
+        let wrapper_name = php_name.as_deref().unwrap_or(filename);
+        let standard = match wrapper_name {
             b"php://stdin" => Some((0, b"STDIN".as_slice())),
             b"php://stdout" => Some((1, b"STDOUT".as_slice())),
             b"php://stderr" => Some((2, b"STDERR".as_slice())),
@@ -467,6 +472,7 @@ impl Runtime {
             return match stream {
                 Some(mut stream) => {
                     stream.mode = mode[..mode.len().min(15)].to_vec();
+                    stream.uri = Some(filename.to_vec());
                     Ok(Value::Resource(
                         self.resources.allocate(Kind::Stream(stream)),
                     ))
@@ -477,7 +483,7 @@ impl Runtime {
                 }
             };
         }
-        let memory = filename == b"php://memory" || filename == b"php://temp";
+        let memory = wrapper_name == b"php://memory" || wrapper_name == b"php://temp";
         let first = mode.first().copied().unwrap_or(0);
         // These wrappers only distinguish read-only mode from writable mode;
         // ordinary files validate the leading mode character.
@@ -559,7 +565,7 @@ impl Runtime {
             read_buffer: Default::default(),
             position: 0,
         }));
-        if filename == b"php://temp" {
+        if wrapper_name == b"php://temp" {
             // PHP's temporary stream owns a separate registered backing stream.
             let mut kind = resource.kind.borrow_mut();
             let Kind::Stream(stream) = &mut *kind else {

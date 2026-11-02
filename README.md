@@ -249,10 +249,16 @@ new request. The CLI returns the low eight bits of the requested status.
   keys, preserving reference bindings and the position of colliding keys.
 - Resource values preserve handle identity and closed state across aliases, with
   `is_resource`, `get_resource_id`, `get_resource_type`, inspection, casts, and key conversion.
+- `md5`, `sha1`, `md5_file`, and `sha1_file` produce hexadecimal or binary digests
+  using incremental Rust implementations. File hashing uses supported streams,
+  preserves native diagnostics and resource lifetimes, and distinguishes MD5's
+  EOF requirement from SHA-1's partial-read result. General hash-extension APIs
+  and data/custom/network stream wrappers remain unfinished.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fgetc`, `fwrite`/`fputs`, `feof`,
   `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
   spill-to-disk and general wrapper registration remain unfinished.
+  Supported `php://` names are case-insensitive and retain their original URI spelling.
 - `ftruncate` shrinks or extends file, memory, and temporary streams with native
   read-only behavior. It preserves logical position, EOF, and stat caches; memory
   streams clamp their internal cursor on shrink and zero-fill newly added bytes.
