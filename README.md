@@ -30,6 +30,9 @@ retained while the existing `output` and `warnings` fields remain separate.
 including registered exception handlers, user-defined exception `__toString()`,
 and any output or exit they cause. A successfully handled exception preserves an
 earlier exit status, or sets it to 0 when none was set.
+Internal warning-producing conversions and operators propagate errors, preparing
+for synchronous PHP error-handler callbacks. User error-handler dispatch remains
+unfinished; this plumbing preserves the current conformance totals.
 Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.

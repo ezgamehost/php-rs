@@ -1403,7 +1403,7 @@ impl Runtime {
                     &mut HashSet::new(),
                     line,
                     &mut self.diagnostics,
-                )))
+                )?))
             }
             Builtin::ArrayValues => {
                 let array = require_array(first, &name, 1, line)?;
@@ -1565,7 +1565,7 @@ impl Runtime {
             return Err(type_error(value, function, position, kind, line));
         }
         self.warn_null(value, function, position, kind, line);
-        value.warn_nan("string", line, &mut self.diagnostics);
+        value.warn_nan("string", line, &mut self.diagnostics)?;
         Ok(value.to_bytes())
     }
 
@@ -1663,7 +1663,7 @@ impl Runtime {
             return Err(type_error(value, function, position, "bool", line));
         }
         self.warn_null(value, function, position, "bool", line);
-        Ok(value.to_bool(line, &mut self.diagnostics))
+        value.to_bool(line, &mut self.diagnostics)
     }
     pub(super) fn warn_null(
         &mut self,
@@ -1740,23 +1740,23 @@ fn count(
     seen: &mut HashSet<usize>,
     line: usize,
     warnings: &mut dyn WarningSink,
-) -> i64 {
+) -> Result<i64, Error> {
     if !recursive {
-        return array.len() as i64;
+        return Ok(array.len() as i64);
     }
     let identity = array as *const PhpArray as usize;
     if !seen.insert(identity) {
-        warnings.push(format!("count(): Recursion detected on line {line}"));
-        return 0;
+        warnings.warn(format!("count(): Recursion detected on line {line}"))?;
+        return Ok(0);
     }
     let mut result = array.len() as i64;
     for (_, value) in array.entries() {
         if let Value::Array(array) = value.dereferenced() {
-            result += count(&array, true, seen, line, warnings);
+            result += count(&array, true, seen, line, warnings)?;
         }
     }
     seen.remove(&identity);
-    result
+    Ok(result)
 }
 fn dump(value: &Value, depth: usize, out: &mut Vec<u8>, line: usize, warnings: &mut Diagnostics) {
     dump_inner(value, depth, out, &mut HashSet::new(), line, warnings);

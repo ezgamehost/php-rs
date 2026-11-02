@@ -2001,6 +2001,21 @@ shutdown boundaries. No custom tests or generated matrices were added. Missing
 builtins, complete qualified callback forms, error handlers, and other documented
 runtime gaps remain unfinished. Adapted rules retain PHP/Zend license attribution.
 
+The [fallible-warning prerequisite](conformance/php-8.5.0-fallible-warnings-regression.txt)
+makes warning sinks return `Result`, propagating failures through numeric and
+boolean conversions, casts, operators, array keys, offsets, recursive counting,
+base decoding, and character masks. Weak scalar coercion no longer discards
+conversion errors. Compiler-only diagnostics retain an infallible sink and
+constant-folding path. Reference reads in numeric/NaN conversions release their
+borrow before warning emission.
+
+This is internal preparation for synchronous PHP error-handler callbacks; it
+does not enable those callbacks or claim new passes. All six full upstream suites
+retain exactly the prior pass/fail/unsupported totals, with zero regressions.
+All 797 existing Rust tests, 57 reference-checked project PHPT fixtures, formatting,
+and Clippy pass. No custom tests or generated matrices were added. Runtime
+callback dispatch and reentrant writes still need implementation.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 

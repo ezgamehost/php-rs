@@ -1,12 +1,13 @@
-/// Value operations can report into either the compiler's unfiltered diagnostics
-/// or a request's live error-reporting mask.
+/// Value operations can emit diagnostics or propagate an error from a warning
+/// callback. Compiler sinks remain infallible.
 pub(crate) trait WarningSink {
-    fn push(&mut self, message: String);
+    fn warn(&mut self, message: String) -> Result<(), crate::Error>;
 }
 
 impl WarningSink for Vec<String> {
-    fn push(&mut self, message: String) {
+    fn warn(&mut self, message: String) -> Result<(), crate::Error> {
         Vec::push(self, message);
+        Ok(())
     }
 }
 
@@ -63,8 +64,8 @@ impl Diagnostics {
     }
 }
 
-impl WarningSink for Diagnostics {
-    fn push(&mut self, message: String) {
+impl Diagnostics {
+    pub fn push(&mut self, message: String) {
         let level = if message.starts_with("Deprecated:") {
             8192
         } else if message.starts_with("Notice:") {
@@ -106,4 +107,11 @@ pub(crate) struct Diagnostic {
     pub position: usize,
     pub rendered: Vec<u8>,
     pub leading_newline: bool,
+}
+
+impl WarningSink for Diagnostics {
+    fn warn(&mut self, message: String) -> Result<(), crate::Error> {
+        self.push(message);
+        Ok(())
+    }
 }

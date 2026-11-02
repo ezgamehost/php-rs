@@ -74,7 +74,7 @@ impl Runtime {
                         name,
                         line,
                         &mut self.diagnostics,
-                    );
+                    )?;
                     bytes[0] = bytes[0].to_ascii_uppercase();
                     for index in 1..bytes.len() {
                         // PHP tests the preceding byte after any earlier capitalization.

@@ -168,7 +168,7 @@ impl Runtime {
         if access != Access::Read {
             let has_isset = objects::method(&object.class, Magic::Isset.name()).is_some();
             if let Some(value) = self.call_property_magic(object, name, Magic::Isset, None, line)? {
-                if !value.to_bool(line, &mut self.diagnostics) {
+                if !value.to_bool(line, &mut self.diagnostics)? {
                     return Ok(Value::Null);
                 }
                 if access == Access::Probe {

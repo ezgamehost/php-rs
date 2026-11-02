@@ -330,7 +330,7 @@ impl Runtime {
             }
             Stmt::Block(stmts) => return self.block(stmts),
             Stmt::If(cond, yes, no) => {
-                if self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics) {
+                if self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics)? {
                     return self.statement(yes);
                 }
                 if let Some(no) = no {
@@ -338,7 +338,7 @@ impl Runtime {
                 }
             }
             Stmt::While(cond, body) => {
-                while self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics) {
+                while self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics)? {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -352,7 +352,7 @@ impl Runtime {
                     Flow::Break(1) => break,
                     flow => return Ok(flow.leave_level()),
                 }
-                if !self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics) {
+                if !self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics)? {
                     break;
                 }
             },
@@ -361,7 +361,7 @@ impl Runtime {
                 while self.eval_sequence(cond, true)?.to_bool(
                     cond.last().map_or(0, |expr| expr.line),
                     &mut self.diagnostics,
-                ) {
+                )? {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -852,7 +852,7 @@ impl Runtime {
                 if matches!(kind, crate::ast::CastKind::String) {
                     Ok(Value::String(self.string_bytes(&value, line)?.into()))
                 } else if matches!(kind, crate::ast::CastKind::Object) {
-                    Ok(self.cast_object(value, line))
+                    self.cast_object(value, line)
                 } else {
                     casting::cast(*kind, value, line, &mut self.diagnostics)
                 }
@@ -992,7 +992,7 @@ impl Runtime {
             ExprKind::Empty(arg) => Ok(Value::Bool(
                 !self
                     .coalesce_read(arg, Access::Empty)?
-                    .to_bool(line, &mut self.diagnostics),
+                    .to_bool(line, &mut self.diagnostics)?,
             )),
             ExprKind::Constant(name) => self.read_constant(name, line),
             ExprKind::NamespacedName(name) => {
@@ -1025,7 +1025,7 @@ impl Runtime {
                 }
                 let value = self.eval(expr)?;
                 match op.as_str() {
-                    "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.diagnostics))),
+                    "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.diagnostics)?)),
                     "~" => match value {
                         Value::String(s) => Ok(Value::String(
                             s.bytes().iter().map(|b| !b).collect::<Vec<_>>().into(),
@@ -1098,7 +1098,7 @@ impl Runtime {
             }
             ExprKind::Conditional(cond, yes, no) => {
                 let value = self.eval(cond)?;
-                if value.to_bool(cond.line, &mut self.diagnostics) {
+                if value.to_bool(cond.line, &mut self.diagnostics)? {
                     match yes {
                         Some(yes) => self.eval(yes),
                         None => Ok(value),
@@ -1123,12 +1123,12 @@ impl Runtime {
                 }
                 let lhs = self.eval(left)?;
                 if matches!(op.as_str(), "&&" | "and" | "||" | "or") {
-                    let truth = lhs.to_bool(line, &mut self.diagnostics);
+                    let truth = lhs.to_bool(line, &mut self.diagnostics)?;
                     if truth == matches!(op.as_str(), "||" | "or") {
                         return Ok(Value::Bool(truth));
                     }
                     let rhs = self.eval(right)?;
-                    return Ok(Value::Bool(rhs.to_bool(line, &mut self.diagnostics)));
+                    return Ok(Value::Bool(rhs.to_bool(line, &mut self.diagnostics)?));
                 }
                 let rhs = self.eval(right)?;
                 self.binary(op, lhs, rhs, line)
@@ -1152,7 +1152,7 @@ fn binary(
         "||" | "or" => return Ok(Bool(left.is_truthy() || right.is_truthy())),
         "xor" => {
             return Ok(Bool(
-                left.to_bool(line, warnings) ^ right.to_bool(line, warnings),
+                left.to_bool(line, warnings)? ^ right.to_bool(line, warnings)?,
             ));
         }
         "===" => return Ok(Bool(left.identical(&right, line)?)),
@@ -1283,7 +1283,7 @@ fn increment(
     use Value::*;
     match value {
         Bool(_) | Null if matches!(value, Bool(_)) || delta < 0 => {
-            warnings.push(format!(
+            warnings.warn(format!(
                 "{} on type {} has no effect on line {line}",
                 if delta > 0 { "Increment" } else { "Decrement" },
                 if matches!(value, Bool(_)) {
@@ -1291,14 +1291,14 @@ fn increment(
                 } else {
                     "null"
                 }
-            ));
+            ))?;
             Ok(value.clone())
         }
         String(s) if crate::value::numeric_string(&s.bytes()).is_none() => {
-            warnings.push(format!(
+            warnings.warn(format!(
                 "Deprecated: {} on non-numeric string on line {line}",
                 if delta > 0 { "Increment" } else { "Decrement" }
-            ));
+            ))?;
             if delta < 0 {
                 return Ok(value.clone());
             }
@@ -1352,9 +1352,9 @@ fn string_bytes(
             line,
         ));
     }
-    value.warn_nan("string", line, warnings);
+    value.warn_nan("string", line, warnings)?;
     if matches!(value, Value::Array(_)) {
-        warnings.push(format!("Array to string conversion on line {line}"));
+        warnings.warn(format!("Array to string conversion on line {line}"))?;
     }
     Ok(value.to_bytes())
 }

@@ -117,9 +117,9 @@ fn step(
     }
     if matches!(value, Value::Null | Value::Bool(false)) {
         if matches!(value, Value::Bool(false)) {
-            warnings.push(format!(
+            warnings.warn(format!(
                 "Deprecated: Automatic conversion of false to array on line {line}"
-            ));
+            ))?;
         }
         *value = Value::Array(Rc::new(PhpArray::default()));
     }

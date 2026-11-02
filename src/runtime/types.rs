@@ -39,7 +39,7 @@ impl Runtime {
                 .string_bytes(&value, line)
                 .map(|s| Some(Value::String(s.into())));
         }
-        Ok(self.coerce_scalar_type(value, ty, strict, line))
+        self.coerce_scalar_type(value, ty, strict, line)
     }
 
     fn coerce_scalar_type(
@@ -48,11 +48,11 @@ impl Runtime {
         ty: &TypeDecl,
         strict: bool,
         line: usize,
-    ) -> Option<Value> {
+    ) -> Result<Option<Value>, Error> {
         if ty.contains("float")
             && let Value::Int(n) = value
         {
-            return Some(Value::Float(n as f64));
+            return Ok(Some(Value::Float(n as f64)));
         }
         if strict
             || matches!(
@@ -64,7 +64,7 @@ impl Runtime {
                     | Value::Resource(_)
             )
         {
-            return None;
+            return Ok(None);
         }
         // A numeric string chooses int or float by its representation when both
         // are present; other weak scalar unions prefer int, float, string, bool.
@@ -86,24 +86,26 @@ impl Runtime {
                 _ => false,
             };
             if !prefer_float && in_range {
-                return Some(Value::Int(
-                    number.integer(line, &mut self.diagnostics).ok()?,
-                ));
+                return Ok(Some(Value::Int(
+                    number.integer(line, &mut self.diagnostics)?,
+                )));
             }
         }
         if ty.contains("float")
             && let Some(number) = number
         {
-            return Some(Value::Float(number.as_float()));
+            return Ok(Some(Value::Float(number.as_float())));
         }
         if ty.contains("string") {
-            value.warn_nan("string", line, &mut self.diagnostics);
-            return Some(Value::String(value.to_bytes().into()));
+            value.warn_nan("string", line, &mut self.diagnostics)?;
+            return Ok(Some(Value::String(value.to_bytes().into())));
         }
         if ty.contains("bool") {
-            return Some(Value::Bool(value.to_bool(line, &mut self.diagnostics)));
+            return Ok(Some(Value::Bool(
+                value.to_bool(line, &mut self.diagnostics)?,
+            )));
         }
-        None
+        Ok(None)
     }
 
     fn is_callable(&mut self, value: &Value, line: usize) -> Result<bool, Error> {

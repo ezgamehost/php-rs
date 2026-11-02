@@ -53,16 +53,16 @@ impl ArrayKey {
             }
             Value::Int(n) => Self::Int(*n),
             Value::Resource(resource) => {
-                warnings.push(format!(
+                warnings.warn(format!(
                     "Resource ID#{} used as offset, casting to integer ({}) on line {line}",
                     resource.id, resource.id
-                ));
+                ))?;
                 Self::Int(resource.id)
             }
             Value::Float(_) => Self::Int(value.integer(line, warnings)?),
             Value::Bool(b) => Self::Int(i64::from(*b)),
             Value::Null => {
-                warnings.push(format!("Deprecated: Using null as an array offset is deprecated, use an empty string instead on line {line}"));
+                warnings.warn(format!("Deprecated: Using null as an array offset is deprecated, use an empty string instead on line {line}"))?;
                 Self::String(Vec::new())
             }
             Value::String(bytes) => {

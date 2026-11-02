@@ -131,13 +131,13 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
         ExprKind::Binary(op, left, right) if matches!(op.as_str(), "&&" | "and" | "||" | "or") => {
             expression(left, warnings);
             if let Some(value) = constant(left) {
-                let truth = value.to_bool(line, warnings);
+                let truth = value.constant_bool(line, warnings);
                 if truth == matches!(op.as_str(), "||" | "or") {
-                    expr.kind = ExprKind::Literal(Value::Bool(value.to_bool(line, warnings)));
+                    expr.kind = ExprKind::Literal(Value::Bool(value.constant_bool(line, warnings)));
                 } else {
                     expression(right, warnings);
                     expr.kind = if let Some(value) = constant(right) {
-                        ExprKind::Literal(Value::Bool(value.to_bool(line, warnings)))
+                        ExprKind::Literal(Value::Bool(value.constant_bool(line, warnings)))
                     } else {
                         ExprKind::Cast(CastKind::Bool, right.clone())
                     };
@@ -153,7 +153,7 @@ fn expression(expr: &mut Expr, warnings: &mut Vec<String>) {
                 && let (Some(left), Some(right)) = (constant(left), constant(right))
             {
                 expr.kind = ExprKind::Literal(Value::Bool(
-                    left.to_bool(line, warnings) ^ right.to_bool(line, warnings),
+                    left.constant_bool(line, warnings) ^ right.constant_bool(line, warnings),
                 ));
             }
         }
@@ -330,11 +330,12 @@ pub(super) fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
             initializer(right, warnings);
             if matches!(op.as_str(), "&&" | "and" | "||" | "or") {
                 if let Some(value) = constant(left) {
-                    let truth = value.to_bool(line, warnings);
+                    let truth = value.constant_bool(line, warnings);
                     if truth == matches!(op.as_str(), "||" | "or") {
                         expr.kind = ExprKind::Literal(Value::Bool(truth));
                     } else if let Some(value) = constant(right) {
-                        expr.kind = ExprKind::Literal(Value::Bool(value.to_bool(line, warnings)));
+                        expr.kind =
+                            ExprKind::Literal(Value::Bool(value.constant_bool(line, warnings)));
                     }
                 }
                 return;
@@ -343,7 +344,7 @@ pub(super) fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
                 && let (Some(left), Some(right)) = (constant(left), constant(right))
             {
                 expr.kind = ExprKind::Literal(Value::Bool(
-                    left.to_bool(line, warnings) ^ right.to_bool(line, warnings),
+                    left.constant_bool(line, warnings) ^ right.constant_bool(line, warnings),
                 ));
                 return;
             }
@@ -351,7 +352,7 @@ pub(super) fn initializer(expr: &mut Expr, warnings: &mut Vec<String>) {
         ExprKind::Conditional(condition, yes, no) => {
             initializer(condition, warnings);
             if let Some(value) = constant(condition) {
-                let selected = if value.to_bool(line, warnings) {
+                let selected = if value.constant_bool(line, warnings) {
                     yes.as_mut().unwrap_or(condition)
                 } else {
                     no

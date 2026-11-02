@@ -17,7 +17,7 @@ impl Runtime {
         }
         let number = self.native_string(first, name, 1, line)?;
         if let builtins::Builtin::BaseDecode(base) = kind {
-            return Ok(decode(&number, base, line, &mut self.diagnostics));
+            return decode(&number, base, line, &mut self.diagnostics);
         }
         let from = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
         let to = self.native_int(args[2].as_ref().unwrap(), name, 3, line)?;
@@ -33,7 +33,7 @@ impl Runtime {
                 ));
             }
         }
-        let value = decode(&number, from as u8, line, &mut self.diagnostics);
+        let value = decode(&number, from as u8, line, &mut self.diagnostics)?;
         let bytes = match value {
             Value::Int(n) => encode_integer(n as u64, to as u8),
             Value::Float(n) => encode_float(n, to as u8, line)?,
@@ -43,7 +43,12 @@ impl Runtime {
     }
 }
 
-fn decode(bytes: &[u8], base: u8, line: usize, warnings: &mut dyn WarningSink) -> Value {
+fn decode(
+    bytes: &[u8],
+    base: u8,
+    line: usize,
+    warnings: &mut dyn WarningSink,
+) -> Result<Value, Error> {
     let mut bytes = bytes;
     // C's isspace() also includes vertical tab, unlike Rust's ASCII whitespace.
     let whitespace = |byte: &u8| matches!(byte, b' ' | b'\t'..=b'\r');
@@ -88,9 +93,9 @@ fn decode(bytes: &[u8], base: u8, line: usize, warnings: &mut dyn WarningSink) -
         }
     }
     if invalid {
-        warnings.push(format!("Deprecated: Invalid characters passed for attempted conversion, these have been ignored on line {line}"));
+        warnings.warn(format!("Deprecated: Invalid characters passed for attempted conversion, these have been ignored on line {line}"))?;
     }
-    float.map(Value::Float).unwrap_or(Value::Int(integer))
+    Ok(float.map(Value::Float).unwrap_or(Value::Int(integer)))
 }
 
 fn encode_integer(mut value: u64, base: u8) -> Vec<u8> {

@@ -57,9 +57,9 @@ impl Runtime {
                     Value::String(Vec::new().into())
                 }
             },
-            CastKind::Object => self.cast_object(value, line),
+            CastKind::Object => self.cast_object(value, line)?,
             CastKind::Void => {
-                value.warn_nan("null", line, &mut self.diagnostics);
+                value.warn_nan("null", line, &mut self.diagnostics)?;
                 Value::Null
             }
             _ => casting::cast(kind, value, line, &mut self.diagnostics)?,

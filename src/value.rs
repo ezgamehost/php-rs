@@ -126,25 +126,31 @@ impl Value {
         kind: &str,
         line: usize,
         warnings: &mut dyn crate::diagnostics::WarningSink,
-    ) {
+    ) -> Result<(), Error> {
         if let Self::Indirect(value) | Self::Reference(value) = self {
-            value.borrow().warn_nan(kind, line, warnings);
-            return;
+            let value = value.borrow().clone();
+            return value.warn_nan(kind, line, warnings);
         }
         if matches!(self, Self::Float(n) if n.is_nan()) {
-            warnings.push(format!(
+            warnings.warn(format!(
                 "unexpected NAN value was coerced to {kind} on line {line}"
-            ));
+            ))?;
         }
+        Ok(())
     }
 
     pub(crate) fn to_bool(
         &self,
         line: usize,
         warnings: &mut dyn crate::diagnostics::WarningSink,
-    ) -> bool {
-        self.warn_nan("bool", line, warnings);
-        self.is_truthy()
+    ) -> Result<bool, Error> {
+        self.warn_nan("bool", line, warnings)?;
+        Ok(self.is_truthy())
+    }
+
+    pub(crate) fn constant_bool(&self, line: usize, warnings: &mut Vec<String>) -> bool {
+        self.to_bool(line, warnings)
+            .expect("compiler diagnostics are infallible")
     }
 
     pub fn is_truthy(&self) -> bool {
@@ -178,7 +184,10 @@ impl Value {
         warnings: &mut dyn crate::diagnostics::WarningSink,
     ) -> Result<Self, Error> {
         match self {
-            Self::Reference(value) | Self::Indirect(value) => value.borrow().number(line, warnings),
+            Self::Reference(value) | Self::Indirect(value) => {
+                let value = value.borrow().clone();
+                value.number(line, warnings)
+            }
             Self::Object(object) => Err(Error::new(
                 ErrorKind::TypeError,
                 format!("Unsupported operand type: {}", object.class_name),
@@ -211,8 +220,9 @@ impl Value {
                         line,
                     )
                 })?;
+                drop(s);
                 if !complete {
-                    warnings.push(format!("A non-numeric value encountered on line {line}"));
+                    warnings.warn(format!("A non-numeric value encountered on line {line}"))?;
                 }
                 Ok(value)
             }
@@ -228,17 +238,17 @@ impl Value {
             Self::Float(n) => {
                 let converted = float_to_int(n);
                 if !n.is_finite() || !(-9223372036854775808.0..9223372036854775808.0).contains(&n) {
-                    warnings.push(format!(
+                    warnings.warn(format!(
                         "The float {} is not representable as an int, cast occurred on line {line}",
                         format_float(n)
-                    ));
+                    ))?;
                 }
                 // PHP's range predicate admits NaN, so it also receives the
                 // precision diagnostic. Infinity and finite overflow do not.
                 if n != converted as f64
                     && (n.is_nan() || (-9223372036854775808.0..9223372036854775808.0).contains(&n))
                 {
-                    warnings.push(format!("Deprecated: Implicit conversion from float {} to int loses precision on line {line}", format_float(n)));
+                    warnings.warn(format!("Deprecated: Implicit conversion from float {} to int loses precision on line {line}", format_float(n)))?;
                 }
                 Ok(converted)
             }

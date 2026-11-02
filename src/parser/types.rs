@@ -314,7 +314,7 @@ fn compile_time_value(expr: &Expr) -> Option<Value> {
         }
         ExprKind::Conditional(a, b, c) => {
             let value = compile_time_value(a)?;
-            if value.to_bool(expr.line, &mut Vec::new()) {
+            if value.constant_bool(expr.line, &mut Vec::new()) {
                 b.as_ref().is_none_or(|b| compile_time_value(b).is_some())
             } else {
                 compile_time_value(c).is_some()

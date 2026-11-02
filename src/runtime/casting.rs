@@ -18,15 +18,15 @@ pub(super) fn cast(
         } else {
             "float"
         };
-        warnings.push(format!(
+        warnings.warn(format!(
             "Object of class {} could not be converted to {name} on line {line}",
             builtins::debug_type(&value)
-        ));
+        ))?;
     }
     Ok(match kind {
         CastKind::Object => unreachable!("object allocation is handled by Runtime"),
         CastKind::Void => Value::Null,
-        CastKind::Bool => Value::Bool(value.to_bool(line, warnings)),
+        CastKind::Bool => Value::Bool(value.to_bool(line, warnings)?),
         CastKind::String => Value::String(string_bytes(&value, line, warnings)?.into()),
         CastKind::Array => match value {
             Value::Array(_) => value,
@@ -41,7 +41,7 @@ pub(super) fn cast(
                 Value::Array(Rc::new(array))
             }
             value => {
-                value.warn_nan("array", line, warnings);
+                value.warn_nan("array", line, warnings)?;
                 let mut array = PhpArray::default();
                 if value != Value::Null {
                     array.append(value, line)?;
@@ -55,7 +55,7 @@ pub(super) fn cast(
                 Value::Resource(resource) => resource.id,
                 Value::Float(number) => {
                     if out_of_range(*number) {
-                        warnings.push(format!("The float {} is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(&value.to_bytes())));
+                        warnings.warn(format!("The float {} is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(&value.to_bytes())))?;
                     }
                     float_to_int(*number)
                 }
@@ -63,7 +63,7 @@ pub(super) fn cast(
                     Some((Value::Int(number), _)) => number,
                     Some((Value::Float(number), _)) => {
                         if out_of_range(number) {
-                            warnings.push(format!("The float-string \"{}\" is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(&bytes.bytes())));
+                            warnings.warn(format!("The float-string \"{}\" is not representable as an int, cast occurred on line {line}", String::from_utf8_lossy(&bytes.bytes())))?;
                         }
                         if number.is_finite() { number as i64 } else { 0 }
                     }
@@ -105,9 +105,9 @@ pub(super) fn cast(
 }
 
 impl Runtime {
-    pub(super) fn cast_object(&mut self, value: Value, line: usize) -> Value {
+    pub(super) fn cast_object(&mut self, value: Value, line: usize) -> Result<Value, Error> {
         if matches!(value, Value::Object(_) | Value::Closure(_)) {
-            return value;
+            return Ok(value);
         }
         let mut properties = PhpArray::default();
         match value {
@@ -118,12 +118,12 @@ impl Runtime {
                 }
             }
             value => {
-                value.warn_nan("object", line, &mut self.diagnostics);
+                value.warn_nan("object", line, &mut self.diagnostics)?;
                 properties.insert(ArrayKey::String(b"scalar".to_vec()), value);
             }
         }
         let handle = self.allocate_object_handle();
-        Value::Object(Rc::new(crate::PhpObject {
+        Ok(Value::Object(Rc::new(crate::PhpObject {
             class: self.find_class(b"stdClass").expect("built-in stdClass"),
             class_name: "stdClass".to_owned(),
             properties: RefCell::new(properties),
@@ -135,7 +135,7 @@ impl Runtime {
             throwable: RefCell::new(None),
             object_id: handle.id,
             _handle: handle,
-        }))
+        })))
     }
 }
 

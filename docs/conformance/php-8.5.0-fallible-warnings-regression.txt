@@ -1,0 +1,39 @@
+PHP 8.5.0 fallible warning plumbing regression check
+Baseline: b43d754 (forwarding callbacks)
+Counts are passed / failed / unsupported.
+This prerequisite changes internal error propagation only. PHP error-handler
+registration/dispatch is not enabled; no compatibility gains are claimed.
+
+ZEND
+Before: 5256 cases; 2173 passed, 2675 failed, 408 unsupported
+After: 5256 cases; 2173 passed, 2675 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+ARRAY
+Before: 840 cases; 726 passed, 62 failed, 52 unsupported
+After: 840 cases; 726 passed, 62 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+REFLECTION
+Before: 492 cases; 280 passed, 175 failed, 37 unsupported
+After: 492 cases; 280 passed, 175 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+SPL
+Before: 778 cases; 23 passed, 661 failed, 94 unsupported
+After: 778 cases; 23 passed, 661 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+STRINGS
+Before: 730 cases; 396 passed, 182 failed, 152 unsupported
+After: 730 cases; 396 passed, 182 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+MATH
+Before: 171 cases; 51 passed, 3 failed, 117 unsupported
+After: 171 cases; 51 passed, 3 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Validation: all 797 existing Rust tests and 57 reference-checked project PHPT
+fixtures pass. Formatting and Clippy pass. No custom tests or generated matrices
+were added. Existing upstream failures and unsupported cases remain unchanged.

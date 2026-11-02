@@ -98,7 +98,7 @@ impl Runtime {
                 seen.remove(&identity);
             }
             value => {
-                value.warn_nan("string", line, &mut self.diagnostics);
+                value.warn_nan("string", line, &mut self.diagnostics)?;
                 output.extend(value.to_bytes());
             }
         }

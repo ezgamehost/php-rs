@@ -27,7 +27,7 @@ impl Runtime {
             let arguments = [value.clone(), key.to_value()];
             let matched = self
                 .call_callback(&callback, &arguments, line)?
-                .to_bool(line, &mut self.diagnostics);
+                .to_bool(line, &mut self.diagnostics)?;
             if matched != all {
                 return Ok(match kind {
                     // Read after the callback: existing reference cells may
@@ -127,9 +127,9 @@ impl Runtime {
                     _ => vec![value.clone()],
                 };
                 self.call_callback(callback, &values, line)?
-                    .to_bool(line, &mut self.diagnostics)
+                    .to_bool(line, &mut self.diagnostics)?
             } else {
-                value.to_bool(line, &mut self.diagnostics)
+                value.to_bool(line, &mut self.diagnostics)?
             };
             if keep {
                 result.insert(key.clone(), value.clone());

@@ -1037,11 +1037,11 @@ fn overwritten(name: &[u8], line: usize) -> Error {
     )
 }
 
-fn diagnose_functions(stmts: &[Stmt], warnings: &mut dyn WarningSink) {
+fn diagnose_functions(stmts: &[Stmt], warnings: &mut Diagnostics) {
     diagnose_statements(stmts, warnings, &mut Vec::new());
 }
 
-fn diagnose_statements(stmts: &[Stmt], warnings: &mut dyn WarningSink, switches: &mut Vec<bool>) {
+fn diagnose_statements(stmts: &[Stmt], warnings: &mut Diagnostics, switches: &mut Vec<bool>) {
     for stmt in stmts {
         match stmt {
             Stmt::Class(class) => {

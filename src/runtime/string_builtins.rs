@@ -43,7 +43,7 @@ impl Runtime {
                     Some(value) => self.native_string(value, name, 2, line)?,
                     None => b" \t\n\r\x0b\0".to_vec(),
                 };
-                let mask = character_mask(&characters, name, line, &mut self.diagnostics);
+                let mask = character_mask(&characters, name, line, &mut self.diagnostics)?;
                 let mut start = 0;
                 let mut end = bytes.len();
                 if mode & 1 != 0 {
@@ -121,7 +121,7 @@ pub(super) fn character_mask(
     function: &str,
     line: usize,
     warnings: &mut dyn WarningSink,
-) -> [bool; 256] {
+) -> Result<[bool; 256], Error> {
     let mut mask = [false; 256];
     let mut index = 0;
     while index < bytes.len() {
@@ -143,13 +143,13 @@ pub(super) fn character_mask(
             } else {
                 ""
             };
-            warnings.push(format!(
+            warnings.warn(format!(
                 "{function}(): Invalid '..'-range{detail} on line {line}"
-            ));
+            ))?;
         } else {
             mask[bytes[index] as usize] = true;
         }
         index += 1;
     }
-    mask
+    Ok(mask)
 }

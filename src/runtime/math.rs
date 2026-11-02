@@ -265,9 +265,9 @@ pub(super) fn power(
     let a = a.as_float();
     let b = b.as_float();
     if a == 0.0 && b < 0.0 {
-        warnings.push(format!(
+        warnings.warn(format!(
             "Deprecated: Power of base 0 and negative exponent is deprecated on line {line}"
-        ));
+        ))?;
     }
     Ok(Value::Float(a.powf(b)))
 }

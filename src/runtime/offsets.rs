@@ -86,10 +86,10 @@ pub(super) fn read_offset(
                 return Ok(value.dereferenced());
             }
             if access == Access::Read {
-                warnings.push(format!(
+                warnings.warn(format!(
                     "Undefined array key {} on line {line}",
                     String::from_utf8_lossy(&key.to_value().to_bytes())
-                ));
+                ))?;
             }
             Ok(Value::Null)
         }
@@ -104,9 +104,9 @@ pub(super) fn read_offset(
                 return Ok(Value::String(vec![*byte].into()));
             }
             if access == Access::Read {
-                warnings.push(format!(
+                warnings.warn(format!(
                     "Uninitialized string offset {index} on line {line}"
-                ));
+                ))?;
                 Ok(Value::String(Vec::new().into()))
             } else {
                 Ok(Value::Null)
@@ -114,9 +114,9 @@ pub(super) fn read_offset(
         }
         _ => {
             if access == Access::Read {
-                warnings.push(format!(
+                warnings.warn(format!(
                     "Trying to access array offset on a scalar on line {line}"
-                ));
+                ))?;
             }
             Ok(Value::Null)
         }
@@ -132,7 +132,7 @@ pub(super) fn string_index(
         Value::Int(n) => return Ok(Some(*n)),
         Value::Float(_) | Value::Bool(_) | Value::Null => {
             if access == Access::Read {
-                warnings.push(format!("String offset cast occurred on line {line}"));
+                warnings.warn(format!("String offset cast occurred on line {line}"))?;
             }
             if matches!(access, Access::Probe | Access::Empty | Access::ProbeValue)
                 && matches!(key, Value::Float(_))
@@ -152,10 +152,10 @@ pub(super) fn string_index(
                     if matches!(access, Access::Probe | Access::Empty | Access::ProbeValue) {
                         return Ok(None);
                     }
-                    warnings.push(format!(
+                    warnings.warn(format!(
                         "Illegal string offset \"{}\" on line {line}",
                         String::from_utf8_lossy(&bytes)
-                    ));
+                    ))?;
                 }
                 return Ok(Some(n));
             }
@@ -190,7 +190,7 @@ pub(super) fn write_string(
 ) -> Result<Value, Error> {
     let index = string_index(key, line, Access::Read, warnings)?.unwrap();
     let Some(position) = position(index, bytes.len()) else {
-        warnings.push(format!("Illegal string offset {index} on line {line}"));
+        warnings.warn(format!("Illegal string offset {index} on line {line}"))?;
         return Ok(Value::Null);
     };
     let replacement = string_bytes(&new_value, line, warnings)?;
@@ -202,9 +202,9 @@ pub(super) fn write_string(
         ));
     };
     if replacement.len() > 1 {
-        warnings.push(format!(
+        warnings.warn(format!(
             "Only the first byte will be assigned to the string offset on line {line}"
-        ));
+        ))?;
     }
     assign_character(bytes, position, byte, line)?;
     Ok(Value::String(vec![byte].into()))

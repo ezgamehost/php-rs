@@ -223,7 +223,7 @@ fn prepare(
             let index =
                 offsets::string_index(offset.value(line)?, line, Access::Read, warnings)?.unwrap();
             let Some(position) = offsets::position(index, buffer.len()) else {
-                warnings.push(format!("Illegal string offset {index} on line {line}"));
+                warnings.warn(format!("Illegal string offset {index} on line {line}"))?;
                 return Ok(Preparation::Ignored);
             };
             Ok(Preparation::Character(PendingWrite {
