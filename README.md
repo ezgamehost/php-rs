@@ -307,7 +307,8 @@ new request. The CLI returns the low eight bits of the requested status.
   dispatch; compile-only warnings bypass user handlers. Array-key and string-offset
   write diagnostics release storage borrows before dispatch and observe handler
   replacement of live variables/properties. Malformed-property dump notices,
-  compound writes, and some nested mutation cases remain incomplete.
+  compound writes, and some nested mutation cases remain incomplete. Float-to-int
+  precision/overflow diagnostics preserve the shortest round-tripping value.
 - `error_get_last` returns the latest default-reported diagnostic, including
   suppressed warnings and uncaught errors, as a fresh type/message/file/line array.
   Handled diagnostics preserve the prior record. `error_clear_last` clears the

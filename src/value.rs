@@ -240,7 +240,7 @@ impl Value {
                 if !n.is_finite() || !(-9223372036854775808.0..9223372036854775808.0).contains(&n) {
                     warnings.warn(format!(
                         "The float {} is not representable as an int, cast occurred on line {line}",
-                        format_float(n)
+                        shortest_float(n)
                     ))?;
                 }
                 // PHP's range predicate admits NaN, so it also receives the
@@ -248,7 +248,7 @@ impl Value {
                 if n != converted as f64
                     && (n.is_nan() || (-9223372036854775808.0..9223372036854775808.0).contains(&n))
                 {
-                    warnings.warn(format!("Deprecated: Implicit conversion from float {} to int loses precision on line {line}", format_float(n)))?;
+                    warnings.warn(format!("Deprecated: Implicit conversion from float {} to int loses precision on line {line}", shortest_float(n)))?;
                 }
                 Ok(converted)
             }
@@ -351,6 +351,31 @@ fn format_float(n: f64) -> String {
         } else {
             s
         }
+    }
+}
+
+/// PHP shortest round-tripping decimal for diagnostics and var_dump.
+pub(crate) fn shortest_float(n: f64) -> String {
+    if n.is_nan() {
+        return "NAN".into();
+    }
+    if n.is_infinite() {
+        return if n.is_sign_negative() { "-INF" } else { "INF" }.into();
+    }
+    if n == 0.0 {
+        return if n.is_sign_negative() { "-0" } else { "0" }.into();
+    }
+    let scientific = format!("{n:e}");
+    let (mantissa, exponent) = scientific.split_once('e').unwrap();
+    let exponent: i32 = exponent.parse().unwrap();
+    if !(-4..17).contains(&exponent) {
+        format!(
+            "{}{}E{exponent:+}",
+            mantissa,
+            if mantissa.contains('.') { "" } else { ".0" }
+        )
+    } else {
+        n.to_string()
     }
 }
 

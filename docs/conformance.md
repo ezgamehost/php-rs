@@ -2120,6 +2120,17 @@ upstream fixtures establish the distinctions. Nested lvalue timing, intermediate
 string probes, mutation during compound operations, shortest float formatting in
 precision diagnostics, and other documented limitations remain incomplete.
 
+The [float diagnostic precision slice](conformance/php-8.5.0-float-diagnostics-hillclimb.txt)
+adds **3 upstream passes**: two Zend string-offset probe fixtures and one array
+fixture. Zend reaches **2312 / 2536 / 408** and array **737 / 51 / 52**, with no
+regressions across the six full suites. Float-to-int precision and overflow
+warnings use the shortest round-tripping decimal, sharing the existing formatter
+with `var_dump`. Ordinary string conversion retains its default precision of 14
+significant digits. All 797 existing Rust tests, 57 project PHPT, formatting, and
+Clippy pass; no custom tests or generated matrices were added. PHP 8.5.0
+`Zend/zend_operators.c` and upstream fixtures establish the diagnostic format.
+Configurable precision and the other documented runtime gaps remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2127,11 +2138,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2310 | 2538 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2312 | 2536 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 736 | 52 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 737 | 51 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

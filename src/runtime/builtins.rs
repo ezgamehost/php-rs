@@ -1968,7 +1968,8 @@ fn dump_inner(
             b"bool(false)\n"
         }),
         Value::Int(n) => out.extend_from_slice(format!("int({n})\n").as_bytes()),
-        Value::Float(n) => out.extend_from_slice(format!("float({})\n", dump_float(*n)).as_bytes()),
+        Value::Float(n) => out
+            .extend_from_slice(format!("float({})\n", crate::value::shortest_float(*n)).as_bytes()),
         Value::String(s) => {
             out.extend_from_slice(format!("string({}) \"", s.len()).as_bytes());
             out.extend_from_slice(&s.bytes());
@@ -1998,29 +1999,6 @@ fn dump_inner(
             out.extend_from_slice(b"}\n");
             seen.remove(&identity);
         }
-    }
-}
-fn dump_float(n: f64) -> String {
-    if n.is_nan() {
-        return "NAN".into();
-    }
-    if n.is_infinite() {
-        return if n.is_sign_negative() { "-INF" } else { "INF" }.into();
-    }
-    if n == 0.0 {
-        return if n.is_sign_negative() { "-0" } else { "0" }.into();
-    }
-    let scientific = format!("{n:e}");
-    let (mantissa, exponent) = scientific.split_once('e').unwrap();
-    let exponent: i32 = exponent.parse().unwrap();
-    if !(-4..17).contains(&exponent) {
-        format!(
-            "{}{}E{exponent:+}",
-            mantissa,
-            if mantissa.contains('.') { "" } else { ".0" }
-        )
-    } else {
-        n.to_string()
     }
 }
 
