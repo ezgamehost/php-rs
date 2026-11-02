@@ -28,6 +28,8 @@ pub(super) enum Builtin {
     Uuencode(bool),
     QuotedPrintable(bool),
     Utf8(bool),
+    UrlCodec(bool, bool),
+    ParseUrl,
     Digest(crate::digest::Algorithm, bool),
     Clock(clocks::Operation),
     Base64(bool),
@@ -244,6 +246,11 @@ impl Builtin {
             b"quoted_printable_decode" => Self::QuotedPrintable(false),
             b"utf8_encode" => Self::Utf8(true),
             b"utf8_decode" => Self::Utf8(false),
+            b"urlencode" => Self::UrlCodec(true, false),
+            b"urldecode" => Self::UrlCodec(false, false),
+            b"rawurlencode" => Self::UrlCodec(true, true),
+            b"rawurldecode" => Self::UrlCodec(false, true),
+            b"parse_url" => Self::ParseUrl,
             b"md5" => Self::Digest(crate::digest::Algorithm::Md5, false),
             b"time" => Self::Clock(clocks::Operation::Time),
             b"microtime" => Self::Clock(clocks::Operation::Microtime),
@@ -844,7 +851,9 @@ impl Builtin {
             | Self::Crc32
             | Self::Uuencode(_)
             | Self::QuotedPrintable(_)
-            | Self::Utf8(_) => &[("string", false, false)],
+            | Self::Utf8(_)
+            | Self::UrlCodec(..) => &[("string", false, false)],
+            Self::ParseUrl => &[("url", false, false), ("component", true, false)],
             Self::Phonetic(false) => &[("string", false, false)],
             Self::Phonetic(true) => &[("string", false, false), ("max_phonemes", true, false)],
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
@@ -1221,6 +1230,7 @@ impl Builtin {
                             (Self::Levenshtein, _) => Value::Int(1),
                             (Self::Phonetic(true), "max_phonemes") => Value::Int(0),
                             (Self::Unpack, "offset") => Value::Int(0),
+                            (Self::ParseUrl, "component") => Value::Int(-1),
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
@@ -1509,6 +1519,8 @@ impl Runtime {
             Builtin::Uuencode(encode) => self.uuencode(encode, first, &name, line),
             Builtin::QuotedPrintable(encode) => self.quoted_printable(encode, first, &name, line),
             Builtin::Utf8(encode) => self.utf8_latin1(encode, first, &name, line),
+            Builtin::UrlCodec(encode, raw) => self.url_codec(encode, raw, first, &name, line),
+            Builtin::ParseUrl => self.parse_url(&args, line),
             Builtin::StreamGetLine => self.stream_get_line(&name, &args, line),
             Builtin::StreamCopy => self.stream_copy(&name, &args, line),
             Builtin::StreamIsLocal => self.stream_is_local(first, &name, line),

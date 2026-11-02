@@ -721,6 +721,9 @@ copyright (c) The PHP Group, originally authored by Kirill Maximov.
 8.5.0's `ext/standard/string.c` and the UTF-8 character reader from
 `ext/standard/html.c`, copyright (c) The PHP Group.
 
+`src/runtime/urls.rs` adapts PHP 8.5.0's `ext/standard/url.c`, copyright (c)
+The PHP Group, originally authored by Jim Winstead.
+
 CRC32 in `src/digest.rs` adapts PHP 8.5.0's `ext/standard/crc32.c` and
 `crc32.h`, copyright (c) The PHP Group. Its lookup table is generated at compile
 time from the reflected AUTODIN II polynomial.

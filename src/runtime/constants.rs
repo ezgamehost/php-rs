@@ -74,6 +74,7 @@ impl Runtime {
             || sort_constant(name).is_some()
             || seek_constant(name).is_some()
             || pathinfo_constant(name).is_some()
+            || url_constant(name).is_some()
             || extract_constant(name).is_some()
         {
             "standard"
@@ -251,6 +252,9 @@ fn predefined(name: &[u8]) -> Option<Value> {
     if let Some(value) = pathinfo_constant(name) {
         return Some(value);
     }
+    if let Some(value) = url_constant(name) {
+        return Some(value);
+    }
     if let Some(value) = seek_constant(name) {
         return Some(value);
     }
@@ -340,6 +344,22 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"DEBUG_BACKTRACE_IGNORE_ARGS" => Value::Int(2),
         _ => return math_constant(name).map(Value::Float),
     })
+}
+
+fn url_constant(name: &[u8]) -> Option<Value> {
+    Some(Value::Int(match name {
+        b"PHP_URL_SCHEME" => 0,
+        b"PHP_URL_HOST" => 1,
+        b"PHP_URL_PORT" => 2,
+        b"PHP_URL_USER" => 3,
+        b"PHP_URL_PASS" => 4,
+        b"PHP_URL_PATH" => 5,
+        b"PHP_URL_QUERY" => 6,
+        b"PHP_URL_FRAGMENT" => 7,
+        b"PHP_QUERY_RFC1738" => 1,
+        b"PHP_QUERY_RFC3986" => 2,
+        _ => return None,
+    }))
 }
 
 fn pathinfo_constant(name: &[u8]) -> Option<Value> {

@@ -1,0 +1,117 @@
+PHP 8.5.0 URL parsing and percent-encoding hillclimb
+Baseline: 5e902603cd1a3e79940a74e9a0232fa124c5f1d4
+The URL suite is added to the tracked gate, using its pre-change baseline.
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 775 passed, 14 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/array/bug14580.phpt
+
+strings
+Before: 730 cases; 477 passed, 101 failed, 152 unsupported
+After: 730 cases; 479 passed, 99 failed, 152 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/standard/tests/strings/url_t.phpt
+NEW PASS: ext/standard/tests/strings/utf8.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 8 passed, 23 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 20; regressions: 0
+NEW PASS: ext/standard/tests/url/bug53248.phpt
+NEW PASS: ext/standard/tests/url/bug54180.phpt
+NEW PASS: ext/standard/tests/url/bug55399.phpt
+NEW PASS: ext/standard/tests/url/bug63162.phpt
+NEW PASS: ext/standard/tests/url/bug68917.phpt
+NEW PASS: ext/standard/tests/url/bug69976.phpt
+NEW PASS: ext/standard/tests/url/bug73192.phpt
+NEW PASS: ext/standard/tests/url/bug74780.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_001.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_002.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_003.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_004.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_005.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_006.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_007.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_008.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_009.phpt
+NEW PASS: ext/standard/tests/url/parse_url_basic_011.phpt
+NEW PASS: ext/standard/tests/url/parse_url_error_002.phpt
+NEW PASS: ext/standard/tests/url/parse_url_relative_scheme.phpt
+
+Total: 9,588 fixtures; 5,267 passed, 2,879 failed, 1,442 unsupported.
+23 new passes; zero regressions across all eleven suites.
+
+The original ten-suite cohort gained three passes (two strings and one array).
+The newly tracked 32-fixture URL suite improved from 8 to 28 passes, with three
+failures and one unsupported case remaining. Its previously passing fixtures
+are baseline coverage, not new gains.
+
+parse_url follows PHP's scheme/port ambiguity, relative authority, credentials,
+last-@ and last-colon handling, bracketed host treatment, file drive paths,
+empty-versus-absent path/query/fragment components, control-byte replacement,
+port range/length rules and native strtol permissiveness. Invalid URLs return
+false before component-identifier validation; negative identifiers return the
+whole component array, preserving PHP's field ordering. PHP_URL_* component
+constants and PHP_QUERY_RFC* constants are exposed with standard metadata.
+urlencode/urldecode and rawurlencode/rawurldecode operate on arbitrary bytes,
+with uppercase hex escapes, native safe-character sets, space/plus and tilde
+rules, preserved malformed escapes and binary-safe decoded NUL handling.
+
+Direct PHP comparisons match representative URL structures and errors, component
+selection/defaults, every byte value in percent codecs, malformed escapes,
+weak/strict and named argument handling, Stringable input and constant metadata.
+A further 17,381 generated parsing cases match PHP exactly, including exhaustive
+short combinations and deterministic structured inputs with control/high bytes.
+The upstream utf8.phpt fixture now passes. Remaining URL-suite failures require
+json_encode, getenv/CLI-server support or get_defined_constants; its EXTENSIONS
+case remains unsupported. General locale changes and full native reflection
+types remain unfinished. PHP attribution is retained in THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-urls-*2.log.
+URL baseline log: /tmp/php-rs-url-before1.log.
+Rust validation logs: /tmp/php-rs-urls-{tests,clippy}1.log.

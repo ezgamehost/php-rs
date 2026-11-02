@@ -141,6 +141,7 @@ mod traits;
 mod typed_properties;
 mod types;
 mod unserialization;
+mod urls;
 mod utf8;
 mod uuencoding;
 mod variable_inspection;

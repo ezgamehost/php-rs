@@ -276,6 +276,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - `utf8_encode` and `utf8_decode` convert between Latin-1 and UTF-8, including
   PHP's malformed-sequence consumption and `?` substitution. They emit PHP's
   deprecation diagnostics; their `Deprecated` metadata is available in reflection.
+- `parse_url` follows PHP's component parsing, including scheme/port ambiguity,
+  credentials, bracketed hosts, file paths and empty query/fragment components.
+  `urlencode`, `urldecode`, `rawurlencode` and `rawurldecode` support binary input,
+  PHP's space/plus and tilde rules, and permissive malformed-escape handling.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and
