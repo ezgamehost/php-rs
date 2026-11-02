@@ -55,6 +55,8 @@ pub(super) enum Builtin {
     StrNaturalCompare(bool),
     SubstrCompare,
     SubstrCount,
+    Levenshtein,
+    SimilarText,
     StrSpan(bool),
     Explode,
     Implode(&'static str),
@@ -295,6 +297,8 @@ impl Builtin {
             b"strnatcasecmp" => Self::StrNaturalCompare(true),
             b"substr_compare" => Self::SubstrCompare,
             b"substr_count" => Self::SubstrCount,
+            b"levenshtein" => Self::Levenshtein,
+            b"similar_text" => Self::SimilarText,
             b"strspn" => Self::StrSpan(true),
             b"strcspn" => Self::StrSpan(false),
             b"explode" => Self::Explode,
@@ -890,6 +894,18 @@ impl Builtin {
                 ("offset", true, false),
                 ("length", true, false),
             ],
+            Self::Levenshtein => &[
+                ("string1", false, false),
+                ("string2", false, false),
+                ("insertion_cost", true, false),
+                ("replacement_cost", true, false),
+                ("deletion_cost", true, false),
+            ],
+            Self::SimilarText => &[
+                ("string1", false, false),
+                ("string2", false, false),
+                ("percent", true, false),
+            ],
             Self::StrSpan(_) => &[
                 ("string", false, false),
                 ("characters", false, false),
@@ -1106,6 +1122,7 @@ impl Builtin {
                     || (matches!(self, Self::Settype) && *name == "var")
                     || (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
+                    || (matches!(self, Self::SimilarText) && *name == "percent")
                     || matches!(self, Self::ArrayCursor(action) if action.moves())
                     || (matches!(
                         self,
@@ -1164,6 +1181,7 @@ impl Builtin {
                             (Self::Base64(false), "strict") => Value::Bool(false),
                             (Self::Digest(_, _), "binary") => Value::Bool(false),
                             (Self::Clock(_), _) => Value::Bool(false),
+                            (Self::Levenshtein, _) => Value::Int(1),
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
@@ -1493,6 +1511,8 @@ impl Runtime {
             Builtin::RegisterShutdownFunction => self.register_shutdown(first, &extra, line),
             Builtin::SubstrCompare => self.substring_compare(&args, line),
             Builtin::SubstrCount => self.substring_count(&args, line),
+            Builtin::Levenshtein => self.levenshtein(&args, line),
+            Builtin::SimilarText => self.similar_text(&args, &references, line),
             Builtin::StrSpan(included) => self.string_span(included, &args, line),
             Builtin::Explode => self.explode_string(&args, line),
             Builtin::Implode(name) => self.implode_strings(name, direct_positional, &args, line),

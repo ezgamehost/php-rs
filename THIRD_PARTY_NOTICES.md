@@ -696,3 +696,8 @@ Stream locality and lock-capability queries in `src/runtime/file_operations.rs`,
 `src/runtime/streams.rs`, and `src/resource.rs` adapt PHP 8.5.0's
 `ext/standard/streamsfuncs.c` and `main/streams/{streams,plain_wrapper,memory}.c`,
 copyright (c) The PHP Group.
+
+`src/runtime/string_distance.rs` adapts PHP 8.5.0's
+`ext/standard/levenshtein.c` (original author Hartmut Holzgraefe) and the
+`similar_text` implementation in `ext/standard/string.c`, copyright (c) The PHP
+Group. The latter uses an explicit work stack instead of native recursion.

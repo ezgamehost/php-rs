@@ -257,6 +257,10 @@ new request. The CLI returns the low eight bits of the requested status.
   preserves native diagnostics and resource lifetimes, and distinguishes MD5's
   EOF requirement from SHA-1's partial-read result. General hash-extension APIs
   and data/custom/network stream wrappers remain unfinished.
+- `levenshtein` compares bytes with configurable insertion, replacement and
+  deletion costs, including strings longer than 255 bytes. `similar_text` follows
+  PHP's matching order and writes its percentage by reference, respecting typed
+  properties. Both support native argument conversion and named arguments.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fgetc`, `fwrite`/`fputs`, `feof`,
   `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary

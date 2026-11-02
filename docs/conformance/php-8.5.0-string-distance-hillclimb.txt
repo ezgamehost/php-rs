@@ -1,0 +1,86 @@
+PHP 8.5.0 string distance and similarity hillclimb
+Baseline: dcdbc851866312c52c1c8aa52628918e7fd09028
+
+zend
+Before: 5256 cases; 2591 passed, 2265 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/bug78154.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 431 passed, 147 failed, 152 unsupported
+After: 730 cases; 436 passed, 142 failed, 152 unsupported
+New passes: 5; regressions: 0
+NEW PASS: ext/standard/tests/strings/levenshtein.phpt
+NEW PASS: ext/standard/tests/strings/levenshtein_bug_16473.phpt
+NEW PASS: ext/standard/tests/strings/levenshtein_bug_6562.phpt
+NEW PASS: ext/standard/tests/strings/levenshtein_bug_7368.phpt
+NEW PASS: ext/standard/tests/strings/levenshtein_error_conditions.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,193 passed, 2,922 failed, 1,441 unsupported.
+Six new passes (five strings, one Zend); zero regressions across all ten suites.
+
+levenshtein uses PHP's two-row byte-distance algorithm, custom integer costs,
+empty-input results, and equal-cost shorter-row optimization. Cost arithmetic
+uses wrapping 64-bit integers, matching direct probes of PHP's native extremes.
+There is no historical 255-byte input limit. Optional costs default to one.
+similar_text preserves PHP's first-match tie breaking and prefix-recursion
+condition, using an explicit work stack. Its optional percentage is written by
+reference after both string conversions, respecting typed-property constraints
+and strict typing. Both builtins support named arguments and reflection defaults.
+
+All five existing Levenshtein fixtures and Zend/tests/bug78154.phpt pass. Direct
+PHP comparisons match binary and UTF-8 byte inputs, empty strings, zero/negative/
+asymmetric/extreme costs, conversion warnings and failures, named arguments,
+reflection defaults, argument/reference rejection, typed percentage properties,
+aliasing, Stringable callbacks, preserved output on conversion failure, and
+destructor delivery when overwriting the output value.
+The unchanged FILE body from similar_text_basic.phpt also matches PHP directly;
+the fixture remains explicitly unsupported in the suite because of its INI
+section. It is not counted as a new suite pass.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-distance-*1.log.
+Rust validation logs: /tmp/php-rs-distance-{tests,clippy}1.log.

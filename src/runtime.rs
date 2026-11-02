@@ -117,6 +117,7 @@ mod stream_records;
 mod streams;
 mod string_builtins;
 mod string_bytes;
+mod string_distance;
 mod string_measure;
 mod string_offsets;
 mod string_replace;
