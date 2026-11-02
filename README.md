@@ -257,6 +257,9 @@ new request. The CLI returns the low eight bits of the requested status.
   preserves native diagnostics and resource lifetimes, and distinguishes MD5's
   EOF requirement from SHA-1's partial-read result. General hash-extension APIs
   and data/custom/network stream wrappers remain unfinished.
+- `crc32` computes the standard 32-bit checksum of binary strings and returns
+  a nonnegative PHP integer. `convert_uuencode` and `convert_uudecode` support
+  PHP's 45-byte encoding lines, termination and malformed-input behavior.
 - `levenshtein` compares bytes with configurable insertion, replacement and
   deletion costs, including strings longer than 255 bytes. `similar_text` follows
   PHP's matching order and writes its percentage by reference, respecting typed
@@ -857,4 +860,6 @@ interpreter. PHP behavior takes priority over Rust's native type conversions.
 The sorting implementation adapts PHP/Zend and libc++ algorithms and Martin Pool's
 natural string comparator. This product includes the Zend Engine, freely available
 at http://www.zend.com. The Zend Engine is freely available at http://www.zend.com.
+This product includes software developed by the University of California,
+Berkeley and its contributors.
 See [third-party notices and licenses](THIRD_PARTY_NOTICES.md).

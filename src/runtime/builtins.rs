@@ -23,6 +23,8 @@ pub(super) enum Builtin {
     StrLower,
     StrUpper,
     Bin2Hex,
+    Crc32,
+    Uuencode(bool),
     Digest(crate::digest::Algorithm, bool),
     Clock(clocks::Operation),
     Base64(bool),
@@ -229,6 +231,9 @@ impl Builtin {
             b"strtolower" => Self::StrLower,
             b"strtoupper" => Self::StrUpper,
             b"bin2hex" => Self::Bin2Hex,
+            b"crc32" => Self::Crc32,
+            b"convert_uuencode" => Self::Uuencode(true),
+            b"convert_uudecode" => Self::Uuencode(false),
             b"md5" => Self::Digest(crate::digest::Algorithm::Md5, false),
             b"time" => Self::Clock(clocks::Operation::Time),
             b"microtime" => Self::Clock(clocks::Operation::Microtime),
@@ -818,9 +823,13 @@ impl Builtin {
             Self::SetExceptionHandler => &[("callback", false, false)],
             Self::RegisterShutdownFunction => &[("callback", false, false), ("args", false, true)],
             Self::GetExceptionHandler | Self::RestoreExceptionHandler => &[],
-            Self::Strlen | Self::StrRev | Self::StrLower | Self::StrUpper | Self::Bin2Hex => {
-                &[("string", false, false)]
-            }
+            Self::Strlen
+            | Self::StrRev
+            | Self::StrLower
+            | Self::StrUpper
+            | Self::Bin2Hex
+            | Self::Crc32
+            | Self::Uuencode(_) => &[("string", false, false)],
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
             Self::SlashEscape(true, true) => {
                 &[("string", false, false), ("characters", false, false)]
@@ -1475,6 +1484,11 @@ impl Runtime {
             Builtin::Digest(algorithm, file) => {
                 self.hash_value(algorithm, file, &name, &args, line)
             }
+            Builtin::Crc32 => {
+                let bytes = self.native_string(first, &name, 1, line)?;
+                Ok(Value::Int(i64::from(crate::digest::crc32(&bytes))))
+            }
+            Builtin::Uuencode(encode) => self.uuencode(encode, first, &name, line),
             Builtin::StreamGetLine => self.stream_get_line(&name, &args, line),
             Builtin::StreamCopy => self.stream_copy(&name, &args, line),
             Builtin::StreamIsLocal => self.stream_is_local(first, &name, line),

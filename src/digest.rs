@@ -1,6 +1,31 @@
-// Altered Rust adaptation of PHP 8.5.0 ext/standard/{md5,sha1}.c.
+// Altered Rust adaptation of PHP 8.5.0 ext/standard/{md5,sha1,crc32}.c.
 // Copyright (c) The PHP Group. The MD5 compression core follows Solar
 // Designer's 2001 public-domain implementation. See THIRD_PARTY_NOTICES.md.
+
+pub(crate) fn crc32(bytes: &[u8]) -> u32 {
+    const TABLE: [u32; 256] = crc32_table();
+    let mut crc = u32::MAX;
+    for &byte in bytes {
+        crc = (crc >> 8) ^ TABLE[((crc ^ u32::from(byte)) & 0xff) as usize];
+    }
+    !crc
+}
+
+const fn crc32_table() -> [u32; 256] {
+    let mut table = [0; 256];
+    let mut index = 0;
+    while index < table.len() {
+        let mut value = index as u32;
+        let mut bit = 0;
+        while bit < 8 {
+            value = (value >> 1) ^ if value & 1 != 0 { 0xedb88320 } else { 0 };
+            bit += 1;
+        }
+        table[index] = value;
+        index += 1;
+    }
+    table
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Algorithm {

@@ -1,0 +1,89 @@
+PHP 8.5.0 CRC32 and uuencoding hillclimb
+Baseline: af0b3a4f15557ddccb71af25e03bbf0e777e280c
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 775 passed, 14 failed, 51 unsupported
+After: 840 cases; 775 passed, 14 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 451 passed, 127 failed, 152 unsupported
+After: 730 cases; 458 passed, 120 failed, 152 unsupported
+New passes: 7; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug36306.phpt
+NEW PASS: ext/standard/tests/strings/bug67252.phpt
+NEW PASS: ext/standard/tests/strings/convert_uudecode_basic.phpt
+NEW PASS: ext/standard/tests/strings/convert_uuencode_basic.phpt
+NEW PASS: ext/standard/tests/strings/crc32.phpt
+NEW PASS: ext/standard/tests/strings/crc32_basic.phpt
+NEW PASS: ext/standard/tests/strings/uuencode.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,217 passed, 2,898 failed, 1,441 unsupported.
+Seven new string passes; zero regressions across all ten suites.
+
+crc32 uses the reflected AUTODIN II polynomial and a compile-time lookup table,
+with native initialization/final inversion. Its result is a nonnegative integer
+under this runtime's 64-bit PHP integer model. All 256 generated table entries
+match PHP's crc32.h. The 32-bit-only CRC32 fixtures remain unsupported and are
+not counted as passes.
+convert_uuencode emits 45-byte lines, padded six-bit groups, and the native
+backtick/newline terminator. convert_uudecode preserves six-bit byte conversion,
+short-line and zero-header termination, unvalidated line separators, trailing
+input handling, declared-length truncation and malformed-input warnings. Bounds
+checks reject truncated groups without reading outside the input.
+
+Direct PHP reference comparisons match empty/binary inputs, all byte values,
+a one-MiB CRC32 input, encoding lengths around 3-byte and 45-byte boundaries,
+partial/missing terminators, noncanonical encoded bytes, malformed lengths,
+weak/strict arguments, named parameters, Stringable conversion and warning
+handler exceptions. The existing out-of-bounds regression bug67252 passes.
+PHP's invalid-encoding diagnostic intentionally says data, while the parameter
+name exposed to named calls and reflection is string.
+The Berkeley uuencode/uudecode license and acknowledgement are retained in
+THIRD_PARTY_NOTICES.md and README.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-binarystrings-*2.log.
+Rust validation logs: /tmp/php-rs-binarystrings-{tests,clippy}2.log.

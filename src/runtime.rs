@@ -138,6 +138,7 @@ mod traits;
 mod typed_properties;
 mod types;
 mod unserialization;
+mod uuencoding;
 mod variable_inspection;
 mod variables;
 mod wordwrap;
