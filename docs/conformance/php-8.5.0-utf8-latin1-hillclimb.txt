@@ -1,0 +1,89 @@
+PHP 8.5.0 Latin-1 and UTF-8 conversion hillclimb
+Baseline: 51b1500a4e18cc8c09d3270fd5bf5bfca78804d3
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 775 passed, 14 failed, 51 unsupported
+After: 840 cases; 775 passed, 14 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 475 passed, 103 failed, 152 unsupported
+After: 730 cases; 477 passed, 101 failed, 152 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug43957.phpt
+NEW PASS: ext/standard/tests/strings/bug49687.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,236 passed, 2,879 failed, 1,441 unsupported.
+Two new string passes; zero regressions across all ten suites.
+
+utf8_encode maps each Latin-1 byte to its corresponding Unicode code point.
+utf8_decode returns Latin-1 bytes and replaces non-Latin-1 characters or illegal
+UTF-8 sequences with question marks. The shared UTF-8 reader follows PHP's
+consumption of malformed sequences: it preserves a subsequent ASCII or valid
+leading byte for the next iteration, consumes other invalid bytes within the
+current sequence's expected width, and rejects overlong forms, surrogate values
+and code points above U+10FFFF. NUL is ordinary data in both conversions.
+
+Deprecation uses the existing call-attribute diagnostic path, before native
+arity/type checks. The same native metadata drives ReflectionFunction's
+isDeprecated and getAttributes, including attribute arguments, filtering and
+instantiation. assert_options and lcg_value retain their diagnostics and now
+expose their existing Deprecated metadata through the same reflection path.
+
+Direct PHP comparisons match Latin-1 roundtrips, malformed and truncated UTF-8,
+non-Latin-1 characters, binary inputs, weak/strict and named arguments,
+Stringable conversion, invalid arity, unknown named parameters, throwing
+handlers and their traces, array_map/call_user_func/reflection/closure calls,
+and native Deprecated reflection. A further 90,101 byte-sequence comparisons
+match exactly: all two-byte inputs and selected four-byte combinations covering
+valid/invalid leading and continuation byte classes.
+The upstream utf8.phpt fixture remains failing because URL-encoding functions
+are still missing; it is not counted as a pass. General native reflection type
+metadata remains unfinished. PHP source attribution is retained in
+THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-utf8-*2.log.
+Rust validation logs: /tmp/php-rs-utf8-{tests,clippy}1.log.

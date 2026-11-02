@@ -717,6 +717,10 @@ functions in PHP 8.5.0's `ext/standard/string.c`, copyright (c) The PHP Group.
 `src/runtime/quoted_printable.rs` adapts PHP 8.5.0's `ext/standard/quot_print.c`,
 copyright (c) The PHP Group, originally authored by Kirill Maximov.
 
+`src/runtime/utf8.rs` adapts the Latin-1/UTF-8 conversion routines from PHP
+8.5.0's `ext/standard/string.c` and the UTF-8 character reader from
+`ext/standard/html.c`, copyright (c) The PHP Group.
+
 CRC32 in `src/digest.rs` adapts PHP 8.5.0's `ext/standard/crc32.c` and
 `crc32.h`, copyright (c) The PHP Group. Its lookup table is generated at compile
 time from the reflected AUTODIN II polynomial.

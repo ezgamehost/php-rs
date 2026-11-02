@@ -37,6 +37,17 @@ impl FunctionReflection {
         )
     }
 
+    pub(super) fn attributes(&self) -> Vec<Attribute> {
+        self.target.function.as_ref().map_or_else(
+            || {
+                self.target
+                    .builtin
+                    .map_or_else(Vec::new, |b| b.attributes())
+            },
+            |function| function.attributes.clone(),
+        )
+    }
+
     fn internal(&self) -> bool {
         self.target.builtin.is_some()
             || self
@@ -239,11 +250,12 @@ impl Runtime {
             ),
             b"isinternal" => Value::Bool(internal),
             b"isuserdefined" => Value::Bool(!internal),
-            b"isdeprecated" => Value::Bool(function.is_some_and(|f| {
-                f.attributes
+            b"isdeprecated" => Value::Bool(
+                reflection
+                    .attributes()
                     .iter()
-                    .any(|a| a.name.eq_ignore_ascii_case(b"Deprecated"))
-            })),
+                    .any(|a| a.name.eq_ignore_ascii_case(b"Deprecated")),
+            ),
             b"isgenerator" => Value::Bool(false),
             b"isstatic" => Value::Bool(function.is_some_and(|f| f.is_static)),
             b"isvariadic" => Value::Bool(reflection.parameters().iter().any(|p| p.variadic)),
@@ -300,7 +312,7 @@ impl Runtime {
             }
             b"getattributes" => {
                 return self.reflected_attributes(
-                    function.map_or(&[], |f| &f.attributes),
+                    &reflection.attributes(),
                     &reflection.attribute_context(self),
                     "ReflectionFunctionAbstract",
                     line,

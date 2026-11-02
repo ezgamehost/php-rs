@@ -3,6 +3,43 @@
 use super::*;
 use crate::{ast::NativeMethod, object::Class};
 
+impl builtins::Builtin {
+    pub(super) fn deprecation(self) -> Option<(&'static str, Option<&'static str>)> {
+        match self {
+            Self::AssertOptions => Some(("8.3", None)),
+            Self::LcgValue => Some(("8.4", Some("use \\Random\\Randomizer::getFloat() instead"))),
+            Self::Utf8(_) => Some((
+                "8.2",
+                Some("visit the php.net documentation for various alternatives"),
+            )),
+            _ => None,
+        }
+    }
+
+    pub(super) fn attributes(self) -> Vec<crate::ast::Attribute> {
+        let Some((since, message)) = self.deprecation() else {
+            return Vec::new();
+        };
+        let arguments = std::iter::once(("since", since))
+            .chain(message.map(|message| ("message", message)))
+            .map(|(name, value)| {
+                crate::ast::Argument::Named(
+                    name.as_bytes().to_vec(),
+                    Expr {
+                        kind: ExprKind::Literal(Value::String(value.as_bytes().to_vec().into())),
+                        line: 0,
+                    },
+                )
+            })
+            .collect();
+        vec![crate::ast::Attribute {
+            name: b"Deprecated".to_vec(),
+            arguments,
+            line: 0,
+        }]
+    }
+}
+
 impl Runtime {
     pub(super) fn deprecated_constant(
         &mut self,
@@ -54,21 +91,17 @@ impl Runtime {
         internal: bool,
     ) -> Result<(), Error> {
         let Some(function) = &target.function else {
-            if matches!(target.builtin, Some(builtins::Builtin::AssertOptions)) {
-                self.attribute_diagnostic(
-                    b"Function assert_options() is deprecated since 8.3",
-                    8192,
-                    line,
-                    internal,
-                )?;
-            }
-            if matches!(target.builtin, Some(builtins::Builtin::LcgValue)) {
-                self.attribute_diagnostic(
-                    b"Function lcg_value() is deprecated since 8.4, use \\Random\\Randomizer::getFloat() instead",
-                    8192,
-                    line,
-                    internal,
-                )?;
+            if let Some((since, message)) = target.builtin.and_then(|builtin| builtin.deprecation())
+            {
+                let mut diagnostic = format!(
+                    "Function {}() is deprecated since {since}",
+                    String::from_utf8_lossy(&target.name)
+                );
+                if let Some(message) = message {
+                    diagnostic.push_str(", ");
+                    diagnostic.push_str(message);
+                }
+                self.attribute_diagnostic(diagnostic.as_bytes(), 8192, line, internal)?;
             }
             return Ok(());
         };

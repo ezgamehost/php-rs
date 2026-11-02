@@ -273,6 +273,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `quoted_printable_encode` and `quoted_printable_decode` follow PHP's byte
   escaping, line wrapping and soft-break rules. Decoding retains invalid hex
   escapes and stops at input NUL bytes, while decoded `=00` bytes remain intact.
+- `utf8_encode` and `utf8_decode` convert between Latin-1 and UTF-8, including
+  PHP's malformed-sequence consumption and `?` substitution. They emit PHP's
+  deprecation diagnostics; their `Deprecated` metadata is available in reflection.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and
