@@ -5,6 +5,9 @@ use crate::{PhpObject, object::ObjectHandle};
 
 pub(super) enum IteratorState {
     FixedArray(usize),
+    Heap {
+        current: Option<Value>,
+    },
     LinkedList {
         cursor: Rc<RefCell<linked_list::Cursor>>,
         flags: i64,
@@ -53,6 +56,49 @@ impl Runtime {
         raw: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        let heap = {
+            let payload = object.internal_iterator.borrow();
+            payload.as_ref().and_then(|data| {
+                if let IteratorState::Heap { current } = &data.state {
+                    Some((
+                        data.source.clone(),
+                        (name == b"current").then(|| current.clone()).flatten(),
+                    ))
+                } else {
+                    None
+                }
+            })
+        };
+        if let Some((source, cached)) = heap {
+            let result = self.heap_iterator_step(&source, name, line);
+            if name == b"next" {
+                let old = {
+                    let mut payload = object.internal_iterator.borrow_mut();
+                    let IteratorState::Heap { current } = &mut payload.as_mut().unwrap().state
+                    else {
+                        unreachable!()
+                    };
+                    current.take()
+                };
+                drop(old);
+                return self.drain_destructors(result, line);
+            }
+            let value = result?;
+            if name == b"current"
+                && source.class.is_a(b"SplPriorityQueue")
+                && self.heap_has_current(&source)
+            {
+                if let Some(cached) = cached {
+                    return Ok(cached);
+                }
+                let mut payload = object.internal_iterator.borrow_mut();
+                let IteratorState::Heap { current } = &mut payload.as_mut().unwrap().state else {
+                    unreachable!()
+                };
+                *current = Some(value.clone());
+            }
+            return Ok(value);
+        }
         let linked = {
             let mut payload = object.internal_iterator.borrow_mut();
             let data = payload.as_mut().ok_or_else(|| {
@@ -108,6 +154,9 @@ impl Runtime {
         match data.as_ref().map(|data| &data.state) {
             Some(IteratorState::LinkedList { cursor, .. }) => {
                 linked_list::has_current(&cursor.borrow())
+            }
+            Some(IteratorState::Heap { .. }) => {
+                self.heap_has_current(&data.as_ref().unwrap().source)
             }
             _ => true,
         }

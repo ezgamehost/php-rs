@@ -131,6 +131,12 @@ new request. The CLI returns the low eight bits of the requested status.
   cloning, and both magic and legacy serialization. Native dimension access
   preserves PHP's null-entry probes and iterator behavior. Storage participates
   in cycle collection; `SplObserver` and `SplSubject` interfaces are available.
+- `SplHeap`, `SplMinHeap`, `SplMaxHeap`, and `SplPriorityQueue` provide native
+  heap ordering, comparison callbacks, destructive iteration, extraction flags,
+  cloning, debug output, and serialization hooks. Failed comparisons mark heaps
+  as corrupted; mutation guards and recovery follow native heap behavior.
+  Stored values participate in cycle collection. Complete reentrant mutation
+  and destructor timing remain unfinished.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,

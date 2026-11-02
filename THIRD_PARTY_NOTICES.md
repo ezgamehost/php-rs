@@ -371,6 +371,12 @@ JsonSerializable declaration follows `ext/json/json.stub.php`; native member
 loading follows `Zend/zend_API.c`. Property inspection and
 `get_mangled_object_vars` follow `Zend/zend_builtin_functions.c`.
 
+SplHeap, SplMinHeap, SplMaxHeap, and SplPriorityQueue in `src/runtime/heap.rs`
+adapt PHP 8.5.0's `ext/spl/spl_heap.c` and `ext/spl/spl_heap.stub.php`, copyright
+(c) The PHP Group, including work by Etienne Kneuss. Sift operations, comparison
+callbacks, corruption and locking rules, native iteration, cloning, debug output,
+serialization, and cycle-collection integration follow those native handlers.
+
 SplDoublyLinkedList, SplQueue, and SplStack storage, cursor behavior, cloning,
 offsets, debug output, serialization hooks, and legacy Serializable methods
 in `src/runtime/linked_list.rs`

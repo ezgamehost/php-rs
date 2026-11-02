@@ -1,0 +1,97 @@
+PHP 8.5.0 SPL heap hillclimb
+Baseline: 22348e271bd6ba8158271efdf8c4edb26ba7bd64
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 444 passed, 240 failed, 94 unsupported
+After: 778 cases; 494 passed, 190 failed, 94 unsupported
+New passes: 50; regressions: 0
+NEW PASS: ext/spl/tests/SplHeap_isEmpty.phpt
+NEW PASS: ext/spl/tests/SplHeap_serialize_corrupted.phpt
+NEW PASS: ext/spl/tests/SplHeap_serialize_error_handling.phpt
+NEW PASS: ext/spl/tests/SplHeap_serialize_format.phpt
+NEW PASS: ext/spl/tests/SplHeap_serialize_indexed_format.phpt
+NEW PASS: ext/spl/tests/SplHeap_serialize_inheritance_safety.phpt
+NEW PASS: ext/spl/tests/SplHeap_with_by_reference_compare.phpt
+NEW PASS: ext/spl/tests/SplMaxHeap_serialize_complex.phpt
+NEW PASS: ext/spl/tests/SplMinHeap_serialize_complex.phpt
+NEW PASS: ext/spl/tests/SplPriorityQueue_serialize_complex.phpt
+NEW PASS: ext/spl/tests/SplPriorityQueue_setExtractFlags_zero.phpt
+NEW PASS: ext/spl/tests/SplPriorityQueue_unserialize_invalid_flags.phpt
+NEW PASS: ext/spl/tests/bug62073.phpt
+NEW PASS: ext/spl/tests/bug69737.phpt
+NEW PASS: ext/spl/tests/bug70573.phpt
+NEW PASS: ext/spl/tests/bug78436.phpt
+NEW PASS: ext/spl/tests/gh16337.phpt
+NEW PASS: ext/spl/tests/gh20101.phpt
+NEW PASS: ext/spl/tests/heap_001.phpt
+NEW PASS: ext/spl/tests/heap_002.phpt
+NEW PASS: ext/spl/tests/heap_003.phpt
+NEW PASS: ext/spl/tests/heap_004.phpt
+NEW PASS: ext/spl/tests/heap_005.phpt
+NEW PASS: ext/spl/tests/heap_006.phpt
+NEW PASS: ext/spl/tests/heap_007.phpt
+NEW PASS: ext/spl/tests/heap_008.phpt
+NEW PASS: ext/spl/tests/heap_009.phpt
+NEW PASS: ext/spl/tests/heap_010.phpt
+NEW PASS: ext/spl/tests/heap_011.phpt
+NEW PASS: ext/spl/tests/heap_012.phpt
+NEW PASS: ext/spl/tests/heap_corruption.phpt
+NEW PASS: ext/spl/tests/heap_current_variation_001.phpt
+NEW PASS: ext/spl/tests/heap_it_current_empty.phpt
+NEW PASS: ext/spl/tests/heap_top_variation_002.phpt
+NEW PASS: ext/spl/tests/heap_top_variation_003.phpt
+NEW PASS: ext/spl/tests/heap_unserialize_under_corruption_or_modification.phpt
+NEW PASS: ext/spl/tests/pqueue_001.phpt
+NEW PASS: ext/spl/tests/pqueue_002.phpt
+NEW PASS: ext/spl/tests/pqueue_003.phpt
+NEW PASS: ext/spl/tests/pqueue_004.phpt
+NEW PASS: ext/spl/tests/pqueue_compare_basic.phpt
+NEW PASS: ext/spl/tests/pqueue_current_error.phpt
+NEW PASS: ext/spl/tests/spl_heap_count_basic.phpt
+NEW PASS: ext/spl/tests/spl_heap_is_empty_basic.phpt
+NEW PASS: ext/spl/tests/spl_heap_isempty.phpt
+NEW PASS: ext/spl/tests/spl_heap_iteration_error.phpt
+NEW PASS: ext/spl/tests/spl_pq_top_basic.phpt
+NEW PASS: ext/spl/tests/spl_pq_top_error_corrupt.phpt
+NEW PASS: ext/spl/tests/spl_pq_top_error_empty.phpt
+NEW PASS: ext/spl/tests/spl_pqueue_gc.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 123 passed, 12 failed, 28 unsupported
+After: 163 cases; 123 passed, 12 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+All executable heap and priority-queue fixtures pass.
+Direct CLI comparisons match subclass current() overrides and top/count reads
+from comparison callbacks during extraction.
+Additional SPL classes, collector accounting, and complete reentrant mutation
+and destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-heap-*2.log.

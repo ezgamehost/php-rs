@@ -84,6 +84,21 @@ impl Runtime {
         by_reference: bool,
         line: usize,
     ) -> Result<Rc<PhpObject>, Error> {
+        if heap::native_iteration(object) {
+            if by_reference {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "An iterator cannot be used with foreach by reference",
+                    line,
+                ));
+            }
+            return self.native_iterator(
+                object.clone(),
+                native_iterator::IteratorState::Heap { current: None },
+                true,
+                line,
+            );
+        }
         if linked_list::native_iteration(object) {
             if by_reference {
                 return Err(Error::new(

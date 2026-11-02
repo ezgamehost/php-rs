@@ -59,6 +59,7 @@ pub struct PhpObject {
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     // Native backing storage is released after ordinary object properties.
     pub(crate) array_iterator: RefCell<Option<crate::runtime::array_iterator::ArrayIteratorData>>,
+    pub(crate) heap: RefCell<Option<crate::runtime::heap::HeapData>>,
     pub(crate) object_storage: RefCell<Option<crate::runtime::object_storage::ObjectStorageData>>,
     pub(crate) dual_iterator: RefCell<Option<crate::runtime::dual_iterator::DualIteratorData>>,
     pub(crate) linked_list: RefCell<Option<crate::runtime::linked_list::LinkedListData>>,
@@ -187,6 +188,7 @@ impl Drop for PhpObject {
             linked_list: std::mem::take(&mut self.linked_list),
             dual_iterator: std::mem::take(&mut self.dual_iterator),
             object_storage: std::mem::take(&mut self.object_storage),
+            heap: std::mem::take(&mut self.heap),
             property_cursor: std::mem::take(&mut self.property_cursor),
             property_iterators: std::mem::take(&mut self.property_iterators),
             reflection: std::mem::take(&mut self.reflection),

@@ -279,6 +279,9 @@ impl Runtime {
         if matches!(method, NativeMethod::DualIterator) {
             return self.native_dual_iterator_method(line, None);
         }
+        if matches!(method, NativeMethod::Heap) {
+            return self.native_heap_method(line);
+        }
         if matches!(method, NativeMethod::ObjectStorage) {
             return self.native_object_storage_method(line);
         }
@@ -356,6 +359,7 @@ impl Runtime {
             properties: RefCell::new(properties),
             linked_list: RefCell::default(),
             object_storage: RefCell::default(),
+            heap: RefCell::default(),
             dual_iterator: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),

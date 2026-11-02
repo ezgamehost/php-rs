@@ -62,6 +62,7 @@ mod formatting;
 mod function_arguments;
 mod functions;
 mod garbage_collection;
+pub(crate) mod heap;
 mod inheritance;
 mod interfaces;
 mod iterator_helpers;

@@ -132,6 +132,7 @@ impl Runtime {
                 !native_storage && original.properties_reordered.get(),
             ),
             object_storage: RefCell::default(),
+            heap: RefCell::new(original.heap.borrow().clone()),
             dual_iterator: RefCell::default(),
             linked_list: RefCell::new(
                 original

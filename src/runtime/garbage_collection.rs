@@ -62,6 +62,9 @@ impl Runtime {
                     if let Some(data) = object.dual_iterator.borrow().as_ref() {
                         values.extend(data.values());
                     }
+                    if let Some(data) = object.heap.borrow().as_ref() {
+                        values.extend(data.values());
+                    }
                     if let Some(data) = object.object_storage.borrow().as_ref() {
                         values.extend(data.values());
                     }
@@ -164,6 +167,8 @@ impl Runtime {
                     let properties = std::mem::take(&mut *object.properties.borrow_mut());
                     drop(properties);
                     let native = object.dual_iterator.borrow_mut().take();
+                    drop(native);
+                    let native = object.heap.borrow_mut().take();
                     drop(native);
                     let native = object.object_storage.borrow_mut().take();
                     drop(native);

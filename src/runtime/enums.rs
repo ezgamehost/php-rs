@@ -208,6 +208,7 @@ impl Runtime {
             properties: RefCell::new(properties),
             linked_list: RefCell::default(),
             object_storage: RefCell::default(),
+            heap: RefCell::default(),
             dual_iterator: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
