@@ -2,6 +2,49 @@ use super::*;
 use crate::ast::{PropertyDecl, PropertyHooks};
 
 impl Parser {
+    pub(super) fn validate_parent_property_hook(
+        &self,
+        callee: &Expr,
+        closure: bool,
+        line: usize,
+    ) -> Result<(), Error> {
+        let Some((property, hook)) = callee.parent_property_hook() else {
+            return Ok(());
+        };
+        let label = format!(
+            "parent::${}::{}()",
+            String::from_utf8_lossy(&property),
+            String::from_utf8_lossy(&hook)
+        );
+        let message = if self.class_name.is_empty() {
+            Some("Cannot use \"parent\" when no class scope is active".to_owned())
+        } else if closure {
+            Some("Cannot create Closure for parent property hook call".to_owned())
+        } else if let Some(name) = self.function_name.strip_prefix(b"$")
+            && let Some(split) = name.windows(2).position(|s| s == b"::")
+        {
+            if property != name[..split] {
+                Some(format!(
+                    "Must not use {label} in a different property (${})",
+                    String::from_utf8_lossy(&name[..split])
+                ))
+            } else if !hook.eq_ignore_ascii_case(&name[split + 2..]) {
+                Some(format!(
+                    "Must not use {label} in a different property hook ({})",
+                    String::from_utf8_lossy(&name[split + 2..])
+                ))
+            } else {
+                None
+            }
+        } else {
+            Some(format!("Must not use {label} outside a property hook"))
+        };
+        if let Some(message) = message {
+            return Err(Error::new(crate::ErrorKind::CompileError, message, line));
+        }
+        Ok(())
+    }
+
     pub(super) fn property_hooks(
         &mut self,
         property: &PropertyDecl,

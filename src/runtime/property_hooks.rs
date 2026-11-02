@@ -36,12 +36,6 @@ impl Runtime {
         value: Option<Value>,
         line: usize,
     ) -> Result<Value, Error> {
-        let target = self.unchecked_method_target(
-            function.clone(),
-            object.class.clone(),
-            Some(object.clone()),
-            line,
-        )?;
         let arguments: Vec<_> = value
             .into_iter()
             .map(|v| {
@@ -51,11 +45,7 @@ impl Runtime {
                 })
             })
             .collect();
-        self.active_property_hooks
-            .push((object.clone(), name.to_vec(), function.name.clone()));
-        let result = self.invoke(target, &arguments, line, false);
-        self.active_property_hooks.pop();
-        result
+        self.invoke_property_hook_arguments(object, name, function, &arguments, line, true)
     }
 
     pub(super) fn read_property_hook(

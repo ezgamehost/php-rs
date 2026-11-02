@@ -723,8 +723,8 @@ new request. The CLI returns the low eight bits of the requested status.
   virtual and backed properties, inherited hooks, trait scope, and final hooks.
   Reads, writes, compound assignments, reference getters, indirect-mutation
   errors, and lazy-object backing access use the hook call frame. `__PROPERTY__`
-  and reflection's `hasHooks`/`isVirtual` queries are available. Promoted hooks,
-  parent-hook calls and hook attributes/reflection remain unfinished.
+  and reflection's `hasHooks`/`isVirtual` queries are available. Promoted hooks
+  and hook attributes/reflection remain unfinished.
 - [Abstract and interface hooks](docs/conformance/php-8.5.0-abstract-hooks-hillclimb.txt)
   enforce required getters/setters and allow plain properties to implement them.
   Readonly properties satisfy getter requirements; missing setters remain abstract.
@@ -738,6 +738,12 @@ new request. The CLI returns the low eight bits of the requested status.
   dynamic values are captured for export and stay live during iteration.
   Dumps and serialization retain backing storage without invoking getters;
   virtual properties have no class defaults and reject unserialized values.
+- [Parent-hook calls](docs/conformance/php-8.5.0-parent-hooks-hillclimb.txt)
+  dispatch `parent::$prop::get()` and `parent::$prop::set()` in the matching
+  property hook, retaining inherited declaration scope, references, and lazy
+  backing access. Plain parent properties use internal accessors with strict
+  argument counts and named-argument checks. Invalid lexical contexts and
+  attempts to create parent-hook closures produce compile errors.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

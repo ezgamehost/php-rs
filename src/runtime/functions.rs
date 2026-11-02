@@ -44,6 +44,15 @@ impl Runtime {
         line: usize,
         result_used: bool,
     ) -> Result<Value, Error> {
+        if let Some((property, hook)) = callee.parent_property_hook() {
+            return self.call_parent_property_hook(
+                &property,
+                hook.eq_ignore_ascii_case(b"get"),
+                args,
+                line,
+                result_used,
+            );
+        }
         let mut target = self.resolve_callee(callee, line)?;
         target.result_used = result_used;
         if let Some(builtin @ (Builtin::CallUserFunc | Builtin::CallUserFuncArray)) = target.builtin

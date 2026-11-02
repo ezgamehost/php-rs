@@ -1162,6 +1162,14 @@ impl Parser {
             }
             Kind::Symbol(op) if op == "++" || op == "--" => {
                 let expr = self.expr(22)?;
+                if matches!(&expr.kind, ExprKind::Call(callee, _) if callee.parent_property_hook().is_some())
+                {
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
+                        "Can't use method return value in write context",
+                        line,
+                    ));
+                }
                 if !expr.is_writable() {
                     return Err(Error::parse("Expected variable", line));
                 }
@@ -1221,6 +1229,7 @@ impl Parser {
                         .is_some_and(|t| t.kind == Kind::Symbol(")".into()))
                 {
                     self.pos += 2;
+                    self.validate_parent_property_hook(&lhs, true, line)?;
                     if lhs.is_nullsafe_callee() && !matches!(lhs.kind, ExprKind::ScopedMember(_, _))
                     {
                         return Err(Error::parse(
@@ -1231,6 +1240,7 @@ impl Parser {
                     ExprKind::Callable(Box::new(lhs))
                 } else {
                     let mut args = self.arguments()?;
+                    self.validate_parent_property_hook(&lhs, false, line)?;
                     assertions::add_description(&lhs, &mut args, line);
                     ExprKind::Call(Box::new(lhs), args)
                 };

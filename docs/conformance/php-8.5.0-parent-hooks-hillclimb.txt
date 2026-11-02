@@ -1,0 +1,132 @@
+PHP 8.5.0 parent property hook calls hillclimb
+Baseline: 1687e485ef3c9c3db5d1630eb8f74fde34ec82a7
+
+zend
+Before: 5256 cases; 2978 passed, 1878 failed, 400 unsupported
+After: 5256 cases; 3004 passed, 1852 failed, 400 unsupported
+New passes: 26; regressions: 0
+NEW PASS: Zend/tests/property_hooks/bug003.phpt
+NEW PASS: Zend/tests/property_hooks/default_value_inheritance.phpt
+NEW PASS: Zend/tests/property_hooks/dump.phpt
+NEW PASS: Zend/tests/property_hooks/gh17234.phpt
+NEW PASS: Zend/tests/property_hooks/gh20270.phpt
+NEW PASS: Zend/tests/property_hooks/multi_level_inheritance.phpt
+NEW PASS: Zend/tests/property_hooks/oss_fuzz_403308724.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_ci.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_in_class_with_no_parent.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_not_in_class.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_plain.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_plain_typed_uninitialized.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_plain_untyped_uninitialized.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_plain_zpp.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_rw.phpt
+NEW PASS: Zend/tests/property_hooks/parent_get_undefined_property.phpt
+NEW PASS: Zend/tests/property_hooks/parent_in_different_hook.phpt
+NEW PASS: Zend/tests/property_hooks/parent_in_different_property.phpt
+NEW PASS: Zend/tests/property_hooks/parent_outside_property.phpt
+NEW PASS: Zend/tests/property_hooks/parent_set.phpt
+NEW PASS: Zend/tests/property_hooks/parent_set_plain.phpt
+NEW PASS: Zend/tests/property_hooks/parent_set_plain_zpp.phpt
+NEW PASS: Zend/tests/property_hooks/parent_superfluous_args.phpt
+NEW PASS: Zend/tests/property_hooks/parent_syntax.phpt
+NEW PASS: Zend/tests/property_hooks/parent_wrong_property_info.phpt
+
+reflection
+Before: 492 cases; 343 passed, 112 failed, 37 unsupported
+After: 492 cases; 343 passed, 112 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 5,993 passed, 2,227 failed, 1,456 unsupported.
+Net gain: 26 upstream passes; zero regressions across all twelve suites.
+The property_hooks directory improves from 154 to 180 passes out of 210 fixtures;
+26 fail and four remain unsupported. These fixtures are already counted in Zend.
+All nineteen parent_* fixtures pass.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match for reference getters, trait parent scope,
+  lazy backing access, setter coercion, and unpacked/named arguments.
+  Nested closure rejection matches PHP's fatal diagnostic, apart from the CLI's
+  existing leading blank-line difference.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Literal, unparenthesized parent::$prop::get/set calls are recognized separately
+  from dynamic static calls. Hook names are case-insensitive. Compile checks
+  require the matching property/accessor context and prohibit closure conversion.
+- Parent lookup uses the executing hook's declaration scope, preserving inherited
+  hooks and trait rebinding. Missing parents/properties and private properties
+  produce PHP's runtime errors.
+- User-defined parent accessors use ordinary argument binding and hook frames,
+  retaining reference returns and allowing extra positional arguments.
+- Plain parent properties use internal accessor functions with strict arity and
+  named-argument checks. The shared property path accesses backing storage,
+  including lazy initialization, typed slots, and assignment coercion.
+- Existing dump, export, default-value inheritance, and multi-level-inheritance
+  fixtures now pass through their parent calls.
+
+Remaining limits:
+- Promoted hooks, hook attributes and full hook reflection remain unfinished.
+- Complex interface merges, generator hooks, final-property diagnostics, and
+  some indirect-access cases remain incomplete. This is a focused gate, not
+  full PHP conformance.

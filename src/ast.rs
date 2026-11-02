@@ -148,6 +148,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
+    ParentPropertyHook(bool),
     RecursiveIterator,
     FixedArray,
     LinkedList,
@@ -179,6 +180,31 @@ pub(crate) enum NativeMethod {
 }
 
 impl Expr {
+    // Only the unparenthesized literal parent::$prop::get/set form is special.
+    // A grouped static property or a dynamic hook name remains a static call.
+    pub fn parent_property_hook(&self) -> Option<(Vec<u8>, Vec<u8>)> {
+        let ExprKind::ScopedMember(class, method) = &self.kind else {
+            return None;
+        };
+        let ExprKind::StaticProperty(class, property) = &class.kind else {
+            return None;
+        };
+        if !class.static_class_name()?.eq_ignore_ascii_case(b"parent") {
+            return None;
+        }
+        let ExprKind::Literal(Value::String(method)) = &method.kind else {
+            return None;
+        };
+        let method = method.bytes();
+        if !method.eq_ignore_ascii_case(b"get") && !method.eq_ignore_ascii_case(b"set") {
+            return None;
+        }
+        let ExprKind::Literal(property) = &property.kind else {
+            return None;
+        };
+        Some((property.to_bytes(), method))
+    }
+
     pub fn static_class_name(&self) -> Option<&[u8]> {
         match &self.kind {
             ExprKind::Constant(name) => Some(name),

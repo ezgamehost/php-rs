@@ -99,6 +99,7 @@ pub(crate) mod object_storage;
 mod objects;
 mod offsets;
 mod packing;
+mod parent_property_hooks;
 mod path_parts;
 mod phonetics;
 mod printing;
