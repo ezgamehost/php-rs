@@ -61,15 +61,26 @@ impl Runtime {
         reflection: &FunctionReflection,
         line: usize,
     ) -> Result<Vec<u8>, Error> {
+        self.reflection_function_string_indented(reflection, line, b"")
+    }
+
+    pub(super) fn reflection_function_string_indented(
+        &mut self,
+        reflection: &FunctionReflection,
+        line: usize,
+        indent: &[u8],
+    ) -> Result<Vec<u8>, Error> {
         let function = reflection.target.function.as_ref();
         let closure = reflection.target.closure.as_ref();
         let context = reflection.target.context.as_ref();
         let method = context.is_some();
         let mut out = Vec::new();
         if let Some(comment) = function.and_then(|f| f.doc_comment.as_ref()) {
+            out.extend(indent);
             out.extend(comment);
             out.push(b'\n');
         }
+        out.extend(indent);
         out.extend(if closure.is_some() {
             b"Closure [ ".as_slice()
         } else if method {
@@ -89,7 +100,7 @@ impl Runtime {
         {
             out.extend(b", deprecated");
         }
-        if let Some(extension) = reflection.extension() {
+        if let Some(extension) = reflection.extension(self) {
             out.push(b':');
             out.extend(extension.bytes());
         }
@@ -146,6 +157,7 @@ impl Runtime {
         if !reflection.internal()
             && let Some(function) = function
         {
+            out.extend(indent);
             out.extend(b"  @@ ");
             out.extend(&function.source.name);
             out.extend(format!(" {} - {}\n", function.line, function.end_line).bytes());
@@ -160,12 +172,16 @@ impl Runtime {
                 static_names(&function.body, &mut names);
             }
             if !names.is_empty() {
-                out.extend(format!("\n  - Bound Variables [{}] {{\n", names.len()).bytes());
+                out.push(b'\n');
+                out.extend(indent);
+                out.extend(format!("  - Bound Variables [{}] {{\n", names.len()).bytes());
                 for (i, name) in names.iter().enumerate() {
+                    out.extend(indent);
                     out.extend(format!("      Variable #{i} [ $").bytes());
                     out.extend(name);
                     out.extend(b" ]\n");
                 }
+                out.extend(indent);
                 out.extend(b"  }\n");
             }
         }
@@ -177,12 +193,16 @@ impl Runtime {
             || tentative.is_some()
             || reflection.signature().is_some()
         {
-            out.extend(format!("\n  - Parameters [{}] {{\n", parameters.len()).bytes());
+            out.push(b'\n');
+            out.extend(indent);
+            out.extend(format!("  - Parameters [{}] {{\n", parameters.len()).bytes());
             for i in 0..parameters.len() {
+                out.extend(indent);
                 out.extend(b"    ");
                 out.extend(self.reflection_parameter_string(reflection, i, line)?);
                 out.push(b'\n');
             }
+            out.extend(indent);
             out.extend(b"  }\n");
         }
         if let Some(ty) = return_type.as_ref().or(tentative) {
@@ -191,6 +211,7 @@ impl Runtime {
             } else {
                 "Tentative return"
             };
+            out.extend(indent);
             out.extend(
                 format!(
                     "  - {label} [ {} ]\n",
@@ -199,6 +220,7 @@ impl Runtime {
                 .bytes(),
             );
         }
+        out.extend(indent);
         out.extend(b"}\n");
         Ok(out)
     }

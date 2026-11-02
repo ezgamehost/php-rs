@@ -74,25 +74,10 @@ impl FunctionReflection {
                 .is_some_and(|s| s.function().returns_reference)
     }
 
-    pub(super) fn extension(&self) -> Option<&'static str> {
+    pub(super) fn extension(&self, runtime: &Runtime) -> Option<&'static str> {
         self.signature().map(|s| s.extension).or_else(|| {
-            self.target
-                .function
-                .as_ref()
-                .and_then(|f| f.native)
-                .map(|native| match native {
-                    NativeMethod::Reflection => "Reflection",
-                    NativeMethod::RecursiveIterator
-                    | NativeMethod::FixedArray
-                    | NativeMethod::LinkedList
-                    | NativeMethod::ObjectStorage
-                    | NativeMethod::Heap
-                    | NativeMethod::FileInfo
-                    | NativeMethod::DirectoryIterator
-                    | NativeMethod::DualIterator
-                    | NativeMethod::ArrayIterator => "SPL",
-                    _ => "Core",
-                })
+            self.target.function.as_ref().and_then(|f| f.native)?;
+            runtime.class_extension(&self.target.context.as_ref()?.scope)
         })
     }
 }

@@ -1,11 +1,16 @@
 # Third-party notices
 
-Function/parameter reflection rendering in `src/runtime/reflection/display.rs`
-follows PHP 8.5.0's `ext/reflection/php_reflection.c`, copyright (c) The PHP Group,
+Class/function/parameter reflection rendering in `src/runtime/reflection/class_display.rs`
+and `src/runtime/reflection/display.rs` follows PHP 8.5.0's `ext/reflection/php_reflection.c`, copyright (c) The PHP Group,
 by Timm Friebe, George Schlossnagle, Andrei Zmievski, Marcus Boerger, and Johannes
 Schlueter. `native_signatures.rs` contains PHP 8.5.0 function signature metadata
-extracted with `tools/generate_native_signatures.py`. The PHP license below
-applies to these adaptations.
+extracted with `tools/generate_native_signatures.py`. `class_modules.rs` contains
+extension ownership extracted with `tools/generate_class_modules.py`. The PHP license
+below applies to these adaptations.
+
+Interface enumeration in `src/runtime/reflection.rs` follows PHP 8.5.0's
+`Zend/zend_inheritance.c`, copyright (c) Zend Technologies Ltd. The Zend license
+below applies to this adaptation.
 
 Default-expression rendering in `src/runtime/reflection/expressions.rs` adapts
 PHP 8.5.0's `Zend/zend_ast.c`, copyright (c) Zend Technologies Ltd., by Bob Weinand

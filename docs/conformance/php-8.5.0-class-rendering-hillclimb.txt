@@ -1,0 +1,140 @@
+PHP 8.5.0 class/object declaration rendering hillclimb
+Baseline: 0e75ef96c9a70a90f44656a31301e894062e0b84
+
+zend
+Before: 5256 cases; 2595 passed, 2261 failed, 400 unsupported
+After: 5256 cases; 2602 passed, 2254 failed, 400 unsupported
+New passes: 7; regressions: 0
+NEW PASS: Zend/tests/attributes/delayed_target_validation/validator_AllowDynamicProperties.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/validator_Attribute.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/validator_Deprecated.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/validator_success.phpt
+NEW PASS: Zend/tests/ctor_promotion/ctor_promotion_mixing.phpt
+NEW PASS: Zend/tests/return_types/reflection001.phpt
+NEW PASS: Zend/tests/traits/bug60717.phpt
+
+reflection
+Before: 492 cases; 306 passed, 149 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 31; regressions: 0
+NEW PASS: ext/reflection/tests/017.phpt
+NEW PASS: ext/reflection/tests/024.phpt
+NEW PASS: ext/reflection/tests/ReflectionClassConstant_getValue.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_export_array_bug72222.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_export_basic1.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_export_basic2.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getExtensionName_variation.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_getExtension_variation.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_002.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_004.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_005.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_006.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_007.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnumUnitCase_getEnum.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_toString.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_toString_backed_int.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_toString_backed_string.phpt
+NEW PASS: ext/reflection/tests/ReflectionEnum_toString_unbacked.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject___toString_basic1.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject___toString_basic2.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_export_basic3.phpt
+NEW PASS: ext/reflection/tests/bug33389.phpt
+NEW PASS: ext/reflection/tests/bug37964.phpt
+NEW PASS: ext/reflection/tests/bug45571.phpt
+NEW PASS: ext/reflection/tests/bug45765.phpt
+NEW PASS: ext/reflection/tests/bug74673.phpt
+NEW PASS: ext/reflection/tests/constructor_promotion.phpt
+NEW PASS: ext/reflection/tests/final_property_indicated.phpt
+NEW PASS: ext/reflection/tests/traits001.phpt
+NEW PASS: ext/reflection/tests/traits002.phpt
+
+spl
+Before: 778 cases; 554 passed, 171 failed, 53 unsupported
+After: 778 cases; 555 passed, 170 failed, 53 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/countable_class_basic1.phpt
+
+array
+Before: 840 cases; 776 passed, 13 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 533 passed, 45 failed, 152 unsupported
+After: 730 cases; 533 passed, 45 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 28 passed, 3 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+Across 9,588 upstream fixtures: 5,379 passed, 2,767 failed, 1,442 unsupported.
+39 new passes; zero regressions. Unsupported fixtures are not counted as passes.
+
+Implements ReflectionClass/ReflectionObject declaration strings for classes,
+interfaces, traits, enums and objects. Rendering includes declaration comments,
+source ranges, modifiers, extension ownership, implemented interfaces, enum
+cases/backing values, constants, static/instance properties and methods, inherited
+member flags and dynamic property names. Inherited private members are filtered;
+properties display declaration defaults rather than current values. Constants,
+properties and methods reuse their standalone formatters with structural indentation,
+preserving embedded newlines in comments and constant values. Rendering does not
+allocate temporary reflector objects or expose dynamic property values.
+
+Class documentation and extension queries are exposed. The parser retains class
+and promoted-property comments. Native class/interface extension ownership is
+extracted from PHP 8.5.0; builtin method reflection uses its declaring class's
+module, and user-enum methods correctly have no extension. Enum interfaces follow
+explicit declarations before UnitEnum/BackedEnum. Interface enumeration preserves
+PHP's different inheritance-only and explicit-implements ordering, including
+reversed linked parent tables. Class-name qualification in constant defaults
+preserves unqualified references while callable defaults remain fully qualified.
+Implicit-nullability diagnostics use qualified method names.
+
+The generated class_modules.rs contains 165 reference class/interface mappings;
+it supplies metadata only for classes that the runtime actually implements.
+Ownership matches the reference for all 105 currently reflectable native classes
+and interfaces. Regeneration is byte-identical after rustfmt, SHA256:
+641de17af4dd1a179b449832f46bcf049eaafb06adbc90c1f8e1510a47bdf8da
+Direct comparisons also cover multiline documentation and binary constant values,
+private/inherited/static/dynamic members, changed property values, enum objects,
+readonly/promoted properties, interface diamonds and inherited ordering, class
+attributes/comments and symbolic/callable default qualification.
+
+Complete internal class layouts/method signatures, Reflector interfaces, property
+hooks and closure-object reflection remain incomplete. In particular, the large
+ReflectionClass self-rendering fixture still exposes missing lazy-object methods
+and native tentative return metadata. Existing parser/default-expression limitations
+remain. PHP/Zend source
+attribution is retained in THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.

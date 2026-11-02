@@ -115,9 +115,9 @@ impl Runtime {
             function.native = Some(NativeMethod::Enum);
             decl.methods.push(Rc::new(function));
         }
-        decl.interfaces.insert(0, b"UnitEnum".to_vec());
+        decl.interfaces.push(b"UnitEnum".to_vec());
         if decl.enum_backing.is_some() {
-            decl.interfaces.insert(1, b"BackedEnum".to_vec());
+            decl.interfaces.push(b"BackedEnum".to_vec());
         }
         Ok(declaration)
     }

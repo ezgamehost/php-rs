@@ -6,6 +6,8 @@ use crate::{
 };
 
 mod attributes;
+mod class_display;
+mod class_modules;
 mod constants;
 mod declarations;
 mod display;
@@ -348,6 +350,17 @@ impl Runtime {
             b"hascase" | b"getcase" | b"getcases" | b"isbacked" | b"getbackingtype" => {
                 return self.reflect_enum_method(class, name, line);
             }
+            b"__tostring" => string(self.reflection_class_string(class, object, line)?),
+            b"getdoccomment" => decl.doc_comment.as_ref().map_or(Value::Bool(false), string),
+            b"getextensionname" => self
+                .class_extension(class)
+                .map_or(Value::Bool(false), string),
+            b"getextension" => self.class_extension(class).map_or(Value::Null, |name| {
+                self.reflection_object(
+                    b"ReflectionExtension",
+                    ReflectionData::Extension(name.to_owned()),
+                )
+            }),
             b"getname" => string(&class.name),
             b"getshortname" => string(class.name.rsplit(|b| *b == b'\\').next().unwrap()),
             b"getnamespacename" => string(
@@ -520,21 +533,7 @@ impl Runtime {
             b"getmethods" => {
                 let mut result = PhpArray::default();
                 let filter = self.lookup(b"filter").unwrap();
-                let mut methods = class.declaration.methods.clone();
-                for inherited in &class.methods {
-                    let short = inherited.name.rsplit(|b| *b == b':').next().unwrap();
-                    if inherited.visibility != Visibility::Private
-                        && !methods.iter().any(|m| {
-                            m.name
-                                .rsplit(|b| *b == b':')
-                                .next()
-                                .unwrap()
-                                .eq_ignore_ascii_case(short)
-                        })
-                    {
-                        methods.push(inherited.clone());
-                    }
-                }
+                let methods = class_display::methods(class);
                 for method in methods {
                     let short = method.name.rsplit(|b| *b == b':').next().unwrap();
                     let function = self.reflected_method(class, short, line)?;
@@ -762,7 +761,14 @@ impl Runtime {
 
 fn collect_interfaces(class: &Rc<Class>, result: &mut Vec<Rc<Class>>) {
     if let Some(parent) = &class.parent {
-        collect_interfaces(parent, result);
+        let mut inherited = Vec::new();
+        collect_interfaces(parent, &mut inherited);
+        // Zend's inheritance-only path appends the parent's linked table in
+        // reverse; an explicit implements list instead copies it unchanged.
+        if class.declaration.interfaces.is_empty() {
+            inherited.reverse();
+        }
+        result.extend(inherited);
     }
     let mut direct = Vec::new();
     for interface in &class.interfaces {

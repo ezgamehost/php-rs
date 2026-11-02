@@ -396,6 +396,7 @@ impl Runtime {
                 initialized: std::cell::Cell::new(false),
                 initializing: std::cell::Cell::new(false),
                 declaration: Rc::new(ClassDecl {
+                    doc_comment: None,
                     source: Rc::default(),
                     strict_types: false,
                     end_line: 0,

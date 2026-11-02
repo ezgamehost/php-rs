@@ -240,8 +240,10 @@ impl Runtime {
         let internal = reflection.internal();
         Ok(match name {
             b"__tostring" => string(self.reflection_function_string(&reflection, line)?),
-            b"getextensionname" => reflection.extension().map_or(Value::Bool(false), string),
-            b"getextension" => reflection.extension().map_or(Value::Null, |name| {
+            b"getextensionname" => reflection
+                .extension(self)
+                .map_or(Value::Bool(false), string),
+            b"getextension" => reflection.extension(self).map_or(Value::Null, |name| {
                 self.reflection_object(
                     b"ReflectionExtension",
                     ReflectionData::Extension(name.to_owned()),

@@ -475,9 +475,14 @@ new request. The CLI returns the low eight bits of the requested status.
   supports deferred argument evaluation, filtering, target/repetition validation,
   and instantiation using the
   declaration's scope and strict-types setting. Other attribute runtime effects remain unfinished.
-- `ReflectionClass`/`ReflectionObject` class names, source locations, flags,
+- [`ReflectionClass`/`ReflectionObject`](docs/conformance/php-8.5.0-class-rendering-hillclimb.txt)
+  class names, source locations, documentation, extension ownership, flags,
   inheritance/interface/trait queries, constants, defaults, static property access,
-  and construction with or without constructors.
+  and construction with or without constructors. Class, interface, trait, enum,
+  and object declaration strings include members in reflection order, enum cases,
+  inherited visibility, and dynamic property names. Property strings show declaration
+  defaults, including after instance/static values change. Promoted properties retain
+  their documentation comments.
 - [Function/method/parameter reflection](docs/conformance/php-8.5.0-function-rendering-hillclimb.txt)
   exposes names, source lines, visibility,
   signature metadata, defaults, attributes, named/union types, and closure captures.
@@ -489,8 +494,8 @@ new request. The CLI returns the low eight bits of the requested status.
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, lazy objects, full reflector
-  interfaces, class declaration strings, and advanced default-expression folding remain
-  unfinished.
+  interfaces, complete internal class layouts, closure-object reflection, and advanced
+  default-expression folding remain unfinished.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining

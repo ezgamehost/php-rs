@@ -621,7 +621,15 @@ impl Parser {
             };
             self.warnings.push(format!("Deprecated: {label}(): Returning by reference from a void function is deprecated on line {line}"));
         }
-        self.validate_defaults(&name, &mut parameters, line)?;
+        let diagnostic_name = if method {
+            let mut qualified = self.class_name.clone();
+            qualified.extend(b"::");
+            qualified.extend(&name);
+            qualified
+        } else {
+            name.clone()
+        };
+        self.validate_defaults(&diagnostic_name, &mut parameters, line)?;
         self.expect(if is_abstract { ";" } else { "{" })?;
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
         let outer_static_names = std::mem::take(&mut self.static_names);
@@ -667,6 +675,7 @@ impl Parser {
         self.expect("(")?;
         let mut parameters = Vec::new();
         while !self.eat(")") {
+            let parameter_start = self.pos;
             let attribute_range = self.take_attributes()?;
             let mut promotion = self.parameter_promotion(allow_promotion)?;
             let attributes = self.parse_attributes_at(
@@ -694,6 +703,12 @@ impl Parser {
                 ));
             };
             self.pos += 1;
+            if let Some(promotion) = &mut promotion {
+                promotion.doc_comment = self.tokens[parameter_start..self.pos]
+                    .iter()
+                    .rev()
+                    .find_map(|t| t.doc_comment.clone());
+            }
             if parameters.iter().any(|p: &Parameter| p.name == name) {
                 return Err(Error::parse("Redefinition of parameter", line));
             }

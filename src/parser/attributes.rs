@@ -226,6 +226,14 @@ impl Parser {
         self.class_parent = outer_parent;
         self.trait_name = outer_trait;
         self.function_name = outer_function;
+        if class.doc_comment.is_none()
+            && let Some((start, end)) = range
+        {
+            class.doc_comment = self.tokens[start..end]
+                .iter()
+                .rev()
+                .find_map(|t| t.doc_comment.clone());
+        }
         class.attributes = result?;
         let delayed = class
             .attributes

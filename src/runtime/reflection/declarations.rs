@@ -12,6 +12,10 @@ impl Runtime {
                 public string $name;
                 private function __clone(): void {}
                 public function __construct(object|string $objectOrClass) {}
+                public function __toString(): string {}
+                public function getDocComment(): string|false {}
+                public function getExtensionName(): string|false {}
+                public function getExtension(): ?ReflectionExtension {}
                 public function getName(): string {}
                 public function getShortName(): string {}
                 public function getNamespaceName(): string {}
@@ -304,6 +308,7 @@ impl Runtime {
                 | "ReflectionFunction"
                 | "ReflectionMethod"
                 | "ReflectionParameter"
+                | "ReflectionClass"
         ) {
             " implements Stringable"
         } else {
@@ -357,6 +362,7 @@ impl Runtime {
                     | "ReflectionFunction"
                     | "ReflectionMethod"
                     | "ReflectionParameter"
+                    | "ReflectionClass"
             ) {
                 vec![self.find_class(b"Stringable").unwrap()]
             } else {

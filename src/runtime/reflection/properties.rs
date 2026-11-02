@@ -6,8 +6,8 @@ pub(crate) struct PropertyReflection {
     pub(super) scope: Rc<Class>,
     pub(super) owner: Rc<Class>,
     pub(super) name: Vec<u8>,
-    declaration: Option<PropertyDecl>,
-    is_static: bool,
+    pub(super) declaration: Option<PropertyDecl>,
+    pub(super) is_static: bool,
 }
 
 impl PropertyReflection {
@@ -32,7 +32,7 @@ impl PropertyReflection {
 }
 
 // Both storage kinds share a declaration-order namespace in PHP reflection.
-fn properties(class: &Rc<Class>) -> Vec<PropertyReflection> {
+pub(super) fn properties(class: &Rc<Class>) -> Vec<PropertyReflection> {
     let mut own: Vec<_> = class
         .declaration
         .properties
@@ -305,7 +305,7 @@ impl Runtime {
             b"getvalue" | b"setvalue" | b"isinitialized" => {
                 return self.reflected_property_value(&property, name, supplied, line);
             }
-            b"__tostring" => return self.reflected_property_string(&property),
+            b"__tostring" => return self.reflected_property_string(&property, b""),
             _ => unreachable!("unhandled property reflection method"),
         })
     }
@@ -423,16 +423,22 @@ impl Runtime {
         result
     }
 
-    fn reflected_property_string(&mut self, property: &PropertyReflection) -> Result<Value, Error> {
+    pub(super) fn reflected_property_string(
+        &mut self,
+        property: &PropertyReflection,
+        indent: &[u8],
+    ) -> Result<Value, Error> {
         let mut out = Vec::new();
         if let Some(comment) = property
             .declaration
             .as_ref()
             .and_then(|p| p.doc_comment.as_ref())
         {
+            out.extend(indent);
             out.extend(comment);
             out.push(b'\n');
         }
+        out.extend(indent);
         out.extend(b"Property [ ");
         if let Some(decl) = &property.declaration {
             if decl.is_final {
@@ -451,7 +457,7 @@ impl Runtime {
                 out.extend(b"readonly ");
             }
             if let Some(ty) = &decl.ty {
-                out.extend(ty.to_string().bytes());
+                out.extend(functions::normalize_type(ty.clone()).to_string().bytes());
                 out.push(b' ');
             }
         } else {

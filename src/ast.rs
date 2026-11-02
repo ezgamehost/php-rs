@@ -275,6 +275,7 @@ pub(crate) struct Attribute {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ClassDecl {
+    pub doc_comment: Option<Vec<u8>>,
     pub source: Rc<crate::source::Source>,
     pub strict_types: bool,
     pub end_line: usize,
@@ -373,6 +374,7 @@ pub(crate) struct ClassConstant {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Promotion {
+    pub doc_comment: Option<Vec<u8>>,
     // Original source attributes, before internal target filtering.
     pub attributes: Vec<Attribute>,
     pub is_final: bool,

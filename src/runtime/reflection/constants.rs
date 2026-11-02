@@ -133,36 +133,14 @@ impl Runtime {
                 if method == b"getvalue" {
                     return Ok(value);
                 }
-                let mut out = Vec::new();
-                if let Some(comment) = &constant.doc_comment {
-                    out.extend(comment);
-                    out.push(b'\n');
-                }
-                out.extend(b"Constant [ ");
-                if constant.is_final {
-                    out.extend(b"final ");
-                }
-                out.extend(match constant.visibility {
-                    Visibility::Public => b"public".as_slice(),
-                    Visibility::Protected => b"protected",
-                    Visibility::Private => b"private",
-                });
-                out.push(b' ');
-                let ty = constant.ty.as_ref().map_or_else(
-                    || builtins::debug_type(&value).to_owned(),
-                    ToString::to_string,
-                );
-                out.extend(ty.bytes());
-                out.push(b' ');
-                out.extend(reflected_name.to_bytes());
-                out.extend(b" ] { ");
-                match value {
-                    Value::Array(_) => out.extend(b"Array"),
-                    Value::Object(_) | Value::Closure(_) => out.extend(b"Object"),
-                    _ => out.extend(self.string_bytes(&value, line)?),
-                }
-                out.extend(b" }\n");
-                string(out)
+                string(self.reflected_constant_string(
+                    owner,
+                    name,
+                    &reflected_name.to_bytes(),
+                    &value,
+                    b"",
+                    line,
+                )?)
             }
             b"getenum" => {
                 self.reflection_object(b"ReflectionEnum", ReflectionData::Class(owner.clone()))
@@ -215,5 +193,56 @@ impl Runtime {
                 .map_or(Value::Null, |ty| self.reflection_type(ty)),
             _ => unreachable!("unhandled class constant reflection method"),
         })
+    }
+}
+
+impl Runtime {
+    pub(super) fn reflected_constant_string(
+        &mut self,
+        owner: &Rc<Class>,
+        name: &[u8],
+        display_name: &[u8],
+        value: &Value,
+        indent: &[u8],
+        line: usize,
+    ) -> Result<Vec<u8>, Error> {
+        let constant = owner
+            .declaration
+            .constants
+            .iter()
+            .find(|c| c.name == name)
+            .unwrap();
+        let mut out = Vec::new();
+        if let Some(comment) = &constant.doc_comment {
+            out.extend(indent);
+            out.extend(comment);
+            out.push(b'\n');
+        }
+        out.extend(indent);
+        out.extend(b"Constant [ ");
+        if constant.is_final {
+            out.extend(b"final ");
+        }
+        out.extend(match constant.visibility {
+            Visibility::Public => b"public".as_slice(),
+            Visibility::Protected => b"protected",
+            Visibility::Private => b"private",
+        });
+        out.push(b' ');
+        let ty = constant.ty.as_ref().map_or_else(
+            || builtins::debug_type(value).to_owned(),
+            |ty| functions::normalize_type(ty.clone()).to_string(),
+        );
+        out.extend(ty.bytes());
+        out.push(b' ');
+        out.extend(display_name);
+        out.extend(b" ] { ");
+        match value {
+            Value::Array(_) => out.extend(b"Array"),
+            Value::Object(_) | Value::Closure(_) => out.extend(b"Object"),
+            _ => out.extend(self.string_bytes(value, line)?),
+        }
+        out.extend(b" }\n");
+        Ok(out)
     }
 }

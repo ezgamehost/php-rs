@@ -67,6 +67,7 @@ impl Parser {
         Ok(
             (visibility.is_some() || set_visibility.is_some() || readonly || is_final).then_some(
                 Promotion {
+                    doc_comment: None,
                     attributes: Vec::new(),
                     is_final,
                     visibility: visibility.unwrap_or(Visibility::Public),
@@ -123,7 +124,7 @@ impl Parser {
                 ));
             }
             properties.push(PropertyDecl {
-                doc_comment: None,
+                doc_comment: promotion.doc_comment.clone(),
                 order: properties.len() + static_properties.len(),
                 is_promoted: true,
                 attributes: promotion

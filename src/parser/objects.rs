@@ -23,6 +23,16 @@ impl Parser {
         kind: ClassKind,
         anonymous_line: Option<usize>,
     ) -> Result<Stmt, Error> {
+        let mut start = self.pos - 1;
+        while start > 0
+            && matches!(&self.tokens[start-1].kind, Kind::Word(word) if [b"final".as_slice(), b"abstract", b"readonly"].iter().any(|m| word.eq_ignore_ascii_case(m)))
+        {
+            start -= 1;
+        }
+        let doc_comment = self.tokens[start..self.pos]
+            .iter()
+            .rev()
+            .find_map(|t| t.doc_comment.clone());
         let is_interface = kind == ClassKind::Interface;
         let is_trait = kind == ClassKind::Trait;
         let is_enum = kind == ClassKind::Enum;
@@ -708,6 +718,7 @@ impl Parser {
         self.class_parent = outer_parent;
         self.trait_name = outer_trait;
         Ok(Stmt::Class(Rc::new(ClassDecl {
+            doc_comment,
             source: self.source.clone(),
             strict_types: self.strict_types,
             end_line: self.tokens[self.pos - 1].line,

@@ -99,12 +99,12 @@ fn expression_prec(expr: &Expr, priority: u16, out: &mut Vec<u8>) {
             }
         }
         ExprKind::ScopedMember(class, member) => {
-            class_name(class, out);
+            class_name(class, false, out);
             out.extend(b"::");
             member_name(member, out);
         }
         ExprKind::ClassName(class) => {
-            class_name(class, out);
+            class_name(class, false, out);
             out.extend(b"::class");
         }
         ExprKind::Property(object, member) | ExprKind::NullsafeProperty(object, member) => {
@@ -117,7 +117,11 @@ fn expression_prec(expr: &Expr, priority: u16, out: &mut Vec<u8>) {
             member_name(member, out);
         }
         ExprKind::Callable(callee) => {
-            if let ExprKind::NamespacedName(name) = &callee.kind {
+            if let ExprKind::ScopedMember(class, member) = &callee.kind {
+                class_name(class, true, out);
+                out.extend(b"::");
+                member_name(member, out);
+            } else if let ExprKind::NamespacedName(name) = &callee.kind {
                 out.extend(&name.function);
             } else {
                 expression(callee, out);
@@ -131,7 +135,7 @@ fn expression_prec(expr: &Expr, priority: u16, out: &mut Vec<u8>) {
         }
         ExprKind::New(class, arguments) => {
             out.extend(b"new ");
-            class_name(class, out);
+            class_name(class, true, out);
             out.push(b'(');
             for (i, argument) in arguments.iter().enumerate() {
                 if i > 0 {
@@ -205,11 +209,12 @@ fn expression_prec(expr: &Expr, priority: u16, out: &mut Vec<u8>) {
     }
 }
 
-fn class_name(class: &Expr, out: &mut Vec<u8>) {
+fn class_name(class: &Expr, qualified: bool, out: &mut Vec<u8>) {
     let name = class.static_class_name().expect("constant class name");
-    if ![b"self".as_slice(), b"parent", b"static"]
-        .iter()
-        .any(|keyword| name.eq_ignore_ascii_case(keyword))
+    if (qualified || matches!(class.kind, ExprKind::NamespacedName(_)))
+        && ![b"self".as_slice(), b"parent", b"static"]
+            .iter()
+            .any(|keyword| name.eq_ignore_ascii_case(keyword))
     {
         out.push(b'\\');
     }
