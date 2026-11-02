@@ -714,6 +714,9 @@ Michael G Schwern's CPAN Text-Metaphone-1.96 code.
 `src/runtime/string_step.rs` adapts the `str_increment` and `str_decrement`
 functions in PHP 8.5.0's `ext/standard/string.c`, copyright (c) The PHP Group.
 
+`src/runtime/quoted_printable.rs` adapts PHP 8.5.0's `ext/standard/quot_print.c`,
+copyright (c) The PHP Group, originally authored by Kirill Maximov.
+
 CRC32 in `src/digest.rs` adapts PHP 8.5.0's `ext/standard/crc32.c` and
 `crc32.h`, copyright (c) The PHP Group. Its lookup table is generated at compile
 time from the reflected AUTODIN II polynomial.

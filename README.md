@@ -270,6 +270,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `str_increment` and `str_decrement` step through ASCII alphanumeric strings,
   preserving letter case and applying PHP's carry, borrow and underflow rules.
   Numeric-looking inputs retain string semantics, including scientific notation.
+- `quoted_printable_encode` and `quoted_printable_decode` follow PHP's byte
+  escaping, line wrapping and soft-break rules. Decoding retains invalid hex
+  escapes and stops at input NUL bytes, while decoded `=00` bytes remain intact.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and

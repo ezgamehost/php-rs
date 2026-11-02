@@ -26,6 +26,7 @@ pub(super) enum Builtin {
     Bin2Hex,
     Crc32,
     Uuencode(bool),
+    QuotedPrintable(bool),
     Digest(crate::digest::Algorithm, bool),
     Clock(clocks::Operation),
     Base64(bool),
@@ -238,6 +239,8 @@ impl Builtin {
             b"crc32" => Self::Crc32,
             b"convert_uuencode" => Self::Uuencode(true),
             b"convert_uudecode" => Self::Uuencode(false),
+            b"quoted_printable_encode" => Self::QuotedPrintable(true),
+            b"quoted_printable_decode" => Self::QuotedPrintable(false),
             b"md5" => Self::Digest(crate::digest::Algorithm::Md5, false),
             b"time" => Self::Clock(clocks::Operation::Time),
             b"microtime" => Self::Clock(clocks::Operation::Microtime),
@@ -836,7 +839,8 @@ impl Builtin {
             | Self::StrStep(_)
             | Self::Bin2Hex
             | Self::Crc32
-            | Self::Uuencode(_) => &[("string", false, false)],
+            | Self::Uuencode(_)
+            | Self::QuotedPrintable(_) => &[("string", false, false)],
             Self::Phonetic(false) => &[("string", false, false)],
             Self::Phonetic(true) => &[("string", false, false), ("max_phonemes", true, false)],
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
@@ -1499,6 +1503,7 @@ impl Runtime {
                 Ok(Value::Int(i64::from(crate::digest::crc32(&bytes))))
             }
             Builtin::Uuencode(encode) => self.uuencode(encode, first, &name, line),
+            Builtin::QuotedPrintable(encode) => self.quoted_printable(encode, first, &name, line),
             Builtin::StreamGetLine => self.stream_get_line(&name, &args, line),
             Builtin::StreamCopy => self.stream_copy(&name, &args, line),
             Builtin::StreamIsLocal => self.stream_is_local(first, &name, line),

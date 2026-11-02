@@ -97,6 +97,7 @@ mod phonetics;
 mod printing;
 mod property_references;
 mod property_visibility;
+mod quoted_printable;
 mod random;
 mod range;
 mod readonly;

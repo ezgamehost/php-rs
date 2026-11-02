@@ -1,0 +1,84 @@
+PHP 8.5.0 quoted-printable hillclimb
+Baseline: 840249ab3cfcf1eaa03be3b6f01603510fdeb203
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 775 passed, 14 failed, 51 unsupported
+After: 840 cases; 775 passed, 14 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 470 passed, 108 failed, 152 unsupported
+After: 730 cases; 475 passed, 103 failed, 152 unsupported
+New passes: 5; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug62462.phpt
+NEW PASS: ext/standard/tests/strings/bug64879.phpt
+NEW PASS: ext/standard/tests/strings/quoted_printable_decode_basic.phpt
+NEW PASS: ext/standard/tests/strings/quoted_printable_encode_001.phpt
+NEW PASS: ext/standard/tests/strings/quoted_printable_encode_002.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,234 passed, 2,881 failed, 1,441 unsupported.
+Five new string passes; zero regressions across all ten suites.
+
+quoted_printable_encode follows PHP's byte escaping and line wrapping, including
+preserved CRLF, encoded lone CR/LF, control and high bytes, spaces before CR,
+and the UTF-8 byte-range lookahead used when inserting soft breaks. Continuation
+bytes participate in that native rule; bytes above F4 do not themselves trigger
+wrapping. Output allocation uses checked size arithmetic and a fallible reserve.
+quoted_printable_decode recognizes hexadecimal escapes and permissive soft line
+breaks, including spaces/tabs after equals and CR/LF/CRLF. It retains invalid hex
+escapes, drops a terminal equals and its following spaces/tabs, and stops at an
+input NUL. Decoded =00 bytes remain in the result and do not terminate decoding.
+The public decoder follows the PHP function, not its stricter internal helper.
+
+Direct PHP reference comparisons match every byte value, repeated binary data,
+empty input, NUL handling, malformed/truncated escapes, line-length boundaries,
+UTF-8 byte classes and multi-byte text, trailing whitespace, weak/strict argument
+conversion, named parameters and Stringable input. Both existing regression
+fixtures pass, including the output-allocation regression for repeated F4 bytes.
+PHP source attribution is retained in THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-qprint-*2.log.
+Rust validation logs: /tmp/php-rs-qprint-{tests,clippy}1.log.
