@@ -136,6 +136,7 @@ impl Runtime {
             || self.builtin_array_iterator_class(&name).is_some()
             || self.builtin_recursive_iterator_class(&name).is_some()
             || self.builtin_fixed_array_class(&name).is_some()
+            || self.builtin_dual_iterator_class(&name).is_some()
             || self.builtin_object_storage_class(&name).is_some()
             || self.builtin_linked_list_class(&name).is_some()
         {
@@ -335,6 +336,9 @@ impl Runtime {
         if let Some(class) = self.builtin_classes.borrow().get(&name) {
             return Some(class.clone());
         }
+        if let Some(class) = self.builtin_dual_iterator_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_object_storage_class(&name) {
             return Some(class);
         }
@@ -511,6 +515,7 @@ impl Runtime {
             properties: RefCell::new(properties),
             linked_list: RefCell::default(),
             object_storage: RefCell::default(),
+            dual_iterator: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),
@@ -685,6 +690,11 @@ impl Runtime {
         }
         if function.is_none() && object.recursive_iterator.borrow().is_some() {
             let inner = self.recursive_iterator_step_inner(&object, line)?;
+            return self.resolve_method(Value::Object(inner), name, line);
+        }
+        if function.is_none()
+            && let Some(inner) = self.dual_iterator_inner(&object)
+        {
             return self.resolve_method(Value::Object(inner), name, line);
         }
         let function = function.ok_or_else(|| {

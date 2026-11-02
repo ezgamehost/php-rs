@@ -152,6 +152,7 @@ pub(crate) enum NativeMethod {
     FixedArray,
     LinkedList,
     ObjectStorage,
+    DualIterator,
     ArrayIterator,
     Abstract,
     Enum,

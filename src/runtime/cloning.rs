@@ -37,6 +37,7 @@ impl Runtime {
         };
         if let Value::Object(object) = original
             && (object.class.is_a(b"RecursiveIteratorIterator")
+                || object.class.is_a(b"IteratorIterator")
                 || object.class.is_a(b"InternalIterator")
                 || object.class.is_a(b"Throwable")
                 || object.class.declaration.is_enum
@@ -131,6 +132,7 @@ impl Runtime {
                 !native_storage && original.properties_reordered.get(),
             ),
             object_storage: RefCell::default(),
+            dual_iterator: RefCell::default(),
             linked_list: RefCell::new(
                 original
                     .linked_list

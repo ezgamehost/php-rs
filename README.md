@@ -98,6 +98,13 @@ new request. The CLI returns the low eight bits of the requested status.
   subclass child construction with parent storage links. Parent writes and child
   sorting can separate storage. Native child writes also reach captured nested-array
   copies; ordinary PHP writes retain copy-on-write behavior.
+- `IteratorIterator` wraps traversable objects with cached values/keys and inner
+  method forwarding. FilterIterator, callback and recursive filters, ParentIterator,
+  LimitIterator, NoRewindIterator, InfiniteIterator, and EmptyIterator provide
+  filtering, bounded seeking, restart control, and recursive child construction.
+  Callback filters retain callable access scope; native wrapper storage participates
+  in cycle collection. Additional SPL iterator classes and full lifecycle timing
+  remain incomplete.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.

@@ -350,6 +350,15 @@ in `src/runtime/recursive_iterator.rs` adapt PHP 8.5.0's
 PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
 and garbage-collection edges follow those native handlers.
 
+IteratorIterator, filter/recursive/callback wrappers, ParentIterator, LimitIterator,
+NoRewindIterator, InfiniteIterator, and EmptyIterator in
+`src/runtime/dual_iterator.rs` adapt PHP 8.5.0's `ext/spl/spl_iterators.c` and
+`.stub.php`, copyright (c) The PHP Group. Cached user-iterator values and callable
+handling also follow `Zend/zend_interfaces.c` and `Zend/zend_API.c`; integration
+in method dispatch, argument binding, lifetime handling, and cycle collection
+follows the corresponding native handlers. These sources include work by Marcus
+Boerger and Etienne Kneuss.
+
 SplFixedArray storage, resizing, offsets, property export, serialization hooks,
 and InternalIterator handling in `src/runtime/fixed_array.rs` adapt PHP 8.5.0's
 `ext/spl/spl_fixedarray.c`, `ext/spl/spl_fixedarray.stub.php`, and

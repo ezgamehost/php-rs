@@ -1,0 +1,86 @@
+PHP 8.5.0 iterator wrappers hillclimb
+Baseline: 1c2c3b3001040afd937df017625a261d3c8c3645
+
+zend
+Before: 5256 cases; 2579 passed, 2269 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 3; regressions: 0
+NEW PASS: Zend/tests/oss_fuzz_58181.phpt
+NEW PASS: Zend/tests/return_types/016.phpt
+NEW PASS: Zend/tests/return_types/017.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 368 passed, 316 failed, 94 unsupported
+After: 778 cases; 405 passed, 279 failed, 94 unsupported
+New passes: 37; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/array_005.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_011.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_013.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_016.phpt
+NEW PASS: ext/spl/tests/CallbackFilterIteratorTest-002.phpt
+NEW PASS: ext/spl/tests/CallbackFilterIteratorTest.phpt
+NEW PASS: ext/spl/tests/RecursiveCallbackFilterIteratorTest.phpt
+NEW PASS: ext/spl/tests/RecursiveCallbackFilterIterator_trampoline_usage.phpt
+NEW PASS: ext/spl/tests/bug37457.phpt
+NEW PASS: ext/spl/tests/bug42703.phpt
+NEW PASS: ext/spl/tests/bug49723.phpt
+NEW PASS: ext/spl/tests/bug51119.phpt
+NEW PASS: ext/spl/tests/bug62616.phpt
+NEW PASS: ext/spl/tests/bug72051.phpt
+NEW PASS: ext/spl/tests/bug73423.phpt
+NEW PASS: ext/spl/tests/bug76367.phpt
+NEW PASS: ext/spl/tests/gh18421.phpt
+NEW PASS: ext/spl/tests/gh19577.phpt
+NEW PASS: ext/spl/tests/iterator_002.phpt
+NEW PASS: ext/spl/tests/iterator_004.phpt
+NEW PASS: ext/spl/tests/iterator_005.phpt
+NEW PASS: ext/spl/tests/iterator_007.phpt
+NEW PASS: ext/spl/tests/iterator_008.phpt
+NEW PASS: ext/spl/tests/iterator_009.phpt
+NEW PASS: ext/spl/tests/iterator_010.phpt
+NEW PASS: ext/spl/tests/iterator_011.phpt
+NEW PASS: ext/spl/tests/iterator_012.phpt
+NEW PASS: ext/spl/tests/iterator_030.phpt
+NEW PASS: ext/spl/tests/iterator_032.phpt
+NEW PASS: ext/spl/tests/iterator_033.phpt
+NEW PASS: ext/spl/tests/iterator_038.phpt
+NEW PASS: ext/spl/tests/iterator_039.phpt
+NEW PASS: ext/spl/tests/iterator_040.phpt
+NEW PASS: ext/spl/tests/iterator_068.phpt
+NEW PASS: ext/spl/tests/spl_iterator_iterator_constructor.phpt
+NEW PASS: ext/spl/tests/spl_iterator_recursive_getiterator_error.phpt
+NEW PASS: ext/spl/tests/spl_limit_iterator_check_limits.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 122 passed, 13 failed, 28 unsupported
+After: 163 cases; 123 passed, 12 failed, 28 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/serialize/unserialize_abstract_class.phpt
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match private callback access and InfiniteIterator validity
+call counts. Other SPL wrappers, INI configuration, and complete mutation/destructor
+timing remain unfinished.
+Full log prefix: /tmp/php-rs-dual-iterator-*3.log.

@@ -47,6 +47,7 @@ mod destructors;
 mod destructuring;
 mod diagnostic_display;
 mod directories;
+pub(crate) mod dual_iterator;
 mod dumping;
 mod enums;
 mod error_handlers;

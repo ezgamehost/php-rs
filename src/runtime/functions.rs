@@ -824,6 +824,7 @@ impl Runtime {
             .replace(function.name.to_ascii_lowercase());
         let caller_source = self.source.clone();
         let caller_strict = self.strict_types;
+        let mut native_callback_target = None;
         let result = (|| {
             let last_required = function
                 .parameters
@@ -897,7 +898,23 @@ impl Runtime {
                     let error = Error::new(ErrorKind::ArgumentCountError, message, function.line);
                     return Err(self.materialize_error_from(error, &function.source.name));
                 };
-                let value = if param.variadic {
+                let value = if matches!(
+                    function.native,
+                    Some(crate::ast::NativeMethod::DualIterator)
+                ) && param.name == b"callback"
+                {
+                    let scope = std::mem::replace(&mut self.class_context, caller_context.clone());
+                    let result = self.native_callback(
+                        &value,
+                        &String::from_utf8_lossy(&function.name),
+                        index + 1,
+                        false,
+                        line,
+                    );
+                    self.class_context = scope;
+                    native_callback_target = result?;
+                    value
+                } else if param.variadic {
                     value
                 } else {
                     self.check_argument(value, param, &function, index + 1, caller_strict, line)?
@@ -915,6 +932,9 @@ impl Runtime {
                 if let Some(object) = this {
                     self.scope
                         .insert(b"this".to_vec(), cell(Value::Object(object)));
+                }
+                if matches!(native, crate::ast::NativeMethod::DualIterator) {
+                    return self.native_dual_iterator_method(line, native_callback_target.take());
                 }
                 return self.native_throwable_method(native, supplied_fixed, line);
             }

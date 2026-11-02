@@ -63,6 +63,9 @@ impl Runtime {
         if native_iterator::hidden_iterator(object) {
             return self.internal_iterator_step(object, name, true, line);
         }
+        if dual_iterator::native_iteration(object) {
+            return self.dual_iterator_step(object, name, true, line);
+        }
         if recursive_iterator::native_iteration(object) {
             return self.recursive_iterator_step(object, name, true, line);
         }
