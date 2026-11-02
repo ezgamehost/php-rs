@@ -473,14 +473,13 @@ impl Runtime {
                 ));
             }
             if !self.compatible_method_loaded(function, &inherited, class)? {
-                return Err(fatal(
-                    self,
-                    format!(
-                        "Declaration of {} must be compatible with {}",
-                        self.inheritance_method_signature(function, class),
-                        self.inheritance_method_signature(&inherited, class)
-                    ),
-                ));
+                let message = self.method_compatibility_message(
+                    function,
+                    &inherited,
+                    class,
+                    self.inheritance_method_signature(&inherited, class),
+                );
+                return Err(fatal(self, message));
             }
         }
         self.validate_abstract_members(class, missing_hooks)
@@ -498,6 +497,23 @@ impl Runtime {
                     .iter()
                     .all(|(narrow, wide)| self.type_subset(narrow.as_ref(), wide.as_ref(), class))
             })
+    }
+
+    pub(super) fn method_compatibility_message(
+        &self,
+        child: &FunctionDecl,
+        parent: &FunctionDecl,
+        class: &Class,
+        parent_signature: String,
+    ) -> String {
+        let child_signature = self.inheritance_method_signature(child, class);
+        if let Some(missing) = self.method_type_dependencies(child, parent, class).first() {
+            format!(
+                "Could not check compatibility between {child_signature} and {parent_signature}, because class {missing} is not available"
+            )
+        } else {
+            format!("Declaration of {child_signature} must be compatible with {parent_signature}")
+        }
     }
 
     pub(super) fn compatible_method_loaded(
@@ -564,7 +580,7 @@ impl Runtime {
                 continue;
             }
             let (Some(narrow), Some(wide)) = (narrow, wide) else {
-                continue;
+                return Vec::new();
             };
             let members = |ty: &TypeDecl| -> Vec<String> {
                 ty.members
@@ -596,22 +612,39 @@ impl Runtime {
                     })
                     .collect()
             };
-            let narrow = members(&narrow);
-            let wide = members(&wide);
-            if narrow.is_empty() || wide.is_empty() {
-                continue;
-            }
-            for name in narrow.into_iter().chain(wide) {
-                if !class.name.eq_ignore_ascii_case(name.as_bytes())
-                    && self.find_class(name.as_bytes()).is_none()
-                    && !self
-                        .linking_classes
-                        .contains_key(&name.as_bytes().to_ascii_lowercase())
-                    && !missing
-                        .iter()
-                        .any(|known: &String| known.eq_ignore_ascii_case(&name))
-                {
-                    missing.push(name);
+            for member in &narrow.members {
+                let narrow = TypeDecl {
+                    members: vec![member.clone()],
+                };
+                if self.type_subset(Some(&narrow), Some(&wide), class) {
+                    continue;
+                }
+                let narrow = members(&narrow);
+                let wide = members(&wide);
+                // A definite incompatibility wins over any unresolved class
+                // obligations elsewhere in the signature, without autoloading.
+                if narrow.is_empty() || wide.is_empty() {
+                    return Vec::new();
+                }
+                let mut unresolved = false;
+                for name in narrow.into_iter().chain(wide) {
+                    if !class.name.eq_ignore_ascii_case(name.as_bytes())
+                        && self.find_class(name.as_bytes()).is_none()
+                        && !self
+                            .linking_classes
+                            .contains_key(&name.as_bytes().to_ascii_lowercase())
+                    {
+                        unresolved = true;
+                        if !missing
+                            .iter()
+                            .any(|known: &String| known.eq_ignore_ascii_case(&name))
+                        {
+                            missing.push(name);
+                        }
+                    }
+                }
+                if !unresolved {
+                    return Vec::new();
                 }
             }
         }
@@ -749,7 +782,11 @@ impl Runtime {
                     return true;
                 }
                 if w == "static" {
-                    return false;
+                    return class.declaration.is_final
+                        && (n.as_bytes().eq_ignore_ascii_case(&class.name)
+                            || self
+                                .find_class(n.as_bytes())
+                                .is_some_and(|c| c.name.eq_ignore_ascii_case(&class.name)));
                 }
                 if n == "static" {
                     return w == "mixed" || w == "object" || class.is_a(w.as_bytes());

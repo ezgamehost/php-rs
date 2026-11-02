@@ -795,6 +795,10 @@ new request. The CLI returns the low eight bits of the requested status.
   defer comparisons that need unresolved class types, load those dependencies at
   declaration execution, and recognize class aliases. Recursive loading can
   inspect pending declarations without autoloading the same class again.
+- [Variance errors and final returns](docs/conformance/php-8.5.0-variance-errors-hillclimb.txt)
+  distinguish unavailable class types from incompatible declarations. Definite
+  signature failures bypass autoloading; final classes may replace inherited
+  `static` return types with their own class type, including `self`.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

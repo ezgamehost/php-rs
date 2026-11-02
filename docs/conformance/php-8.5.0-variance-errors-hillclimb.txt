@@ -1,0 +1,107 @@
+PHP 8.5.0 variance diagnostic and final-return hillclimb
+Baseline: d7423caa4e3a1325d913187b9635940f5b231eba
+
+zend
+Before: 5256 cases; 3197 passed, 1659 failed, 400 unsupported
+After: 5256 cases; 3207 passed, 1649 failed, 400 unsupported
+New passes: 10; regressions: 0
+NEW PASS: Zend/tests/type_declarations/variance/abstract_constructor.phpt
+NEW PASS: Zend/tests/type_declarations/variance/class_order_autoload_error6.phpt
+NEW PASS: Zend/tests/type_declarations/variance/class_order_autoload_error7.phpt
+NEW PASS: Zend/tests/type_declarations/variance/class_order_error.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/static_to_self.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/static_to_self_to_unions.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/union_to_union_3.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/union_to_union_4.phpt
+NEW PASS: Zend/tests/type_declarations/variance/trait_error.phpt
+NEW PASS: Zend/tests/typehints/bug62441.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,224 passed, 1,996 failed, 1,456 unsupported.
+Net gain: 10 upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 probes match unresolved-type diagnostics, final and non-final
+  self/static overrides, and definite signature failures alongside unresolved
+  types. These failures avoid autoloading, including untyped parameter cases.
+  Fatal comparisons combine stdout/stderr, normalize the leading newline,
+  and disable native fatal backtraces.
+- No new tests, upstream fixture changes, or dependencies.
+
+Implementation:
+- Compatibility diagnostics distinguish unavailable class dependencies from
+  incompatible resolved declarations while retaining full method signatures.
+- Definite type mismatches take precedence over unresolved obligations elsewhere
+  in the signature and do not invoke autoloaders. Union constraints inspect each
+  member independently; structurally invalid signatures remain immediate errors.
+- A final class can replace an inherited static return type with its own class
+  type, including self. Non-final classes retain the stricter requirement.
+
+Remaining limits:
+- Multiple delayed-obligation ordering, autoloader-exception diagnostics,
+  complex intersection/union relationships, and other runtime behavior remain
+  incomplete. This focused gate does not establish full PHP conformance.

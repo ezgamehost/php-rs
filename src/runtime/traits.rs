@@ -396,10 +396,11 @@ impl Runtime {
                     class.display_name()
                 ))
             } else if !self.compatible_method_loaded(&actual, required, class)? {
-                Some(format!(
-                    "Declaration of {} must be compatible with {}",
-                    self.inheritance_method_signature(&actual, class),
-                    self.trait_requirement_signature(required, class)
+                Some(self.method_compatibility_message(
+                    &actual,
+                    required,
+                    class,
+                    self.trait_requirement_signature(required, class),
                 ))
             } else {
                 None
