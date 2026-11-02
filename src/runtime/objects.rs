@@ -110,7 +110,20 @@ impl Runtime {
         }
         Ok(())
     }
-    fn link_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
+    fn link_class(&mut self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
+        self.build_class(decl.clone()).map_err(|error| {
+            if error.kind != ErrorKind::CompileError {
+                return error;
+            }
+            let mut fatal = self.compile_fatal_at(&error.message, &decl.source, error.line);
+            // PHP cannot catch a class-linking compile failure. Keep its message
+            // available to Rust callers while unwinding the request as a fatal.
+            fatal.message = error.message;
+            fatal
+        })
+    }
+
+    fn build_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
         let decl = self.compose_traits(decl)?;
         let mut decl = self.prepare_enum(decl)?;
         // __toString implies Stringable in PHP, so its public visibility is
@@ -164,6 +177,7 @@ impl Runtime {
         } else {
             None
         };
+        self.validate_final_properties(&decl, parent.as_ref())?;
         self.link_property_hooks(Rc::make_mut(&mut decl), parent.as_ref())?;
         if parent.as_ref().is_some_and(|p| p.declaration.is_trait) {
             return Err(Error::new(

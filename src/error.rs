@@ -3,7 +3,8 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorKind {
     Exception,
-    /// Internal control signal, consumed at the request execution boundary.
+    /// Internal control signal. Empty signals are consumed at the request
+    /// boundary; fatal diagnostics with messages remain errors for embedders.
     #[doc(hidden)]
     UnwindExit,
     ParseError,

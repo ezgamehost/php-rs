@@ -252,9 +252,10 @@ impl Runtime {
                 .as_ref()
                 .map(|ty| inheritance::class_type(ty, parent));
             if !self.type_subset(set_type.as_ref(), child_type.as_ref(), owner) {
-                let ty = set_type
-                    .as_ref()
-                    .map_or_else(|| "mixed".to_owned(), |ty| ty.to_string());
+                let ty = set_type.as_ref().map_or_else(
+                    || "mixed".to_owned(),
+                    |ty| typed_properties::type_label(ty, parent),
+                );
                 let kind = if parent.declaration.is_interface {
                     "interface"
                 } else {

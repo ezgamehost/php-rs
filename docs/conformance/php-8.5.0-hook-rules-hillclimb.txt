@@ -1,0 +1,119 @@
+PHP 8.5.0 property declaration and reference rules hillclimb
+Baseline: 63f1d689163b9769fe3ffc9bd395b15613f9faa9
+
+zend
+Before: 5256 cases; 3009 passed, 1847 failed, 400 unsupported
+After: 5256 cases; 3020 passed, 1836 failed, 400 unsupported
+New passes: 11; regressions: 0
+NEW PASS: Zend/tests/asymmetric_visibility/override_private_public.phpt
+NEW PASS: Zend/tests/property_hooks/bug007.phpt
+NEW PASS: Zend/tests/property_hooks/final_private_prop.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop_2.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop_promoted_1.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop_promoted_2.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop_promoted_3.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop_promoted_4.phpt
+NEW PASS: Zend/tests/property_hooks/gh15140.phpt
+NEW PASS: Zend/tests/property_hooks/traits_conflict.phpt
+
+reflection
+Before: 492 cases; 343 passed, 112 failed, 37 unsupported
+After: 492 cases; 343 passed, 112 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,009 passed, 2,211 failed, 1,456 unsupported.
+Net gain: 11 upstream passes; zero regressions across all twelve suites.
+The property_hooks directory improves from 185 to 195 passes out of 210 fixtures;
+11 fail and four remain unsupported. These fixtures are already counted in Zend.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons confirm final-check precedence, inherited static
+  owner names, trait conflicts, permitted trait override of inherited properties,
+  getter side effects/exceptions during reference assignment, and canonical
+  setter-type diagnostics. CLI comparisons ignore the existing leading blank-line
+  difference for fatal diagnostics.
+- Conditional class failures exit with status 255 and bypass PHP catch blocks.
+  Existing Rust tests confirm retained fatal messages remain API errors.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Final-property checks precede hook merging and include static/instance
+  redeclarations. Diagnostics name the original declaring class. Final/private
+  combinations are rejected for ordinary and promoted properties.
+- Hooked-property collisions between a class and its traits, or between traits,
+  produce the native composition error. Inherited properties remain eligible
+  for ordinary trait overrides; they are not local composition conflicts.
+- Reference assignment invokes an available getter before reporting an overloaded
+  target. Getter exceptions propagate. Missing getters retain write-only and
+  indirect-modification errors instead of using the overloaded-target error.
+- Abstract setter compatibility diagnostics use PHP's canonical union ordering.
+- Class-linking compile errors emit a fatal and unwind without PHP exception
+  handling. A retained diagnostic remains an error at the Rust execution API
+  boundary; ordinary exit signals continue returning normally. Reporting an
+  already emitted fatal does not duplicate it or call an exception handler.
+
+Remaining limits:
+- Hook attributes, full hook reflection, generator hooks, complex interface
+  merges, and AST rendering remain unfinished. This is a focused gate, not
+  full PHP conformance.

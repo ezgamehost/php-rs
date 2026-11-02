@@ -187,6 +187,13 @@ impl Parser {
                 properties.len() + static_properties.len(),
                 readonly_class,
             );
+            if property.is_final && property.visibility == Visibility::Private {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Property cannot be both final and private",
+                    function.line,
+                ));
+            }
             if property.is_readonly && property.hooks.is_some() {
                 return Err(Error::new(
                     crate::ErrorKind::CompileError,

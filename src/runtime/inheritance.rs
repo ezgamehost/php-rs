@@ -2,6 +2,44 @@ use super::*;
 use crate::{ast::TypeDecl, object::Class};
 
 impl Runtime {
+    pub(super) fn validate_final_properties(
+        &self,
+        decl: &crate::ast::ClassDecl,
+        parent: Option<&Rc<Class>>,
+    ) -> Result<(), Error> {
+        let Some(parent) = parent else {
+            return Ok(());
+        };
+        for property in decl.properties.iter().chain(&decl.static_properties) {
+            if let Some(inherited) = parent
+                .properties
+                .iter()
+                .chain(&parent.static_properties)
+                .find(|p| p.name == property.name && p.is_final)
+            {
+                let owner = if inherited.declaring_class.is_empty() {
+                    parent
+                        .static_owner(&property.name)
+                        .unwrap_or_else(|| parent.clone())
+                        .name
+                        .clone()
+                } else {
+                    inherited.declaring_class.clone()
+                };
+                return Err(Error::new(
+                    ErrorKind::CompileError,
+                    format!(
+                        "Cannot override final property {}::${}",
+                        String::from_utf8_lossy(&owner),
+                        String::from_utf8_lossy(&property.name)
+                    ),
+                    decl.line,
+                ));
+            }
+        }
+        Ok(())
+    }
+
     // A comparison involving unresolved class names cannot be early-bound.
     // The candidate's own type is known in its declarations, but not yet in
     // unresolved declarations inherited from its parent.
@@ -258,13 +296,6 @@ impl Runtime {
                     return Err(Error::new(
                         ErrorKind::Error,
                         "Cannot narrow inherited property visibility",
-                        class.declaration.line,
-                    ));
-                }
-                if parent_property.is_final {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        "Cannot override final property",
                         class.declaration.line,
                     ));
                 }

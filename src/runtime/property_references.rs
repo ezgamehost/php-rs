@@ -139,7 +139,9 @@ impl Runtime {
                     || hooks.is_virtual
                     || hooks.get.is_none())
             {
-                if self.in_property_hook(object, &location.name) {
+                if !self.in_property_hook(object, &location.name) && hooks.get.is_some() {
+                    self.read_property_value(object, &location.name, line, Access::Read)?;
+                } else {
                     self.indirect_hook_value(object, &location.name, line)?;
                 }
                 return Err(Error::new(

@@ -265,6 +265,12 @@ impl Runtime {
             decl.methods
                 .push(rebound(&candidate.function, &decl.name, &candidate.name));
         }
+        let mut property_origins: HashMap<Vec<u8>, Vec<u8>> = decl
+            .properties
+            .iter()
+            .chain(&decl.static_properties)
+            .map(|p| (p.name.clone(), decl.name.clone()))
+            .collect();
         for class in traits {
             let used = &class.declaration;
             for required in &used.trait_requirements {
@@ -290,6 +296,26 @@ impl Runtime {
                         return Err(composition_error(
                             &decl,
                             "Readonly classes cannot use non-readonly trait properties",
+                        ));
+                    }
+                    let existing = decl
+                        .properties
+                        .iter()
+                        .chain(&decl.static_properties)
+                        .find(|p| p.name == property.name);
+                    if existing.is_some_and(|p| p.hooks.is_some() || property.hooks.is_some()) {
+                        return Err(Error::new(
+                            ErrorKind::CompileError,
+                            format!(
+                                "{} and {} define the same hooked property (${}) in the composition of {}. Conflict resolution between hooked properties is currently not supported. Class was composed",
+                                String::from_utf8_lossy(
+                                    property_origins.get(&property.name).unwrap()
+                                ),
+                                String::from_utf8_lossy(&class.name),
+                                String::from_utf8_lossy(&property.name),
+                                String::from_utf8_lossy(&decl.name)
+                            ),
+                            decl.line,
                         ));
                     }
                     let other = if is_static {
@@ -325,6 +351,8 @@ impl Runtime {
                             }
                         }
                         target.push(property);
+                        property_origins
+                            .insert(target.last().unwrap().name.clone(), class.name.clone());
                     }
                 }
             }

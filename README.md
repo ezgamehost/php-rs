@@ -750,6 +750,12 @@ new request. The CLI returns the low eight bits of the requested status.
   separately from backing storage. Trait promotion, parent-hook calls, and
   property/parameter attributes use the promoted declaration; readonly hooks
   are rejected.
+- [Property declaration rules](docs/conformance/php-8.5.0-hook-rules-hillclimb.txt)
+  reject final-property overrides before accessor merging, identify the original
+  owner in diagnostics, and reject hooked-property conflicts during trait
+  composition. Class-linking compile errors terminate the request. Reference
+  assignment invokes available getters before rejecting an overloaded target;
+  missing getters retain write-only and indirect-modification errors.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

@@ -96,7 +96,12 @@ impl Runtime {
             .map(|(name, value)| (name.clone(), value.borrow().clone()))
             .collect();
         match result {
-            Err(error) if error.kind == ErrorKind::UnwindExit => Ok(Value::Null),
+            // Ordinary exit signals are consumed here. A class-linking fatal
+            // retains its diagnostic for embedders without becoming catchable
+            // inside PHP or being reported a second time by the CLI.
+            Err(error) if error.kind == ErrorKind::UnwindExit && error.message.is_empty() => {
+                Ok(Value::Null)
+            }
             result => result,
         }
     }

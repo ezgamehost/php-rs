@@ -609,7 +609,8 @@ impl Parser {
                 || self.is("?")
             {
                 if final_method && visibility == Visibility::Private {
-                    return Err(Error::parse(
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
                         "Property cannot be both final and private",
                         self.token().line,
                     ));
