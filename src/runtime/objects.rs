@@ -1030,6 +1030,15 @@ impl Runtime {
     ) -> Result<Flow, Error> {
         let initialized = self.initialize_lazy_object(object, value_target.line)?;
         let object = &initialized;
+        if self.has_property_hooks(object) {
+            return self.foreach_hooked_object(
+                object,
+                key_target,
+                value_target,
+                by_reference,
+                body,
+            );
+        }
         let cursor = Rc::new(RefCell::new(crate::object::PropertyCursor::default()));
         {
             let mut iterators = object.property_iterators.borrow_mut();

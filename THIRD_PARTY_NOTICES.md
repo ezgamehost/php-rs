@@ -1,5 +1,13 @@
 # Third-party notices
 
+Hook-aware property enumeration in `src/runtime/property_export.rs` and its
+iteration, inspection, JSON, export, and restoration integration follows PHP
+8.5.0's `Zend/zend_property_hooks.c` (by Ilija Tovilo),
+`Zend/zend_object_handlers.c`, and `Zend/zend_builtin_functions.c`, copyright
+(c) Zend Technologies Ltd., and `ext/json/json_encoder.c`, `ext/standard/var.c`,
+and `ext/standard/var_unserializer.re`, copyright (c) The PHP Group. The Zend
+and PHP licenses below apply to the respective adaptations.
+
 Property hook parsing, backing-storage detection, and runtime dispatch in
 `src/parser/property_hooks.rs`, `src/runtime/property_hooks.rs`,
 `src/runtime/property_contracts.rs`, and their integration sites follow PHP 8.5.0's `Zend/zend_compile.c`,

@@ -196,7 +196,7 @@ impl Runtime {
         result
     }
 
-    pub(super) fn object_variables(&self, object: &PhpObject) -> PhpArray {
+    pub(super) fn raw_object_variables(&self, object: &PhpObject) -> PhpArray {
         // SplFixedArray exports ordinary properties as direct values. Zend's
         // get_object_vars therefore retains their mangled keys, without the
         // visibility filtering applied to standard indirect property slots.

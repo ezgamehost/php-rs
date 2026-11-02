@@ -301,9 +301,9 @@ new request. The CLI returns the low eight bits of the requested status.
   depth checks, recursion detection, partial output, and `JsonException`.
   `json_last_error` and `json_last_error_msg` preserve PHP's exception-mode rules.
   `JsonSerializable` callbacks, backed enums, lazy-object initialization, live
-  declared properties, and dynamic-property snapshots are supported. Validation
+  declared properties, property getters, and dynamic-property snapshots are supported. Validation
   uses the decoder's grammar without building decoded arrays or objects.
-  Configurable serialization precision and property hooks remain unfinished;
+  Configurable serialization precision remains unfinished;
   encoding currently limits native traversal to 1,024 container levels.
 - [Environment functions](docs/conformance/php-8.5.0-environment-hillclimb.txt)
   support `getenv` and `putenv`, including enumeration, deletion, native name
@@ -479,8 +479,8 @@ new request. The CLI returns the low eight bits of the requested status.
   enum/case reflection are supported. Full reflection strings remain unfinished.
 - `var_export` prints or returns PHP expressions for scalars, arrays, objects,
   closures, and enum cases. It preserves byte strings, floating-point fractions,
-  nested indentation, and detects circular references. Configurable serialization
-  precision and property hooks remain unfinished.
+  nested indentation, and detects circular references across getter callbacks.
+  Property getters run during export; configurable serialization precision remains unfinished.
 - `serialize` encodes scalars, byte strings, arrays, objects, and enum cases,
   preserving shared references and object identity. It supports `__serialize`,
   `__sleep`, and the user-defined `Serializable` interface, including nested hook
@@ -724,14 +724,20 @@ new request. The CLI returns the low eight bits of the requested status.
   Reads, writes, compound assignments, reference getters, indirect-mutation
   errors, and lazy-object backing access use the hook call frame. `__PROPERTY__`
   and reflection's `hasHooks`/`isVirtual` queries are available. Promoted hooks,
-  parent-hook calls, hook attributes/reflection, and enumeration/export
-  integration remain unfinished.
+  parent-hook calls and hook attributes/reflection remain unfinished.
 - [Abstract and interface hooks](docs/conformance/php-8.5.0-abstract-hooks-hillclimb.txt)
   enforce required getters/setters and allow plain properties to implement them.
   Readonly properties satisfy getter requirements; missing setters remain abstract.
   Getter references, hook signatures, virtual-property variance, setter parameter
   compatibility, autoloaded types, and abstract reflection flags are supported.
   Complex interface merges and intersection/DNF type handling remain unfinished.
+- [Hook-aware enumeration](docs/conformance/php-8.5.0-hook-export-hillclimb.txt)
+  invokes visible getters during `foreach`, `get_object_vars`, JSON encoding,
+  and `var_export`, and skips virtual write-only properties. Reference iteration
+  requires reference getters and preserves aliases. Declared values stay live;
+  dynamic values are captured for export and stay live during iteration.
+  Dumps and serialization retain backing storage without invoking getters;
+  virtual properties have no class defaults and reject unserialized values.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

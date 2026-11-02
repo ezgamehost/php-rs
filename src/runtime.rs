@@ -103,6 +103,7 @@ mod path_parts;
 mod phonetics;
 mod printing;
 mod property_contracts;
+mod property_export;
 mod property_hooks;
 mod property_references;
 mod property_visibility;
@@ -172,6 +173,7 @@ pub struct Runtime {
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,
     dump_guards: HashSet<(bool, usize)>,
+    export_guards: HashSet<(bool, usize)>,
     counting_arrays: HashSet<usize>,
     deprecated_constants: HashSet<(usize, Vec<u8>)>,
     assertion_options: assertions::Options,

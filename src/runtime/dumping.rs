@@ -116,6 +116,7 @@ impl Runtime {
                         .iter()
                         .filter(|p| {
                             !object.hides_properties()
+                                && !p.hooks.as_ref().is_some_and(|hooks| hooks.is_virtual)
                                 && (p.ty.is_some()
                                     || properties
                                         .get(&ArrayKey::String(p.storage_name()))

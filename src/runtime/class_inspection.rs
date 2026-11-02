@@ -80,6 +80,7 @@ impl Runtime {
             for is_static in [false, true] {
                 for (owner, property, storage) in &properties {
                     if *storage == is_static
+                        && !property.hooks.as_ref().is_some_and(|h| h.is_virtual)
                         && self.can_access_static_visibility(owner, property.visibility)
                     {
                         let value = self

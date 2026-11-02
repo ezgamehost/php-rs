@@ -1,3 +1,4 @@
+use super::property_export::ExportProperty;
 use super::*;
 
 impl Runtime {
@@ -12,13 +13,7 @@ impl Runtime {
             .transpose()?
             .unwrap_or(false);
         let mut output = Vec::new();
-        self.export_value(
-            args[0].as_ref().unwrap(),
-            1,
-            &mut output,
-            &mut HashSet::new(),
-            line,
-        )?;
+        self.export_value(args[0].as_ref().unwrap(), 1, &mut output, line)?;
         if return_output {
             Ok(Value::String(output.into()))
         } else {
@@ -32,20 +27,12 @@ impl Runtime {
         value: &Value,
         level: usize,
         output: &mut Vec<u8>,
-        seen: &mut HashSet<(bool, usize)>,
         line: usize,
     ) -> Result<(), Error> {
         let value = value.dereferenced();
         let (table, identity, object) = match &value {
             Value::Array(array) => (array.clone(), (false, Rc::as_ptr(array) as usize), false),
-            Value::Object(object) => {
-                let initialized = self.initialize_lazy_object(object, line)?;
-                (
-                    Rc::new(initialized.export_properties()),
-                    (true, object.object_id),
-                    true,
-                )
-            }
+            Value::Object(object) => (Rc::new(PhpArray::default()), (true, object.object_id), true),
             Value::Closure(closure) => (
                 Rc::new(PhpArray::default()),
                 (true, closure.object_id),
@@ -77,78 +64,111 @@ impl Runtime {
             }
             Value::Reference(_) | Value::Indirect(_) => unreachable!(),
         };
-        if !seen.insert(identity) {
+        if !self.export_guards.insert(identity) {
             output.extend(b"NULL");
             self.warn(format!(
                 "Warning: var_export does not handle circular references on line {line}"
             ))?;
             return Ok(());
         }
-        if level > 1 {
-            output.push(b'\n');
-            output.extend(std::iter::repeat_n(b' ', level - 1));
-        }
-        let std_class = matches!(&value, Value::Object(o) if o.class.name == b"stdClass");
-        if object {
-            if std_class {
-                output.extend(b"(object) array(\n");
+        let result = (|| {
+            let initialized = if let Value::Object(object) = &value {
+                Some(self.initialize_lazy_object(object, line)?)
             } else {
-                output.push(b'\\');
-                if let Value::Object(object) = &value {
-                    output.extend(&object.class.name);
-                    if object.class.declaration.is_enum {
-                        output.extend(b"::");
-                        output.extend(
-                            object
-                                .properties
-                                .borrow()
-                                .get(&ArrayKey::String(b"name".to_vec()))
-                                .unwrap()
-                                .to_bytes(),
-                        );
-                        seen.remove(&identity);
-                        return Ok(());
-                    }
+                None
+            };
+            let entries: Vec<_> = if let Some(object) = &initialized {
+                if self.has_property_hooks(object) {
+                    self.property_export_entries(object)
                 } else {
-                    output.extend(b"Closure");
+                    object
+                        .export_properties()
+                        .iter_copied()
+                        .map(|(key, value)| ExportProperty::snapshot(key, value))
+                        .collect()
                 }
-                output.extend(b"::__set_state(array(\n");
+            } else {
+                table
+                    .iter_copied()
+                    .map(|(key, value)| ExportProperty::snapshot(key, value))
+                    .collect()
+            };
+            if level > 1 {
+                output.push(b'\n');
+                output.extend(std::iter::repeat_n(b' ', level - 1));
             }
-        } else {
-            output.extend(b"array (\n");
-        }
-        for (ref key, ref value) in table.iter() {
-            output.extend(std::iter::repeat_n(b' ', level + 1 + usize::from(object)));
-            match key {
-                ArrayKey::Int(n) => output.extend(n.to_string().bytes()),
-                ArrayKey::String(name) => {
-                    let name = if object {
-                        match crate::object::property_name(name) {
-                            Ok(name) => name.name,
-                            Err(message) => {
-                                self.warn(format!("Notice: {message} on line {line}"))?;
-                                name
-                            }
+            let std_class = matches!(&value, Value::Object(o) if o.class.name == b"stdClass");
+            if object {
+                if std_class {
+                    output.extend(b"(object) array(\n");
+                } else {
+                    output.push(b'\\');
+                    if let Value::Object(object) = &value {
+                        output.extend(&object.class.name);
+                        if object.class.declaration.is_enum {
+                            output.extend(b"::");
+                            output.extend(
+                                object
+                                    .properties
+                                    .borrow()
+                                    .get(&ArrayKey::String(b"name".to_vec()))
+                                    .unwrap()
+                                    .to_bytes(),
+                            );
+                            return Ok(());
                         }
                     } else {
-                        name
-                    };
-                    export_string(name, !object, output);
+                        output.extend(b"Closure");
+                    }
+                    output.extend(b"::__set_state(array(\n");
                 }
+            } else {
+                output.extend(b"array (\n");
             }
-            output.extend(b" => ");
-            self.export_value(value, level + 2, output, seen, line)?;
-            output.extend(b",\n");
-        }
-        if level > 1 {
-            output.extend(std::iter::repeat_n(b' ', level - 1));
-        }
-        output.push(b')');
-        if object && !std_class {
+            for entry in entries {
+                let value =
+                    if let (Some(object), Some(property)) = (&initialized, &entry.declaration) {
+                        let Some(value) = self.read_export_property(object, property, line)? else {
+                            continue;
+                        };
+                        value
+                    } else {
+                        entry.value
+                    };
+                let key = &entry.key;
+                output.extend(std::iter::repeat_n(b' ', level + 1 + usize::from(object)));
+                match key {
+                    ArrayKey::Int(n) => output.extend(n.to_string().bytes()),
+                    ArrayKey::String(name) => {
+                        let name = if object {
+                            match crate::object::property_name(name) {
+                                Ok(name) => name.name,
+                                Err(message) => {
+                                    self.warn(format!("Notice: {message} on line {line}"))?;
+                                    name
+                                }
+                            }
+                        } else {
+                            name
+                        };
+                        export_string(name, !object, output);
+                    }
+                }
+                output.extend(b" => ");
+                self.export_value(&value, level + 2, output, line)?;
+                output.extend(b",\n");
+            }
+            if level > 1 {
+                output.extend(std::iter::repeat_n(b' ', level - 1));
+            }
             output.push(b')');
-        }
-        seen.remove(&identity);
-        Ok(())
+            if object && !std_class {
+                output.push(b')');
+            }
+            Ok(())
+        })();
+        self.export_guards.remove(&identity);
+        result
     }
 }
 

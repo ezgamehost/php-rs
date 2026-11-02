@@ -1,0 +1,117 @@
+PHP 8.5.0 hook-aware property enumeration and export hillclimb
+Baseline: 36eb4447d0bfd104a330f089a9d65b17a0821e8f
+
+zend
+Before: 5256 cases; 2968 passed, 1888 failed, 400 unsupported
+After: 5256 cases; 2978 passed, 1878 failed, 400 unsupported
+New passes: 10; regressions: 0
+NEW PASS: Zend/tests/lazy_objects/init_trigger_foreach_hooks.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_json_encode_hooks.phpt
+NEW PASS: Zend/tests/lazy_objects/typed_properties_004.phpt
+NEW PASS: Zend/tests/property_hooks/foreach.phpt
+NEW PASS: Zend/tests/property_hooks/foreach_val_to_ref.phpt
+NEW PASS: Zend/tests/property_hooks/gh15456.phpt
+NEW PASS: Zend/tests/property_hooks/gh16185.phpt
+NEW PASS: Zend/tests/property_hooks/gh16725.phpt
+NEW PASS: Zend/tests/property_hooks/oss-fuzz-382922236.phpt
+NEW PASS: Zend/tests/property_hooks/unserialize.phpt
+
+reflection
+Before: 492 cases; 342 passed, 113 failed, 37 unsupported
+After: 492 cases; 343 passed, 112 failed, 37 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionProperty_getMangledName_hooks.phpt
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 5,967 passed, 2,253 failed, 1,456 unsupported.
+Net gain: 11 upstream passes; zero regressions across all twelve suites.
+The property_hooks directory improves from 147 to 154 passes out of 210 fixtures;
+52 fail and four remain unsupported. These fixtures are already counted in Zend.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons confirm virtual-property dumps, export guard
+  cleanup after getter exceptions, and declared/dynamic mutation order.
+  Recursive getter export matches PHP's warning and values, apart from the
+  CLI's existing leading blank-line difference for the warning.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- foreach visits accessible declared properties before live dynamic entries.
+  Getters supply values; reference iteration requires reference getters and
+  preserves returned aliases. Virtual write-only and uninitialized backed slots
+  are skipped. Iterator-held values survive the body before destructor draining.
+- get_object_vars, JSON, and var_export read getters as entries are consumed.
+  Declared slots stay live, including slots initialized by earlier callbacks;
+  dynamic values retain the snapshot from before callbacks. Visibility filtering
+  precedes getter invocation. Private export reads use declaration scope.
+- var_export shares recursion guards across nested callbacks and clears guards
+  after errors; guards are installed before lazy initialization.
+- Virtual properties have no class defaults or debug-dump backing slots.
+  Unserialization rejects values for virtual properties before parsing the value,
+  preserving PHP's warning and failure offset. Array casts and serialization
+  continue to use backing values without invoking getters.
+
+Remaining limits:
+- Parent-hook calls still block dump and multi-level-inheritance fixtures.
+- Promoted hooks, hook attributes and full hook reflection remain unfinished.
+- Complex interface merges, generator hooks, and some indirect-access cases
+  remain incomplete. This is a focused gate, not full PHP conformance.

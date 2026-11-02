@@ -831,7 +831,7 @@ impl Decoder<'_> {
             .class
             .properties
             .iter()
-            .any(|p| p.storage_name() == raw)
+            .any(|p| p.storage_name() == raw && !p.hooks.as_ref().is_some_and(|h| h.is_virtual))
         {
             return Ok(key);
         }
@@ -848,6 +848,18 @@ impl Decoder<'_> {
                 .rev()
                 .find(|p| p.name == decoded.name)
         {
+            if property.hooks.as_ref().is_some_and(|h| h.is_virtual) {
+                let name = raw.split(|b| *b == 0).next().unwrap();
+                self.warning(
+                    runtime,
+                    format!(
+                        "Cannot unserialize value for virtual property {}::${}",
+                        String::from_utf8_lossy(&property.declaring_class),
+                        String::from_utf8_lossy(name)
+                    ),
+                )?;
+                return Err(Failure::Syntax);
+            }
             return Ok(ArrayKey::String(property.storage_name()));
         }
         if object.properties.borrow().get(&key).is_none() {

@@ -1762,7 +1762,7 @@ impl Runtime {
             Builtin::GetObjectVars => match first {
                 Value::Object(object) => {
                     let object = self.initialize_lazy_object(object, line)?;
-                    Ok(Value::Array(Rc::new(self.object_variables(&object))))
+                    Ok(Value::Array(Rc::new(self.object_variables(&object, line)?)))
                 }
                 Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),
                 _ => Err(Error::new(

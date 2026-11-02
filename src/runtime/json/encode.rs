@@ -239,14 +239,20 @@ impl Runtime {
         if !self.json_guards.insert(identity) {
             return Ok(encoder.fail(6, b"null"));
         }
-        let entries = object
-            .export_properties()
-            .entries()
-            .iter()
+        let hooked = self.has_property_hooks(&object);
+        let entries = if hooked {
+            self.property_export_entries(&object)
+                .into_iter()
+                .map(|entry| (entry.key, entry.value))
+                .collect()
+        } else {
+            object.export_properties().entries().to_vec()
+        };
+        let entries = entries
+            .into_iter()
             .filter(|(key, _)| !matches!(key, ArrayKey::String(name) if name.first() == Some(&0)))
-            .cloned()
             .collect();
-        let live = object.array_iterator.borrow().is_none().then_some(&object);
+        let live = (hooked || object.array_iterator.borrow().is_none()).then_some(&object);
         let result = self.json_encode_entries(entries, true, live, encoder, line);
         self.json_guards.remove(&identity);
         result
@@ -271,13 +277,14 @@ impl Runtime {
             // Declared slots remain indirect in PHP's property table. Dynamic
             // entries instead retain the snapshot taken before user callbacks.
             let value = if let Some(object) = live
-                && object
+                && let Some(property) = object
                     .class
                     .properties
                     .iter()
-                    .any(|p| key == ArrayKey::String(p.storage_name()))
+                    .find(|p| key == ArrayKey::String(p.storage_name()))
+                    .cloned()
             {
-                let Some(value) = object.properties.borrow().get(&key) else {
+                let Some(value) = self.read_export_property(object, &property, line)? else {
                     continue;
                 };
                 value
