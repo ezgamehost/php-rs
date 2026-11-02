@@ -201,6 +201,7 @@ impl Runtime {
         }
         let handle = self.allocate_object_handle();
         Ok(Value::Object(self.create_object(PhpObject {
+            lazy: RefCell::default(),
             class: class.clone(),
             class_name: class.display_name().into_owned(),
             object_id: handle.id,

@@ -1692,7 +1692,10 @@ impl Runtime {
                 )),
             },
             Builtin::GetObjectVars => match first {
-                Value::Object(object) => Ok(Value::Array(Rc::new(self.object_variables(object)))),
+                Value::Object(object) => {
+                    let object = self.initialize_lazy_object(object, line)?;
+                    Ok(Value::Array(Rc::new(self.object_variables(&object))))
+                }
                 Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),
                 _ => Err(Error::new(
                     ErrorKind::TypeError,

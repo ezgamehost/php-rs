@@ -43,6 +43,7 @@ pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str
 
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
+    pub(crate) lazy: RefCell<Option<crate::runtime::lazy_objects::LazyState>>,
     pub(crate) fixed_array: RefCell<Option<crate::runtime::fixed_array::FixedArrayData>>,
     pub(crate) internal_iterator:
         RefCell<Option<crate::runtime::native_iterator::InternalIteratorData>>,
@@ -161,7 +162,8 @@ impl Drop for ObjectHandle {
 
 impl Drop for PhpObject {
     fn drop(&mut self) {
-        if self._handle.destructor_called.replace(true)
+        if self.suppresses_destructor()
+            || self._handle.destructor_called.replace(true)
             || !self.class.methods.iter().any(|method| {
                 method
                     .name
@@ -182,6 +184,7 @@ impl Drop for PhpObject {
         // payload and handle to the request's queue. No strong references to
         // the old allocation remain; the destructor may resurrect this one.
         let object = Rc::new(Self {
+            lazy: std::mem::take(&mut self.lazy),
             fixed_array: std::mem::take(&mut self.fixed_array),
             internal_iterator: std::mem::take(&mut self.internal_iterator),
             recursive_iterator: std::mem::take(&mut self.recursive_iterator),
@@ -295,6 +298,9 @@ impl PhpObject {
     }
 
     pub(crate) fn snapshot(&self) -> PhpArray {
+        if let Some(instance) = self.lazy_instance() {
+            return instance.snapshot();
+        }
         let properties = self.properties.borrow();
         let mut result = PhpArray::default();
         if !self.properties_reordered.get() {

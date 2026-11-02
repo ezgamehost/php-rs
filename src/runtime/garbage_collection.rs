@@ -59,6 +59,9 @@ impl Runtime {
                         .iter()
                         .map(|(_, value)| value.clone())
                         .collect();
+                    if let Some(data) = object.lazy.borrow().as_ref() {
+                        values.extend(data.values());
+                    }
                     if let Some(data) = object.dual_iterator.borrow().as_ref() {
                         values.extend(data.values());
                     }
@@ -158,6 +161,11 @@ impl Runtime {
             match &node.value {
                 Value::Object(object) => {
                     count += 1;
+                    if object.suppresses_destructor() {
+                        object._handle.destructor_called.set(true);
+                    }
+                    let lazy = object.lazy.take();
+                    drop(lazy);
                     let native = object.fixed_array.borrow_mut().take();
                     drop(native);
                     let native = object.internal_iterator.borrow_mut().take();

@@ -140,6 +140,7 @@ impl Runtime {
         }
         let handle = self.allocate_object_handle();
         Value::Object(self.create_object(PhpObject {
+            lazy: RefCell::default(),
             reflection: RefCell::new(Some(data)),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
@@ -706,6 +707,25 @@ impl Runtime {
                     "ReflectionClass",
                     line,
                 );
+            }
+            b"initializelazyobject"
+            | b"isuninitializedlazyobject"
+            | b"marklazyobjectasinitialized"
+            | b"getlazyinitializer" => {
+                let object = self.lazy_checked_object(class, line)?;
+                match name {
+                    b"initializelazyobject" => {
+                        Value::Object(self.initialize_lazy_object(&object, line)?)
+                    }
+                    b"marklazyobjectasinitialized" => {
+                        Value::Object(self.mark_lazy_initialized(&object)?)
+                    }
+                    b"isuninitializedlazyobject" => Value::Bool(object.is_lazy_uninitialized()),
+                    _ => match &*object.lazy.borrow() {
+                        Some(lazy_objects::LazyState::Uninitialized(init)) => init.callback.clone(),
+                        _ => Value::Null,
+                    },
+                }
             }
             b"newinstance" | b"newinstanceargs" | b"newinstancewithoutconstructor" => {
                 let args = match self.lookup(b"args") {

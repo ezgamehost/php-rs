@@ -128,6 +128,7 @@ impl Runtime {
     pub(super) fn object_from_properties(&mut self, properties: PhpArray) -> Value {
         let handle = self.allocate_object_handle();
         Value::Object(self.create_object(crate::PhpObject {
+            lazy: RefCell::default(),
             class: self.find_class(b"stdClass").expect("built-in stdClass"),
             class_name: "stdClass".to_owned(),
             properties: RefCell::new(properties),

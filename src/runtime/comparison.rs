@@ -42,6 +42,9 @@ impl Runtime {
                 {
                     return Ok(None);
                 }
+                let left = self.initialize_lazy_object(a, line)?;
+                let right = self.initialize_lazy_object(b, line)?;
+                let (a, b) = (&left, &right);
                 let pair = (Rc::as_ptr(a) as usize, Rc::as_ptr(b) as usize);
                 if !seen.insert(pair) {
                     return Err(Error::new(

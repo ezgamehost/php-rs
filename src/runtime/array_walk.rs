@@ -58,6 +58,14 @@ impl Runtime {
             Rc<RefCell<PropertyCursor>>,
         )> = None;
         loop {
+            let object = match &*source.borrow() {
+                Value::Object(object) => Some(object.clone()),
+                _ => None,
+            };
+            let initialized = object
+                .as_ref()
+                .map(|object| self.initialize_lazy_object(object, line))
+                .transpose()?;
             let next = {
                 let mut value = source.borrow_mut();
                 match &mut *value {
@@ -69,7 +77,8 @@ impl Runtime {
                         }
                         array.next_reference(&token)
                     }
-                    Value::Object(object) => {
+                    Value::Object(_) => {
+                        let object = initialized.as_ref().unwrap();
                         let identity = Rc::downgrade(object);
                         if object_iterator
                             .as_ref()

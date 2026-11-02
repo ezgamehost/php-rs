@@ -275,9 +275,10 @@ impl Runtime {
                 output.extend_from_slice(b"N;");
                 return Ok(());
             };
-            Rc::new(self.serialize_sleep_properties(object, &names, line)?)
+            let initialized = self.lazy_serialization_target(object, line)?;
+            Rc::new(self.serialize_sleep_properties(&initialized, &names, line)?)
         } else {
-            Rc::new(object.snapshot())
+            Rc::new(self.lazy_serialization_target(object, line)?.snapshot())
         };
         let mut name = class.name.clone();
         if class.name == b"__PHP_Incomplete_Class" {
@@ -293,6 +294,19 @@ impl Runtime {
         let result = self.encode_serialized_table(&properties, state, output, depth, false, line);
         drop(properties);
         self.drain_destructors(result, line)
+    }
+
+    fn lazy_serialization_target(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Rc<PhpObject>, Error> {
+        let skip = matches!(&*object.lazy.borrow(), Some(lazy_objects::LazyState::Uninitialized(init)) if init.options & 8 != 0);
+        if skip {
+            Ok(object.clone())
+        } else {
+            self.initialize_lazy_object(object, line)
+        }
     }
 
     fn serialize_sleep_properties(

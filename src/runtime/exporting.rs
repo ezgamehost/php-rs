@@ -38,11 +38,14 @@ impl Runtime {
         let value = value.dereferenced();
         let (table, identity, object) = match &value {
             Value::Array(array) => (array.clone(), (false, Rc::as_ptr(array) as usize), false),
-            Value::Object(object) => (
-                Rc::new(object.export_properties()),
-                (true, object.object_id),
-                true,
-            ),
+            Value::Object(object) => {
+                let initialized = self.initialize_lazy_object(object, line)?;
+                (
+                    Rc::new(initialized.export_properties()),
+                    (true, object.object_id),
+                    true,
+                )
+            }
             Value::Closure(closure) => (
                 Rc::new(PhpArray::default()),
                 (true, closure.object_id),

@@ -66,6 +66,22 @@ impl Runtime {
         {
             self.check_method_access(&method, line)?;
         }
+        if let Value::Object(object) = original {
+            self.initialize_lazy_object(object, line)?;
+            if let Some(instance) = object.lazy_instance() {
+                let wrapper = self.allocate_class_object(object.class.clone(), line)?;
+                // A failed backing clone must not run a destructor on the empty wrapper.
+                wrapper._handle.destructor_called.set(true);
+                let copied = self.clone_value(&Value::Object(instance), None, line)?;
+                let Value::Object(copied) = copied else {
+                    unreachable!()
+                };
+                *wrapper.properties.borrow_mut() = PhpArray::default();
+                *wrapper.lazy.borrow_mut() = Some(lazy_objects::LazyState::Proxy(copied));
+                self.clone_updates(&wrapper, updates, line)?;
+                return Ok(Value::Object(wrapper));
+            }
+        }
         let handle = self.allocate_object_handle();
         if let Value::Closure(closure) = original {
             if let Some((key, _)) = updates.and_then(|a| a.entries().first().cloned()) {
@@ -125,6 +141,7 @@ impl Runtime {
             original.properties.borrow().clone()
         };
         let object = self.create_object(PhpObject {
+            lazy: RefCell::default(),
             reflection: RefCell::default(),
             class: original.class.clone(),
             class_name: original.class_name.clone(),
@@ -192,10 +209,19 @@ impl Runtime {
             object.reinitializable.borrow_mut().clear();
             result?;
         }
+        self.clone_updates(&object, updates, line)?;
+        Ok(Value::Object(object))
+    }
+    fn clone_updates(
+        &mut self,
+        object: &Rc<PhpObject>,
+        updates: Option<&Rc<PhpArray>>,
+        line: usize,
+    ) -> Result<(), Error> {
         if let Some(updates) = updates.filter(|a| !a.entries().is_empty()) {
             // PHP 8.5.0 clears each flag on a successful write, but retains
             // flags for untouched slots after clone-with (also after errors).
-            unlock_readonly(&object);
+            unlock_readonly(object);
             for (ref key, ref value) in updates.iter_copied() {
                 if value.is_shared_reference() {
                     return Err(Error::new(
@@ -222,11 +248,14 @@ impl Runtime {
                 result?;
             }
         }
-        Ok(Value::Object(object))
+        Ok(())
     }
 }
 
 fn unlock_readonly(object: &PhpObject) {
+    if let Some(instance) = object.lazy_instance() {
+        return unlock_readonly(&instance);
+    }
     object.reinitializable.borrow_mut().extend(
         object
             .class

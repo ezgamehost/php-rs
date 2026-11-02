@@ -92,14 +92,12 @@ impl Runtime {
             && !object.class.declaration.is_enum
         {
             let custom = objects::method(&object.class, b"__debugInfo").is_some();
-            let properties = if custom {
-                self.debug_properties(object, line, pending)?
-            } else {
-                object.export_properties()
-            };
+            let instance = object.lazy_instance();
+            let properties = self.debug_properties(object, line, pending)?;
             if reference {
                 self.emit_output(b"&")?;
             }
+            self.emit_output(object.lazy_label())?;
             self.emit_output(b"object(")?;
             self.emit_output(object.class.name.split(|b| *b == 0).next().unwrap())?;
             self.emit_output(
@@ -107,6 +105,7 @@ impl Runtime {
             )?;
             let mut keys = Vec::new();
             if !custom
+                && instance.is_none()
                 && !object.properties_reordered.get()
                 && object.fixed_array.borrow().is_none()
             {

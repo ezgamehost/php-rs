@@ -34,6 +34,8 @@ impl Runtime {
                     value => cell(value),
                 });
             }
+            self.initialize_lazy_location(location, false, true, line)?;
+            let object = location.object.as_ref().unwrap();
             let key = self.instance_property_key(object, &location.name);
             let existing = object.properties.borrow().get(&key);
             if !location.keys.is_empty()
@@ -135,11 +137,13 @@ impl Runtime {
                     line,
                 ));
             }
+            self.initialize_lazy_location(location, false, true, line)?;
             self.check_readonly_access(location, false, true, line)?;
             let source = self.property_reference_source(location);
             if let Some(source) = &source {
                 self.check_reference_binding(&reference, source, line)?;
             }
+            let object = location.object.as_ref().unwrap();
             let key = self.instance_property_key(object, &location.name);
             if object.properties.borrow().get(&key).is_none() {
                 let value = reference.borrow().clone();

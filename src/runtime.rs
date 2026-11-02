@@ -79,6 +79,7 @@ mod interfaces;
 mod iterator_helpers;
 mod iterators;
 mod jumps;
+pub(crate) mod lazy_objects;
 pub(crate) mod linked_list;
 mod loading;
 mod magic_properties;
@@ -560,6 +561,8 @@ impl Runtime {
                     if let Some(object) = &location.object {
                         self.prepare_property_unset(object, &location.name, target.line)?;
                     }
+                    let indirect = !location.keys.is_empty();
+                    self.initialize_lazy_location(&mut location, true, indirect, target.line)?;
                     self.check_readonly_write(&location, true, target.line)?;
                     if let Some(class) = &location.static_class {
                         if location.keys.is_empty() {
@@ -873,6 +876,7 @@ impl Runtime {
                 }
             }
         }
+        self.initialize_lazy_location(location, false, !location.keys.is_empty(), line)?;
         self.check_readonly_write(location, false, line)?;
         if let Some(object) = &location.object {
             if location.keys.is_empty() {

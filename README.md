@@ -483,6 +483,17 @@ new request. The CLI returns the low eight bits of the requested status.
   inherited visibility, and dynamic property names. Property strings show declaration
   defaults, including after instance/static values change. Promoted properties retain
   their documentation comments.
+- [Lazy objects](docs/conformance/php-8.5.0-lazy-objects-hillclimb.txt) support
+  reflection-created ghosts and proxies, explicit initialization, initializer queries,
+  and resetting existing instances. Property reads, writes, references, iteration,
+  comparison, cloning, and serialization trigger initialization where PHP requires it.
+  Ghost initializer exceptions restore property state; proxy properties delegate to the
+  factory's compatible instance. Reflection can skip individual properties or assign
+  their raw values without initialization. Array casts, mangled property queries,
+  and ordinary debug output preserve deferred initialization. Uninitialized objects
+  suppress destructors, and reset options support skipping destruction or serialization
+  initialization. Property-hook integration and some initialization lifetime and
+  compound-assignment edge cases remain unfinished.
 - [Function/method/parameter reflection](docs/conformance/php-8.5.0-function-rendering-hillclimb.txt)
   exposes names, source lines, visibility,
   signature metadata, defaults, attributes, named/union types, and closure captures.
@@ -493,14 +504,14 @@ new request. The CLI returns the low eight bits of the requested status.
   metadata covers all 417 implemented function names, including types, symbolic defaults,
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
-  Complete native method signatures, static-variable queries, lazy objects, full reflector
+  Complete native method signatures, static-variable queries, full reflector
   interfaces, complete internal class layouts, closure-object reflection, and advanced
   default-expression folding remain unfinished.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining
   typed-reference and readonly constraints. Declaration strings cover ordinary defaults;
-  unevaluated expression rendering, raw/hooked access, lazy objects,
+  unevaluated expression rendering, complete raw/hooked access,
   and complete internal property metadata remain unfinished.
 - Class-constant reflection supports individual/filtered discovery, deferred values,
   declared types, visibility/final/deprecated flags, declaring classes, attributes,

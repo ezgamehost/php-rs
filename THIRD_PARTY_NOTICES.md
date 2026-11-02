@@ -1,5 +1,13 @@
 # Third-party notices
 
+Lazy-object state and property integration in `src/runtime/lazy_objects.rs`,
+`src/object.rs`, and the runtime object handlers adapt PHP 8.5.0's
+`Zend/zend_lazy_objects.c` and `Zend/zend_object_handlers.c`, copyright (c) Zend
+Technologies Ltd., including Arnaud Le Blanc's lazy-object implementation. The Zend
+license below applies. Lazy-object reflection APIs in `src/runtime/reflection.rs`,
+`src/runtime/reflection/properties.rs`, and `src/runtime/reflection/declarations.rs`
+adapt `ext/reflection/php_reflection.c` and its stubs under the PHP license below.
+
 Class/function/parameter reflection rendering in `src/runtime/reflection/class_display.rs`
 and `src/runtime/reflection/display.rs` follows PHP 8.5.0's `ext/reflection/php_reflection.c`, copyright (c) The PHP Group,
 by Timm Friebe, George Schlossnagle, Andrei Zmievski, Marcus Boerger, and Johannes

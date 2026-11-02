@@ -109,6 +109,9 @@ impl Runtime {
         object: &Rc<PhpObject>,
         line: usize,
     ) -> Result<(), Error> {
+        if object.suppresses_destructor() {
+            return Ok(());
+        }
         let Some(method) = objects::method(&object.class, b"__destruct") else {
             return Ok(());
         };

@@ -302,12 +302,106 @@ impl Runtime {
                 self.warn(format!("Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect on line {line}"))?;
                 Value::Null
             }
+            b"islazy" | b"skiplazyinitialization" | b"setrawvaluewithoutlazyinitialization" => {
+                return self.reflected_lazy_property(&property, name, line);
+            }
             b"getvalue" | b"setvalue" | b"isinitialized" => {
                 return self.reflected_property_value(&property, name, supplied, line);
             }
             b"__tostring" => return self.reflected_property_string(&property, b""),
             _ => unreachable!("unhandled property reflection method"),
         })
+    }
+
+    fn reflected_lazy_property(
+        &mut self,
+        property: &PropertyReflection,
+        method: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let mut object = self.lazy_checked_object(&property.scope, line)?;
+        while let Some(instance) = object.lazy_instance() {
+            object = instance;
+        }
+        let declaration = property.declaration.as_ref();
+        if method == b"islazy" && (declaration.is_none() || property.is_static) {
+            return Ok(Value::Bool(false));
+        }
+        if declaration.is_none() || property.is_static {
+            let label = if method == b"skiplazyinitialization" {
+                "skipLazyInitialization"
+            } else {
+                "setRawValueWithoutLazyInitialization"
+            };
+            return Err(self.reflection_error(
+                format!(
+                    "Can not use {label} on {} property {}::${}",
+                    if property.is_static {
+                        "static"
+                    } else {
+                        "dynamic"
+                    },
+                    property.owner.display_name(),
+                    String::from_utf8_lossy(&property.name)
+                ),
+                line,
+            ));
+        }
+        let declaration = declaration.unwrap();
+        let key = declaration.storage_name_for(&property.owner.name);
+        let was_lazy = object.lazy_slot(&ArrayKey::String(key.clone()));
+        if method == b"islazy" {
+            return Ok(Value::Bool(was_lazy));
+        }
+        if method == b"skiplazyinitialization" {
+            if was_lazy {
+                let effective = object
+                    .class
+                    .properties
+                    .iter()
+                    .find(|p| p.storage_name() == key)
+                    .unwrap_or(declaration);
+                let owner = object.class.property_slot_owner(effective);
+                if let Some(value) = self.property_default(&owner, effective)? {
+                    object
+                        .properties
+                        .borrow_mut()
+                        .insert(ArrayKey::String(key.clone()), value);
+                }
+                object.realize_lazy_slot(&key);
+            }
+            return Ok(Value::Null);
+        }
+        let outer = self.class_context.replace(ClassContext {
+            scope: property.scope.clone(),
+            called: property.scope.clone(),
+        });
+        let strict = std::mem::replace(&mut self.strict_types, false);
+        let result = (|| {
+            let location = Location {
+                offset_reference: None,
+                overloaded: None,
+                static_class: None,
+                object: Some(object.clone()),
+                name: property.name.clone(),
+                global: false,
+                keys: Vec::new(),
+            };
+            self.check_readonly_write(&location, false, line)?;
+            self.write_property_value(
+                &object,
+                &property.name,
+                self.lookup(b"value").unwrap(),
+                line,
+            )
+        })();
+        self.class_context = outer;
+        self.strict_types = strict;
+        result?;
+        if was_lazy {
+            object.realize_lazy_slot(&key);
+        }
+        Ok(Value::Null)
     }
 
     fn reflected_property_value(
@@ -404,7 +498,10 @@ impl Runtime {
                 }
                 value.ok_or_else(|| Error::new(ErrorKind::Error, format!("Typed static property {}::${} must not be accessed before initialization", property.owner.display_name(), String::from_utf8_lossy(&property.name)), line))
             } else {
-                let object = object.unwrap();
+                let mut object = object.unwrap();
+                while let Some(instance) = object.lazy_instance() {
+                    object = instance;
+                }
                 if method == b"isinitialized" {
                     Ok(Value::Bool(
                         object

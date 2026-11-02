@@ -358,6 +358,7 @@ impl Runtime {
             );
         }
         error.throwable = Some(self.create_object(crate::PhpObject {
+            lazy: RefCell::default(),
             class_name: name,
             class,
             object_id: handle.id,

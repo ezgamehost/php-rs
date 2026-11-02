@@ -8,7 +8,8 @@ impl Runtime {
                 None,
                 "
                 public const int IS_IMPLICIT_ABSTRACT=16, IS_EXPLICIT_ABSTRACT=64,
-                    IS_FINAL=32, IS_READONLY=65536;
+                    IS_FINAL=32, IS_READONLY=65536,
+                    SKIP_INITIALIZATION_ON_SERIALIZE=8, SKIP_DESTRUCTOR=16;
                 public string $name;
                 private function __clone(): void {}
                 public function __construct(object|string $objectOrClass) {}
@@ -66,6 +67,14 @@ impl Runtime {
                 public function newInstance(mixed ...$args): object {}
                 public function newInstanceArgs(array $args=[]): ?object {}
                 public function newInstanceWithoutConstructor(): object {}
+                public function newLazyGhost(callable $initializer, int $options=0): object {}
+                public function newLazyProxy(callable $factory, int $options=0): object {}
+                public function resetAsLazyGhost(object $object, callable $initializer, int $options=0): void {}
+                public function resetAsLazyProxy(object $object, callable $factory, int $options=0): void {}
+                public function initializeLazyObject(object $object): object {}
+                public function isUninitializedLazyObject(object $object): bool {}
+                public function markLazyObjectAsInitialized(object $object): object {}
+                public function getLazyInitializer(object $object): ?callable {}
             ",
             ),
             b"reflectionenum" => ("ReflectionEnum", Some("ReflectionClass"), "
@@ -246,6 +255,9 @@ impl Runtime {
                 public function getValue(?object $object=null): mixed {}
                 public function setValue(mixed $objectOrValue, mixed $value=null): void {}
                 public function isInitialized(?object $object=null): bool {}
+                public function setRawValueWithoutLazyInitialization(object $object, mixed $value): void {}
+                public function skipLazyInitialization(object $object): void {}
+                public function isLazy(object $object): bool {}
                 public function setAccessible(bool $accessible): void {}
                 public function hasType(): bool {}
                 public function getType(): ?ReflectionType {}

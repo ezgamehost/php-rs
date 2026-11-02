@@ -1,0 +1,279 @@
+PHP 8.5.0 lazy-object hillclimb
+Baseline: bd9817e6a42db703b25e32d6d8832deefad947dd
+
+zend
+Before: 5256 cases; 2602 passed, 2254 failed, 400 unsupported
+After: 5256 cases; 2778 passed, 2078 failed, 400 unsupported
+New passes: 176; regressions: 0
+NEW PASS: Zend/tests/clone/clone_with_009.phpt
+NEW PASS: Zend/tests/lazy_objects/array_walk.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_calls___clone_once.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_creates_object_with_independent_state_001.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_creates_object_with_independent_state_002.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_creates_object_with_independent_state_003.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_initialized.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_initializer_exception.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/clone_preverves_object_class.phpt
+NEW PASS: Zend/tests/lazy_objects/convert_to_array.phpt
+NEW PASS: Zend/tests/lazy_objects/dtor_called_if_init.phpt
+NEW PASS: Zend/tests/lazy_objects/dtor_not_called_if_not_init.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_coalesce_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_coalesce_non_existing_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_declared_prop_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_dynamic_prop_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_magic_prop_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_magic_prop_may_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_magic_prop_recursive_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_op_dynamic_error.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_op_dynamic_prop_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_op_error.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_op_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_op_skipped_prop_does_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_ref_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_ref_skipped_prop_does_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_skipped_prop_does_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/final_classes_can_be_initialized_lazily.phpt
+NEW PASS: Zend/tests/lazy_objects/gc_001.phpt
+NEW PASS: Zend/tests/lazy_objects/gc_002.phpt
+NEW PASS: Zend/tests/lazy_objects/gc_003.phpt
+NEW PASS: Zend/tests/lazy_objects/gc_004.phpt
+NEW PASS: Zend/tests/lazy_objects/gc_005.phpt
+NEW PASS: Zend/tests/lazy_objects/gc_006.phpt
+NEW PASS: Zend/tests/lazy_objects/get_initializer.phpt
+NEW PASS: Zend/tests/lazy_objects/get_properties.phpt
+NEW PASS: Zend/tests/lazy_objects/gh15999_002.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-001.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-002.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-003.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-004.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-005.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-006.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-007.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-008.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-009.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-010.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-011.phpt
+NEW PASS: Zend/tests/lazy_objects/gh18038-012.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_001.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_leaves_object_lazy.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes_dyn_props.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes_dyn_props_and_ht.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes_nested.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes_overridden_prop.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes_props_ht.phpt
+NEW PASS: Zend/tests/lazy_objects/init_exception_reverts_initializer_changes_props_ht_ref.phpt
+NEW PASS: Zend/tests/lazy_objects/init_handles_ref_source_types.phpt
+NEW PASS: Zend/tests/lazy_objects/init_handles_ref_source_types_exception.phpt
+NEW PASS: Zend/tests/lazy_objects/init_may_leave_props_uninit.phpt
+NEW PASS: Zend/tests/lazy_objects/init_preserves_identity.phpt
+NEW PASS: Zend/tests/lazy_objects/init_preserves_proxy_class.phpt
+NEW PASS: Zend/tests/lazy_objects/init_sets_prop_default_values.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_array_cast.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_compare.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_foreach.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_get_mangled_object_vars.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_get_object_vars.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_reflection_object_toString.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_serialize.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_var_dump.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_var_dump_debug_info_001.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_var_dump_debug_info_002.phpt
+NEW PASS: Zend/tests/lazy_objects/init_trigger_var_export.phpt
+NEW PASS: Zend/tests/lazy_objects/initializeLazyObject.phpt
+NEW PASS: Zend/tests/lazy_objects/initializeLazyObject_error.phpt
+NEW PASS: Zend/tests/lazy_objects/initializeLazyObject_noop_on_initialized_object.phpt
+NEW PASS: Zend/tests/lazy_objects/invalid_options.phpt
+NEW PASS: Zend/tests/lazy_objects/isUninitializedLazyObject.phpt
+NEW PASS: Zend/tests/lazy_objects/isset_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_dynamic.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_op_prop_info.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_op_unknown_prop_info.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_op_unknown_prop_info_untyped.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_prop_info.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_unknown_prop_info.phpt
+NEW PASS: Zend/tests/lazy_objects/jit_assign_obj_unknown_prop_info_untyped.phpt
+NEW PASS: Zend/tests/lazy_objects/markLazyObjectAsInitialized.phpt
+NEW PASS: Zend/tests/lazy_objects/oss_fuzz_71407.phpt
+NEW PASS: Zend/tests/lazy_objects/oss_fuzz_71446.phpt
+NEW PASS: Zend/tests/lazy_objects/realize.phpt
+NEW PASS: Zend/tests/lazy_objects/realize_no_props.phpt
+NEW PASS: Zend/tests/lazy_objects/realize_proxy_overridden.phpt
+NEW PASS: Zend/tests/lazy_objects/realize_skipped.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_accepts_sub_classes.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_already_exception.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_calls_destructor.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_can_reset_initialized_proxies.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_deletes_reference_source_type.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_destructor_exception.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_ignores_additional_props.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_initialized_proxy.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_may_call_nested_destructors.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_may_skip_destructor.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_readonly.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_real_instance.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_resets_dynamic_props.phpt
+NEW PASS: Zend/tests/lazy_objects/reset_as_lazy_while_init_exception.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_001.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_002.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_003.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_004.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_005.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_006.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_008.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_009.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_010.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_011.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_012.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize___serialize_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize___serialize_may_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize___sleep.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize___sleep_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize___sleep_skip_flag.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize___sleep_skip_flag_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_dynamic_props.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_failed_lazy_object.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_failed_lazy_object_skip_init_on_serialize.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_props_ht.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_skip_flag.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_skip_flag_props_ht.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_exception_001.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_exception_002.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_initialized.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_no_dynamic_prop.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_readonly.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_readonly_variant.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_realize.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_side_effect_destruct.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_side_effect_toString.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_skips___set.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_default.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_initialized_object.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_no_dynamic_prop.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_readonly.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_realize.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_skips___set.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_skips_non_lazy_prop.phpt
+NEW PASS: Zend/tests/lazy_objects/support_readonly_class.phpt
+NEW PASS: Zend/tests/lazy_objects/support_readonly_prop.phpt
+NEW PASS: Zend/tests/lazy_objects/support_stdClass.phpt
+NEW PASS: Zend/tests/lazy_objects/support_stdClass_sub_classes.phpt
+NEW PASS: Zend/tests/lazy_objects/typed_properties_001.phpt
+NEW PASS: Zend/tests/lazy_objects/typed_properties_002.phpt
+NEW PASS: Zend/tests/lazy_objects/typed_properties_003.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_defined_no_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_magic_circular_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_magic_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_magic_may_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_skipped_no_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_undefined_dynamic_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_undefined_dynamic_initializes_no_props_ht.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_undefined_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/use_case_001.phpt
+NEW PASS: Zend/tests/lazy_objects/use_case_001b.phpt
+NEW PASS: Zend/tests/lazy_objects/use_case_002.phpt
+NEW PASS: Zend/tests/lazy_objects/write_dynamic_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/write_initializer_exception.phpt
+NEW PASS: Zend/tests/lazy_objects/write_initializes.phpt
+NEW PASS: Zend/tests/lazy_objects/write_magic_circular_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/write_magic_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/write_skipped_no_initialize.phpt
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 555 passed, 170 failed, 53 unsupported
+After: 778 cases; 555 passed, 170 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 776 passed, 13 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 533 passed, 45 failed, 152 unsupported
+After: 730 cases; 533 passed, 45 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 28 passed, 3 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,588 fixtures; 5,555 passed, 2,591 failed, 1,442 unsupported.
+176 new upstream passes; zero regressions across all eleven suites.
+Lazy-object directory: 175 passed, 30 failed, 0 unsupported (205 fixtures).
+One additional gain: Zend/tests/clone/clone_with_009.phpt.
+
+Validation:
+- cargo build --locked --bins
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match for proxy static-property compatibility,
+  asymmetric and readonly write denial without initialization, clone-with magic
+  method dispatch, initialized proxy debug hooks, property-iteration reset denial,
+  clone exceptions/destructor suppression, and reflective proxy reads.
+- No new test files or upstream fixture changes.
+
+Implementation:
+- Boxed lazy state on object handles, cached callback resolution in caller scope,
+  ghost initialization/defaults, proxy factories and compatibility checks.
+- Explicit initialization, mark-as-initialized, initializer queries, reset options,
+  dynamic-property removal, skipped/readonly/subclass property preservation.
+- Per-property isLazy, skipLazyInitialization and raw assignment without initialization.
+- Reads, writes, references, magic methods, comparison, iteration, cloning,
+  clone-with updates, serialization, debug rendering, destruction and GC edges.
+- Failed ghosts restore property state; proxy factory failures retain their mutations.
+- Array casts and mangled property queries do not force initialization.
+
+Remaining limits:
+- Thirty lazy-object fixtures still fail. Most depend on unfinished property hooks,
+  JSON, DateTime, WeakReference, debug helpers, or shutdown support.
+- Known engine mismatches remain for release during initialization (gh15999_001),
+  object rebinding during reference foreach (gh20085), and ghost dynamic compound
+  assignment/default restoration (jit_assign_obj_op_dynamic).
+- This is a conformance increment, not completion of PHP 8.5 compatibility.
+
+Evidence logs: /tmp/php-rs-lazy-{suite}2.log; /tmp/php-rs-lazy-compare-{suite}2.log;
+/tmp/php-rs-lazy-tests4.log; /tmp/php-rs-lazy-clippy4.log;
+/tmp/php-rs-lazy-direct-probes.log. Reference: PHP 8.5.0 at
+/tmp/php-rs-reference/php-8.5.0/sapi/cli/php.

@@ -12,6 +12,7 @@ impl Runtime {
         );
         let handle = self.allocate_object_handle();
         Value::Object(self.create_object(crate::PhpObject {
+            lazy: RefCell::default(),
             class_name: "SensitiveParameterValue".into(),
             class,
             properties: RefCell::new(properties),

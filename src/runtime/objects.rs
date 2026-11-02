@@ -522,6 +522,7 @@ impl Runtime {
         let handle = self.allocate_object_handle();
         let object_id = handle.id;
         Ok(self.create_object(PhpObject {
+            lazy: RefCell::default(),
             reflection: RefCell::default(),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
@@ -759,7 +760,7 @@ impl Runtime {
     }
     pub(super) fn read_property_storage(
         &mut self,
-        object: &PhpObject,
+        object: &Rc<PhpObject>,
         name: &[u8],
         line: usize,
         silent: bool,
@@ -785,6 +786,10 @@ impl Runtime {
         if !silent {
             validate_property_name(name, line)?;
             self.warn_static_as_instance(object, name, line)?;
+        }
+        let target = self.lazy_property_target(object, name, line)?;
+        if !Rc::ptr_eq(&target, object) {
+            return self.read_property_storage(&target, name, line, silent);
         }
         if let Some(value) = object
             .properties
@@ -991,6 +996,14 @@ impl Runtime {
         by_reference: bool,
         body: &Stmt,
     ) -> Result<Flow, Error> {
+        let initialized = self.initialize_lazy_object(object, value_target.line)?;
+        let object = &initialized;
+        let cursor = Rc::new(RefCell::new(crate::object::PropertyCursor::default()));
+        {
+            let mut iterators = object.property_iterators.borrow_mut();
+            iterators.retain(|iterator| iterator.strong_count() > 0);
+            iterators.push(Rc::downgrade(&cursor));
+        }
         let mut visited = HashSet::new();
         loop {
             let properties = object.snapshot();

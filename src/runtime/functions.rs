@@ -902,6 +902,8 @@ impl Runtime {
                     function.native,
                     Some(crate::ast::NativeMethod::DualIterator)
                 ) && param.name == b"callback"
+                    || matches!(function.native, Some(crate::ast::NativeMethod::Reflection))
+                        && matches!(param.name.as_slice(), b"initializer" | b"factory")
                 {
                     let scope = std::mem::replace(&mut self.class_context, caller_context.clone());
                     let result = self.native_callback(
@@ -912,7 +914,15 @@ impl Runtime {
                         line,
                     );
                     self.class_context = scope;
-                    native_callback_target = result?;
+                    native_callback_target = result.map_err(|mut error| {
+                        if param.name != b"callback" {
+                            error.message = error.message.replace(
+                                "($callback)",
+                                &format!("(${})", String::from_utf8_lossy(&param.name)),
+                            );
+                        }
+                        error
+                    })?;
                     value
                 } else if param.variadic {
                     value
@@ -935,6 +945,11 @@ impl Runtime {
                 }
                 if matches!(native, crate::ast::NativeMethod::DualIterator) {
                     return self.native_dual_iterator_method(line, native_callback_target.take());
+                }
+                if matches!(native, crate::ast::NativeMethod::Reflection)
+                    && let Some(target) = native_callback_target.take()
+                {
+                    return self.native_lazy_factory(target, line);
                 }
                 return self.native_throwable_method(native, supplied_fixed, line);
             }

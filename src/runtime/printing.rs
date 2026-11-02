@@ -38,6 +38,14 @@ impl Runtime {
         pending: &mut Option<Error>,
     ) -> Result<PhpArray, Error> {
         let Some(method) = objects::method(&object.class, b"__debugInfo") else {
+            if let Some(instance) = object.lazy_instance() {
+                let mut properties = PhpArray::default();
+                properties.insert(
+                    ArrayKey::String(b"instance".to_vec()),
+                    Value::Object(instance),
+                );
+                return Ok(properties);
+            }
             return Ok(object.export_properties());
         };
         if let Some(error) = pending.take() {

@@ -22,6 +22,9 @@ impl Magic {
 
 impl Runtime {
     fn property_backed(&self, object: &PhpObject, name: &[u8]) -> bool {
+        if let Some(instance) = object.lazy_instance() {
+            return self.property_backed(&instance, name);
+        }
         if name.first() == Some(&0) {
             return false;
         }
@@ -39,7 +42,7 @@ impl Runtime {
             return false;
         }
         let key = self.instance_property_key(object, name);
-        if object.properties.borrow().get(&key).is_some() {
+        if object.lazy_slot(&key) || object.properties.borrow().get(&key).is_some() {
             return true;
         }
         let ArrayKey::String(key) = key else {
@@ -195,6 +198,14 @@ impl Runtime {
             } else if matches!(access, Access::Probe | Access::Empty)
                 || (has_isset && !self.magic_get_applicable(object, name))
             {
+                if (object.is_lazy_uninitialized() || object.lazy_instance().is_some())
+                    && self.check_instance_property_access(object, name, true, line)?
+                {
+                    let target = self.lazy_property_target(object, name, line)?;
+                    if !target.is_lazy_uninitialized() {
+                        return self.read_property_storage(&target, name, line, true);
+                    }
+                }
                 return Ok(Value::Null);
             }
         }
