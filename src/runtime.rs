@@ -102,6 +102,7 @@ mod packing;
 mod path_parts;
 mod phonetics;
 mod printing;
+mod property_hooks;
 mod property_references;
 mod property_visibility;
 mod query_strings;
@@ -178,6 +179,7 @@ pub struct Runtime {
     attribute_evaluation_line: Option<(usize, usize)>,
     attribute_constant_location: Option<(Rc<crate::source::Source>, usize)>,
     fatal_backtraces: Option<bool>,
+    active_property_hooks: Vec<(Rc<crate::PhpObject>, Vec<u8>, Vec<u8>)>,
     property_guards: HashSet<(usize, Vec<u8>, magic_properties::Magic)>,
     autoloaders: Vec<Option<autoload::Autoloader>>,
     autoloading: HashSet<Vec<u8>>,
@@ -556,6 +558,11 @@ impl Runtime {
                             if self.magic_property_unset(object, &location.name, target.line)? {
                                 continue;
                             }
+                        } else if let Some(mut value) =
+                            self.indirect_hook_value(object, &location.name, target.line)?
+                        {
+                            unset_path(&mut value, &mut location.keys, target.line, self)?;
+                            continue;
                         } else if self.magic_get_applicable(object, &location.name) {
                             let mut value = self.read_property_value(
                                 object,
@@ -867,11 +874,21 @@ impl Runtime {
         }
         if let Some(object) = &location.object {
             if location.keys.is_empty() {
+                if self.property_hooks(object, &location.name).is_some() {
+                    self.check_readonly_write(location, false, line)?;
+                    if self.write_property_hook(object, &location.name, &new_value, line)? {
+                        return Ok(new_value);
+                    }
+                }
                 if self.magic_property_write(object, &location.name, &new_value, line)? {
                     return Ok(new_value);
                 }
             } else {
                 let overloaded = if let Some(value) = location.overloaded.take() {
+                    Some(value)
+                } else if let Some(value) =
+                    self.indirect_hook_value(object, &location.name, line)?
+                {
                     Some(value)
                 } else if self.magic_get_applicable(object, &location.name) {
                     let value =

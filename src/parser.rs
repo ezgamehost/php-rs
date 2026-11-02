@@ -19,6 +19,7 @@ mod logical_constants;
 mod namespaces;
 mod objects;
 mod promotion;
+mod property_hooks;
 mod targets;
 mod traits;
 mod types;
@@ -1043,6 +1044,18 @@ impl Parser {
                     }),
                     Vec::new(),
                 ),
+                b"__property__" => {
+                    let name = self
+                        .function_name
+                        .strip_prefix(b"$")
+                        .and_then(|n| {
+                            n.windows(2)
+                                .position(|p| p == b"::")
+                                .map(|end| n[..end].to_vec())
+                        })
+                        .unwrap_or_default();
+                    ExprKind::Literal(Value::String(name.into()))
+                }
                 b"__line__" => ExprKind::Literal(Value::Int(line as i64)),
                 b"__file__" => ExprKind::Literal(Value::String(self.source.name.clone().into())),
                 b"__dir__" => ExprKind::Literal(Value::String(
@@ -1390,5 +1403,6 @@ fn is_magic_constant(name: &[u8]) -> bool {
             | b"__class__"
             | b"__namespace__"
             | b"__trait__"
+            | b"__property__"
     )
 }

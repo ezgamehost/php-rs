@@ -261,7 +261,12 @@ impl Runtime {
             b"isfinal" => Value::Bool(flags & 32 != 0),
             b"isprotectedset" => Value::Bool(flags & 2048 != 0),
             b"isprivateset" => Value::Bool(flags & 4096 != 0),
-            b"isabstract" | b"isvirtual" | b"hashooks" => Value::Bool(false),
+            b"isabstract" => Value::Bool(false),
+            b"isvirtual" => Value::Bool(
+                decl.and_then(|p| p.hooks.as_ref())
+                    .is_some_and(|h| h.is_virtual),
+            ),
+            b"hashooks" => Value::Bool(decl.is_some_and(|p| p.hooks.is_some())),
             b"gethooks" => Value::Array(Rc::new(PhpArray::default())),
             b"isdefault" => Value::Bool(decl.is_some()),
             b"isdynamic" => Value::Bool(decl.is_none()),
@@ -275,9 +280,10 @@ impl Runtime {
             b"gettype" | b"getsettabletype" => decl
                 .and_then(|p| p.ty.clone())
                 .map_or(Value::Null, |ty| self.reflection_type(ty)),
-            b"hasdefaultvalue" => {
-                Value::Bool(decl.is_some_and(|p| p.default.is_some() || p.ty.is_none()))
-            }
+            b"hasdefaultvalue" => Value::Bool(decl.is_some_and(|p| {
+                !p.hooks.as_ref().is_some_and(|h| h.is_virtual)
+                    && (p.default.is_some() || p.ty.is_none())
+            })),
             b"getdefaultvalue" => {
                 let value = match decl {
                     Some(p) => self.property_default(&property.owner, p)?,

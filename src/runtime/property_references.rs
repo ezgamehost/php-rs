@@ -26,6 +26,12 @@ impl Runtime {
                     value => cell(value),
                 });
             }
+            if let Some(value) = self.indirect_hook_value(object, &location.name, line)? {
+                return Ok(match value {
+                    Value::Reference(reference) => reference,
+                    value => cell(value),
+                });
+            }
             if self.magic_get_applicable(object, &location.name) {
                 let value = self.read_property_value(object, &location.name, line, Access::Read)?;
                 self.warn_indirect_magic(object, &location.name, &value, line)?;
@@ -128,6 +134,20 @@ impl Runtime {
             return reference_paths::bind(root, &mut location.keys, reference, line, self);
         }
         if let Some(object) = &location.object {
+            if let Some(hooks) = self.property_hooks(object, &location.name)
+                && (!self.in_property_hook(object, &location.name)
+                    || hooks.is_virtual
+                    || hooks.get.is_none())
+            {
+                if self.in_property_hook(object, &location.name) {
+                    self.indirect_hook_value(object, &location.name, line)?;
+                }
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "Cannot assign by reference to overloaded object",
+                    line,
+                ));
+            }
             if self.magic_get_applicable(object, &location.name) {
                 let value = self.read_property_value(object, &location.name, line, Access::Read)?;
                 self.warn_indirect_magic(object, &location.name, &value, line)?;

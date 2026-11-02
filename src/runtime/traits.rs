@@ -317,6 +317,13 @@ impl Runtime {
                     } else {
                         let mut property = property.clone();
                         property.order += property_order;
+                        if let Some(hooks) = &mut property.hooks {
+                            for hook in hooks.get.iter_mut().chain(hooks.set.iter_mut()) {
+                                let offset =
+                                    hook.name.windows(2).position(|p| p == b"::").unwrap() + 2;
+                                *hook = rebound(hook, &decl.name, &hook.name[offset..]);
+                            }
+                        }
                         target.push(property);
                     }
                 }

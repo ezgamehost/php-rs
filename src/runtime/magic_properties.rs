@@ -41,6 +41,9 @@ impl Runtime {
         {
             return false;
         }
+        if self.property_hooks(object, name).is_some() {
+            return true;
+        }
         let key = self.instance_property_key(object, name);
         if object.lazy_slot(&key) || object.properties.borrow().get(&key).is_some() {
             return true;
@@ -175,6 +178,9 @@ impl Runtime {
                 line,
                 access,
             );
+        }
+        if let Some(value) = self.read_property_hook(object, name, line)? {
+            return Ok(value);
         }
         if self.property_backed(object, name) {
             return self.read_property_storage(object, name, line, access != Access::Read);

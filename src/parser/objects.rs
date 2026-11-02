@@ -636,6 +636,7 @@ impl Parser {
                         self.token().line,
                     ));
                 }
+                let group_start = properties.len() + static_properties.len();
                 loop {
                     let Kind::Variable(property) = self.token().kind.clone() else {
                         return Err(Error::parse(
@@ -679,7 +680,8 @@ impl Parser {
                     }
                     let attributes =
                         self.parse_attributes_at(attribute_range, attributes::Target::Property)?;
-                    let property = PropertyDecl {
+                    let mut property = PropertyDecl {
+                        hooks: None,
                         doc_comment,
                         order: properties.len() + static_properties.len(),
                         is_promoted: false,
@@ -695,18 +697,42 @@ impl Parser {
                         default,
                         ty: ty.clone(),
                     };
+                    if self.is("{") {
+                        if properties.len() + static_properties.len() != group_start {
+                            return Err(Error::parse(
+                                "Property hooks cannot be used in a grouped declaration",
+                                self.token().line,
+                            ));
+                        }
+                        if readonly || static_method {
+                            return Err(Error::new(
+                                crate::ErrorKind::CompileError,
+                                if readonly {
+                                    "Hooked properties cannot be readonly"
+                                } else {
+                                    "Cannot declare hooks for static property"
+                                },
+                                self.token().line,
+                            ));
+                        }
+                        property.hooks = Some(self.property_hooks(&property)?);
+                    }
                     Self::validate_attributes(&property.attributes, attributes::Target::Property)?;
+                    let has_hooks = property.hooks.is_some();
                     if static_method {
                         static_properties.push(property);
                     } else {
                         properties.push(property);
                     }
+                    if has_hooks {
+                        break;
+                    }
                     if !self.eat(",") {
+                        self.expect(";")?;
                         break;
                     }
                     member_start = self.pos;
                 }
-                self.expect(";")?;
             } else {
                 return Err(Error::parse(
                     "Expected public property or method",

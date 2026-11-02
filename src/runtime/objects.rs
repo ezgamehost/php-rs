@@ -112,7 +112,7 @@ impl Runtime {
     }
     fn link_class(&self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {
         let decl = self.compose_traits(decl)?;
-        let decl = self.prepare_enum(decl)?;
+        let mut decl = self.prepare_enum(decl)?;
         // __toString implies Stringable in PHP, so its public visibility is
         // checked when the class is linked rather than when its body is parsed.
         if !decl.is_trait
@@ -164,6 +164,7 @@ impl Runtime {
         } else {
             None
         };
+        self.link_property_hooks(Rc::make_mut(&mut decl), parent.as_ref())?;
         if parent.as_ref().is_some_and(|p| p.declaration.is_trait) {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -903,11 +904,14 @@ impl Runtime {
 
     pub(super) fn write_property_value(
         &mut self,
-        object: &PhpObject,
+        object: &Rc<PhpObject>,
         name: &[u8],
         value: Value,
         line: usize,
     ) -> Result<Value, Error> {
+        if self.write_property_hook(object, name, &value, line)? {
+            return Ok(value);
+        }
         let key = self.prepare_property_write(object, name, line)?;
         let value = value.dereferenced();
         let value = if let Some(owner) = self.instance_property_owner(&object.class, name) {
@@ -960,6 +964,17 @@ impl Runtime {
     ) -> Result<(), Error> {
         if object.class.name == b"__PHP_Incomplete_Class" {
             return Err(self.incomplete_object_error(object, "modify a property", line));
+        }
+        if self.property_hooks(object, name).is_some() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "Cannot unset hooked property {}::${}",
+                    object.class_name,
+                    String::from_utf8_lossy(name)
+                ),
+                line,
+            ));
         }
         validate_property_name(name, line)?;
         if let Some(owner) = self.instance_static_owner(&object.class, name) {

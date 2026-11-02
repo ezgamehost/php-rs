@@ -718,10 +718,19 @@ new request. The CLI returns the low eight bits of the requested status.
   methods, nullsafe calls, pipes, and suppressed expressions. Assignment and
   `(void)` consume the result. Attribute messages use caller strictness; throwing
   handlers prevent execution, and `Deprecated` diagnostics run first.
+- [Property hooks](docs/conformance/php-8.5.0-property-hooks-hillclimb.txt) support
+  concrete getters and setters, short bodies, explicit setter parameters,
+  virtual and backed properties, inherited hooks, trait scope, and final hooks.
+  Reads, writes, compound assignments, reference getters, indirect-mutation
+  errors, and lazy-object backing access use the hook call frame. `__PROPERTY__`
+  and reflection's `hasHooks`/`isVirtual` queries are available. Abstract and
+  interface hooks, promoted hooks, parent-hook calls, full type variance,
+  hook attributes/reflection, and enumeration/export integration remain unfinished.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.
-  Invalid declarations produce fatal diagnostics; property hooks remain unfinished.
+  Invalid declarations produce fatal diagnostics; hook-level Override validation
+  remains unfinished.
 - Default-enabled `assert` validates descriptions, throws supplied Throwable
   objects unchanged, and creates AssertionError with code 1 on failure. Direct
   calls receive generated descriptions for supported expressions and declarations.
@@ -845,7 +854,7 @@ new request. The CLI returns the low eight bits of the requested status.
 Known gaps include intersection/DNF types, most builtins, complete exception APIs,
 generators, complete attribute behavior, extensions, and most PHP 8.5 additions.
 The object implementation is a foundation: built-in interfaces, interface properties,
-property hooks,
+complete property-hook support,
 intersection/DNF constant types, complete constant/default-expression compatibility,
 remaining magic methods, inheritance-variance autoloading, and complete reflection remain unfinished. Closure methods,
 direct static trait-access deprecations, complete trait conflict diagnostics,

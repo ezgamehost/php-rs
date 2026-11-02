@@ -17,6 +17,11 @@ pub(super) fn fold(statements: &mut [Stmt], warnings: &mut Vec<String>) {
                     .iter_mut()
                     .chain(class.static_properties.iter_mut())
                 {
+                    if let Some(hooks) = &mut property.hooks {
+                        for hook in hooks.get.iter_mut().chain(hooks.set.iter_mut()) {
+                            fold(&mut Rc::make_mut(hook).body, warnings);
+                        }
+                    }
                     if let Some(value) = &mut property.default {
                         initializer(value, warnings);
                     }

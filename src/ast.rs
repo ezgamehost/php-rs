@@ -326,7 +326,17 @@ pub(crate) enum TraitAdaptation {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct PropertyHooks {
+    pub get_final: bool,
+    pub set_final: bool,
+    pub get: Option<Rc<FunctionDecl>>,
+    pub set: Option<Rc<FunctionDecl>>,
+    pub is_virtual: bool,
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct PropertyDecl {
+    pub hooks: Option<PropertyHooks>,
     pub doc_comment: Option<Vec<u8>>,
     pub order: usize,
     pub is_promoted: bool,

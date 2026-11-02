@@ -10,7 +10,12 @@ impl Runtime {
         owner: &Rc<Class>,
         property: &PropertyDecl,
     ) -> Result<Option<Value>, Error> {
-        if property.default.is_none() && property.ty.is_some() {
+        if property
+            .hooks
+            .as_ref()
+            .is_some_and(|hooks| hooks.is_virtual)
+            || (property.default.is_none() && property.ty.is_some())
+        {
             return Ok(None);
         }
         let outer = self.class_context.replace(ClassContext {

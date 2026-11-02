@@ -102,6 +102,11 @@ impl Validator {
                         .iter()
                         .chain(class.static_properties.iter())
                     {
+                        if let Some(hooks) = &property.hooks {
+                            for hook in hooks.get.iter().chain(hooks.set.iter()) {
+                                self.validate(&[Stmt::Function(hook.clone())])?;
+                            }
+                        }
                         if let Some(value) = &property.default {
                             self.expression(value, false)?;
                         }

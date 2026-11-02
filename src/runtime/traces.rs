@@ -52,7 +52,9 @@ impl TraceFrame {
             let function = if name.starts_with(b"{closure:") {
                 name.as_slice()
             } else {
-                name.rsplit(|b| *b == b':').next().unwrap()
+                name.windows(2)
+                    .position(|p| p == b"::")
+                    .map_or(name.as_slice(), |offset| &name[offset + 2..])
             };
             put(
                 &mut frame.fields,

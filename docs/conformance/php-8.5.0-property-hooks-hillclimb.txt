@@ -1,0 +1,222 @@
+PHP 8.5.0 concrete property hooks hillclimb
+Baseline: 01a294177bc8e58a40793b777b4d1ad2ddd9e6cb
+
+zend
+Before: 5256 cases; 2792 passed, 2064 failed, 400 unsupported
+After: 5256 cases; 2900 passed, 1956 failed, 400 unsupported
+New passes: 108; regressions: 0
+NEW PASS: Zend/tests/clone/clone_with_003.phpt
+NEW PASS: Zend/tests/clone/clone_with_004.phpt
+NEW PASS: Zend/tests/clone/clone_with_005.phpt
+NEW PASS: Zend/tests/clone/clone_with_012.phpt
+NEW PASS: Zend/tests/exceptions/exception_027.phpt
+NEW PASS: Zend/tests/exceptions/exception_028.phpt
+NEW PASS: Zend/tests/gh18907.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_hook_may_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_hook_virtual_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/fetch_hook_virtual_may_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/gh17941.phpt
+NEW PASS: Zend/tests/lazy_objects/gh17998.phpt
+NEW PASS: Zend/tests/lazy_objects/isset_hooked_may_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/isset_hooked_may_not_initialize.phpt
+NEW PASS: Zend/tests/lazy_objects/oss_fuzz_71382.phpt
+NEW PASS: Zend/tests/lazy_objects/serialize_hook.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization_skips_hooks.phpt
+NEW PASS: Zend/tests/lazy_objects/unset_hook.phpt
+NEW PASS: Zend/tests/oss-fuzz-403816122.phpt
+NEW PASS: Zend/tests/property_hooks/backed_implicit_get.phpt
+NEW PASS: Zend/tests/property_hooks/backed_implicit_set.phpt
+NEW PASS: Zend/tests/property_hooks/backing_value_simple.phpt
+NEW PASS: Zend/tests/property_hooks/bug002.phpt
+NEW PASS: Zend/tests/property_hooks/bug004.phpt
+NEW PASS: Zend/tests/property_hooks/bug005.phpt
+NEW PASS: Zend/tests/property_hooks/bug008.phpt
+NEW PASS: Zend/tests/property_hooks/bug009.phpt
+NEW PASS: Zend/tests/property_hooks/cache.phpt
+NEW PASS: Zend/tests/property_hooks/default_on_hooks.phpt
+NEW PASS: Zend/tests/property_hooks/default_on_virtual.phpt
+NEW PASS: Zend/tests/property_hooks/default_on_virtual_with_inheritance.phpt
+NEW PASS: Zend/tests/property_hooks/direct_hook_call.phpt
+NEW PASS: Zend/tests/property_hooks/duplicate_hook.phpt
+NEW PASS: Zend/tests/property_hooks/explicit_set_value_parameter.phpt
+NEW PASS: Zend/tests/property_hooks/explicit_set_value_parameter_type.phpt
+NEW PASS: Zend/tests/property_hooks/field_assign.phpt
+NEW PASS: Zend/tests/property_hooks/field_guard.phpt
+NEW PASS: Zend/tests/property_hooks/final.phpt
+NEW PASS: Zend/tests/property_hooks/final_prop_final_hook.phpt
+NEW PASS: Zend/tests/property_hooks/find_property_usage.phpt
+NEW PASS: Zend/tests/property_hooks/foreach_002.phpt
+NEW PASS: Zend/tests/property_hooks/get.phpt
+NEW PASS: Zend/tests/property_hooks/get_by_ref.phpt
+NEW PASS: Zend/tests/property_hooks/get_by_ref_auto.phpt
+NEW PASS: Zend/tests/property_hooks/get_by_ref_backed.phpt
+NEW PASS: Zend/tests/property_hooks/get_by_ref_virtual.phpt
+NEW PASS: Zend/tests/property_hooks/get_type_check.phpt
+NEW PASS: Zend/tests/property_hooks/gh15187_1.phpt
+NEW PASS: Zend/tests/property_hooks/gh15187_2.phpt
+NEW PASS: Zend/tests/property_hooks/gh15187_3.phpt
+NEW PASS: Zend/tests/property_hooks/gh15240.phpt
+NEW PASS: Zend/tests/property_hooks/gh15419_1.phpt
+NEW PASS: Zend/tests/property_hooks/gh15644.phpt
+NEW PASS: Zend/tests/property_hooks/gh16040.phpt
+NEW PASS: Zend/tests/property_hooks/gh16185_002.phpt
+NEW PASS: Zend/tests/property_hooks/gh16615_001.phpt
+NEW PASS: Zend/tests/property_hooks/gh16615_002.phpt
+NEW PASS: Zend/tests/property_hooks/gh17200.phpt
+NEW PASS: Zend/tests/property_hooks/gh17988.phpt
+NEW PASS: Zend/tests/property_hooks/gh18000.phpt
+NEW PASS: Zend/tests/property_hooks/gh18268.phpt
+NEW PASS: Zend/tests/property_hooks/hooked_with_magic_method.phpt
+NEW PASS: Zend/tests/property_hooks/indirect_modification.phpt
+NEW PASS: Zend/tests/property_hooks/inheritance.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_empty_hooks.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_final_private.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_hook_visibility.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_static.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_static_prop.phpt
+NEW PASS: Zend/tests/property_hooks/isset.phpt
+NEW PASS: Zend/tests/property_hooks/magic_consts.phpt
+NEW PASS: Zend/tests/property_hooks/magic_interaction.phpt
+NEW PASS: Zend/tests/property_hooks/magic_method_from_hooked.phpt
+NEW PASS: Zend/tests/property_hooks/no_default_value_untyped_001.phpt
+NEW PASS: Zend/tests/property_hooks/no_default_value_untyped_002.phpt
+NEW PASS: Zend/tests/property_hooks/no_get_parameters.phpt
+NEW PASS: Zend/tests/property_hooks/object_in_hook.phpt
+NEW PASS: Zend/tests/property_hooks/oss-fuzz-391975641.phpt
+NEW PASS: Zend/tests/property_hooks/override_add_get.phpt
+NEW PASS: Zend/tests/property_hooks/override_add_set.phpt
+NEW PASS: Zend/tests/property_hooks/override_by_plain_prop.phpt
+NEW PASS: Zend/tests/property_hooks/override_default_value.phpt
+NEW PASS: Zend/tests/property_hooks/override_implicit_with_explicit.phpt
+NEW PASS: Zend/tests/property_hooks/override_plain_set.phpt
+NEW PASS: Zend/tests/property_hooks/parameter_attributes.phpt
+NEW PASS: Zend/tests/property_hooks/plain_to_hook.phpt
+NEW PASS: Zend/tests/property_hooks/private_override.phpt
+NEW PASS: Zend/tests/property_hooks/private_prop_final_hook.phpt
+NEW PASS: Zend/tests/property_hooks/property_access_within_closure.phpt
+NEW PASS: Zend/tests/property_hooks/property_const.phpt
+NEW PASS: Zend/tests/property_hooks/property_const_nested.phpt
+NEW PASS: Zend/tests/property_hooks/protected_to_public.phpt
+NEW PASS: Zend/tests/property_hooks/readonly.phpt
+NEW PASS: Zend/tests/property_hooks/recursion.phpt
+NEW PASS: Zend/tests/property_hooks/set.phpt
+NEW PASS: Zend/tests/property_hooks/set_by_ref.phpt
+NEW PASS: Zend/tests/property_hooks/set_shorthand.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_006.phpt
+NEW PASS: Zend/tests/property_hooks/set_variadic.phpt
+NEW PASS: Zend/tests/property_hooks/static_variables.phpt
+NEW PASS: Zend/tests/property_hooks/syntax.phpt
+NEW PASS: Zend/tests/property_hooks/trait_scope.phpt
+NEW PASS: Zend/tests/property_hooks/traits.phpt
+NEW PASS: Zend/tests/property_hooks/unknown_hook.phpt
+NEW PASS: Zend/tests/property_hooks/unknown_hook_private.phpt
+NEW PASS: Zend/tests/property_hooks/unset.phpt
+NEW PASS: Zend/tests/property_hooks/update_constants_virtual_prop.phpt
+NEW PASS: Zend/tests/property_hooks/var_property.phpt
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 342 passed, 113 failed, 37 unsupported
+New passes: 5; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionClass_isIterable_gh20217.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_isFinal.phpt
+NEW PASS: ext/reflection/tests/gh19187.phpt
+NEW PASS: ext/reflection/tests/property_hooks/ReflectionClass_getMethods.phpt
+NEW PASS: ext/reflection/tests/property_hooks/ReflectionProperty_getSetValue.phpt
+
+spl
+Before: 778 cases; 668 passed, 57 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/property_hooks.phpt
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 5,888 passed, 2,332 failed, 1,456 unsupported.
+Net gain: 114 upstream passes; zero regressions across all twelve suites.
+The property_hooks directory improves from 2 to 91 passes out of 210 fixtures;
+115 fail and 4 remain unsupported. These fixtures are included in Zend above.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match setter coercion and assignment results,
+  ordinary members after hooks, lazy-proxy call order, dynamic self-access to
+  virtual properties, backing-reference access, and reference/unset errors.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Concrete get/set hooks parse block and short bodies, reference getters and
+  explicit setter parameters. Short setters assign their expression to backing
+  storage; short getters return it. Existing target validation and constant
+  folding traverse hook bodies. __PROPERTY__ follows the lexical hook scope.
+- Backing-storage detection traverses the unoptimized hook body, excluding nested
+  functions and classes. Virtual properties do not allocate default slots.
+- Runtime property reads/writes invoke hooks with the declaring class scope.
+  Access in the active hook reaches backing storage for the same object,
+  including an initialized lazy proxy instance. Virtual self-access throws.
+- Inheritance merges missing hooks and retains inherited backing storage;
+  trait composition rebinds hook scope. Final hook overrides are rejected.
+- Hooked reference assignment, indirect mutation, unset, readonly/static hooks,
+  duplicate/unknown hooks and invalid setter parameter forms report errors.
+- Reflection exposes hasHooks/isVirtual and virtual default-value availability;
+  traces retain the property name in hook frames.
+
+Remaining limits:
+- Abstract/interface hooks, promoted hooks, parent-hook calls and full hook
+  type variance and attribute validation are unfinished.
+- Full hook reflection, hook-aware foreach/get_object_vars/JSON/property export,
+  and remaining inheritance/diagnostic edge cases are unfinished.
+- Generators, unsupported PHPT sections, and the broader PHP 8.5 runtime remain
+  incomplete. This is a concrete-hook implementation slice, not full conformance.

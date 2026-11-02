@@ -1,5 +1,11 @@
 # Third-party notices
 
+Property hook parsing, backing-storage detection, and runtime dispatch in
+`src/parser/property_hooks.rs`, `src/runtime/property_hooks.rs`, and their
+integration sites follow PHP 8.5.0's `Zend/zend_compile.c`,
+`Zend/zend_object_handlers.c`, and `Zend/zend_inheritance.c`, copyright (c) Zend
+Technologies Ltd. The Zend license below applies to these adaptations.
+
 Query-string parsing in `src/runtime/query_strings.rs` follows PHP 8.5.0's
 `main/php_variables.c`, `ext/standard/string.c`, and the array-initialization
 helpers in `Zend/zend_API.h`. Copyright (c) The PHP Group and Zend Technologies
