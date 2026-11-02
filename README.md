@@ -439,6 +439,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `stristr`, `strrchr`, and the contains/starts-with/ends-with predicates.
 - Binary `strcmp`/`strncmp` and ASCII insensitive variants, `substr_compare`,
   `strspn`/`strcspn` character spans, and non-overlapping `substr_count`.
+- `strnatcmp` and `strnatcasecmp` share the natural-order comparator used by
+  array sorting, including digit runs, leading zeros, whitespace, and binary strings.
 - Binary `explode`, `implode`/`join`, `str_split`, and `chunk_split`, including
   split limits, ordered element conversion, and native argument-validation rules.
 - `strtr` byte tables and longest-match replacement maps, plus `addslashes`,

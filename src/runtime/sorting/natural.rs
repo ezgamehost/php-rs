@@ -3,7 +3,7 @@
 // The original license notice is retained in THIRD_PARTY_NOTICES.md.
 use std::cmp::Ordering;
 
-pub(super) fn compare(mut a: &[u8], mut b: &[u8], insensitive: bool) -> Ordering {
+pub(in crate::runtime) fn compare(mut a: &[u8], mut b: &[u8], insensitive: bool) -> Ordering {
     if a.is_empty() || b.is_empty() {
         return a.len().cmp(&b.len());
     }

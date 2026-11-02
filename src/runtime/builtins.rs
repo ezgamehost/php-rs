@@ -27,6 +27,7 @@ pub(super) enum Builtin {
     SubstrReplace,
     StringSearch(string_search::SearchKind),
     StrCompare(bool, bool),
+    StrNaturalCompare(bool),
     SubstrCompare,
     SubstrCount,
     StrSpan(bool),
@@ -198,6 +199,8 @@ impl Builtin {
             b"strcasecmp" => Self::StrCompare(true, false),
             b"strncmp" => Self::StrCompare(false, true),
             b"strncasecmp" => Self::StrCompare(true, true),
+            b"strnatcmp" => Self::StrNaturalCompare(false),
+            b"strnatcasecmp" => Self::StrNaturalCompare(true),
             b"substr_compare" => Self::SubstrCompare,
             b"substr_count" => Self::SubstrCount,
             b"strspn" => Self::StrSpan(true),
@@ -570,7 +573,9 @@ impl Builtin {
                 ("to", true, false),
             ],
             Self::StringSearch(kind) => kind.parameters(),
-            Self::StrCompare(_, false) => &[("string1", false, false), ("string2", false, false)],
+            Self::StrCompare(_, false) | Self::StrNaturalCompare(_) => {
+                &[("string1", false, false), ("string2", false, false)]
+            }
             Self::StrCompare(_, true) => &[
                 ("string1", false, false),
                 ("string2", false, false),
@@ -1068,6 +1073,13 @@ impl Runtime {
             Builtin::StringSearch(kind) => self.string_search(kind, &args, line),
             Builtin::StrCompare(insensitive, bounded) => {
                 self.string_compare(insensitive, bounded, &args, line)
+            }
+            Builtin::StrNaturalCompare(insensitive) => {
+                let left = self.native_string(first, &name, 1, line)?;
+                let right = self.native_string(args[1].as_ref().unwrap(), &name, 2, line)?;
+                Ok(Value::Int(
+                    sorting::natural_compare(&left, &right, insensitive) as i64,
+                ))
             }
             Builtin::SubstrCompare => self.substring_compare(&args, line),
             Builtin::SubstrCount => self.substring_count(&args, line),

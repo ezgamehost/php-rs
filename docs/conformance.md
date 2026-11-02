@@ -1902,6 +1902,24 @@ sections remain unfinished; unsupported fixtures are not counted as passes.
 The adapter supports macOS and 64-bit Linux; native execution was checked on macOS.
 Adapted directory rules retain PHP notices/license.
 
+The [natural string comparison slice](conformance/php-8.5.0-natural-comparison-hillclimb.txt)
+adds **five upstream string passes**, bringing that suite to **396 / 182 / 152**.
+`strnatcmp` and `strnatcasecmp` use the same comparator as natural array sorting,
+with native string argument conversion, named arguments, callback dispatch, and
+normalized -1/0/1 results. The comparator handles numeric runs, leading zeros,
+whitespace, embedded NULs, and case folding without parsing numbers into bounded
+integers. Its existing source and license attribution are retained.
+
+All five focused fixtures pass. Weak and strict reference probes match binary
+strings, digit ordering, Stringable conversion order, argument errors, nullable
+scalar deprecations, named calls, first-class callables, and use with `usort`.
+The other five tracked suites retain their totals, with zero regressions across
+all six. All 797 existing Rust tests and 57 reference-checked project PHPT pass;
+formatting and Clippy pass. No custom tests or generated matrices were added.
+Configurable locale case conversion remains unfinished; the comparison uses the
+default C-locale byte rules. PHP 8.5.0's `strnatcmp.c`, the wrappers in `string.c`,
+native signatures, upstream fixtures, and reference execution establish behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1915,7 +1933,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 726 | 62 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 391 | 187 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

@@ -1,6 +1,7 @@
 use super::*;
 pub(super) mod algorithm;
 mod natural;
+pub(super) use natural::compare as natural_compare;
 
 #[derive(Debug, Clone, Copy)]
 pub(super) enum Sort {
