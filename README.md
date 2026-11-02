@@ -254,6 +254,13 @@ new request. The CLI returns the low eight bits of the requested status.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
   spill-to-disk, context configuration, and general
   wrapper registration remain unfinished.
+- `mkdir`, `rmdir`, and `touch` create directories, remove empty directories, and
+  update file timestamps without truncating existing contents. Recursive mkdir
+  resolves dot components and applies native permission/umask behavior. `chdir`
+  and `getcwd` use request-local paths. File metadata and access queries share
+  the SplFileInfo stat/lstat caches; chdir clears cached relative paths, and
+  touch/rmdir clear metadata caches. Custom wrappers, open_basedir, realpath-cache
+  behavior, and tracking a renamed working directory remain unfinished.
 - `file_get_contents` reads local files and supported wrappers, with include-path
   lookup, positive/negative offsets, length limits, and native read diagnostics.
 - `opendir`, `readdir`, `rewinddir`, `closedir`, and `scandir` support local

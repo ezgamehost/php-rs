@@ -275,6 +275,12 @@ Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 `ext/standard/type.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf as author.
 
+`src/runtime/filesystem.rs` implements directory creation/removal, timestamps,
+request-local working directories, and metadata/access queries from PHP 8.5.0's
+`ext/standard/dir.c`, `file.c`, `filestat.c`, and `main/streams/plain_wrapper.c`,
+copyright (c) The PHP Group. These operations reuse the native access adapter and
+metadata conversion in `src/runtime/file_info.rs`.
+
 `src/runtime/directories.rs` and the directory branches in `src/resource.rs` and
 `src/runtime/streams.rs` adapt directory operations from PHP 8.5.0's
 `ext/standard/dir.c`, `main/streams/plain_wrapper.c`, and `main/streams/streams.c`,

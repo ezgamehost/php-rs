@@ -58,6 +58,7 @@ mod extract;
 mod extrema;
 mod file_contents;
 pub(crate) mod file_info;
+mod filesystem;
 pub(crate) mod fixed_array;
 mod foreach;
 mod formatting;

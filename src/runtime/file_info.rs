@@ -534,7 +534,7 @@ impl Runtime {
 }
 
 #[cfg(unix)]
-fn native_access(path: &std::path::Path, mode: i32) -> bool {
+pub(super) fn native_access(path: &std::path::Path, mode: i32) -> bool {
     use std::{
         ffi::{CString, c_char, c_int},
         os::unix::ffi::OsStrExt,
@@ -549,11 +549,15 @@ fn native_access(path: &std::path::Path, mode: i32) -> bool {
     unsafe { access(path.as_ptr(), mode) == 0 }
 }
 #[cfg(not(unix))]
-fn native_access(path: &std::path::Path, mode: i32) -> bool {
+pub(super) fn native_access(path: &std::path::Path, mode: i32) -> bool {
     path.metadata()
         .is_ok_and(|m| mode != 2 || !m.permissions().readonly())
 }
-fn metadata_value(metadata: &std::fs::Metadata, name: &[u8], line: usize) -> Result<Value, Error> {
+pub(super) fn metadata_value(
+    metadata: &std::fs::Metadata,
+    name: &[u8],
+    line: usize,
+) -> Result<Value, Error> {
     if name == b"isfile" {
         return Ok(Value::Bool(metadata.is_file()));
     }

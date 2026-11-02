@@ -80,6 +80,7 @@ pub(super) enum Builtin {
     ResourceInfo(bool),
     Fopen,
     FileExists,
+    Filesystem(filesystem::Operation),
     ClearStatCache,
     FileGetContents,
     Unlink,
@@ -324,6 +325,28 @@ impl Builtin {
             b"get_resource_type" => Self::ResourceInfo(false),
             b"fopen" => Self::Fopen,
             b"file_exists" => Self::FileExists,
+            b"mkdir" => Self::Filesystem(filesystem::Operation::Mkdir),
+            b"rmdir" => Self::Filesystem(filesystem::Operation::Rmdir),
+            b"touch" => Self::Filesystem(filesystem::Operation::Touch),
+            b"chdir" => Self::Filesystem(filesystem::Operation::Chdir),
+            b"getcwd" => Self::Filesystem(filesystem::Operation::Getcwd),
+            b"is_file" => Self::Filesystem(filesystem::Operation::Stat(b"isfile")),
+            b"is_dir" => Self::Filesystem(filesystem::Operation::Stat(b"isdir")),
+            b"is_link" => Self::Filesystem(filesystem::Operation::Stat(b"islink")),
+            b"is_readable" => Self::Filesystem(filesystem::Operation::Stat(b"isreadable")),
+            b"is_writable" => Self::Filesystem(filesystem::Operation::Stat(b"iswritable")),
+            b"is_writeable" => Self::Filesystem(filesystem::Operation::Stat(b"iswritable")),
+            b"is_executable" => Self::Filesystem(filesystem::Operation::Stat(b"isexecutable")),
+            b"fileperms" => Self::Filesystem(filesystem::Operation::Stat(b"getperms")),
+            b"fileinode" => Self::Filesystem(filesystem::Operation::Stat(b"getinode")),
+            b"filesize" => Self::Filesystem(filesystem::Operation::Stat(b"getsize")),
+            b"fileowner" => Self::Filesystem(filesystem::Operation::Stat(b"getowner")),
+            b"filegroup" => Self::Filesystem(filesystem::Operation::Stat(b"getgroup")),
+            b"fileatime" => Self::Filesystem(filesystem::Operation::Stat(b"getatime")),
+            b"filemtime" => Self::Filesystem(filesystem::Operation::Stat(b"getmtime")),
+            b"filectime" => Self::Filesystem(filesystem::Operation::Stat(b"getctime")),
+            b"filetype" => Self::Filesystem(filesystem::Operation::Stat(b"gettype")),
+
             b"clearstatcache" => Self::ClearStatCache,
             b"file_get_contents" => Self::FileGetContents,
             b"unlink" => Self::Unlink,
@@ -516,7 +539,25 @@ impl Builtin {
             Self::ArrayShuffle => &[("array", false, false)],
             Self::StrShuffle => &[("string", false, false)],
             Self::ResourceInfo(_) => &[("resource", false, false)],
-            Self::FileExists => &[("filename", false, false)],
+            Self::FileExists | Self::Filesystem(filesystem::Operation::Stat(_)) => {
+                &[("filename", false, false)]
+            }
+            Self::Filesystem(filesystem::Operation::Getcwd) => &[],
+            Self::Filesystem(filesystem::Operation::Chdir) => &[("directory", false, false)],
+            Self::Filesystem(filesystem::Operation::Mkdir) => &[
+                ("directory", false, false),
+                ("permissions", true, false),
+                ("recursive", true, false),
+                ("context", true, false),
+            ],
+            Self::Filesystem(filesystem::Operation::Rmdir) => {
+                &[("directory", false, false), ("context", true, false)]
+            }
+            Self::Filesystem(filesystem::Operation::Touch) => &[
+                ("filename", false, false),
+                ("mtime", true, false),
+                ("atime", true, false),
+            ],
             Self::ClearStatCache => &[
                 ("clear_realpath_cache", true, false),
                 ("filename", true, false),
@@ -947,6 +988,12 @@ impl Builtin {
                             (Self::Ucwords, "separators") => {
                                 Value::String(b" \t\r\n\x0c\x0b".to_vec().into())
                             }
+                            (Self::Filesystem(filesystem::Operation::Mkdir), "permissions") => {
+                                Value::Int(0o777)
+                            }
+                            (Self::Filesystem(filesystem::Operation::Mkdir), "recursive") => {
+                                Value::Bool(false)
+                            }
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Base64(false), "strict") => Value::Bool(false),
                             (Self::Wordwrap, "width") => Value::Int(75),
@@ -1157,6 +1204,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::Settype) {
             return self.settype(args, references, line);
+        }
+        if let Builtin::Filesystem(operation) = builtin {
+            return self.filesystem_operation(operation, &name, &args, line);
         }
         if let Builtin::Directory(operation) = builtin {
             return self.directory_operation(operation, &name, &args, line);
@@ -1577,6 +1627,7 @@ impl Runtime {
             Builtin::ArrayWalk(_)
             | Builtin::Settype
             | Builtin::Directory(_)
+            | Builtin::Filesystem(_)
             | Builtin::ArraySort(_)
             | Builtin::ArrayUserSort(_)
             | Builtin::ArrayMultisort

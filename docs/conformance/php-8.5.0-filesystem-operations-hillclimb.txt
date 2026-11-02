@@ -1,0 +1,88 @@
+PHP 8.5.0 filesystem operations hillclimb
+Baseline: 80081953543eef715319a8424101322ef29b3260
+
+The seven established suites plus newly baselined file and dir suites are compared.
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 536 passed, 148 failed, 94 unsupported
+After: 778 cases; 538 passed, 146 failed, 94 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/spl/tests/bug64228.phpt
+NEW PASS: ext/spl/tests/spl_fileinfo_getextension_leadingdot.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 23 passed, 201 failed, 672 unsupported
+After: 896 cases; 45 passed, 179 failed, 672 unsupported
+New passes: 22; regressions: 0
+NEW PASS: ext/standard/tests/file/003.phpt
+NEW PASS: ext/standard/tests/file/005_error.phpt
+NEW PASS: ext/standard/tests/file/bug55124.phpt
+NEW PASS: ext/standard/tests/file/bug68335.phpt
+NEW PASS: ext/standard/tests/file/filegroup_error.phpt
+NEW PASS: ext/standard/tests/file/fileinode_error.phpt
+NEW PASS: ext/standard/tests/file/fileowner_error.phpt
+NEW PASS: ext/standard/tests/file/filesize_error.phpt
+NEW PASS: ext/standard/tests/file/filesize_variation5.phpt
+NEW PASS: ext/standard/tests/file/filestat.phpt
+NEW PASS: ext/standard/tests/file/filetype_basic.phpt
+NEW PASS: ext/standard/tests/file/filetype_error.phpt
+NEW PASS: ext/standard/tests/file/is_executable_error.phpt
+NEW PASS: ext/standard/tests/file/is_readable_error.phpt
+NEW PASS: ext/standard/tests/file/is_writable_error.phpt
+NEW PASS: ext/standard/tests/file/mkdir-001.phpt
+NEW PASS: ext/standard/tests/file/mkdir-003.phpt
+NEW PASS: ext/standard/tests/file/mkdir-004.phpt
+NEW PASS: ext/standard/tests/file/mkdir_rmdir_error.phpt
+NEW PASS: ext/standard/tests/file/rmdir_variation3.phpt
+NEW PASS: ext/standard/tests/file/touch_error.phpt
+NEW PASS: ext/standard/tests/file/touch_variation2.phpt
+
+dir
+Before: 73 cases; 5 passed, 2 failed, 66 unsupported
+After: 73 cases; 6 passed, 1 failed, 66 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/dir/chdir_error2.phpt
+
+Total: 9,399 fixtures; 4,816 passed, 2,957 failed, 1,626 unsupported.
+25 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct PHP comparisons match timestamp updates, content preservation, recursive
+directory creation, dot-component resolution, metadata queries, and working directories.
+The existing bug51068 and gh17067 FILE sections now match PHP output/status when
+executed separately; their unsupported CLEAN sections remain excluded from pass counts.
+Custom wrappers, open_basedir, complete realpath caches, renamed working directories,
+full stat/lstat arrays, and permission-changing APIs remain unfinished.
+Full log prefix: /tmp/php-rs-fs-ops-*2.log.

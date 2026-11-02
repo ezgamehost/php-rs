@@ -3008,6 +3008,26 @@ Other glob fixtures still require missing touch() and mkdir() functions. Custom
 stream wrappers, open_basedir filtering, SplFileObject, and complete lifecycle
 and collector behavior remain unfinished.
 
+The [filesystem operations slice](conformance/php-8.5.0-filesystem-operations-hillclimb.txt)
+adds mkdir(), rmdir(), touch(), chdir(), getcwd(), file metadata functions, and
+file access predicates. Recursive directory creation resolves dot components and
+uses native permission/umask behavior. Timestamp updates preserve file contents;
+nullable timestamp arguments and failures follow PHP diagnostics. Working-directory
+changes remain local to the request. Metadata operations share SplFileInfo's
+stat/lstat caches and invalidate them after relevant filesystem changes.
+
+This slice adds **25 upstream passes**, with **zero regressions** across **nine
+full suites (9,399 fixtures)**: **22 file**, **two SPL**, and **one directory** case.
+The file and directory suites were baselined at the preceding commit. SPL reaches
+**538 / 146 / 94**, file reaches **45 / 179 / 672**, and directory reaches
+**6 / 1 / 66**. The other seven-suite totals are unchanged. All **797 existing Rust
+tests**, **57 reference-checked project PHPT**, formatting, Clippy, and diff checks
+pass. No custom tests or matrices were added. The existing bug51068 and gh17067
+FILE sections now match PHP output/status in separate executions; unsupported
+CLEAN sections remain excluded from runner pass counts. Custom wrappers,
+open_basedir, full stat/lstat arrays, permission-changing APIs, complete realpath
+caches, and tracking renamed working directories remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3017,12 +3037,14 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2582 | 2266 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 536 | 148 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 538 | 146 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 45 | 179 | 672 |
+| PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 6 | 1 | 66 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
