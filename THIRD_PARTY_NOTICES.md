@@ -1,5 +1,10 @@
 # Third-party notices
 
+Query-string parsing in `src/runtime/query_strings.rs` follows PHP 8.5.0's
+`main/php_variables.c`, `ext/standard/string.c`, and the array-initialization
+helpers in `Zend/zend_API.h`. Copyright (c) The PHP Group and Zend Technologies
+Ltd.; the PHP and Zend licenses below apply to the respective adaptations.
+
 Environment functions in `src/runtime/environment.rs` follow PHP 8.5.0's
 `ext/standard/basic_functions.c` and `main/php_variables.c`, copyright (c) The PHP
 Group. PHPT environment handling follows `run-tests.php`. The PHP license below

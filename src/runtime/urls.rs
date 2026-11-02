@@ -25,9 +25,12 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let input = self.native_string(value, name, 1, line)?;
+        if !encode {
+            return Ok(Value::String(decode(&input, raw).into()));
+        }
         let capacity = input
             .len()
-            .checked_mul(if encode { 3 } else { 1 })
+            .checked_mul(3)
             .ok_or_else(|| Error::new(ErrorKind::Error, "URL string size overflow", line))?;
         let mut output = Vec::new();
         output
@@ -38,37 +41,19 @@ impl Runtime {
         while index < input.len() {
             let byte = input[index];
             index += 1;
-            if encode {
-                if byte == b' ' && !raw {
-                    output.push(b'+');
-                } else if byte.is_ascii_alphanumeric()
-                    || b"-_.".contains(&byte)
-                    || (raw && byte == b'~')
-                {
-                    output.push(byte);
-                } else {
-                    output.extend_from_slice(&[
-                        b'%',
-                        HEX[(byte >> 4) as usize],
-                        HEX[(byte & 15) as usize],
-                    ]);
-                }
-            } else if byte == b'+' && !raw {
-                output.push(b' ');
-            } else if byte == b'%'
-                && let Some((high, low)) = input
-                    .get(index)
-                    .and_then(|byte| (*byte as char).to_digit(16))
-                    .zip(
-                        input
-                            .get(index + 1)
-                            .and_then(|byte| (*byte as char).to_digit(16)),
-                    )
+            if byte == b' ' && !raw {
+                output.push(b'+');
+            } else if byte.is_ascii_alphanumeric()
+                || b"-_.".contains(&byte)
+                || (raw && byte == b'~')
             {
-                output.push((high * 16 + low) as u8);
-                index += 2;
-            } else {
                 output.push(byte);
+            } else {
+                output.extend_from_slice(&[
+                    b'%',
+                    HEX[(byte >> 4) as usize],
+                    HEX[(byte & 15) as usize],
+                ]);
             }
         }
         Ok(Value::String(output.into()))
@@ -320,4 +305,28 @@ fn port(input: &[u8]) -> Option<i64> {
     } else {
         Some(value)
     }
+}
+
+// Both parse_str and the URL decoding builtins preserve malformed escapes.
+pub(super) fn decode(input: &[u8], raw: bool) -> Vec<u8> {
+    let mut output = Vec::with_capacity(input.len());
+    let mut index = 0;
+    while index < input.len() {
+        let byte = input[index];
+        index += 1;
+        if byte == b'+' && !raw {
+            output.push(b' ');
+        } else if byte == b'%'
+            && let Some((high, low)) = input
+                .get(index)
+                .and_then(|b| (*b as char).to_digit(16))
+                .zip(input.get(index + 1).and_then(|b| (*b as char).to_digit(16)))
+        {
+            output.push((high * 16 + low) as u8);
+            index += 2;
+        } else {
+            output.push(byte);
+        }
+    }
+    output
 }

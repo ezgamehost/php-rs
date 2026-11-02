@@ -1,0 +1,108 @@
+PHP 8.5.0 query-string parsing hillclimb
+Baseline: e48dbe799cd4983d5a56af1f767b2eb52804c75c
+
+zend
+Before: 5256 cases; 2791 passed, 2065 failed, 400 unsupported
+After: 5256 cases; 2792 passed, 2064 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/type_declarations/typed_properties_067.phpt
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 668 passed, 57 failed, 53 unsupported
+After: 778 cases; 668 passed, 57 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 535 passed, 43 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug77439.phpt
+NEW PASS: ext/standard/tests/strings/parse_str_basic1.phpt
+NEW PASS: ext/standard/tests/strings/parse_str_basic4.phpt
+NEW PASS: ext/standard/tests/strings/parse_str_memory_error.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 5,774 passed, 2,446 failed, 1,456 unsupported.
+Net gain: 5 upstream passes; zero regressions across all twelve suites.
+The focused parse_str selection passes all five runnable fixtures; two fixtures
+remain unsupported because they require INI configuration. These fixtures are
+already included in the gate above and are not counted twice.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match for malformed brackets, nested arrays,
+  binary values, numeric keys, exhausted append indexes, special-name filtering,
+  whitespace-only indexes, input/nesting limits and warning-handler mutations.
+- Typed output assignments, destructor changes to the output, string-conversion
+  callback ordering and pending-destructor-exception handler suppression match.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- parse_str initializes its output reference before parsing and returns null.
+- Shared URL decoding preserves malformed percent escapes and binary values.
+- Variable registration implements PHP's name normalization, nested and appended
+  array entries, scalar replacement, duplicate keys and forbidden-name checks.
+- The default 1,000-field limit leaves partial results visible to the warning
+  handler; excessive nesting deletes the entire top-level entry.
+- Typed properties and destructor ordering use the runtime's checked reference
+  assignments while native array registration writes directly to the output table.
+- Native reflection metadata now covers 430 implemented function names.
+
+Remaining limits:
+- arg_separator.input, max_input_vars and max_input_nesting_level use PHP's
+  defaults (&, 1,000 and 64); configuring them through INI is unfinished.
+- Input filters, non-CLI request parsing and unsupported PHPT sections remain
+  unfinished. The broader PHP 8.5 runtime is still incomplete.

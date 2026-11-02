@@ -122,6 +122,7 @@ pub(super) enum Builtin {
     ClassRelations(class_queries::Relation),
     Json(json::Operation),
     ParseIni(bool),
+    ParseStr,
     Environment(bool),
     GetCalledClass,
     ClassExists,
@@ -385,6 +386,7 @@ impl Builtin {
             b"get_parent_class" => Self::GetParentClass,
             b"getenv" => Self::Environment(false),
             b"putenv" => Self::Environment(true),
+            b"parse_str" => Self::ParseStr,
             b"parse_ini_file" => Self::ParseIni(true),
             b"parse_ini_string" => Self::ParseIni(false),
             b"json_encode" => Self::Json(json::Operation::Encode),
@@ -811,6 +813,7 @@ impl Builtin {
             ],
             Self::Environment(false) => &[("name", true, false), ("local_only", true, false)],
             Self::Environment(true) => &[("assignment", false, false)],
+            Self::ParseStr => &[("string", false, false), ("result", false, false)],
             Self::ParseIni(file) => &[
                 (if file { "filename" } else { "ini_string" }, false, false),
                 ("process_sections", true, false),
@@ -1233,6 +1236,7 @@ impl Builtin {
                 attributes: Vec::new(),
                 by_reference: matches!(self, Self::ArrayMultisort)
                     || (matches!(self, Self::Scan(_)) && *name == "vars")
+                    || (matches!(self, Self::ParseStr) && *name == "result")
                     || (matches!(self, Self::Settype) && *name == "var")
                     || (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
@@ -1492,6 +1496,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::ParseStr = builtin {
+            return self.parse_query_string(args, &references, line);
+        }
         if let Builtin::Environment(set) = builtin {
             return self.environment_builtin(set, &name, &args, line);
         }
@@ -1713,6 +1720,7 @@ impl Runtime {
             | Builtin::Html(_)
             | Builtin::ClassRelations(_)
             | Builtin::Environment(_)
+            | Builtin::ParseStr
             | Builtin::ParseIni(_)
             | Builtin::Json(_) => {
                 unreachable!("handled before required arguments")

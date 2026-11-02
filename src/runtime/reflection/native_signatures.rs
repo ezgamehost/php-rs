@@ -1980,6 +1980,13 @@ pub(super) fn lookup(name: &[u8]) -> Option<NativeSignature> {
             defaults: &[None, Some("false"), Some("INI_SCANNER_NORMAL")],
             by_value: &[true, true, true],
         },
+        b"parse_str" => NativeSignature {
+            name: "parse_str",
+            extension: "standard",
+            declaration: "<?php function __native(string $string, &$result): void {}",
+            defaults: &[None, None],
+            by_value: &[true, false],
+        },
         b"parse_url" => NativeSignature {
             name: "parse_url",
             extension: "standard",

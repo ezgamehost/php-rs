@@ -286,6 +286,11 @@ new request. The CLI returns the low eight bits of the requested status.
   credentials, bracketed hosts, file paths and empty query/fragment components.
   `urlencode`, `urldecode`, `rawurlencode` and `rawurldecode` support binary input,
   PHP's space/plus and tilde rules, and permissive malformed-escape handling.
+- [Query-string parsing](docs/conformance/php-8.5.0-query-strings-hillclimb.txt)
+  supports `parse_str` with nested arrays, PHP name normalization, permissive
+  URL decoding, typed output references and native destructor/handler ordering.
+  It uses the default `&` separator, 1,000-field limit and 64-level nesting limit;
+  configuring these through INI remains unfinished.
 - `htmlspecialchars`, `htmlentities`, their decode functions and
   `get_html_translation_table` support PHP's HTML 4.01, XML, XHTML and HTML5 rules,
   named and numeric entities, multi-codepoint entities, quote/substitution flags,
@@ -528,7 +533,7 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion, non-public methods, and closure creation.
   Function, method, and parameter declaration strings include defaults, documentation,
   source locations, closure captures, and inheritance/prototype flags. Native function
-  metadata covers all 429 implemented function names, including types, symbolic defaults,
+  metadata covers all 430 implemented function names, including types, symbolic defaults,
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, full reflector
