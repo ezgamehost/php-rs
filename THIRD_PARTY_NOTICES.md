@@ -274,6 +274,10 @@ from `ext/standard/array.c`, copyright (c) The PHP Group. MT19937 implementation
 authors include Rasmus Lerdorf, Zeev Suraski, Pedro Melo, Sterling Hughes, and
 Go Kudo. The underlying Mersenne Twister license is reproduced below.
 
+Array and binary-string shuffling in `src/array.rs` and
+`src/runtime/mersenne_twister.rs` adapts PHP 8.5.0
+`ext/standard/array.c` and `ext/standard/string.c`, copyright (c) The PHP Group.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 
@@ -317,14 +321,7 @@ are met:
 
   6. Redistributions of any form whatsoever must retain the following
      acknowledgment:
-     "`src/runtime/mersenne_twister.rs` adapts MT19937 generation, range selection,
-legacy scaling, seeding, and combined LCG behavior from PHP 8.5.0's
-`ext/random/engine_mt19937.c` and `ext/random/random.c`, and array key selection
-from `ext/standard/array.c`, copyright (c) The PHP Group. MT19937 implementation
-authors include Rasmus Lerdorf, Zeev Suraski, Pedro Melo, Sterling Hughes, and
-Go Kudo. The underlying Mersenne Twister license is reproduced below.
-
-This product includes PHP software, freely available from
+     "This product includes PHP software, freely available from
      <http://www.php.net/software/>".
 
 THIS SOFTWARE IS PROVIDED BY THE PHP DEVELOPMENT TEAM ``AS IS'' AND

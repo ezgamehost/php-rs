@@ -123,6 +123,42 @@ fn default_seed() -> u32 {
 }
 
 impl Runtime {
+    pub(super) fn shuffle_array(
+        &mut self,
+        args: Vec<Option<Value>>,
+        references: Vec<Option<variables::Cell>>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let first = args.into_iter().next().unwrap().unwrap();
+        builtins::require_array(&first, "shuffle", 1, line)?;
+        let source = if let Some(reference) = &references[0] {
+            drop(first);
+            reference.clone()
+        } else {
+            cell(first)
+        };
+        sorting::with_array(&mut source.borrow_mut(), |array| {
+            let array = Rc::make_mut(array);
+            self.mt_state.ensure_seeded();
+            array.shuffle(|last| {
+                self.mt_state
+                    .unbiased_range(0, last as i64, line)
+                    .map(|n| n as usize)
+            })
+        })
+        .unwrap()?;
+        Ok(Value::Bool(true))
+    }
+
+    pub(super) fn shuffle_string(&mut self, value: &Value, line: usize) -> Result<Value, Error> {
+        let mut bytes = self.native_string(value, "str_shuffle", 1, line)?;
+        for last in (1..bytes.len()).rev() {
+            let other = self.mt_state.unbiased_range(0, last as i64, line)? as usize;
+            bytes.swap(last, other);
+        }
+        Ok(Value::String(bytes.into()))
+    }
+
     pub(super) fn array_rand(
         &mut self,
         args: &[Option<Value>],

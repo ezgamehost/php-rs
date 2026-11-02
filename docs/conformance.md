@@ -2319,6 +2319,31 @@ arrays. The entropy-failure seed mixer differs from PHP's fallback, and failure
 injection was not exercised. Random engine objects, Randomizer, shuffling,
 and full internal reflection metadata remain unfinished.
 
+The [shuffle slice](conformance/php-8.5.0-shuffle-hillclimb.txt) adds **12
+upstream passes**, with zero regressions across all six suites (8,267 fixtures).
+Array reaches **757 / 31 / 52** and strings **399 / 179 / 152**. All eight
+focused shuffle fixtures pass; the expanded set records **12 / 1 / 0**, with
+the remaining Zend backtrace failure requiring destructor execution.
+
+`shuffle` and `str_shuffle` apply Fisher–Yates swaps through the shared MT19937
+state. They use unbiased range selection even in legacy mode. Array shuffling
+validates a reference argument, separates shared storage, renumbers keys,
+preserves reference containers, updates active foreach positions, and resets
+the internal pointer and next append index. Empty arrays preserve their table
+state. String shuffling is binary-safe and does not seed or advance the generator
+for zero- or one-byte strings. Nonempty array calls initialize the generator;
+singleton arrays renumber without consuming a draw.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or generated matrices were added. PHP's statistical
+fixture checks 90,000 array and 90,000 string permutations. One direct CLI probe
+also matches reference values, copy-on-write, active reference iteration, cursors,
+append indices, binary strings, singleton arrays, legacy RNG sharing, and exit
+status. A transient file-not-found runner error cleared on a full math rerun.
+PHP 8.5.0 `ext/standard/array.c` and `ext/standard/string.c` establish the
+implementation. Physical bucket history and destructor execution remain
+unfinished; other previously documented runtime gaps still apply.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2330,9 +2355,9 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 283 | 172 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 748 | 40 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 757 | 31 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 399 | 179 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

@@ -92,6 +92,10 @@ new request. The CLI returns the low eight bits of the requested status.
   `array_rand` selects unique keys in input order using the same generator;
   exact seeded single-key sequences for arrays with deleted bucket history
   remain unfinished. `lcg_value` implements the deprecated combined LCG.
+- `shuffle` and `str_shuffle` use the shared MT generator with unbiased
+  Fisher–Yates swaps. Array shuffling renumbers keys, preserves reference values,
+  resets the internal pointer, and updates active iteration positions; string
+  shuffling operates on bytes, including embedded NULs.
 - Trigonometric/inverse and hyperbolic/inverse functions, `atan2`, `hypot`,
   `exp`/`expm1`, `log`/`log10`/`log1p`, degree/radian conversion, `pi`, and
   PHP's standard mathematical constants.

@@ -272,6 +272,37 @@ impl PhpArray {
         self.cursor = 0;
     }
 
+    // Adapted from PHP 8.5.0 php_array_data_shuffle. Live entries are already
+    // compacted in our representation; iterator positions use that same order.
+    pub(crate) fn shuffle(
+        &mut self,
+        mut pick: impl FnMut(usize) -> Result<usize, Error>,
+    ) -> Result<(), Error> {
+        if self.is_empty() {
+            return Ok(());
+        }
+        self.positions.clear();
+        for (index, (key, _)) in self.entries.iter_mut().enumerate() {
+            *key = ArrayKey::Int(index as i64);
+            self.positions.insert(key.clone(), index);
+        }
+        for last in (1..self.len()).rev() {
+            let other = pick(last)?;
+            if last != other {
+                let (before, after) = self.entries.split_at_mut(last);
+                std::mem::swap(&mut before[other].1, &mut after[0].1);
+                for (_, position) in self.iterators.get_mut() {
+                    if *position == other {
+                        *position = last;
+                    }
+                }
+            }
+        }
+        self.cursor = 0;
+        self.next_index = Some(self.len() as i64);
+        Ok(())
+    }
+
     pub(crate) fn cursor_entry(&self) -> Option<&(ArrayKey, Value)> {
         self.entries.get(self.cursor)
     }

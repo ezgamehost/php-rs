@@ -229,7 +229,10 @@ impl Runtime {
     }
 }
 
-fn with_array<T>(value: &mut Value, action: impl FnOnce(&mut Rc<PhpArray>) -> T) -> Option<T> {
+pub(super) fn with_array<T>(
+    value: &mut Value,
+    action: impl FnOnce(&mut Rc<PhpArray>) -> T,
+) -> Option<T> {
     match value {
         Value::Array(array) => Some(action(array)),
         Value::Reference(reference) | Value::Indirect(reference) => {

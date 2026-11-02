@@ -13,6 +13,8 @@ pub(super) enum Builtin {
     RandMax,
     LcgValue,
     ArrayRand,
+    ArrayShuffle,
+    StrShuffle,
     Clone,
     Strlen,
     StrRepeat,
@@ -184,6 +186,8 @@ impl Builtin {
             b"mt_getrandmax" | b"getrandmax" => Self::RandMax,
             b"lcg_value" => Self::LcgValue,
             b"array_rand" => Self::ArrayRand,
+            b"shuffle" => Self::ArrayShuffle,
+            b"str_shuffle" => Self::StrShuffle,
             b"clone" => Self::Clone,
             b"strlen" => Self::Strlen,
             b"str_repeat" => Self::StrRepeat,
@@ -491,6 +495,8 @@ impl Builtin {
             Self::MtRand(_) => &[("min", true, false), ("max", true, false)],
             Self::RandMax | Self::LcgValue => &[],
             Self::ArrayRand => &[("array", false, false), ("num", true, false)],
+            Self::ArrayShuffle => &[("array", false, false)],
+            Self::StrShuffle => &[("string", false, false)],
             Self::ResourceInfo(_) => &[("resource", false, false)],
             Self::FileExists => &[("filename", false, false)],
             Self::FileGetContents => &[
@@ -863,6 +869,7 @@ impl Builtin {
                     || (matches!(
                         self,
                         Self::ArrayWalk(_)
+                            | Self::ArrayShuffle
                             | Self::ArraySort(_)
                             | Self::ArrayUserSort(_)
                             | Self::Extract
@@ -1084,6 +1091,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if matches!(builtin, Builtin::ArrayShuffle) {
+            return self.shuffle_array(args, references, line);
+        }
         match builtin {
             Builtin::MtSeed => return self.mt_seed(&args, &name, line),
             Builtin::MtRand(inverted) => return self.mt_rand(&args, &name, inverted, line),
@@ -1219,6 +1229,8 @@ impl Runtime {
             Builtin::RandomBytes => self.random_bytes(&args, line),
             Builtin::RandomInt => self.random_int(&args, line),
             Builtin::ArrayRand => self.array_rand(&args, line),
+            Builtin::StrShuffle => self.shuffle_string(first, line),
+            Builtin::ArrayShuffle => unreachable!(),
             Builtin::MtSeed | Builtin::MtRand(_) | Builtin::RandMax | Builtin::LcgValue => {
                 unreachable!()
             }
