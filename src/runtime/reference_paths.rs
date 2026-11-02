@@ -292,6 +292,22 @@ fn finish(
                 keys = &mut keys[consumed..];
                 runtime.check_array_access(&object, line)?;
                 let key = keys[0].argument();
+                if keys[0].is_append()
+                    && fixed_array::native_method(
+                        &object,
+                        if keys.len() == 1 && matches!(mutation, Mutation::Write(_)) {
+                            b"offsetSet"
+                        } else {
+                            b"offsetGet"
+                        },
+                    )
+                {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "[] operator not supported for SplFixedArray",
+                        line,
+                    ));
+                }
                 if array_iterator::native_offset_get(&object)
                     && !(keys.len() == 1
                         && matches!(mutation, Mutation::Write(_) | Mutation::Unset))

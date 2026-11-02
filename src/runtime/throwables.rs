@@ -5,6 +5,7 @@ use crate::object::{Class, ThrowableData};
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
         b"arrayaccess" => ("ArrayAccess", None),
+        b"jsonserializable" => ("JsonSerializable", None),
         b"countable" => ("Countable", None),
         b"traversable" => ("Traversable", None),
         b"iterator" => ("Iterator", None),
@@ -68,6 +69,9 @@ impl Runtime {
                 public function offsetUnset(mixed $offset): void;
             }"
             .to_owned()
+        } else if canonical == "JsonSerializable" {
+            "<?php interface JsonSerializable { public function jsonSerialize(): mixed; }"
+                .to_owned()
         } else if canonical == "Countable" {
             "<?php interface Countable { public function count(): int; }".to_owned()
         } else if canonical == "Traversable" {
@@ -138,6 +142,7 @@ impl Runtime {
                     canonical,
                     "ArrayAccess"
                         | "Countable"
+                        | "JsonSerializable"
                         | "Iterator"
                         | "IteratorAggregate"
                         | "SeekableIterator"
@@ -246,6 +251,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::FixedArray) {
+            return self.native_fixed_array_method(line);
+        }
         if matches!(method, NativeMethod::RecursiveIterator) {
             return self.native_recursive_iterator_method(line);
         }
@@ -278,6 +286,7 @@ impl Runtime {
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
             NativeMethod::ThrowableToString
+            | NativeMethod::FixedArray
             | NativeMethod::RecursiveIterator
             | NativeMethod::ArrayIterator
             | NativeMethod::AttributeConstruct
@@ -354,6 +363,8 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::default(),
+            fixed_array: RefCell::default(),
+            internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),

@@ -184,7 +184,25 @@ impl Runtime {
             && self.instance_property_key(object, name) == *key
     }
 
+    pub(super) fn mangled_object_variables(&self, object: &PhpObject) -> PhpArray {
+        let mut result = PhpArray::default();
+        if !object.hides_properties() {
+            for (key, value) in object.snapshot().iter_copied() {
+                let key = ArrayKey::from_value(&key.to_value(), 0, &mut Vec::new())
+                    .expect("property key");
+                result.insert(key, value);
+            }
+        }
+        result
+    }
+
     pub(super) fn object_variables(&self, object: &PhpObject) -> PhpArray {
+        // SplFixedArray exports ordinary properties as direct values. Zend's
+        // get_object_vars therefore retains their mangled keys, without the
+        // visibility filtering applied to standard indirect property slots.
+        if object.fixed_array.borrow().is_some() {
+            return self.mangled_object_variables(object);
+        }
         let mut result = PhpArray::default();
         let properties = if object.array_iterator.borrow().is_some() {
             object.snapshot()

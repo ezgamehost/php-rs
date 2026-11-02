@@ -16,6 +16,9 @@ impl Runtime {
             *object.recursive_iterator.get_mut() =
                 Some(recursive_iterator::RecursiveIteratorData::default());
         }
+        if object.class.is_a(b"SplFixedArray") && object.fixed_array.get_mut().is_none() {
+            *object.fixed_array.get_mut() = Some(fixed_array::FixedArrayData::default());
+        }
         let object = Rc::new(object);
         self.object_store
             .borrow_mut()

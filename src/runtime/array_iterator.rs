@@ -198,6 +198,16 @@ impl Runtime {
                         line,
                     ));
                 }
+                if backing.fixed_array.borrow().is_some() {
+                    return Err(self.array_iterator_exception(
+                        b"InvalidArgumentException",
+                        format!(
+                            "Overloaded object of type {} is not compatible with {}",
+                            backing.class_name, object.class_name
+                        ),
+                        line,
+                    ));
+                }
                 if inherit_flags && let Some(data) = backing.array_iterator.borrow().as_ref() {
                     flags = data.flags;
                 }

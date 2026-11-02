@@ -94,6 +94,7 @@ pub(super) enum Builtin {
     MethodExists,
     PropertyExists,
     GetObjectVars,
+    GetMangledObjectVars,
     ObjectId,
     ObjectHash,
     GetClassVars,
@@ -297,6 +298,7 @@ impl Builtin {
             b"method_exists" => Self::MethodExists,
             b"property_exists" => Self::PropertyExists,
             b"get_object_vars" => Self::GetObjectVars,
+            b"get_mangled_object_vars" => Self::GetMangledObjectVars,
             b"spl_object_id" => Self::ObjectId,
             b"spl_object_hash" => Self::ObjectHash,
             b"get_class_vars" => Self::GetClassVars,
@@ -543,7 +545,10 @@ impl Builtin {
             Self::GetCalledClass => &[],
             Self::GetClassVars => &[("class", false, false)],
             Self::GetClassMethods => &[("object_or_class", false, false)],
-            Self::GetObjectVars | Self::ObjectId | Self::ObjectHash => &[("object", false, false)],
+            Self::GetObjectVars
+            | Self::GetMangledObjectVars
+            | Self::ObjectId
+            | Self::ObjectHash => &[("object", false, false)],
             Self::EnumExists => &[("enum", false, false), ("autoload", true, false)],
             Self::ClassExists => &[("class", false, false), ("autoload", true, false)],
             Self::ClassAlias => &[
@@ -1269,6 +1274,20 @@ impl Runtime {
             Builtin::GetClassVars | Builtin::GetClassMethods => {
                 self.class_inspection(builtin, first, line)
             }
+            Builtin::GetMangledObjectVars => match first {
+                Value::Object(object) => {
+                    Ok(Value::Array(Rc::new(self.mangled_object_variables(object))))
+                }
+                Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),
+                _ => Err(Error::new(
+                    ErrorKind::TypeError,
+                    format!(
+                        "get_mangled_object_vars(): Argument #1 ($object) must be of type object, {} given",
+                        debug_type(first)
+                    ),
+                    line,
+                )),
+            },
             Builtin::GetObjectVars => match first {
                 Value::Object(object) => Ok(Value::Array(Rc::new(self.object_variables(object)))),
                 Value::Closure(_) => Ok(Value::Array(Rc::new(PhpArray::default()))),

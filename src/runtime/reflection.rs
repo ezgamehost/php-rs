@@ -139,6 +139,8 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            fixed_array: RefCell::default(),
+            internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),
@@ -376,6 +378,7 @@ impl Runtime {
                     .is_none_or(|method| method.visibility == Visibility::Public)
                     && (name != b"iscloneable"
                         || (!class.is_a(b"RecursiveIteratorIterator")
+                            && !class.is_a(b"InternalIterator")
                             && !class.is_a(b"Throwable")
                             && !class.is_a(b"ReflectionClass")
                             && !class.is_a(b"ReflectionAttribute")
@@ -701,6 +704,9 @@ impl Runtime {
                     Some(Value::Array(args)) => callbacks::callback_arguments(&args, line)?,
                     _ => Vec::new(),
                 };
+                if name == b"newinstancewithoutconstructor" && class.is_a(b"InternalIterator") {
+                    return Err(self.reflection_error("Class InternalIterator is an internal class marked as final that cannot be instantiated without invoking its constructor", line));
+                }
                 if name != b"newinstancewithoutconstructor" {
                     if let Some(constructor) = objects::method(class, b"__construct") {
                         if constructor.visibility != Visibility::Public {

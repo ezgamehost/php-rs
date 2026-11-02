@@ -38,7 +38,7 @@ impl Runtime {
         pending: &mut Option<Error>,
     ) -> Result<PhpArray, Error> {
         let Some(method) = objects::method(&object.class, b"__debugInfo") else {
-            return Ok(object.snapshot());
+            return Ok(object.export_properties());
         };
         if let Some(error) = pending.take() {
             // PHP cannot enter another hook with an exception already pending.

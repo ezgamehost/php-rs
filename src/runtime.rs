@@ -55,6 +55,7 @@ mod exporting;
 mod extract;
 mod extrema;
 mod file_contents;
+pub(crate) mod fixed_array;
 mod foreach;
 mod formatting;
 mod function_arguments;

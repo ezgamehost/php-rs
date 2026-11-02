@@ -43,6 +43,9 @@ pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str
 
 /// A PHP object handle. Copying a Value shares this instance, including properties.
 pub struct PhpObject {
+    pub(crate) fixed_array: RefCell<Option<crate::runtime::fixed_array::FixedArrayData>>,
+    pub(crate) internal_iterator:
+        RefCell<Option<crate::runtime::fixed_array::InternalIteratorData>>,
     pub(crate) recursive_iterator:
         RefCell<Option<crate::runtime::recursive_iterator::RecursiveIteratorData>>,
     pub(crate) property_cursor: RefCell<PropertyCursor>,
@@ -175,6 +178,8 @@ impl Drop for PhpObject {
         // payload and handle to the request's queue. No strong references to
         // the old allocation remain; the destructor may resurrect this one.
         let object = Rc::new(Self {
+            fixed_array: std::mem::take(&mut self.fixed_array),
+            internal_iterator: std::mem::take(&mut self.internal_iterator),
             recursive_iterator: std::mem::take(&mut self.recursive_iterator),
             array_iterator: std::mem::take(&mut self.array_iterator),
             property_cursor: std::mem::take(&mut self.property_cursor),
@@ -271,6 +276,8 @@ impl PhpObject {
     pub(crate) fn export_properties(&self) -> PhpArray {
         if self.hides_properties() {
             PhpArray::default()
+        } else if self.fixed_array.borrow().is_some() {
+            crate::runtime::fixed_array::export_storage(self)
         } else if self
             .array_iterator
             .borrow()

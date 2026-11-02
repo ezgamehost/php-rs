@@ -99,6 +99,12 @@ new request. The CLI returns the low eight bits of the requested status.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.
+- `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
+  independent storage clones, and native iteration through `InternalIterator`.
+  Resizing preserves destructor order and deferred size changes. Property inspection,
+  serialization hooks, and `JsonSerializable` are available; general serialization
+  and JSON encoding remain incomplete. `get_mangled_object_vars` exposes ordinary
+  object properties without visibility filtering.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

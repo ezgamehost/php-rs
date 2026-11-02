@@ -2672,6 +2672,37 @@ The remaining destructor-order fixture is blocked by a reserved-class eval
 message mismatch. Other SPL classes, arbitrary callback reentry, generators,
 serialization, and earlier runtime/harness gaps remain incomplete.
 
+The [SplFixedArray slice](conformance/php-8.5.0-fixed-array-hillclimb.txt)
+adds dense native storage, construction and resizing, offset conversion and bounds
+checks, array conversion, cloning, and serialization hooks. Shrinking exposes the
+new size before running removed values' destructors, uses PHP's removal order,
+and defers nested resize requests. Replacement values are installed before old
+values are destroyed. Native storage participates in cycle collection.
+
+Foreach uses independent native cursors over live storage, bypassing offset
+method overrides; explicit getIterator returns an InternalIterator with lazy
+rewinding, constructor/clone restrictions, and native wrapper handle lifetimes.
+Subclass getIterator overrides use ordinary aggregate dispatch. Direct iteration
+rejects references. Offset overrides, empty/isset/coalescing, and unsupported
+append operations follow the native handlers.
+
+Native elements are included in dumps, array casts, print_r, and var_export,
+while ordinary property inspection excludes them. SplFixedArray's get_object_vars
+retains mangled property names as PHP does. The new get_mangled_object_vars
+builtin exposes ordinary object properties without visibility filtering.
+JsonSerializable and method return-type metadata are registered; member loading
+preserves native visibility resolution and readonly restrictions.
+
+This slice adds **56 upstream passes**, with **zero regressions** across all six
+full suites: **54 SPL** and **two Zend**. Zend reaches **2536 / 2312 / 408** and
+SPL **256 / 428 / 94**; other suite totals are unchanged. All **797 existing Rust
+tests**, **57 reference-checked project PHPT**, formatting, Clippy, and diff checks
+pass. No custom tests or matrices were added. Direct CLI comparisons also match
+property loading/inspection, InternalIterator restrictions, and native cycle
+collection behavior. Remaining related fixtures need general serialization,
+JSON encoding, debug_zval_dump, generators, or other SPL classes. General PHP
+compatibility and earlier runtime/harness gaps remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2679,9 +2710,9 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2534 | 2314 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2536 | 2312 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 287 | 168 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 202 | 482 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 256 | 428 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

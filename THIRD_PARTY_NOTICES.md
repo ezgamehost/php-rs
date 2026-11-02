@@ -334,6 +334,14 @@ in `src/runtime/recursive_iterator.rs` adapt PHP 8.5.0's
 PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
 and garbage-collection edges follow those native handlers.
 
+SplFixedArray storage, resizing, offsets, property export, serialization hooks,
+and InternalIterator handling in `src/runtime/fixed_array.rs` adapt PHP 8.5.0's
+`ext/spl/spl_fixedarray.c`, `ext/spl/spl_fixedarray.stub.php`, and
+`Zend/zend_interfaces.c`/`.stub.php`, copyright (c) The PHP Group. The
+JsonSerializable declaration follows `ext/json/json.stub.php`; native member
+loading follows `Zend/zend_API.c`. Property inspection and
+`get_mangled_object_vars` follow `Zend/zend_builtin_functions.c`.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 
@@ -377,13 +385,7 @@ are met:
 
   6. Redistributions of any form whatsoever must retain the following
      acknowledgment:
-     "RecursiveIteratorIterator traversal, native frames, hooks, and lifecycle behavior
-in `src/runtime/recursive_iterator.rs` adapt PHP 8.5.0's
-`ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c) The
-PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
-and garbage-collection edges follow those native handlers.
-
-This product includes PHP software, freely available from
+     "This product includes PHP software, freely available from
      <http://www.php.net/software/>".
 
 THIS SOFTWARE IS PROVIDED BY THE PHP DEVELOPMENT TEAM ``AS IS'' AND

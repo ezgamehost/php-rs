@@ -59,6 +59,11 @@ impl Runtime {
                         .iter()
                         .map(|(_, value)| value.clone())
                         .collect();
+                    if let Some(data) = object.fixed_array.borrow().as_ref() {
+                        values.extend(data.elements.iter().cloned());
+                    }
+                    // PHP's InternalIterator uses the standard GC handler,
+                    // which does not expose its native iterator/source edge.
                     if let Some(data) = object.recursive_iterator.borrow().as_ref() {
                         values.extend(data.values());
                     }
@@ -141,6 +146,10 @@ impl Runtime {
             match &node.value {
                 Value::Object(object) => {
                     count += 1;
+                    let native = object.fixed_array.borrow_mut().take();
+                    drop(native);
+                    let native = object.internal_iterator.borrow_mut().take();
+                    drop(native);
                     let native = object.recursive_iterator.borrow_mut().take();
                     drop(native);
                     let properties = std::mem::take(&mut *object.properties.borrow_mut());

@@ -60,6 +60,9 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
+        if fixed_array::hidden_iterator(object) {
+            return self.fixed_array_iterator_step(object, name, true, line);
+        }
         if recursive_iterator::native_iteration(object) {
             return self.recursive_iterator_step(object, name, true, line);
         }
@@ -78,6 +81,16 @@ impl Runtime {
         by_reference: bool,
         line: usize,
     ) -> Result<Rc<PhpObject>, Error> {
+        if fixed_array::native_method(object, b"getIterator") {
+            if by_reference {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    "An iterator cannot be used with foreach by reference",
+                    line,
+                ));
+            }
+            return self.fixed_array_iterator(object.clone(), true, line);
+        }
         if object.class.is_a(b"IteratorAggregate") {
             // Unlike current(), the aggregate hook inspects the raw return
             // zval: a reference return is not accepted as an iterator object.
@@ -134,7 +147,8 @@ impl Runtime {
         let iterator = self.resolve_iterator(&object, by_reference, line)?;
         // Zend iterator wrappers occupy an object-store handle even though
         // they are not exposed as PHP values. Release it after the iterator.
-        let wrapper = self.allocate_object_handle();
+        let wrapper =
+            (!fixed_array::hidden_iterator(&iterator)).then(|| self.allocate_object_handle());
         let mut source = Some(object);
         let result = (|| {
             drop(self.iterator_method(&iterator, b"rewind", line)?);
@@ -190,7 +204,9 @@ impl Runtime {
                 }
                 // Native array iteration points into storage, without the
                 // persistent current-result cache used by user Iterator hooks.
-                let current = if array_iterator::native_iteration(&iterator) {
+                let current = if array_iterator::native_iteration(&iterator)
+                    || fixed_array::hidden_iterator(&iterator)
+                {
                     drop(current);
                     self.drain_destructors(Ok(()), line)?;
                     None

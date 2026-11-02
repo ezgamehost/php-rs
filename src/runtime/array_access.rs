@@ -136,6 +136,46 @@ impl Runtime {
         }
         self.check_array_access(&object, line)?;
         let key = offset.argument();
+        if access != Access::Read && object.fixed_array.borrow().is_some() {
+            if fixed_array::native_method(&object, b"offsetExists") {
+                let index = self.fixed_array_index(&key, line)?;
+                let value = usize::try_from(index).ok().and_then(|index| {
+                    object
+                        .fixed_array
+                        .borrow()
+                        .as_ref()
+                        .unwrap()
+                        .elements
+                        .get(index)
+                        .cloned()
+                });
+                let exists = value
+                    .as_ref()
+                    .is_some_and(|value| !matches!(value, Value::Null));
+                if !exists {
+                    return Ok(Value::Null);
+                }
+                if access == Access::Probe {
+                    return Ok(Value::Bool(true));
+                }
+                if access == Access::Empty {
+                    return Ok(value.unwrap().dereferenced());
+                }
+            } else {
+                let exists = self
+                    .array_access_call(&object, b"offsetExists", vec![key.clone()], line)?
+                    .is_truthy();
+                if !exists {
+                    return Ok(Value::Null);
+                }
+                if matches!(access, Access::Probe | Access::Empty) {
+                    return Ok(Value::Bool(true));
+                }
+            }
+            return self
+                .array_access_call(&object, b"offsetGet", vec![key], line)
+                .map(|v| v.dereferenced());
+        }
         if access != Access::Read {
             let native_exists = object.array_iterator.borrow().is_some()
                 && objects::method(&object.class, b"offsetExists").is_some_and(|method| {

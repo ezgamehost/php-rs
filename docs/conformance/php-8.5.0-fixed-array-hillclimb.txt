@@ -1,0 +1,94 @@
+PHP 8.5.0 SplFixedArray hillclimb
+Baseline: 82760dbb21e61ea06edebe48644e7cc60bf602c3
+
+zend
+Before: 5256 cases; 2534 passed, 2314 failed, 408 unsupported
+After: 5256 cases; 2536 passed, 2312 failed, 408 unsupported
+New passes: 2; regressions: 0
+NEW PASS: Zend/tests/get_mangled_object_vars.phpt
+NEW PASS: Zend/tests/serialize/bug73900.phpt
+
+reflection
+Before: 492 cases; 287 passed, 168 failed, 37 unsupported
+After: 492 cases; 287 passed, 168 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 202 passed, 482 failed, 94 unsupported
+After: 778 cases; 256 passed, 428 failed, 94 unsupported
+New passes: 54; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/gh15918.phpt
+NEW PASS: ext/spl/tests/SplArray_fromArray.phpt
+NEW PASS: ext/spl/tests/SplFixedArray__construct_param_array.phpt
+NEW PASS: ext/spl/tests/SplFixedArray__construct_param_null.phpt
+NEW PASS: ext/spl/tests/SplFixedArray__construct_param_string.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_change_size_during_iteration.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_construct_param_SplFixedArray.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_fromarray_indexes.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_fromarray_non_indexes.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_fromarray_param_multiarray.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_immediate_gc.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_indirect_modification.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_nested_foreach.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_offsetExists_less_than_zero.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_offsetUnset_string.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_override_offsetGet_only.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setSize_destruct.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setSize_filled_to_smaller.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setSize_param_null.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setSize_reduce.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setsize_001.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setsize_grow.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_setsize_shrink.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_toArray_empty.phpt
+NEW PASS: ext/spl/tests/bug53362.phpt
+NEW PASS: ext/spl/tests/bug54970.phpt
+NEW PASS: ext/spl/tests/bug62904.phpt
+NEW PASS: ext/spl/tests/bug64106.phpt
+NEW PASS: ext/spl/tests/bug64264.phpt
+NEW PASS: ext/spl/tests/bug70853.phpt
+NEW PASS: ext/spl/tests/bug74478.phpt
+NEW PASS: ext/spl/tests/bug79393.phpt
+NEW PASS: ext/spl/tests/bug80663.phpt
+NEW PASS: ext/spl/tests/bug81992.phpt
+NEW PASS: ext/spl/tests/bug81992b.phpt
+NEW PASS: ext/spl/tests/fixedarray_001.phpt
+NEW PASS: ext/spl/tests/fixedarray_002.phpt
+NEW PASS: ext/spl/tests/fixedarray_003.phpt
+NEW PASS: ext/spl/tests/fixedarray_004.phpt
+NEW PASS: ext/spl/tests/fixedarray_006.phpt
+NEW PASS: ext/spl/tests/fixedarray_007.phpt
+NEW PASS: ext/spl/tests/fixedarray_008.phpt
+NEW PASS: ext/spl/tests/fixedarray_010.phpt
+NEW PASS: ext/spl/tests/fixedarray_012.phpt
+NEW PASS: ext/spl/tests/fixedarray_013.phpt
+NEW PASS: ext/spl/tests/fixedarray_014.phpt
+NEW PASS: ext/spl/tests/fixedarray_016.phpt
+NEW PASS: ext/spl/tests/fixedarray_018.phpt
+NEW PASS: ext/spl/tests/fixedarray_020.phpt
+NEW PASS: ext/spl/tests/fixedarray_021.phpt
+NEW PASS: ext/spl/tests/fixedarray_024.phpt
+NEW PASS: ext/spl/tests/gh16478.phpt
+NEW PASS: ext/spl/tests/gh17198.phpt
+NEW PASS: ext/spl/tests/splfixedarray_offsetExists_larger.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 399 passed, 179 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparison matches property loading/inspection, InternalIterator restrictions,
+and native GC behavior. Full log prefix: /tmp/php-rs-fixed-array-*6.log.
