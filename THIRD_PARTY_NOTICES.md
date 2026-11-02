@@ -676,3 +676,7 @@ and error EOF handling follow `main/streams/{streams,plain_wrapper}.c`.
 buffer integration in stream reads, writes, seeks, metadata and transfers adapt
 PHP 8.5.0's `ext/standard/streamsfuncs.c` and `main/streams/streams.c`, copyright
 (c) The PHP Group.
+
+`src/runtime/file_links.rs` adapts link operations and canonical path resolution
+from PHP 8.5.0's `ext/standard/{link,file}.c`, `main/fopen_wrappers.c`, and
+`Zend/zend_virtual_cwd.c`, copyright (c) The PHP Group.

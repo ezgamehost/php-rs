@@ -58,6 +58,7 @@ mod extract;
 mod extrema;
 mod file_contents;
 pub(crate) mod file_info;
+mod file_links;
 mod file_operations;
 mod file_stat;
 mod file_writing;

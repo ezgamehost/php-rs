@@ -91,6 +91,7 @@ pub(super) enum Builtin {
     Fopen,
     FileExists,
     Filesystem(filesystem::Operation),
+    FileLink(file_links::Operation),
     ClearStatCache,
     StreamContext(stream_contexts::Operation),
     FileGetContents,
@@ -366,6 +367,11 @@ impl Builtin {
             b"chmod" => Self::Filesystem(filesystem::Operation::Chmod),
             b"chdir" => Self::Filesystem(filesystem::Operation::Chdir),
             b"getcwd" => Self::Filesystem(filesystem::Operation::Getcwd),
+            b"link" => Self::FileLink(file_links::Operation::Hard),
+            b"symlink" => Self::FileLink(file_links::Operation::Symbolic),
+            b"readlink" => Self::FileLink(file_links::Operation::Read),
+            b"linkinfo" => Self::FileLink(file_links::Operation::Info),
+            b"realpath" => Self::FileLink(file_links::Operation::Realpath),
             b"is_file" => Self::Filesystem(filesystem::Operation::Stat(b"isfile")),
             b"is_dir" => Self::Filesystem(filesystem::Operation::Stat(b"isdir")),
             b"is_link" => Self::Filesystem(filesystem::Operation::Stat(b"islink")),
@@ -608,6 +614,10 @@ impl Builtin {
                 &[("filename", false, false)]
             }
             Self::Filesystem(filesystem::Operation::Getcwd) => &[],
+            Self::FileLink(file_links::Operation::Hard | file_links::Operation::Symbolic) => {
+                &[("target", false, false), ("link", false, false)]
+            }
+            Self::FileLink(_) => &[("path", false, false)],
             Self::IncludePath(include_paths::Operation::Get) => &[],
             Self::IncludePath(include_paths::Operation::Set) => &[("include_path", false, false)],
             Self::IncludePath(include_paths::Operation::Resolve) => &[("filename", false, false)],
@@ -1363,6 +1373,9 @@ impl Runtime {
         if let Builtin::Filesystem(operation) = builtin {
             return self.filesystem_operation(operation, &name, &args, line);
         }
+        if let Builtin::FileLink(operation) = builtin {
+            return self.file_link(operation, &name, &args, line);
+        }
         if let Builtin::Directory(operation) = builtin {
             return self.directory_operation(operation, &name, &args, line);
         }
@@ -1798,6 +1811,7 @@ impl Runtime {
             | Builtin::Settype
             | Builtin::Directory(_)
             | Builtin::Filesystem(_)
+            | Builtin::FileLink(_)
             | Builtin::TemporaryFile
             | Builtin::TemporaryName
             | Builtin::TemporaryDirectory

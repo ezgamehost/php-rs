@@ -1,0 +1,83 @@
+PHP 8.5.0 filesystem links and canonical paths hillclimb
+Baseline: a53ee245c447504253c9bfd49f7a723e26acd7c0
+
+zend
+Before: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+After: 5256 cases; 2589 passed, 2267 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/dim_assign_001.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 551 passed, 174 failed, 53 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/RecursiveDirectoryIterator_hasChildren.phpt
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 299 passed, 89 failed, 508 unsupported
+After: 896 cases; 308 passed, 80 failed, 508 unsupported
+New passes: 9; regressions: 0
+NEW PASS: ext/standard/tests/file/bug43248.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_variation14.phpt
+NEW PASS: ext/standard/tests/file/readlink_realpath_variation3.phpt
+NEW PASS: ext/standard/tests/file/realpath_basic2.phpt
+NEW PASS: ext/standard/tests/file/realpath_basic3.phpt
+NEW PASS: ext/standard/tests/file/realpath_basic4.phpt
+NEW PASS: ext/standard/tests/file/symlink_link_linkinfo_is_link_variation2.phpt
+NEW PASS: ext/standard/tests/file/symlink_link_linkinfo_is_link_variation4.phpt
+NEW PASS: ext/standard/tests/file/windows_links/bug78862.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 30 passed, 76 failed, 51 unsupported
+After: 157 cases; 30 passed, 76 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,164 passed, 2,951 failed, 1,441 unsupported.
+11 new passes (9 file, 1 SPL, 1 Zend); zero regressions across all ten suites.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+link/symlink/readlink/linkinfo support Unix local files with native path validation,
+diagnostics, literal symbolic-link targets, device metadata and preserved stat
+caches. Hard links use the same native link() call as PHP; Rust hard_link has
+different final-symlink behavior on macOS. realpath resolves existing paths,
+including an empty path for the working directory. Shared expansion enforces
+native path limits and a 32-symlink traversal limit.
+Direct PHP comparisons match hard-link identity, relative symbolic links,
+dangling destination expansion, literal URL targets, empty/trailing path
+components, retained stat caches and 32-versus-33-link resolution.
+Realpath caching, open_basedir and Windows-specific link/metadata behavior remain
+unfinished. No complete cross-platform filesystem conformance is claimed.
+Final upstream logs: /tmp/php-rs-links-*2.log.
+Rust validation logs: /tmp/php-rs-links-{tests,clippy}2.log.

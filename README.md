@@ -299,6 +299,12 @@ new request. The CLI returns the low eight bits of the requested status.
   directory handles return false. File URLs and unknown-wrapper diagnostics are
   supported; custom stat wrappers and non-Unix metadata remain unfinished.
   `PHP_OS` and `PHP_OS_FAMILY` identify the runtime platform.
+- `link`, `symlink`, `readlink`, and `linkinfo` support local Unix links with
+  native diagnostics, literal symbolic-link targets, fresh device metadata, and
+  preserved stat caches. `realpath` resolves existing paths, including an empty
+  path for the working directory. Link path expansion enforces native path limits
+  and a 32-symlink traversal limit. Realpath caching, open_basedir enforcement,
+  and Windows-specific link/metadata behavior remain unfinished.
 - `chmod` changes Unix file/directory permissions, follows symlinks, and clears
   cached metadata on success. It preserves native path/wrapper diagnostics and
   permission changes that occur while a wrapper warning exception is pending.
