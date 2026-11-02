@@ -78,6 +78,7 @@ mod rounding;
 mod scalar_values;
 mod scope_slots;
 mod sensitive_parameters;
+mod shutdown;
 mod sorting;
 mod static_members;
 mod streams;
@@ -150,6 +151,9 @@ pub struct Runtime {
     exception_handler: Option<Value>,
     exception_handlers: Vec<Option<Value>>,
     uncaught_handler_allowed: bool,
+    shutdown_functions: Vec<shutdown::Callback>,
+    shutdown_started: bool,
+    executing_units: usize,
 }
 struct Location {
     offset_reference: Option<variables::Cell>,

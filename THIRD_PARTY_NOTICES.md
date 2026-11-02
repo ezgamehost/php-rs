@@ -213,6 +213,10 @@ Rasmus Lerdorf as author.
 `ext/standard/dir.c`, `main/streams/plain_wrapper.c`, and `main/streams/streams.c`,
 copyright (c) The PHP Group. Their authors include Thies C. Arntzen and Wez Furlong.
 
+`src/runtime/shutdown.rs` adapts shutdown callback registration and invocation
+from PHP 8.5.0's `ext/standard/basic_functions.c`, copyright (c) The PHP Group.
+Its authors are Andi Gutmans and Zeev Suraski.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

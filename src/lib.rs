@@ -29,9 +29,16 @@ pub fn lint(source: &[u8]) -> Result<(), Error> {
     Ok(())
 }
 
-/// Execute a PHP document, including any text outside PHP tags.
+/// Execute a PHP document and its shutdown callbacks, including text outside PHP
+/// tags. Execution errors remain returned even if an exception handler runs.
 pub fn run(source: &[u8]) -> Result<Vec<u8>, Error> {
     let mut runtime = Runtime::default();
-    runtime.execute(source)?;
+    let execution = runtime.execute(source);
+    if let Err(error) = &execution {
+        runtime.report_uncaught(error);
+    }
+    let shutdown = runtime.shutdown();
+    execution?;
+    shutdown?;
     Ok(runtime.output)
 }

@@ -195,6 +195,7 @@ impl Case {
         if let Err(error) = result {
             runtime.report_uncaught(&error);
         }
+        let _ = runtime.shutdown();
         self.check_output(&runtime.output_with_diagnostics())
     }
     pub fn check_output(&self, actual: &[u8]) -> Outcome {

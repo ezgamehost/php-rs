@@ -144,6 +144,7 @@ pub(super) enum Builtin {
     FuncGetArgs,
     ErrorReporting,
     SetExceptionHandler,
+    RegisterShutdownFunction,
     GetExceptionHandler,
     RestoreExceptionHandler,
     AutoloadRegister,
@@ -434,6 +435,7 @@ impl Builtin {
             b"func_get_args" => Self::FuncGetArgs,
             b"error_reporting" => Self::ErrorReporting,
             b"set_exception_handler" => Self::SetExceptionHandler,
+            b"register_shutdown_function" => Self::RegisterShutdownFunction,
             b"get_exception_handler" => Self::GetExceptionHandler,
             b"restore_exception_handler" => Self::RestoreExceptionHandler,
             b"spl_autoload_register" => Self::AutoloadRegister,
@@ -521,6 +523,7 @@ impl Builtin {
             Self::AutoloadExtensions => &[("file_extensions", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
             Self::SetExceptionHandler => &[("callback", false, false)],
+            Self::RegisterShutdownFunction => &[("callback", false, false), ("args", false, true)],
             Self::GetExceptionHandler | Self::RestoreExceptionHandler => &[],
             Self::Strlen | Self::StrRev | Self::StrLower | Self::StrUpper | Self::Bin2Hex => {
                 &[("string", false, false)]
@@ -1097,6 +1100,7 @@ impl Runtime {
                     sorting::natural_compare(&left, &right, insensitive) as i64,
                 ))
             }
+            Builtin::RegisterShutdownFunction => self.register_shutdown(first, &extra, line),
             Builtin::SubstrCompare => self.substring_compare(&args, line),
             Builtin::SubstrCount => self.substring_count(&args, line),
             Builtin::StrSpan(included) => self.string_span(included, &args, line),

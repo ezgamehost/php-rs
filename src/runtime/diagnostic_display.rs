@@ -4,7 +4,8 @@ impl Runtime {
     /// Report an execution error as an uncaught PHP error. Call once at the
     /// request boundary, before reading/writing displayed output. This may run
     /// a registered exception handler or user-defined exception __toString(),
-    /// including their output or exit(). A handled exception sets exit status 0.
+    /// including their output or exit(). A handled exception preserves an existing
+    /// exit status, or sets it to 0 if no earlier status was set.
     /// Execution APIs themselves continue returning errors without reporting them.
     pub fn report_uncaught(&mut self, error: &Error) {
         self.diagnostics.messages = std::mem::take(&mut self.warnings);
@@ -12,7 +13,7 @@ impl Runtime {
         let source =
             self.replace_source(Rc::new(crate::source::Source::memory(b"[no active file]")));
         if self.uncaught_handler_allowed {
-            self.dispatch_uncaught(error.clone());
+            let _ = self.dispatch_uncaught(error.clone());
         } else {
             self.report_uncaught_inner(error.clone());
         }
@@ -40,6 +41,7 @@ impl Runtime {
                 _ => None,
             };
             if let Some((level, label)) = label {
+                self.exit_status = Some(255);
                 self.diagnostics
                     .display(level, label, &data.message, &data.file, data.line);
                 return;
@@ -64,6 +66,7 @@ impl Runtime {
             message.extend_from_slice(b"\n  thrown");
             self.diagnostics
                 .display(1, "Fatal error", &message, &data.file, data.line);
+            self.exit_status = Some(255);
             return;
         }
     }

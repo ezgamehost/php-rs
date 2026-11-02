@@ -32,18 +32,20 @@ impl Runtime {
         }
     }
 
-    pub(super) fn dispatch_uncaught(&mut self, error: Error) {
+    pub(super) fn dispatch_uncaught(&mut self, error: Error) -> Result<(), Error> {
         if error.kind == ErrorKind::UnwindExit {
-            return;
+            return Err(error);
         }
         let Some(handler) = self.exception_handler.take() else {
-            self.report_uncaught_inner(error);
-            return;
+            self.report_uncaught_inner(error.clone());
+            return Err(error);
         };
         self.exception_handlers.push(Some(handler.clone()));
         let error = self.materialize_error(error);
         let exception = Value::Object(error.throwable.unwrap());
-        let source = self.replace_source(Rc::new(crate::source::Source::memory(b"Unknown")));
+        let source =
+            self.replace_source(Rc::new(crate::source::Source::memory(b"[no active file]")));
+        self.diagnostics.source = Rc::new(crate::source::Source::memory(b"Unknown"));
         let result = match self.resolve_native_callback(&handler, 0) {
             Ok(target) => self.call_callback(&target, &[exception], 0),
             Err(error) if error.throwable.is_none() && error.kind != ErrorKind::UnwindExit => {
@@ -69,21 +71,25 @@ impl Runtime {
                 }
                 self.exit_status = Some(255);
                 self.replace_source(source);
-                return;
+                return Err(error);
             }
             Err(error) => Err(error),
         };
         self.replace_source(source);
-        match result {
-            Ok(_) => self.exit_status = Some(0),
+        let result = match result {
+            Ok(_) => {
+                self.exit_status.get_or_insert(0);
+                Ok(())
+            }
             Err(error) => {
                 // The active handler is cleared during invocation. A handler
                 // explicitly installed by that invocation can handle its throw.
-                self.dispatch_uncaught(error);
+                self.dispatch_uncaught(error)
             }
-        }
+        };
         if self.exception_handler.is_none() {
             self.exception_handler = self.exception_handlers.pop().flatten();
         }
+        result
     }
 }

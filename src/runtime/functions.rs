@@ -675,7 +675,10 @@ impl Runtime {
                     line,
                 )
             };
-            if let Some(Builtin::ArrayUserSet(operation)) = builtin {
+            if matches!(
+                builtin,
+                Some(Builtin::ArrayUserSet(_) | Builtin::RegisterShutdownFunction)
+            ) {
                 // Legacy variadic parsing rejects extra named arguments before
                 // checking its callback-dependent minimum argument count.
                 if bound
@@ -693,6 +696,8 @@ impl Runtime {
                         line,
                     ));
                 }
+            }
+            if let Some(Builtin::ArrayUserSet(operation)) = builtin {
                 let minimum = operation.callbacks() + 1;
                 if supplied < minimum {
                     return Err(count_error(minimum, "at least"));

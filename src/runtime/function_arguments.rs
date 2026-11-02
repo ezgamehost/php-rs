@@ -55,7 +55,11 @@ impl Runtime {
         let arguments = self.current_arguments.as_ref().ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
-                if matches!(builtin, Builtin::FuncNumArgs) {
+                if dynamic && self.executing_units == 0 {
+                    // Internal request-boundary callbacks have no preceding
+                    // script frame, unlike dynamic calls in a global script.
+                    format!("Cannot call {name}() dynamically")
+                } else if matches!(builtin, Builtin::FuncNumArgs) {
                     "func_num_args() must be called from a function context".to_owned()
                 } else {
                     format!("{name}() cannot be called from the global scope")

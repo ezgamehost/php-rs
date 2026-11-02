@@ -28,14 +28,20 @@ output/error streams in emission order. Source filenames and diagnostic levels a
 retained while the existing `output` and `warnings` fields remain separate.
 `report_uncaught(&error)` handles an execution error at the request boundary,
 including registered exception handlers, user-defined exception `__toString()`,
-and any output or exit they cause. A successfully handled exception sets exit status 0.
+and any output or exit they cause. A successfully handled exception preserves an
+earlier exit status, or sets it to 0 when none was set.
 Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
+Call `Runtime::shutdown()` after reporting any execution error and before consuming
+output. It runs shutdown callbacks once; callback errors are reported and returned,
+so callers must not report them again. The CLI, PHPT runner, and `run` helper do
+this automatically. The `run` helper still returns execution errors even when an
+exception handler runs.
 `Runtime::set_working_directory` configures relative path resolution for one
 request without changing the host process's working directory.
-`Runtime::exit_status()` reports request termination, including `exit`/`die`; execution
-returns successfully with `Value::Null`, preserving output and global state.
+`Runtime::exit_status()` reports request termination. `exit`/`die` return from
+execution successfully with `Value::Null`, preserving output and global state.
 A terminated request does not execute further PHP; create a new `Runtime` for a
 new request. The CLI returns the low eight bits of the requested status.
 
@@ -292,7 +298,13 @@ new request. The CLI returns the low eight bits of the requested status.
   preserve callable identity and handler stacks, including null entries. Uncaught
   file/stdin exceptions dispatch at the request boundary; replacement handlers can
   catch exceptions from an active handler. CLI `-r` and initial compilation errors
-  bypass handlers, following PHP. Shutdown callbacks remain unfinished.
+  bypass handlers, following PHP.
+- `register_shutdown_function` retains resolved callbacks and argument values,
+  runs them in registration order, and includes callbacks added during shutdown.
+  Handled exceptions continue the queue; exits and unhandled exceptions stop it.
+  Shutdown runs after normal completion, exit, or a reported fatal error and
+  preserves prior exit status. Destructor and output-buffer shutdown phases
+  remain unfinished.
 - `ErrorException` supports severity, custom filenames and signed line numbers,
   named arguments, and the final `getSeverity()` method. The 13 SPL exception
   classes support their native inheritance and constructors. Repeated native

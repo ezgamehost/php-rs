@@ -73,11 +73,13 @@ fn execute() -> Result<u8, Box<dyn std::error::Error>> {
     } else {
         runtime.execute(&source)
     };
-    if let Err(error) = &result {
-        runtime.report_uncaught(error);
+    let failed = result.is_err();
+    if let Err(error) = result {
+        runtime.report_uncaught(&error);
     }
+    let _ = runtime.shutdown();
     runtime.write_output(&mut io::stdout().lock(), &mut io::stderr().lock())?;
     Ok(runtime
         .exit_status()
-        .unwrap_or(if result.is_err() { 255 } else { 0 }) as u8)
+        .unwrap_or(if failed { 255 } else { 0 }) as u8)
 }

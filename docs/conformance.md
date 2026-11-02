@@ -1947,6 +1947,34 @@ deprecation attributes, and closure-debug metadata still block related fixtures.
 Adapted rules from PHP 8.5.0 `Zend/zend_builtin_functions.c` and `Zend/zend.c`
 retain Zend license attribution.
 
+The [shutdown callback slice](conformance/php-8.5.0-shutdown-hillclimb.txt) adds
+**twelve upstream passes**: eight Zend fixtures and four dedicated shutdown fixtures.
+Zend reaches **2162 / 2686 / 408**; the other five tracked suites retain their totals.
+`register_shutdown_function` validates and retains a resolved callback, its class
+scope/object, and argument values. Callbacks run in registration order, including
+callbacks appended while shutdown is running. A handled exception continues the
+queue; an exit or unhandled exception stops it. Successful exception handling
+preserves an earlier exit status, including a main-script fatal status.
+
+`Runtime::shutdown` performs this phase once after any execution error is reported.
+The CLI, PHPT runner, and `run` helper invoke it before returning output. Embedded
+callers can invoke it explicitly; unhandled callback errors are reported and
+returned, and must not be reported twice. Execution errors retain the `run` helper's
+existing error-return contract. No-active-frame argument inspection now preserves
+PHP's dynamic-call errors separately from global-script errors. Internal callback
+warnings use `Unknown:0`, while native callback exceptions use `[no active file]:0`.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. There are zero regressions across six tracked suites. The dedicated
+selection is **4 / 1 / 0**; its remaining failure needs `forward_static_call`.
+Reference probes match live queue order, private callbacks, saved targets versus
+referenced callback-name mutation, scalar/array snapshots and shared objects,
+by-reference parameter warnings, named-argument rejection, eval exceptions,
+fatal/exit paths, and stdin/CLI `-r` shutdown. No custom tests or generated matrices
+were added. Destructor and output-buffer shutdown phases, error handlers, and
+other missing builtins remain unfinished. Adapted shutdown rules retain PHP
+license attribution.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1954,7 +1982,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2154 | 2694 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2162 | 2686 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

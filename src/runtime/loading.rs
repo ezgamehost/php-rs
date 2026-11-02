@@ -143,7 +143,9 @@ impl Runtime {
         if let Some(frame) = frame {
             self.trace_frames.push(frame);
         }
+        self.executing_units += 1;
         let result = self.block(&statements);
+        self.executing_units -= 1;
         if has_frame {
             self.trace_frames.pop();
         }
