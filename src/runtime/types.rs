@@ -339,15 +339,10 @@ impl Runtime {
                 // PHP's return verifier raises its own TypeError and retains
                 // a failed __toString conversion as the previous throwable.
                 let error = self.materialize_error(error());
-                error
-                    .throwable
-                    .as_ref()
-                    .unwrap()
-                    .throwable
-                    .borrow_mut()
-                    .as_mut()
-                    .unwrap()
-                    .previous = previous.throwable;
+                error.throwable.as_ref().unwrap().set_throwable_property(
+                    b"previous",
+                    previous.throwable.map_or(Value::Null, Value::Object),
+                );
                 Err(error)
             }
         }

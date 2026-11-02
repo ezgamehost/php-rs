@@ -142,7 +142,6 @@ impl Runtime {
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
-            throwable: RefCell::new(None),
             object_id: handle.id,
             _handle: handle,
         }))

@@ -38,6 +38,7 @@ impl Runtime {
         if let Value::Object(object) = original
             && (object.class.is_a(b"RecursiveIteratorIterator")
                 || object.class.is_a(b"InternalIterator")
+                || object.class.is_a(b"Throwable")
                 || object.class.declaration.is_enum
                 || object.class.is_a(b"ReflectionClass")
                 || object.class.is_a(b"ReflectionAttribute")
@@ -113,16 +114,8 @@ impl Runtime {
         let Value::Object(original) = original else {
             unreachable!()
         };
-        if original.class.is_a(b"Throwable") {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "Trying to clone an uncloneable throwable object",
-                line,
-            ));
-        }
         let object = self.create_object(PhpObject {
             reflection: RefCell::default(),
-            throwable: RefCell::new(None),
             class: original.class.clone(),
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),

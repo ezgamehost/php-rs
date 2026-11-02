@@ -143,11 +143,14 @@ impl Runtime {
             ));
             {
                 let object = error.throwable.as_ref().unwrap();
-                let mut data = object.throwable.borrow_mut();
-                let data = data.as_mut().unwrap();
-                data.message = message.to_vec();
-                data.code = 1;
-                data.previous = pending.and_then(|error| error.throwable);
+                object.set_throwable_property(b"message", Value::String(message.to_vec().into()));
+                object.set_throwable_property(b"code", Value::Int(1));
+                object.set_throwable_property(
+                    b"previous",
+                    pending
+                        .and_then(|error| error.throwable)
+                        .map_or(Value::Null, Value::Object),
+                );
             }
             if self.assertion_options.bail {
                 self.report_uncaught_inner(error);

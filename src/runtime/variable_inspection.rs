@@ -90,8 +90,10 @@ impl Runtime {
                     if let Some(previous) = state.error.take()
                         && let Some(current) = &error.throwable
                     {
-                        current.throwable.borrow_mut().as_mut().unwrap().previous =
-                            previous.throwable;
+                        current.set_throwable_property(
+                            b"previous",
+                            previous.throwable.map_or(Value::Null, Value::Object),
+                        );
                     }
                     state.error = Some(error);
                     return Ok(());

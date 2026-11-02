@@ -59,10 +59,9 @@ impl Runtime {
             }
             let materialized = self.materialize_error(error);
             let object = materialized.throwable.unwrap();
-            let data = object.throwable.borrow().as_ref().unwrap().clone();
             let method = objects::method(&object.class, b"__toString").unwrap();
             let result = self
-                .unchecked_method_target(method, object.class.clone(), Some(object), 0)
+                .unchecked_method_target(method, object.class.clone(), Some(object.clone()), 0)
                 .and_then(|target| self.invoke_at(target, &[], 0, false, true));
             let text = match result {
                 Ok(value) => value.to_bytes(),
@@ -71,13 +70,20 @@ impl Runtime {
                     continue;
                 }
             };
+            object.set_throwable_property(b"string", Value::String(text.clone().into()));
+            let data = object.throwable_snapshot();
+            let file = if data.file.is_empty() {
+                b"Unknown".as_slice()
+            } else {
+                &data.file
+            };
             let mut message = b"Uncaught ".to_vec();
             message.extend(text);
             message.extend_from_slice(b"\n  thrown");
             self.diagnostics.last_fatal_trace = None;
             self.diagnostics.output_position = self.output.len();
             self.diagnostics
-                .display(2, "Warning", &message, &data.file, data.line);
+                .display(2, "Warning", &message, file, data.line as u32 as i64);
             return Ok(());
         }
     }
@@ -115,7 +121,7 @@ impl Runtime {
             self.diagnostics.last_fatal_trace = None;
             let error_object = self.materialize_error(error);
             let object = error_object.throwable.unwrap();
-            let data = object.throwable.borrow().as_ref().unwrap().clone();
+            let data = object.throwable_snapshot();
             // PHP special-cases the exact internal classes, not their subclasses.
             let label = match object.class.name.as_slice() {
                 b"ParseError" => Some((4, "Parse error")),
@@ -124,13 +130,18 @@ impl Runtime {
             };
             if let Some((level, label)) = label {
                 self.exit_status = Some(255);
-                self.diagnostics
-                    .display(level, label, &data.message, &data.file, data.line);
+                self.diagnostics.display(
+                    level,
+                    label,
+                    &data.message,
+                    &data.file,
+                    data.line as u32 as i64,
+                );
                 return;
             }
             let method = objects::method(&object.class, b"__toString").unwrap();
             let result = self
-                .unchecked_method_target(method, object.class.clone(), Some(object), 0)
+                .unchecked_method_target(method, object.class.clone(), Some(object.clone()), 0)
                 .and_then(|target| self.invoke_at(target, &[], 0, false, true))
                 .map(|value| value.dereferenced());
             let text = match result {
@@ -143,11 +154,18 @@ impl Runtime {
                     continue;
                 }
             };
+            object.set_throwable_property(b"string", Value::String(text.clone().into()));
+            let data = object.throwable_snapshot();
+            let file = if data.file.is_empty() {
+                b"Unknown".as_slice()
+            } else {
+                &data.file
+            };
             let mut message = b"Uncaught ".to_vec();
             message.extend(text);
             message.extend_from_slice(b"\n  thrown");
             self.diagnostics
-                .display(1, "Fatal error", &message, &data.file, data.line);
+                .display(1, "Fatal error", &message, file, data.line as u32 as i64);
             self.exit_status = Some(255);
             return;
         }

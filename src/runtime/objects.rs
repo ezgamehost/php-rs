@@ -485,13 +485,23 @@ impl Runtime {
         line: usize,
     ) -> Result<Rc<PhpObject>, Error> {
         self.initialize_class(&class)?;
-        let properties = self.property_defaults(&class)?;
+        let mut properties = self.property_defaults(&class)?;
+        if class.is_a(b"Throwable") {
+            for (name, value) in [
+                (b"trace".as_slice(), Value::Array(self.capture_trace())),
+                (b"file", Value::String(self.source.name.clone().into())),
+                (b"line", Value::Int(line as i64)),
+            ] {
+                properties.insert(
+                    super::throwable_properties::property_key(&class, name),
+                    value,
+                );
+            }
+        }
         let handle = self.allocate_object_handle();
         let object_id = handle.id;
-        let throwable = self.throwable_data(&class, line);
         Ok(self.create_object(PhpObject {
             reflection: RefCell::default(),
-            throwable: RefCell::new(throwable),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),

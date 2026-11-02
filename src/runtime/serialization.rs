@@ -261,7 +261,7 @@ impl Runtime {
             };
             Rc::new(self.serialize_sleep_properties(object, &names, line)?)
         } else {
-            Rc::new(self.serialization_properties(object))
+            Rc::new(object.snapshot())
         };
         let mut name = class.name.clone();
         if class.name == b"__PHP_Incomplete_Class" {
@@ -279,55 +279,13 @@ impl Runtime {
         self.drain_destructors(result, line)
     }
 
-    fn serialization_properties(&self, object: &PhpObject) -> PhpArray {
-        let Some(data) = object.throwable.borrow().as_ref().cloned() else {
-            return object.snapshot();
-        };
-        let owner = if object.class.is_a(b"Exception") {
-            "Exception"
-        } else {
-            "Error"
-        };
-        let mut properties = PhpArray::default();
-        for (key, value) in [
-            (b"\0*\0message".to_vec(), Value::String(data.message.into())),
-            (
-                format!("\0{owner}\0string").into_bytes(),
-                Value::String(Vec::new().into()),
-            ),
-            (b"\0*\0code".to_vec(), Value::Int(data.code)),
-            (b"\0*\0file".to_vec(), Value::String(data.file.into())),
-            (b"\0*\0line".to_vec(), Value::Int(data.line)),
-            (
-                format!("\0{owner}\0trace").into_bytes(),
-                Value::Array(data.trace),
-            ),
-            (
-                format!("\0{owner}\0previous").into_bytes(),
-                data.previous.map_or(Value::Null, Value::Object),
-            ),
-        ] {
-            properties.insert(ArrayKey::String(key), value);
-        }
-        if object.class.is_a(b"ErrorException") {
-            properties.insert(
-                ArrayKey::String(b"\0*\0severity".to_vec()),
-                Value::Int(data.severity),
-            );
-        }
-        for (key, value) in object.snapshot().iter_copied() {
-            properties.insert(key, value);
-        }
-        properties
-    }
-
     fn serialize_sleep_properties(
         &mut self,
         object: &PhpObject,
         names: &PhpArray,
         line: usize,
     ) -> Result<PhpArray, Error> {
-        let properties = self.serialization_properties(object);
+        let properties = object.snapshot();
         let mut result = PhpArray::default();
         for (_, value) in names.iter() {
             let value = value.dereferenced();

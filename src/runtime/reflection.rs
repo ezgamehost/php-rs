@@ -135,7 +135,6 @@ impl Runtime {
         let handle = self.allocate_object_handle();
         Value::Object(self.create_object(PhpObject {
             reflection: RefCell::new(Some(data)),
-            throwable: RefCell::default(),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),

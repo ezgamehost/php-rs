@@ -112,6 +112,7 @@ mod stringable;
 mod strip_tags;
 mod substrings;
 mod termination;
+mod throwable_properties;
 mod throwables;
 mod traces;
 mod traits;

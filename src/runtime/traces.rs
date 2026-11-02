@@ -319,7 +319,7 @@ fn format_trace(trace: &PhpArray, include_main: bool) -> Vec<u8> {
     output
 }
 
-fn format_argument(output: &mut Vec<u8>, value: &Value) {
+pub(super) fn format_argument(output: &mut Vec<u8>, value: &Value) {
     match value {
         Value::Reference(reference) | Value::Indirect(reference) => {
             format_argument(output, &reference.borrow())

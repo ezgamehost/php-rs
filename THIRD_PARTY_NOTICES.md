@@ -75,6 +75,14 @@ layouts and anonymous-class trace names follow `Zend/zend_exceptions.stub.php`
 and `Zend/zend_exceptions.c`. The Zend license below also applies to these
 adaptations.
 
+Native Throwable property declarations, construction, getters, wakeup checks,
+trace formatting, cached string conversion, clone restrictions, and exception
+chain handling in `src/runtime/throwable_properties.rs`,
+`src/runtime/throwables.rs`, and related object/reporting paths adapt PHP 8.5.0's
+`Zend/zend_exceptions.c`, `.stub.php`, and `.h`, copyright (c) Zend Technologies
+Ltd., by Andi Gutmans, Marcus Boerger, Sterling Hughes, and Zeev Suraski.
+The Zend license below also applies to these adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.

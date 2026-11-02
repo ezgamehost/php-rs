@@ -1,6 +1,6 @@
 use super::*;
 use crate::ast::{CatchClause, NativeMethod};
-use crate::object::{Class, ThrowableData};
+use crate::object::Class;
 
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
@@ -106,9 +106,19 @@ impl Runtime {
         } else if canonical == "Stringable" {
             "<?php interface Stringable { public function __toString():string; }".to_owned()
         } else if canonical == "Throwable" {
-            "<?php interface Throwable extends Stringable {}".to_owned()
+            "<?php interface Throwable extends Stringable {
+                public function getMessage(): string;
+                public function getCode();
+                public function getFile(): string;
+                public function getLine(): int;
+                public function getTrace(): array;
+                public function getPrevious(): ?Throwable;
+                public function getTraceAsString(): string;
+            }"
+            .to_owned()
         } else if canonical == "ErrorException" {
             "<?php class ErrorException extends Exception {
+                protected int $severity = 1;
                 public function __construct(string $message='', int $code=0,
                     int $severity=1, ?string $filename=null, ?int $line=null,
                     ?Throwable $previous=null) {}
@@ -123,6 +133,15 @@ impl Runtime {
             }
         } else {
             format!("<?php class {canonical} implements Throwable {{
+            protected $message = \"\";
+            private string $string = \"\";
+            protected $code = 0;
+            protected string $file = \"\";
+            protected int $line{};
+            private array $trace = [];
+            private ?Throwable $previous = null;
+            private function __clone(): void {{}}
+            public function __wakeup(): void {{}}
             public function __construct(string $message='', int $code=0, ?Throwable $previous=null) {{}}
             final public function getMessage():string {{}}
             final public function getCode() {{}}
@@ -132,7 +151,7 @@ impl Runtime {
             final public function getTrace():array {{}}
             final public function getTraceAsString():string {{}}
             public function __toString():string {{}}
-        }}")
+        }}", if canonical == "Exception" { " = 0" } else { "" })
         };
         let (mut statements, _, _) =
             parser::parse(lexer::lex(code.as_bytes()).expect("native source"))
@@ -140,6 +159,9 @@ impl Runtime {
         let Stmt::Class(mut declaration) = statements.remove(0) else {
             unreachable!()
         };
+        for property in &mut Rc::make_mut(&mut declaration).properties {
+            property.declaring_class = canonical.as_bytes().to_vec();
+        }
         for function in &mut Rc::make_mut(&mut declaration).methods {
             let function = Rc::make_mut(function);
             if function.is_abstract {
@@ -159,8 +181,13 @@ impl Runtime {
                 }
                 continue;
             }
+            if function.name.ends_with(b"::__wakeup") {
+                function.tentative_return_type = function.return_type.take();
+            }
             function.native = Some(match function.name.rsplit(|b| *b == b':').next().unwrap() {
                 b"__toString" => NativeMethod::ThrowableToString,
+                b"__wakeup" => NativeMethod::ThrowableWakeup,
+                b"__clone" => NativeMethod::ThrowableClone,
                 b"__construct" if canonical == "ErrorException" => {
                     NativeMethod::ErrorExceptionConstruct
                 }
@@ -215,6 +242,10 @@ impl Runtime {
             });
             methods.push(own.clone());
         }
+        let mut properties = parent
+            .as_ref()
+            .map_or_else(Vec::new, |p| p.properties.clone());
+        properties.extend(declaration.properties.iter().cloned());
         let class = Rc::new(Class {
             aliases: RefCell::default(),
             name: canonical.as_bytes().to_vec(),
@@ -222,7 +253,7 @@ impl Runtime {
             parent,
             interfaces,
             methods,
-            properties: Vec::new(),
+            properties,
             static_properties: Vec::new(),
             allow_dynamic: canonical == "__PHP_Incomplete_Class",
             forbid_dynamic: false,
@@ -237,18 +268,6 @@ impl Runtime {
             .borrow_mut()
             .insert(name.to_vec(), class.clone());
         Some(class)
-    }
-
-    pub(super) fn throwable_data(&mut self, class: &Class, line: usize) -> Option<ThrowableData> {
-        class.is_a(b"Throwable").then(|| ThrowableData {
-            trace: self.capture_trace(),
-            message: Vec::new(),
-            code: 0,
-            file: self.source.name.clone(),
-            line: line as i64,
-            severity: 1,
-            previous: None,
-        })
     }
 
     pub(super) fn native_throwable_method(
@@ -288,67 +307,7 @@ impl Runtime {
                 line,
             ));
         };
-        if matches!(method, NativeMethod::ThrowableToString) {
-            return Ok(Value::String(stringable::throwable_string(&object).into()));
-        }
-        let mut data = object.throwable.borrow_mut();
-        let data = data.as_mut().expect("native throwable receiver");
-        Ok(match method {
-            NativeMethod::ThrowableToString
-            | NativeMethod::LinkedList
-            | NativeMethod::FixedArray
-            | NativeMethod::RecursiveIterator
-            | NativeMethod::ArrayIterator
-            | NativeMethod::AttributeConstruct
-            | NativeMethod::SensitiveValue
-            | NativeMethod::Reflection
-            | NativeMethod::Enum
-            | NativeMethod::Abstract => unreachable!(),
-            NativeMethod::ThrowableConstruct | NativeMethod::ErrorExceptionConstruct => {
-                let Value::String(message) = self.lookup(b"message").unwrap() else {
-                    unreachable!()
-                };
-                let Value::Int(code) = self.lookup(b"code").unwrap() else {
-                    unreachable!()
-                };
-                let previous = self.lookup(b"previous").unwrap();
-                // Omitted message, zero code, and null previous leave existing
-                // state intact when a constructor is invoked again.
-                if supplied > 0 {
-                    data.message = message.to_vec();
-                }
-                if code != 0 {
-                    data.code = code;
-                }
-                if let Value::Object(previous) = previous {
-                    data.previous = Some(previous);
-                }
-                if matches!(method, NativeMethod::ErrorExceptionConstruct) {
-                    let Value::Int(severity) = self.lookup(b"severity").unwrap() else {
-                        unreachable!()
-                    };
-                    data.severity = severity;
-                    if let Value::String(filename) = self.lookup(b"filename").unwrap() {
-                        data.file = filename.to_vec();
-                        data.line = 0;
-                    }
-                    if let Value::Int(line) = self.lookup(b"line").unwrap() {
-                        data.line = line;
-                    }
-                }
-                Value::Null
-            }
-            NativeMethod::GetTrace => Value::Array(data.trace.clone()),
-            NativeMethod::GetTraceAsString => {
-                Value::String(traces::trace_string(&data.trace).into())
-            }
-            NativeMethod::GetMessage => Value::String(data.message.clone().into()),
-            NativeMethod::GetCode => Value::Int(data.code),
-            NativeMethod::GetFile => Value::String(data.file.clone().into()),
-            NativeMethod::GetLine => Value::Int(data.line),
-            NativeMethod::GetSeverity => Value::Int(data.severity),
-            NativeMethod::GetPrevious => data.previous.clone().map_or(Value::Null, Value::Object),
-        })
+        self.throwable_method(&object, method, supplied, line)
     }
 
     pub(super) fn materialize_error(&mut self, error: Error) -> Error {
@@ -366,13 +325,29 @@ impl Runtime {
         };
         let class = self.find_class(name.as_bytes()).expect("error class");
         let handle = self.allocate_object_handle();
-        let trace = self.capture_trace();
+        let mut properties = self
+            .property_defaults(&class)
+            .expect("native error defaults");
+        for (name, value) in [
+            (b"trace".as_slice(), Value::Array(self.capture_trace())),
+            (
+                b"message",
+                Value::String(error.message.as_bytes().to_vec().into()),
+            ),
+            (b"file", Value::String(file.to_vec().into())),
+            (b"line", Value::Int(error.line as i64)),
+        ] {
+            properties.insert(
+                super::throwable_properties::property_key(&class, name),
+                value,
+            );
+        }
         error.throwable = Some(self.create_object(crate::PhpObject {
             class_name: name,
             class,
             object_id: handle.id,
             _handle: handle,
-            properties: RefCell::default(),
+            properties: RefCell::new(properties),
             linked_list: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
@@ -384,15 +359,6 @@ impl Runtime {
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
-            throwable: RefCell::new(Some(ThrowableData {
-                trace,
-                message: error.message.as_bytes().to_vec(),
-                code: 0,
-                file: file.to_vec(),
-                line: error.line as i64,
-                severity: 1,
-                previous: None,
-            })),
         }));
         error
     }
@@ -408,8 +374,7 @@ impl Runtime {
                 line,
             );
         }
-        let data = object.throwable.borrow();
-        let data = data.as_ref().expect("throwable object");
+        let data = object.throwable_snapshot();
         let kind = [
             (b"Exception".as_slice(), ErrorKind::Exception),
             (b"ArgumentCountError", ErrorKind::ArgumentCountError),
@@ -549,33 +514,25 @@ impl Runtime {
 }
 
 pub(super) fn append_previous(current: &Rc<crate::PhpObject>, previous: &Rc<crate::PhpObject>) {
-    let mut seen = HashSet::new();
+    // A shared ancestor would create a cycle even if neither root is the other.
+    let mut ancestors = HashSet::new();
     let mut next = Some(previous.clone());
     while let Some(object) = next {
-        if Rc::ptr_eq(&object, current) || !seen.insert(object.object_id) {
+        if !ancestors.insert(object.object_id) {
             return;
         }
-        next = object
-            .throwable
-            .borrow()
-            .as_ref()
-            .and_then(|d| d.previous.clone());
+        next = object.throwable_previous();
     }
     let mut cursor = current.clone();
-    seen.clear();
+    let mut seen = HashSet::new();
     loop {
-        if Rc::ptr_eq(&cursor, previous) || !seen.insert(cursor.object_id) {
+        if ancestors.contains(&cursor.object_id) || !seen.insert(cursor.object_id) {
             return;
         }
-        let next = cursor
-            .throwable
-            .borrow()
-            .as_ref()
-            .and_then(|d| d.previous.clone());
-        if let Some(next) = next {
+        if let Some(next) = cursor.throwable_previous() {
             cursor = next;
         } else {
-            cursor.throwable.borrow_mut().as_mut().unwrap().previous = Some(previous.clone());
+            cursor.set_throwable_property(b"previous", Value::Object(previous.clone()));
             return;
         }
     }

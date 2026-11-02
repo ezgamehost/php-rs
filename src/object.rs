@@ -51,7 +51,6 @@ pub struct PhpObject {
     pub(crate) property_cursor: RefCell<PropertyCursor>,
     pub(crate) property_iterators: RefCell<Vec<std::rc::Weak<RefCell<PropertyCursor>>>>,
     pub(crate) reflection: RefCell<Option<crate::runtime::reflection::ReflectionData>>,
-    pub(crate) throwable: RefCell<Option<ThrowableData>>,
     pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,
     pub(crate) properties: RefCell<PhpArray>,
@@ -187,7 +186,6 @@ impl Drop for PhpObject {
             property_cursor: std::mem::take(&mut self.property_cursor),
             property_iterators: std::mem::take(&mut self.property_iterators),
             reflection: std::mem::take(&mut self.reflection),
-            throwable: std::mem::take(&mut self.throwable),
             class: self.class.clone(),
             class_name: std::mem::take(&mut self.class_name),
             properties: std::mem::take(&mut self.properties),
@@ -214,13 +212,9 @@ impl Drop for PhpObject {
 
 #[derive(Clone)]
 pub(crate) struct ThrowableData {
-    pub trace: Rc<PhpArray>,
     pub message: Vec<u8>,
-    pub code: i64,
     pub file: Vec<u8>,
     pub line: i64,
-    pub severity: i64,
-    pub previous: Option<Rc<PhpObject>>,
 }
 impl Eq for PhpObject {}
 impl PhpObject {

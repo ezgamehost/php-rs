@@ -1,0 +1,68 @@
+PHP 8.5.0 native Throwable property hillclimb
+Baseline: 7981e396d71c4bff6cd00deff13edbbcc0802113
+
+zend
+Before: 5256 cases; 2560 passed, 2288 failed, 408 unsupported
+After: 5256 cases; 2575 passed, 2273 failed, 408 unsupported
+New passes: 15; regressions: 0
+NEW PASS: Zend/tests/exception_with_by_ref_message.phpt
+NEW PASS: Zend/tests/exceptions/bug50005.phpt
+NEW PASS: Zend/tests/exceptions/bug63762.phpt
+NEW PASS: Zend/tests/exceptions/bug64821.1.phpt
+NEW PASS: Zend/tests/exceptions/bug64821.2.phpt
+NEW PASS: Zend/tests/exceptions/bug64821.3.phpt
+NEW PASS: Zend/tests/exceptions/bug70944.phpt
+NEW PASS: Zend/tests/exceptions/bug72581.phpt
+NEW PASS: Zend/tests/exceptions/bug73350.phpt
+NEW PASS: Zend/tests/exceptions/exception_009.phpt
+NEW PASS: Zend/tests/exceptions/exception_delayed_message.phpt
+NEW PASS: Zend/tests/exceptions/exception_getters_with_ref_props.phpt
+NEW PASS: Zend/tests/exceptions/gh16188.phpt
+NEW PASS: Zend/tests/serialize/bug70121.phpt
+NEW PASS: Zend/tests/serialize/bug76502.phpt
+
+reflection
+Before: 492 cases; 288 passed, 167 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionObject_isInternal_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionObject_isUserDefined_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_double_construct.phpt
+
+spl
+Before: 778 cases; 316 passed, 368 failed, 94 unsupported
+After: 778 cases; 316 passed, 368 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 404 passed, 174 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug72663.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 112 passed, 23 failed, 28 unsupported
+After: 163 cases; 116 passed, 19 failed, 28 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/serialize/bug69152.phpt
+NEW PASS: ext/standard/tests/serialize/bug69793.phpt
+NEW PASS: ext/standard/tests/serialize/bug70963.phpt
+NEW PASS: ext/standard/tests/serialize/bug72663_2.phpt
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparison matches uncaught reporting after __toString changes file and line.
+Configurable traces, property hooks, legacy SPL Serializable formats, and complete
+exception-handler and lifecycle compatibility remain unfinished.
+Full log prefix: /tmp/php-rs-throwable-*4.log.

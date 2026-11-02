@@ -2781,6 +2781,29 @@ depth limit. Native exception restoration, legacy SPL Serializable formats,
 INI settings/callbacks, property hooks, and complete lifecycle compatibility
 remain unfinished, along with the earlier runtime and harness gaps.
 
+The [Throwable property slice](conformance/php-8.5.0-throwable-properties-hillclimb.txt)
+replaces the separate native exception payload with declared PHP properties.
+Constructors, getters, references, reflection, serialization, and direct subclass
+writes now use the same storage. Native declarations include typed private trace,
+previous, and cached-string properties, protected location fields, and
+ErrorException severity. Wakeup removes invalid message/code values; exception
+objects reject cloning. Trace formatting handles malformed restored frames and
+reports their field warnings. Exception chaining rejects shared-ancestor cycles,
+and uncaught reporting reads location changes made by custom __toString methods.
+
+This slice adds **23 upstream passes**, with **zero regressions** across all seven
+full suites (**8,430 fixtures**): fifteen Zend, three reflection, one strings, and
+four serialization. Totals are **2575 / 2273 / 408** for Zend,
+**291 / 164 / 37** for reflection, **405 / 173 / 152** for strings, and
+**116 / 19 / 28** for serialization; the other suites are unchanged.
+All **797 existing Rust tests**, **57 reference-checked project PHPT**, formatting,
+Clippy, and diff checks pass. No custom tests or matrices were added. A direct CLI
+comparison also matches uncaught reporting after __toString changes the filename
+to an empty string and the line to a negative value. This supersedes the earlier
+separate Throwable payload and native exception restoration limitations.
+Configurable traces, property hooks, legacy SPL Serializable formats, and complete
+exception-handler and lifecycle compatibility remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2788,14 +2811,14 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2560 | 2288 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 288 | 167 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2575 | 2273 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 316 | 368 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 404 | 174 | 152 |
-| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 112 | 23 | 28 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 116 | 19 | 28 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

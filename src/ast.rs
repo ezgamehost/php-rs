@@ -160,6 +160,8 @@ pub(crate) enum NativeMethod {
     ThrowableConstruct,
     ErrorExceptionConstruct,
     ThrowableToString,
+    ThrowableWakeup,
+    ThrowableClone,
     GetMessage,
     GetCode,
     GetFile,

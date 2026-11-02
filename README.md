@@ -291,8 +291,8 @@ new request. The CLI returns the low eight bits of the requested status.
   and `max_depth`, and defers magic restoration hooks until the graph is parsed.
   Unknown/disallowed classes become `__PHP_Incomplete_Class`, with restricted
   property/method access and preservation of their original serialized class name.
-  Native exception restoration, legacy SPL serialization, INI configuration,
-  and complete lifecycle compatibility remain unfinished.
+  Legacy SPL serialization, INI configuration, and complete lifecycle compatibility
+  remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and
   permitted string sources, checking target names without autoloading them.
@@ -373,6 +373,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Exceptions thrown from `finally` retain the pending exception as their previous.
   Throwable string conversion includes saved traces and previous exceptions,
   honors subclass overrides, and terminates cyclic previous-exception chains.
+  Native exception fields use ordinary declared property storage, including typed
+  private trace/previous slots, protected fields, and ErrorException severity.
+  Getters, reflection, serialization, references, and property writes observe the
+  same values. `__wakeup` validates legacy message/code values; native cloning is
+  forbidden. Error reporting observes location changes made by `__toString`.
 - `set_error_handler`, `get_error_handler`, and `restore_error_handler` preserve
   callable identity, handler stacks, and signed 32-bit level masks. `trigger_error`
   and `user_error` dispatch user notices, warnings, deprecations, and fatal errors.
@@ -611,9 +616,8 @@ reference captures, reference parameters/returns, and reference destructuring wo
 Traversable unpacking, complete reference coercion compatibility and diagnostics,
 and complete cycle collection remain unfinished. Cycles without a tracked object
 and cycles through closures are not yet collected.
-Throwable property layouts, configurable trace settings, error
-handlers, protected exception-property access (including severity), and complete compile-time fatal
-error distinctions remain unfinished.
+Configurable trace settings, remaining error-handler edge cases, and complete
+compile-time fatal error distinctions remain unfinished.
 Other `declare` directives and output handlers are not implemented. Destructor
 timing during complex expressions and reentrant mutations remains incomplete.
 Automatic initialization and scope handling for the other superglobals are not
