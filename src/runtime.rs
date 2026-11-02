@@ -80,6 +80,7 @@ mod inheritance;
 mod interfaces;
 mod iterator_helpers;
 mod iterators;
+mod json;
 mod jumps;
 pub(crate) mod lazy_objects;
 pub(crate) mod linked_list;
@@ -192,6 +193,8 @@ pub struct Runtime {
     checking_trait_values: bool,
     sort_compare_deprecated: bool,
     string_token_state: Option<(Vec<u8>, usize)>,
+    json_last_error: i64,
+    json_guards: HashSet<(u8, usize)>,
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,

@@ -19,6 +19,7 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
         b"backedenum" => ("BackedEnum", None),
         b"stringable" => ("Stringable", None),
         b"throwable" => ("Throwable", None),
+        b"jsonexception" => ("JsonException", Some("Exception")),
         b"reflectionexception" => ("ReflectionException", Some("Exception")),
         b"random\\randomexception" => ("Random\\RandomException", Some("Exception")),
         b"random\\randomerror" => ("Random\\RandomError", Some("Error")),

@@ -49,6 +49,8 @@ impl Runtime {
         };
         let extension = if matches!(name, b"MT_RAND_PHP" | b"MT_RAND_MT19937") {
             "random"
+        } else if name.starts_with(b"JSON_") {
+            "json"
         } else if name.starts_with(b"ASSERT_")
             || matches!(
                 name,
@@ -244,6 +246,9 @@ fn assertion_constant(name: &[u8]) -> Option<i64> {
 }
 
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = json::constant(name) {
+        return Some(Value::Int(value));
+    }
     if matches!(name, b"MT_RAND_PHP" | b"MT_RAND_MT19937") {
         return Some(Value::Int(i64::from(name == b"MT_RAND_PHP")));
     }

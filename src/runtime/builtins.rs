@@ -120,6 +120,7 @@ pub(super) enum Builtin {
     GetClass,
     GetParentClass,
     ClassRelations(class_queries::Relation),
+    Json(json::Operation),
     GetCalledClass,
     ClassExists,
     EnumExists,
@@ -380,6 +381,11 @@ impl Builtin {
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
             b"get_parent_class" => Self::GetParentClass,
+            b"json_encode" => Self::Json(json::Operation::Encode),
+            b"json_decode" => Self::Json(json::Operation::Decode),
+            b"json_validate" => Self::Json(json::Operation::Validate),
+            b"json_last_error" => Self::Json(json::Operation::LastError),
+            b"json_last_error_msg" => Self::Json(json::Operation::LastMessage),
             b"class_parents" => Self::ClassRelations(class_queries::Relation::Parents),
             b"class_implements" => Self::ClassRelations(class_queries::Relation::Interfaces),
             b"class_uses" => Self::ClassRelations(class_queries::Relation::Traits),
@@ -797,6 +803,23 @@ impl Builtin {
                 ("to", false, false),
                 ("context", true, false),
             ],
+            Self::Json(json::Operation::Encode) => &[
+                ("value", false, false),
+                ("flags", true, false),
+                ("depth", true, false),
+            ],
+            Self::Json(json::Operation::Decode) => &[
+                ("json", false, false),
+                ("associative", true, false),
+                ("depth", true, false),
+                ("flags", true, false),
+            ],
+            Self::Json(json::Operation::Validate) => &[
+                ("json", false, false),
+                ("depth", true, false),
+                ("flags", true, false),
+            ],
+            Self::Json(_) => &[],
             Self::GetClass => &[("object", true, false)],
             Self::Clone => &[("object", false, false), ("withProperties", true, false)],
             Self::GetParentClass => &[("object_or_class", true, false)],
@@ -1456,6 +1479,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::Json(operation) = builtin {
+            return self.json_builtin(operation, &name, &args, line);
+        }
         if let Builtin::ClassRelations(relation) = builtin {
             return self.class_relations(relation, &name, &args, line);
         }
@@ -1664,7 +1690,10 @@ impl Runtime {
             Builtin::RandomInt => self.random_int(&args, line),
             Builtin::ArrayRand => self.array_rand(&args, line),
             Builtin::CollectCycles => unreachable!(),
-            Builtin::Clock(_) | Builtin::Html(_) | Builtin::ClassRelations(_) => {
+            Builtin::Clock(_)
+            | Builtin::Html(_)
+            | Builtin::ClassRelations(_)
+            | Builtin::Json(_) => {
                 unreachable!("handled before required arguments")
             }
             Builtin::StrShuffle => self.shuffle_string(first, line),

@@ -1,5 +1,12 @@
 # Third-party notices
 
+JSON encoding, decoding, validation, constants, and error handling in
+`src/runtime/json.rs` and `src/runtime/json/` adapt PHP 8.5.0's `ext/json/json.c`,
+`json_encoder.c`, `json_parser.y`, `json_scanner.re`, `php_json.h`, and
+`json.stub.php`, copyright (c) The PHP Group. The sources credit Omar Kilani and
+Jakub Zelenka. The PHP license below applies to these adaptations. Native JSON
+signature metadata is extracted by the existing reflection metadata generator.
+
 Lazy-object state and property integration in `src/runtime/lazy_objects.rs`,
 `src/object.rs`, and the runtime object handlers adapt PHP 8.5.0's
 `Zend/zend_lazy_objects.c` and `Zend/zend_object_handlers.c`, copyright (c) Zend

@@ -171,9 +171,8 @@ new request. The CLI returns the low eight bits of the requested status.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,
-  serialization hooks, and `JsonSerializable` are available; JSON encoding remains
-  incomplete. `get_mangled_object_vars` exposes ordinary
-  object properties without visibility filtering.
+  serialization hooks, and `JsonSerializable` are available, including JSON encoding.
+  `get_mangled_object_vars` exposes ordinary object properties without visibility filtering.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted
@@ -292,6 +291,15 @@ new request. The CLI returns the low eight bits of the requested status.
   named and numeric entities, multi-codepoint entities, quote/substitution flags,
   double-encoding control and legacy charsets. The default charset remains UTF-8;
   request-level charset INI settings are unfinished.
+- [JSON encoding, decoding, and validation](docs/conformance/php-8.5.0-json-hillclimb.txt)
+  support formatting and Unicode flags, associative decoding, large integers,
+  depth checks, recursion detection, partial output, and `JsonException`.
+  `json_last_error` and `json_last_error_msg` preserve PHP's exception-mode rules.
+  `JsonSerializable` callbacks, backed enums, lazy-object initialization, live
+  declared properties, and dynamic-property snapshots are supported. Validation
+  uses the decoder's grammar without building decoded arrays or objects.
+  Configurable serialization precision and property hooks remain unfinished;
+  encoding currently limits native traversal to 1,024 container levels.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and
@@ -509,7 +517,7 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion, non-public methods, and closure creation.
   Function, method, and parameter declaration strings include defaults, documentation,
   source locations, closure captures, and inheritance/prototype flags. Native function
-  metadata covers all 420 implemented function names, including types, symbolic defaults,
+  metadata covers all 425 implemented function names, including types, symbolic defaults,
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, full reflector
