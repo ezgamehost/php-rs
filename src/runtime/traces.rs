@@ -328,7 +328,7 @@ fn format_argument(output: &mut Vec<u8>, value: &Value) {
         Value::Bool(value) => output.extend_from_slice(if *value { b"true" } else { b"false" }),
         Value::Array(_) => output.extend_from_slice(b"Array"),
         Value::Object(object) => {
-            output.extend_from_slice(format!("Object({})", object.class_name).as_bytes())
+            output.extend_from_slice(format!("Object({})", object.class.display_name()).as_bytes())
         }
         Value::Closure(_) => output.extend_from_slice(b"Object(Closure)"),
         Value::String(value) => {

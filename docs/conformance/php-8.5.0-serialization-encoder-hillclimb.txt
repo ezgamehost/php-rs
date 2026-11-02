@@ -1,0 +1,74 @@
+PHP 8.5.0 serialization encoder hillclimb
+Baseline: dcbad9d283b05603e9ca6951b42b62db9c2be7ab
+
+zend
+Before: 5256 cases; 2536 passed, 2312 failed, 408 unsupported
+After: 5256 cases; 2546 passed, 2302 failed, 408 unsupported
+New passes: 10; regressions: 0
+NEW PASS: Zend/tests/enum/serialize.phpt
+NEW PASS: Zend/tests/exceptions/exception_023.phpt
+NEW PASS: Zend/tests/function_arguments/sensitive_parameter_value_serialize.phpt
+NEW PASS: Zend/tests/gh19839.phpt
+NEW PASS: Zend/tests/inheritance/gh15907.phpt
+NEW PASS: Zend/tests/serialize/bug64354.phpt
+NEW PASS: Zend/tests/serialize/bug69761.phpt
+NEW PASS: Zend/tests/serialize/bug70187.phpt
+NEW PASS: Zend/tests/serialize/serializable_deprecation.phpt
+NEW PASS: Zend/tests/traits/bug53748.phpt
+
+reflection
+Before: 492 cases; 287 passed, 168 failed, 37 unsupported
+After: 492 cases; 287 passed, 168 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 302 passed, 382 failed, 94 unsupported
+After: 778 cases; 303 passed, 381 failed, 94 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/bug78409.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 400 passed, 178 failed, 152 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug25671.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 0 passed, 135 failed, 28 unsupported
+After: 163 cases; 16 passed, 119 failed, 28 unsupported
+New passes: 16; regressions: 0
+NEW PASS: ext/standard/tests/serialize/__serialize_002.phpt
+NEW PASS: ext/standard/tests/serialize/bug35895.phpt
+NEW PASS: ext/standard/tests/serialize/bug64354_3.phpt
+NEW PASS: ext/standard/tests/serialize/bug65481.phpt
+NEW PASS: ext/standard/tests/serialize/bug79526.phpt
+NEW PASS: ext/standard/tests/serialize/bug81163.phpt
+NEW PASS: ext/standard/tests/serialize/counting_of_references.phpt
+NEW PASS: ext/standard/tests/serialize/gh12265.phpt
+NEW PASS: ext/standard/tests/serialize/gh12265b.phpt
+NEW PASS: ext/standard/tests/serialize/gh19701.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_004.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_010.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_019.phpt
+NEW PASS: ext/standard/tests/serialize/sleep_deref.phpt
+NEW PASS: ext/standard/tests/serialize/sleep_mangled_name_clash.phpt
+NEW PASS: ext/standard/tests/serialize/sleep_undefined_declared_properties.phpt
+
+The serialize suite is newly tracked, baselined at the same commit before implementation.
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match ArrayObject hook restoration and exception serialization.
+unserialize(), legacy native Serializable methods, configurable precision, and complete
+mutation/destructor timing remain incomplete. Encoding has a 1,024-level nesting guard.
+Full log prefix: /tmp/php-rs-serialize-*3.log.

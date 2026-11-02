@@ -88,7 +88,8 @@ new request. The CLI returns the low eight bits of the requested status.
   Six sorting methods use the array sort engine with callback mutation guards;
   `ARRAY_AS_PROPS` routes property access and references to backing offsets.
   Native comparisons inspect backing storage and ordinary properties.
-  Serialization remains incomplete.
+  `__serialize`/`__unserialize` preserve backing storage, flags, ordinary members,
+  and iterator classes. Legacy Serializable methods remain incomplete.
 - `ArrayObject` shares native storage, offsets, flags, sorting, and property routing,
   with storage exchange, independent storage clones, and configurable iterator
   factories. Its iterators share live storage and skip user constructors.
@@ -103,11 +104,11 @@ new request. The CLI returns the low eight bits of the requested status.
   offsets, insertion/removal, count, debug output, and independent storage clones.
   Foreach cursors retain their starting mode and support FIFO/LIFO and delete/keep
   traversal. `__serialize`/`__unserialize` hooks are available; legacy Serializable
-  methods and general serialization remain incomplete.
+  methods and general unserialization remain incomplete.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,
-  serialization hooks, and `JsonSerializable` are available; general serialization
+  serialization hooks, and `JsonSerializable` are available; general unserialization
   and JSON encoding remain incomplete. `get_mangled_object_vars` exposes ordinary
   object properties without visibility filtering.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
@@ -274,12 +275,18 @@ new request. The CLI returns the low eight bits of the requested status.
 - Unit and int/string-backed enums with shared case identities, readonly name/value
   properties, constants, methods, traits, interfaces, `cases`, `from`, and `tryFrom`.
   Native UnitEnum/BackedEnum contracts, `enum_exists`, enum comparisons/dumps, and
-  enum/case reflection are supported. Serialization and full reflection strings
+  enum/case reflection are supported. Unserialization and full reflection strings
   remain unfinished.
 - `var_export` prints or returns PHP expressions for scalars, arrays, objects,
   closures, and enum cases. It preserves byte strings, floating-point fractions,
   nested indentation, and detects circular references. Configurable serialization
   precision and property hooks remain unfinished.
+- `serialize` encodes scalars, byte strings, arrays, objects, and enum cases,
+  preserving shared references and object identity. It supports `__serialize`,
+  `__sleep`, and the user-defined `Serializable` interface, including nested hook
+  reference tables and legacy-interface deprecations. `unserialize`, configurable
+  precision, deep nesting beyond 1,024 levels, and complete mutation/destructor
+  timing remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and
   permitted string sources, checking target names without autoloading them.
@@ -506,8 +513,8 @@ new request. The CLI returns the low eight bits of the requested status.
   Sensitive fixed parameters and positional variadic arguments are wrapped in
   `SensitiveParameterValue` in backtraces and exception traces. The wrapper supports
   `getValue`, cloning, readonly private storage, and hidden dump/array-cast properties.
-  PHP 8.5.0's extra named variadic behavior is preserved; trace configuration,
-  serialization and uninitialized wrapper reads remain unfinished.
+  PHP 8.5.0's extra named variadic behavior and serialization prohibition are
+  preserved; trace configuration and uninitialized wrapper reads remain unfinished.
 - Core builtins: `var_dump`, `print_r`, `strlen`, `count`/`sizeof`, `gettype`, `get_debug_type`,
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,

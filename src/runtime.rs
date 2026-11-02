@@ -94,6 +94,7 @@ mod rounding;
 mod scalar_values;
 mod scope_slots;
 mod sensitive_parameters;
+mod serialization;
 mod shutdown;
 mod sorting;
 mod static_members;
@@ -126,6 +127,7 @@ use variables::{Scope, cell};
 /// One request's variable scope, output, and diagnostics. Output survives errors.
 #[derive(Default)]
 pub struct Runtime {
+    serialization: Option<Rc<RefCell<serialization::SerializeState>>>,
     recursive_child_slots: HashMap<usize, std::rc::Weak<crate::PhpObject>>,
     pub output: Vec<u8>,
     pub warnings: Vec<String>,

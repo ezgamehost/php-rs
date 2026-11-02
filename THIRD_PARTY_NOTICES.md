@@ -67,6 +67,14 @@ Key handling in `src/runtime/iterator_helpers.rs` adapts PHP 8.5.0's
 `Zend/zend_API.c`, copyright (c) Zend Technologies Ltd. The Zend license below
 also applies to this adaptation.
 
+Serializable interface declarations, dispatch, and deprecations in
+`src/runtime/serialization.rs`, `src/runtime/throwables.rs`, and
+`src/runtime/inheritance.rs` adapt PHP 8.5.0's `Zend/zend_interfaces.c` and
+`.stub.php`, copyright (c) Zend Technologies Ltd. Throwable serialization property
+layouts and anonymous-class trace names follow `Zend/zend_exceptions.stub.php`
+and `Zend/zend_exceptions.c`. The Zend license below also applies to these
+adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -348,6 +356,12 @@ adapt PHP 8.5.0's `ext/spl/spl_dllist.c`, `.h`, and `.stub.php`, copyright (c)
 The PHP Group. Shared iterator wrappers in `src/runtime/native_iterator.rs`
 follow `Zend/zend_interfaces.c` and the SPL native handlers. The shared member
 loader in `src/runtime/objects.rs` follows `Zend/zend_API.c`.
+
+Serialization encoding, reference tables, and magic hooks in
+`src/runtime/serialization.rs` adapt PHP 8.5.0's `ext/standard/var.c`, copyright
+(c) The PHP Group, by Jani Lehtimäki, Thies C. Arntzen, and Sascha Schumann.
+ArrayObject/ArrayIterator serialization hooks in `src/runtime/array_iterator.rs`
+follow `ext/spl/spl_array.c` and `.stub.php`, copyright (c) The PHP Group.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

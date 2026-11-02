@@ -368,6 +368,8 @@ impl Runtime {
             public function offsetUnset(mixed $key): void {}
             public function append(mixed $value): void {}
             public function getArrayCopy(): array {}
+            public function __serialize(): array {}
+            public function __unserialize(array $data): void {}
             public function count(): int {}
             public function getFlags(): int {}
             public function setFlags(int $flags): void {}
@@ -546,6 +548,103 @@ impl Runtime {
                 self.array_iterator_sort(&object, &name, line)
             }
             b"count" => Ok(Value::Int(storage(&object).keys().len() as i64)),
+            b"__serialize" => {
+                let data = object.array_iterator.borrow();
+                let data = data.as_ref().unwrap();
+                let backing = data.storage.borrow().clone();
+                let mut result = PhpArray::default();
+                result.insert(
+                    ArrayKey::Int(0),
+                    Value::Int(
+                        data.flags
+                            | if matches!(backing, Value::Null) {
+                                0x01000000
+                            } else {
+                                0
+                            },
+                    ),
+                );
+                result.insert(ArrayKey::Int(1), backing);
+                result.insert(
+                    ArrayKey::Int(2),
+                    Value::Array(Rc::new(self.mangled_object_variables(&object))),
+                );
+                let iterator = data
+                    .iterator_class
+                    .as_ref()
+                    .filter(|class| class.name != b"ArrayIterator")
+                    .map_or(Value::Null, |class| {
+                        Value::String(class.name.clone().into())
+                    });
+                result.insert(ArrayKey::Int(3), iterator);
+                Ok(Value::Array(Rc::new(result)))
+            }
+            b"__unserialize" => {
+                let Value::Array(input) = self.lookup(b"data").unwrap() else {
+                    unreachable!()
+                };
+                let (Some(Value::Int(flags)), Some(backing), Some(Value::Array(members))) = (
+                    input.get(&ArrayKey::Int(0)),
+                    input.get(&ArrayKey::Int(1)),
+                    input.get(&ArrayKey::Int(2)),
+                ) else {
+                    return Err(self.array_iterator_exception(
+                        b"UnexpectedValueException",
+                        "Incomplete or ill-typed serialization data".into(),
+                        line,
+                    ));
+                };
+                let iterator = input.get(&ArrayKey::Int(3));
+                if iterator
+                    .as_ref()
+                    .is_some_and(|value| !matches!(value, Value::Null | Value::String(_)))
+                {
+                    return Err(self.array_iterator_exception(
+                        b"UnexpectedValueException",
+                        "Incomplete or ill-typed serialization data".into(),
+                        line,
+                    ));
+                }
+                object.array_iterator.borrow_mut().as_mut().unwrap().flags = flags & 0xffff;
+                if flags & 0x01000000 != 0 {
+                    let old = object
+                        .array_iterator
+                        .borrow()
+                        .as_ref()
+                        .unwrap()
+                        .storage
+                        .replace(Value::Null);
+                    drop(old);
+                    self.drain_destructors(Ok(()), line)?;
+                } else {
+                    if !matches!(backing, Value::Array(_) | Value::Object(_)) {
+                        return Err(self.array_iterator_exception(
+                            b"InvalidArgumentException",
+                            "Passed variable is not an array or object".into(),
+                            line,
+                        ));
+                    }
+                    self.array_iterator_set_storage(&object, backing, None, "__unserialize", line)?;
+                }
+                for (key, value) in members.iter() {
+                    self.load_native_object_member(&object, key, value, line)?;
+                }
+                if let Some(Value::String(name)) = iterator {
+                    let Some(class) = self.load_class(&name.bytes(), line)? else {
+                        return Err(self.array_iterator_exception(b"UnexpectedValueException", format!("Cannot deserialize ArrayObject with iterator class '{}'; no such class exists", String::from_utf8_lossy(&name.bytes())), line));
+                    };
+                    if !class.is_a(b"Iterator") {
+                        return Err(self.array_iterator_exception(b"UnexpectedValueException", format!("Cannot deserialize ArrayObject with iterator class '{}'; this class does not implement the Iterator interface", String::from_utf8_lossy(&name.bytes())), line));
+                    }
+                    object
+                        .array_iterator
+                        .borrow_mut()
+                        .as_mut()
+                        .unwrap()
+                        .iterator_class = Some(class);
+                }
+                Ok(Value::Null)
+            }
             b"__debuginfo" => {
                 let mut properties = object.snapshot();
                 let backing = object

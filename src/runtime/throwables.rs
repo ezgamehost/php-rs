@@ -5,6 +5,7 @@ use crate::object::{Class, ThrowableData};
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
         b"arrayaccess" => ("ArrayAccess", None),
+        b"serializable" => ("Serializable", None),
         b"jsonserializable" => ("JsonSerializable", None),
         b"countable" => ("Countable", None),
         b"traversable" => ("Traversable", None),
@@ -69,6 +70,8 @@ impl Runtime {
                 public function offsetUnset(mixed $offset): void;
             }"
             .to_owned()
+        } else if canonical == "Serializable" {
+            "<?php interface Serializable { public function serialize(); public function unserialize(string $data); }".to_owned()
         } else if canonical == "JsonSerializable" {
             "<?php interface JsonSerializable { public function jsonSerialize(): mixed; }"
                 .to_owned()

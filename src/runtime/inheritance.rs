@@ -124,6 +124,14 @@ impl Runtime {
         }
         self.validate_iterator_interfaces(class)?;
         self.validate_inheritance(class)?;
+        if !class.declaration.is_interface
+            && !class.declaration.is_abstract
+            && class.is_a(b"Serializable")
+            && (objects::method(class, b"__serialize").is_none()
+                || objects::method(class, b"__unserialize").is_none())
+        {
+            self.warn(format!("Deprecated: {} implements the Serializable interface, which is deprecated. Implement __serialize() and __unserialize() instead (or in addition, if support for old PHP versions is necessary) on line {}", class.display_name(), class.declaration.line))?;
+        }
         self.validate_override_attributes(class)
     }
 

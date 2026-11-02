@@ -2728,6 +2728,31 @@ flag restoration, offset metadata/coercion, hooks, and cycle collection. No cust
 tests or matrices were added. Legacy Serializable methods/interface, general
 serialization, other SPL classes, and earlier runtime/harness gaps remain incomplete.
 
+The [serialization encoder slice](conformance/php-8.5.0-serialization-encoder-hillclimb.txt)
+adds `serialize` for scalars, binary strings, arrays, ordinary objects, and enum
+cases. Reference tables distinguish shared variable bindings from repeated object
+handles. `__serialize`, `__sleep`, and user-defined Serializable callbacks follow
+PHP's precedence, return validation, and nested serialization context rules.
+Serializable declarations emit the legacy-interface deprecation. Closures,
+anonymous classes, and implemented native nonserializable objects reject encoding.
+
+ArrayObject and ArrayIterator now expose array-based serialization hooks for
+flags, backing storage, ordinary members, and iterator classes. Exception encoding
+includes native property names and values. Anonymous-class argument names in
+exception traces use their display name.
+
+This slice adds **28 upstream passes**, with **zero regressions** across seven
+full suites (**8,430 fixtures**): ten Zend, one SPL, one strings, and sixteen in
+the newly tracked standard serialization suite. That suite was baselined at the
+preceding commit and reaches **16 / 119 / 28**. Zend reaches **2546 / 2302 / 408**,
+SPL **303 / 381 / 94**, and strings **400 / 178 / 152**. All **797 existing Rust
+tests**, **57 reference-checked project PHPT**, formatting, Clippy, and diff checks
+pass. No custom tests or matrices were added. Direct CLI comparisons also match
+ArrayObject hook restoration and exception serialization. `unserialize`, legacy
+native Serializable methods, configurable precision, and complete mutation and
+destructor timing remain incomplete. Encoding currently has a 1,024-level nesting
+guard; this does not establish PHP's full recursion-limit behavior.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2735,13 +2760,14 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2536 | 2312 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2546 | 2302 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 287 | 168 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 302 | 382 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 303 | 381 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 399 | 179 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 400 | 178 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 16 | 119 | 28 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
