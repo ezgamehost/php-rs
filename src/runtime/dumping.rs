@@ -100,14 +100,10 @@ impl Runtime {
             if reference {
                 self.emit_output(b"&")?;
             }
+            self.emit_output(b"object(")?;
+            self.emit_output(object.class.name.split(|b| *b == 0).next().unwrap())?;
             self.emit_output(
-                format!(
-                    "object({})#{} ({}) {{\n",
-                    object.class_name.split('\0').next().unwrap(),
-                    object.object_id,
-                    properties.len()
-                )
-                .as_bytes(),
+                format!(")#{} ({}) {{\n", object.object_id, properties.len()).as_bytes(),
             )?;
             let mut keys = Vec::new();
             if !custom

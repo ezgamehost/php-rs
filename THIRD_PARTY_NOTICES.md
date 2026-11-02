@@ -363,6 +363,15 @@ Serialization encoding, reference tables, and magic hooks in
 ArrayObject/ArrayIterator serialization hooks in `src/runtime/array_iterator.rs`
 follow `ext/spl/spl_array.c` and `.stub.php`, copyright (c) The PHP Group.
 
+Serialized input parsing, reference tables, class filtering, depth limits, typed
+property restoration, and deferred hooks in `src/runtime/unserialization.rs`
+adapt PHP 8.5.0's `ext/standard/var.c` and `ext/standard/var_unserializer.re`,
+copyright (c) The PHP Group. Incomplete-class declarations, access handlers, and
+serialization in the runtime follow `ext/standard/incomplete_class.c` and
+`ext/standard/basic_functions.stub.php`. These sources include work by Sascha
+Schumann, Jani Lehtimäki, and Thies C. Arntzen. Typed reference-source checks reuse
+the Zend property implementation described above.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

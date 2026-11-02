@@ -162,6 +162,9 @@ impl Runtime {
         line: usize,
         access: Access,
     ) -> Result<Value, Error> {
+        if object.class.name == b"__PHP_Incomplete_Class" {
+            return self.read_property_storage(object, name, line, access != Access::Read);
+        }
         if self.array_iterator_property(object, name) {
             return self.read_offset(
                 Value::Object(object.clone()),

@@ -17,6 +17,9 @@ impl Runtime {
         line: usize,
     ) -> Result<Cell, Error> {
         if let Some(object) = &location.object {
+            if object.class.name == b"__PHP_Incomplete_Class" {
+                return Err(self.incomplete_object_error(object, "modify a property", line));
+            }
             if let Some(value) = location.overloaded.take() {
                 return Ok(match value {
                     Value::Reference(reference) => reference,
@@ -113,6 +116,11 @@ impl Runtime {
         reference: Cell,
         line: usize,
     ) -> Result<(), Error> {
+        if let Some(object) = &location.object
+            && object.class.name == b"__PHP_Incomplete_Class"
+        {
+            return Err(self.incomplete_object_error(object, "modify a property", line));
+        }
         if !location.keys.is_empty() {
             let root = self.property_reference_root(location, line)?;
             return reference_paths::bind(root, &mut location.keys, reference, line, self);

@@ -68,6 +68,7 @@ pub(super) enum Builtin {
     PrintR,
     VarExport,
     Serialize,
+    Unserialize,
     Printf,
     Fprintf,
     Vfprintf,
@@ -279,6 +280,7 @@ impl Builtin {
             b"print_r" => Self::PrintR,
             b"var_export" => Self::VarExport,
             b"serialize" => Self::Serialize,
+            b"unserialize" => Self::Unserialize,
             b"printf" => Self::Printf,
             b"fprintf" => Self::Fprintf,
             b"vfprintf" => Self::Vfprintf,
@@ -723,6 +725,7 @@ impl Builtin {
                 ("args", true, false),
             ],
             Self::Serialize => &[("value", false, false)],
+            Self::Unserialize => &[("data", false, false), ("options", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
             Self::Printf | Self::Sprintf => &[("format", false, false), ("values", false, true)],
             Self::Fprintf => &[
@@ -1500,6 +1503,7 @@ impl Runtime {
             Builtin::PrintR => self.print_r(&args, line),
             Builtin::VarExport => self.var_export(&args, line),
             Builtin::Serialize => self.serialize_value(first, line),
+            Builtin::Unserialize => self.unserialize_value(&args, line),
             Builtin::IsCallable => self.inspect_callable(&args, &references, line),
             Builtin::DebugBacktrace | Builtin::DebugPrintBacktrace => unreachable!(),
             Builtin::Printf

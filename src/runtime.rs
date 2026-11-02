@@ -117,6 +117,7 @@ mod traces;
 mod traits;
 mod typed_properties;
 mod types;
+mod unserialization;
 mod variable_inspection;
 mod variables;
 mod wordwrap;
@@ -128,6 +129,7 @@ use variables::{Scope, cell};
 #[derive(Default)]
 pub struct Runtime {
     serialization: Option<Rc<RefCell<serialization::SerializeState>>>,
+    unserialization: Option<Rc<RefCell<unserialization::UnserializeState>>>,
     recursive_child_slots: HashMap<usize, std::rc::Weak<crate::PhpObject>>,
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
@@ -749,6 +751,9 @@ impl Runtime {
             return result;
         }
         if let Some(object) = &location.object {
+            if modify.is_some() && object.class.name == b"__PHP_Incomplete_Class" {
+                return Err(self.incomplete_object_error(object, "modify a property", line));
+            }
             let overloaded = !silent
                 && !location.keys.is_empty()
                 && self.magic_get_applicable(object, &location.name);

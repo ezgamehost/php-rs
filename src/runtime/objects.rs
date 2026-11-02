@@ -639,6 +639,9 @@ impl Runtime {
                 line,
             ));
         };
+        if object.class.name == b"__PHP_Incomplete_Class" {
+            return Err(self.incomplete_object_error(&object, "call a method", line));
+        }
         if let Some(data) = object.recursive_iterator.borrow().as_ref()
             && !data.initialized()
         {
@@ -704,6 +707,16 @@ impl Runtime {
         line: usize,
         silent: bool,
     ) -> Result<Value, Error> {
+        if object.class.name == b"__PHP_Incomplete_Class" {
+            let error = self.incomplete_object_error(object, "access a property", line);
+            let function = self.current_function.as_deref().unwrap_or(b"main");
+            self.warn(format!(
+                "Warning: {}(): {} on line {line}",
+                String::from_utf8_lossy(function),
+                error.message
+            ))?;
+            return Ok(Value::Null);
+        }
         if !self.check_instance_property_access(object, name, silent, line)? {
             return Ok(Value::Null);
         }
@@ -747,6 +760,9 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<ArrayKey, Error> {
+        if object.class.name == b"__PHP_Incomplete_Class" {
+            return Err(self.incomplete_object_error(object, "modify a property", line));
+        }
         if matches!(name, b"name" | b"class")
             && (object.class.is_a(b"ReflectionClass")
                 || object.class.is_a(b"ReflectionFunctionAbstract")
@@ -863,6 +879,9 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<(), Error> {
+        if object.class.name == b"__PHP_Incomplete_Class" {
+            return Err(self.incomplete_object_error(object, "modify a property", line));
+        }
         validate_property_name(name, line)?;
         if let Some(owner) = self.instance_static_owner(&object.class, name) {
             self.check_static_property_access(&object.class, &owner, name, line, false)?;
@@ -981,6 +1000,30 @@ fn method_name(function: &FunctionDecl) -> &[u8] {
 }
 
 impl Runtime {
+    pub(super) fn incomplete_object_error(
+        &self,
+        object: &PhpObject,
+        action: &str,
+        line: usize,
+    ) -> Error {
+        let name = object
+            .properties
+            .borrow()
+            .get(&ArrayKey::String(b"__PHP_Incomplete_Class_Name".to_vec()));
+        let name = match name {
+            Some(Value::String(name)) => name.to_vec(),
+            _ => b"unknown".to_vec(),
+        };
+        Error::new(
+            ErrorKind::Error,
+            format!(
+                "The script tried to {action} on an incomplete object. Please ensure that the class definition \"{}\" of the object you are trying to operate on was loaded _before_ unserialize() gets called or provide an autoloader to load the class definition",
+                String::from_utf8_lossy(&name)
+            ),
+            line,
+        )
+    }
+
     // object_properties_load bypasses normal write hooks and type coercion.
     // It still resolves mangled visibility and protects initialized readonly slots.
     pub(super) fn load_native_object_member(

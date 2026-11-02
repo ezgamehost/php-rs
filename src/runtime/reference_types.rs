@@ -51,6 +51,50 @@ pub(super) struct Constraints {
 }
 
 impl Runtime {
+    pub(super) fn check_unserialized_reference(
+        &mut self,
+        object: &Rc<PhpObject>,
+        key: &ArrayKey,
+        reference: &Cell,
+        line: usize,
+    ) -> Result<(), Error> {
+        if let Some(property) = object.class.properties.iter().find(|property| {
+            property.ty.is_some() && ArrayKey::String(property.storage_name()) == *key
+        }) {
+            let source = Source {
+                holder: Holder::Instance(Rc::downgrade(object), key.clone()),
+                owner: object.class.property_slot_owner(property),
+                property: property.clone(),
+            };
+            let strict = std::mem::replace(&mut self.strict_types, true);
+            let result = self.check_reference_binding(reference, &source, line);
+            self.strict_types = strict;
+            result?;
+            self.register_reference_source(reference, source);
+        }
+        Ok(())
+    }
+
+    pub(super) fn register_unserialized_reference(
+        &mut self,
+        object: &Rc<PhpObject>,
+        key: &ArrayKey,
+        reference: &Cell,
+    ) {
+        if let Some(property) = object.class.properties.iter().find(|property| {
+            property.ty.is_some() && ArrayKey::String(property.storage_name()) == *key
+        }) {
+            self.register_reference_source(
+                reference,
+                Source {
+                    holder: Holder::Instance(Rc::downgrade(object), key.clone()),
+                    owner: object.class.property_slot_owner(property),
+                    property: property.clone(),
+                },
+            );
+        }
+    }
+
     pub(super) fn iterated_property_reference(
         &mut self,
         object: &Rc<PhpObject>,

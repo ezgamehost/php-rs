@@ -6,6 +6,7 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
         b"arrayaccess" => ("ArrayAccess", None),
         b"serializable" => ("Serializable", None),
+        b"__php_incomplete_class" => ("__PHP_Incomplete_Class", None),
         b"jsonserializable" => ("JsonSerializable", None),
         b"countable" => ("Countable", None),
         b"traversable" => ("Traversable", None),
@@ -70,6 +71,8 @@ impl Runtime {
                 public function offsetUnset(mixed $offset): void;
             }"
             .to_owned()
+        } else if canonical == "__PHP_Incomplete_Class" {
+            "<?php final class __PHP_Incomplete_Class {}".to_owned()
         } else if canonical == "Serializable" {
             "<?php interface Serializable { public function serialize(); public function unserialize(string $data); }".to_owned()
         } else if canonical == "JsonSerializable" {
@@ -221,7 +224,7 @@ impl Runtime {
             methods,
             properties: Vec::new(),
             static_properties: Vec::new(),
-            allow_dynamic: false,
+            allow_dynamic: canonical == "__PHP_Incomplete_Class",
             forbid_dynamic: false,
             defaults: RefCell::default(),
             static_values: RefCell::default(),

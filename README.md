@@ -104,12 +104,12 @@ new request. The CLI returns the low eight bits of the requested status.
   offsets, insertion/removal, count, debug output, and independent storage clones.
   Foreach cursors retain their starting mode and support FIFO/LIFO and delete/keep
   traversal. `__serialize`/`__unserialize` hooks are available; legacy Serializable
-  methods and general unserialization remain incomplete.
+  methods remain incomplete.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,
-  serialization hooks, and `JsonSerializable` are available; general unserialization
-  and JSON encoding remain incomplete. `get_mangled_object_vars` exposes ordinary
+  serialization hooks, and `JsonSerializable` are available; JSON encoding remains
+  incomplete. `get_mangled_object_vars` exposes ordinary
   object properties without visibility filtering.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
@@ -275,8 +275,7 @@ new request. The CLI returns the low eight bits of the requested status.
 - Unit and int/string-backed enums with shared case identities, readonly name/value
   properties, constants, methods, traits, interfaces, `cases`, `from`, and `tryFrom`.
   Native UnitEnum/BackedEnum contracts, `enum_exists`, enum comparisons/dumps, and
-  enum/case reflection are supported. Unserialization and full reflection strings
-  remain unfinished.
+  enum/case reflection are supported. Full reflection strings remain unfinished.
 - `var_export` prints or returns PHP expressions for scalars, arrays, objects,
   closures, and enum cases. It preserves byte strings, floating-point fractions,
   nested indentation, and detects circular references. Configurable serialization
@@ -284,9 +283,16 @@ new request. The CLI returns the low eight bits of the requested status.
 - `serialize` encodes scalars, byte strings, arrays, objects, and enum cases,
   preserving shared references and object identity. It supports `__serialize`,
   `__sleep`, and the user-defined `Serializable` interface, including nested hook
-  reference tables and legacy-interface deprecations. `unserialize`, configurable
-  precision, deep nesting beyond 1,024 levels, and complete mutation/destructor
+  reference tables and legacy-interface deprecations. Configurable precision,
+  deep nesting beyond 1,024 levels, and complete mutation/destructor
   timing remain unfinished.
+- `unserialize` restores scalars, byte strings, arrays, objects, enum cases, and
+  shared references. It validates typed properties, supports `allowed_classes`
+  and `max_depth`, and defers magic restoration hooks until the graph is parsed.
+  Unknown/disallowed classes become `__PHP_Incomplete_Class`, with restricted
+  property/method access and preservation of their original serialized class name.
+  Native exception restoration, legacy SPL serialization, INI configuration,
+  and complete lifecycle compatibility remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and
   permitted string sources, checking target names without autoloading them.

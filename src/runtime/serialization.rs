@@ -214,7 +214,7 @@ impl Runtime {
             output.extend_from_slice(b"\";");
             return Ok(());
         }
-        let properties = if objects::method(class, b"__serialize").is_some() {
+        let mut properties = if objects::method(class, b"__serialize").is_some() {
             let value = self.serialization_hook(object, b"__serialize", true, line)?;
             let Value::Array(array) = value else {
                 return Err(Error::new(
@@ -263,8 +263,16 @@ impl Runtime {
         } else {
             Rc::new(self.serialization_properties(object))
         };
-        output.extend(format!("O:{}:\"", class.name.len()).bytes());
-        output.extend(&class.name);
+        let mut name = class.name.clone();
+        if class.name == b"__PHP_Incomplete_Class" {
+            let key = ArrayKey::String(b"__PHP_Incomplete_Class_Name".to_vec());
+            if let Some(Value::String(original)) = properties.get(&key) {
+                name = original.to_vec();
+                Rc::make_mut(&mut properties).remove(&key);
+            }
+        }
+        output.extend(format!("O:{}:\"", name.len()).bytes());
+        output.extend(&name);
         output.extend_from_slice(b"\":");
         let result = self.encode_serialized_table(&properties, state, output, depth, false, line);
         drop(properties);

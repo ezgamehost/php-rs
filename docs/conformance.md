@@ -2753,6 +2753,34 @@ native Serializable methods, configurable precision, and complete mutation and
 destructor timing remain incomplete. Encoding currently has a 1,024-level nesting
 guard; this does not establish PHP's full recursion-limit behavior.
 
+The [unserialization slice](conformance/php-8.5.0-unserialization-hillclimb.txt)
+adds scalar, binary-string, array, object, enum, and reference decoding. An
+explicit parsing stack handles compound values without recursive Rust calls.
+Parser slots preserve shared references, repeated object handles, and references
+to values parsed earlier. Typed properties enforce strict assignment and retain
+constraints when their slots become references.
+
+The decoder supports allowed_classes and max_depth options, autoloading,
+constructor-free object allocation, user Serializable payloads, and deferred
+__unserialize/__wakeup hooks. Nested legacy callbacks share reference state;
+magic callbacks use isolated contexts. Unknown or disallowed classes become
+__PHP_Incomplete_Class. Its property reads warn, mutations and method calls fail,
+and reserialization preserves the original class name. Malformed input reports
+offsets and applicable warnings; deprecated S strings and trailing data are
+recognized. Object dumps now preserve non-UTF-8 class-name bytes.
+
+This slice adds **128 upstream passes**, with **zero regressions** across all
+seven full suites (**8,430 fixtures**): fourteen Zend, one reflection, thirteen
+SPL, four strings, and ninety-six serialization. Totals are **2560 / 2288 / 408**
+for Zend, **288 / 167 / 37** for reflection, **316 / 368 / 94** for SPL,
+**404 / 174 / 152** for strings, and **112 / 23 / 28** for serialization.
+All **797 existing Rust tests**, **57 reference-checked project PHPT**, formatting,
+Clippy, and diff checks pass. No custom tests or matrices were added. A direct
+CLI comparison also matches PHP for 4,096 nested arrays and an explicit smaller
+depth limit. Native exception restoration, legacy SPL Serializable formats,
+INI settings/callbacks, property hooks, and complete lifecycle compatibility
+remain unfinished, along with the earlier runtime and harness gaps.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2760,14 +2788,14 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2546 | 2302 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 287 | 168 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 303 | 381 | 94 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2560 | 2288 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 288 | 167 | 37 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 316 | 368 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 400 | 178 | 152 |
-| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 16 | 119 | 28 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 404 | 174 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 112 | 23 | 28 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

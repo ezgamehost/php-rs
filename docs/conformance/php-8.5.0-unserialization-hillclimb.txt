@@ -1,0 +1,173 @@
+PHP 8.5.0 unserialization hillclimb
+Baseline: 719fbb83bda0448f06eb7566caf8717d62830623
+
+zend
+Before: 5256 cases; 2546 passed, 2302 failed, 408 unsupported
+After: 5256 cases; 2560 passed, 2288 failed, 408 unsupported
+New passes: 14; regressions: 0
+NEW PASS: Zend/tests/bug63882_2.phpt
+NEW PASS: Zend/tests/enum/serialization-round-trip.phpt
+NEW PASS: Zend/tests/enum/unserialize-const.phpt
+NEW PASS: Zend/tests/enum/unserialize-missing-colon.phpt
+NEW PASS: Zend/tests/enum/unserialize-non-enum.phpt
+NEW PASS: Zend/tests/enum/unserialize-non-existent-case.phpt
+NEW PASS: Zend/tests/enum/unserialize.phpt
+NEW PASS: Zend/tests/magic_methods/bug30791.phpt
+NEW PASS: Zend/tests/readonly_classes/readonly_class_unserialize_error.phpt
+NEW PASS: Zend/tests/readonly_props/serialization.phpt
+NEW PASS: Zend/tests/serialize/bug34045.phpt
+NEW PASS: Zend/tests/serialize/bug70187_2.phpt
+NEW PASS: Zend/tests/serialize/bug70253.phpt
+NEW PASS: Zend/tests/traits/interface_003.phpt
+
+reflection
+Before: 492 cases; 287 passed, 168 failed, 37 unsupported
+After: 492 cases; 288 passed, 167 failed, 37 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/reflection/tests/bug76737.phpt
+
+spl
+Before: 778 cases; 303 passed, 381 failed, 94 unsupported
+After: 778 cases; 316 passed, 368 failed, 94 unsupported
+New passes: 13; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject__serialize_saves_iterator_class.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_023.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_025.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug62672.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_serialization.phpt
+NEW PASS: ext/spl/tests/SplFixedArray_serialize.phpt
+NEW PASS: ext/spl/tests/bug41528.phpt
+NEW PASS: ext/spl/tests/bug70959.phpt
+NEW PASS: ext/spl/tests/bug71617.phpt
+NEW PASS: ext/spl/tests/bug78456.phpt
+NEW PASS: ext/spl/tests/gh10907.phpt
+NEW PASS: ext/spl/tests/gh10925.phpt
+NEW PASS: ext/spl/tests/gh13531.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 400 passed, 178 failed, 152 unsupported
+After: 730 cases; 404 passed, 174 failed, 152 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug47168.phpt
+NEW PASS: ext/standard/tests/strings/bug68710.phpt
+NEW PASS: ext/standard/tests/strings/bug72433.phpt
+NEW PASS: ext/standard/tests/strings/bug72663_3.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 16 passed, 119 failed, 28 unsupported
+After: 163 cases; 112 passed, 23 failed, 28 unsupported
+New passes: 96; regressions: 0
+NEW PASS: ext/standard/tests/serialize/002.phpt
+NEW PASS: ext/standard/tests/serialize/006.phpt
+NEW PASS: ext/standard/tests/serialize/__serialize_001.phpt
+NEW PASS: ext/standard/tests/serialize/__serialize_003.phpt
+NEW PASS: ext/standard/tests/serialize/__serialize_004.phpt
+NEW PASS: ext/standard/tests/serialize/__serialize_005.phpt
+NEW PASS: ext/standard/tests/serialize/__serialize_006.phpt
+NEW PASS: ext/standard/tests/serialize/__serialize_007.phpt
+NEW PASS: ext/standard/tests/serialize/bug14293.phpt
+NEW PASS: ext/standard/tests/serialize/bug21957.phpt
+NEW PASS: ext/standard/tests/serialize/bug25378.phpt
+NEW PASS: ext/standard/tests/serialize/bug27469.phpt
+NEW PASS: ext/standard/tests/serialize/bug28325.phpt
+NEW PASS: ext/standard/tests/serialize/bug36424.phpt
+NEW PASS: ext/standard/tests/serialize/bug42919.phpt
+NEW PASS: ext/standard/tests/serialize/bug43614.phpt
+NEW PASS: ext/standard/tests/serialize/bug45706.phpt
+NEW PASS: ext/standard/tests/serialize/bug46882.phpt
+NEW PASS: ext/standard/tests/serialize/bug49649.phpt
+NEW PASS: ext/standard/tests/serialize/bug49649_1.phpt
+NEW PASS: ext/standard/tests/serialize/bug49649_2.phpt
+NEW PASS: ext/standard/tests/serialize/bug55798.phpt
+NEW PASS: ext/standard/tests/serialize/bug62373.phpt
+NEW PASS: ext/standard/tests/serialize/bug62836_1.phpt
+NEW PASS: ext/standard/tests/serialize/bug64146.phpt
+NEW PASS: ext/standard/tests/serialize/bug64354_1.phpt
+NEW PASS: ext/standard/tests/serialize/bug64354_2.phpt
+NEW PASS: ext/standard/tests/serialize/bug65806.phpt
+NEW PASS: ext/standard/tests/serialize/bug68044.phpt
+NEW PASS: ext/standard/tests/serialize/bug68545.phpt
+NEW PASS: ext/standard/tests/serialize/bug68594.phpt
+NEW PASS: ext/standard/tests/serialize/bug69139.phpt
+NEW PASS: ext/standard/tests/serialize/bug69210.phpt
+NEW PASS: ext/standard/tests/serialize/bug70172.phpt
+NEW PASS: ext/standard/tests/serialize/bug70172_2.phpt
+NEW PASS: ext/standard/tests/serialize/bug70436.phpt
+NEW PASS: ext/standard/tests/serialize/bug71840.phpt
+NEW PASS: ext/standard/tests/serialize/bug71940.phpt
+NEW PASS: ext/standard/tests/serialize/bug71995.phpt
+NEW PASS: ext/standard/tests/serialize/bug72229.phpt
+NEW PASS: ext/standard/tests/serialize/bug72663.phpt
+NEW PASS: ext/standard/tests/serialize/bug72731.phpt
+NEW PASS: ext/standard/tests/serialize/bug73052.phpt
+NEW PASS: ext/standard/tests/serialize/bug73154.phpt
+NEW PASS: ext/standard/tests/serialize/bug73825.phpt
+NEW PASS: ext/standard/tests/serialize/bug74101.phpt
+NEW PASS: ext/standard/tests/serialize/bug74103.phpt
+NEW PASS: ext/standard/tests/serialize/bug74111.phpt
+NEW PASS: ext/standard/tests/serialize/bug74614.phpt
+NEW PASS: ext/standard/tests/serialize/bug75054.phpt
+NEW PASS: ext/standard/tests/serialize/bug76300.phpt
+NEW PASS: ext/standard/tests/serialize/bug80411.phpt
+NEW PASS: ext/standard/tests/serialize/incomplete_class.phpt
+NEW PASS: ext/standard/tests/serialize/invalid_signs_in_lengths.phpt
+NEW PASS: ext/standard/tests/serialize/oss_fuzz_433303828.phpt
+NEW PASS: ext/standard/tests/serialize/overwrite_untyped_ref.phpt
+NEW PASS: ext/standard/tests/serialize/ref_to_failed_serialize.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_arrays_002.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_arrays_003.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_arrays_004.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_arrays_005.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_error_002.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_005.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_006.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_009.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_011.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_012.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_013.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_014.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_015.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_016.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_017.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_018.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_objects_incomplete.phpt
+NEW PASS: ext/standard/tests/serialize/serialization_resources_001.phpt
+NEW PASS: ext/standard/tests/serialize/serialize_globals_var_refs.phpt
+NEW PASS: ext/standard/tests/serialize/shm_corruption_coercion_unserialize_options.phpt
+NEW PASS: ext/standard/tests/serialize/sleep_uninitialized_typed_prop.phpt
+NEW PASS: ext/standard/tests/serialize/typed_property_ref_assignment_failure.phpt
+NEW PASS: ext/standard/tests/serialize/typed_property_ref_overwrite.phpt
+NEW PASS: ext/standard/tests/serialize/typed_property_ref_overwrite2.phpt
+NEW PASS: ext/standard/tests/serialize/typed_property_refs.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_allowed_classes_option_invalid_array.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_allowed_classes_option_invalid_class_names.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_allowed_classes_option_invalid_value.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_allowed_classes_option_stringable_value.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_classes.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_extra_data_001.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_extra_data_002.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_extra_data_003.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_large.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_mem_leak.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_overwrite_undeclared_protected.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_ref_to_overwritten_declared_prop.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_subclasses.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_uppercase_s.phpt
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparison matches decoding 4,096 nested arrays and a smaller explicit max_depth.
+Native exception restoration, legacy SPL Serializable formats, INI settings/callbacks,
+property hooks, and complete lifecycle compatibility remain unfinished.
+Full log prefix: /tmp/php-rs-unserialize-*6.log.

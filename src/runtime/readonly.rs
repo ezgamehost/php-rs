@@ -137,6 +137,13 @@ impl Runtime {
                 let (value, _) = self.write_base_value(base, silent)?;
                 let name = self.variable_name(name)?;
                 if let Value::Object(object) = value {
+                    if object.class.name == b"__PHP_Incomplete_Class" {
+                        return Err(self.incomplete_object_error(
+                            &object,
+                            "modify a property",
+                            expr.line,
+                        ));
+                    }
                     let overloaded = self.magic_get_applicable(&object, &name);
                     let value = self.read_property_value(
                         &object,
