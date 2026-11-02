@@ -386,7 +386,8 @@ follow `Zend/zend_interfaces.c` and the SPL native handlers. The shared member
 loader in `src/runtime/objects.rs` follows `Zend/zend_API.c`.
 
 SplObjectStorage storage, object hashing, iteration, set operations, cloning,
-comparison, and serialization in `src/runtime/object_storage.rs` adapt PHP 8.5.0's
+comparison, and serialization, plus MultipleIterator attachment, combined iteration,
+and native dimension handling in `src/runtime/object_storage.rs` adapt PHP 8.5.0's
 `ext/spl/spl_observer.c` and `.stub.php`, copyright (c) The PHP Group, including
 work by Marcus Boerger and Etienne Kneuss. SplObserver/SplSubject declarations follow the same
 stubs. Native dimension access, object lifetime, and collection integration in

@@ -114,6 +114,11 @@ new request. The CLI returns the low eight bits of the requested status.
   skips exhausted inputs, and can append inputs during traversal. Explicit current()
   reads follow changes to the active inner cursor. Native iterator handles and cached
   values are released when switching inputs; generator integration remains unfinished.
+- `MultipleIterator` combines iterator keys and values, with any/all validity modes,
+  numeric or associated keys, duplicate-key checks, and attachment management.
+  It shares native object storage for cloning, debug output, and cycle collection;
+  native dimension access follows its flags. Complete mutation timing remains
+  unfinished.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.

@@ -2940,6 +2940,21 @@ match subclass current() overrides and top/count reads from extraction callbacks
 Other SPL classes, collector accounting, and complete reentrant mutation and
 destructor timing remain unfinished.
 
+The [MultipleIterator slice](conformance/php-8.5.0-multiple-iterator-hillclimb.txt)
+adds combined iterator keys and values, any/all validity modes, numeric/associated
+keys, attachment management, and strict duplicate-label checks. It reuses native
+object storage for cloning, debug output, and cycle collection. Native dimension
+handlers honor PHP's shared flag bits and reject non-Iterator attachments.
+
+This slice adds **three upstream passes**, with **zero regressions** across all
+seven full suites (**8,430 fixtures**). SPL reaches **497 / 187 / 94**; other suite
+totals are unchanged. All **797 existing Rust tests**, **57 reference-checked project
+PHPT**, formatting, Clippy, and diff checks pass. No custom tests or matrices were
+added. Direct CLI comparisons match cloning, flag reset, default serialization,
+object-keyed dimension access, flag changes during current(), and constructor
+default values. Additional SPL classes, collector accounting, and complete mutation
+and destructor timing remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2949,7 +2964,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2582 | 2266 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 494 | 190 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 497 | 187 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

@@ -14,6 +14,9 @@ pub(crate) struct ObjectStorageData {
     indices: HashMap<ArrayKey, usize>,
     position: usize,
     index: i64,
+    // MultipleIterator reuses the native storage flags for its public modes.
+    // SplObjectStorage's override checks are derived from methods below.
+    flags: i64,
 }
 impl ObjectStorageData {
     fn advance(&mut self) {
@@ -73,6 +76,22 @@ fn object_id(value: &Value) -> Option<usize> {
     }
 }
 pub(super) fn native_dimensions(object: &PhpObject, methods: &[&[u8]]) -> bool {
+    if object.class.is_a(b"MultipleIterator") {
+        // PHP shares these dimension handlers with SplObjectStorage. Its public
+        // mode bits therefore also select native access versus ArrayAccess.
+        let mask = if methods.contains(&b"offsetSet".as_slice()) {
+            2
+        } else if methods.contains(&b"offsetUnset".as_slice()) {
+            4
+        } else {
+            1
+        };
+        return object
+            .object_storage
+            .borrow()
+            .as_ref()
+            .is_some_and(|data| data.flags & mask == 0);
+    }
     object.object_storage.borrow().is_some()
         && std::iter::once(b"getHash".as_slice())
             .chain(methods.iter().copied())
@@ -85,6 +104,22 @@ pub(super) fn native_dimensions(object: &PhpObject, methods: &[&[u8]]) -> bool {
 impl Runtime {
     pub(super) fn builtin_object_storage_class(&self, name: &[u8]) -> Option<Rc<Class>> {
         let code: &[u8] = match name {
+            b"multipleiterator" => br#"<?php class MultipleIterator implements Iterator {
+                public const int MIT_NEED_ANY = 0, MIT_NEED_ALL = 1, MIT_KEYS_NUMERIC = 0, MIT_KEYS_ASSOC = 2;
+                public function __construct(int $flags = 1) {}
+                public function getFlags(): int {}
+                public function setFlags(int $flags): void {}
+                public function attachIterator(Iterator $iterator, string|int|null $info = null): void {}
+                public function detachIterator(Iterator $iterator): void {}
+                public function containsIterator(Iterator $iterator): bool {}
+                public function countIterators(): int {}
+                public function rewind(): void {}
+                public function valid(): bool {}
+                public function key(): array {}
+                public function current(): array {}
+                public function next(): void {}
+                public function __debugInfo(): array {}
+            }"#,
             b"splobserver" => b"<?php interface SplObserver { public function update(SplSubject $subject): void; }",
             b"splsubject" => b"<?php interface SplSubject { public function attach(SplObserver $observer): void; public function detach(SplObserver $observer): void; public function notify(): void; }",
             b"splobjectstorage" => br#"<?php class SplObjectStorage implements Countable, SeekableIterator, Serializable, ArrayAccess {
@@ -128,12 +163,37 @@ impl Runtime {
         };
         for method in &mut Rc::make_mut(&mut declaration).methods {
             let method = Rc::make_mut(method);
+            if name == b"multipleiterator" && method.name.ends_with(b"::__construct") {
+                let constant = |name: &[u8]| Expr {
+                    line: 0,
+                    kind: ExprKind::ScopedMember(
+                        Box::new(Expr {
+                            line: 0,
+                            kind: ExprKind::Constant(b"MultipleIterator".to_vec()),
+                        }),
+                        Box::new(Expr {
+                            line: 0,
+                            kind: ExprKind::Literal(Value::String(name.to_vec().into())),
+                        }),
+                    ),
+                };
+                method.parameters[0].default = Some(Expr {
+                    line: 0,
+                    kind: ExprKind::Binary(
+                        "|".into(),
+                        Box::new(constant(b"MIT_NEED_ALL")),
+                        Box::new(constant(b"MIT_KEYS_NUMERIC")),
+                    ),
+                });
+            }
             method.native = Some(NativeMethod::ObjectStorage);
             if method.name.rsplit(|b| *b == b':').next().unwrap() != b"seek" {
                 method.tentative_return_type = method.return_type.take();
             }
         }
-        let interfaces = if name == b"splobjectstorage" {
+        let interfaces = if name == b"multipleiterator" {
+            vec![self.find_class(b"Iterator").unwrap()]
+        } else if name == b"splobjectstorage" {
             [
                 b"Countable".as_slice(),
                 b"SeekableIterator",
@@ -170,12 +230,230 @@ impl Runtime {
         Some(class)
     }
 
+    fn multiple_iterator_call(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        // These are explicit method calls, not calls through a native foreach
+        // iterator: wrapper current() methods must not use iterator caches.
+        let method = objects::method(&object.class, name).unwrap();
+        let target =
+            self.unchecked_method_target(method, object.class.clone(), Some(object.clone()), line)?;
+        self.invoke_at(target, &[], line, false, true)
+    }
+
+    fn multiple_iterator_advance(object: &PhpObject) {
+        let mut data = object.object_storage.borrow_mut();
+        let data = data.as_mut().unwrap();
+        if data.position < data.entries.len() {
+            data.position += 1;
+        }
+        data.advance();
+    }
+
+    fn multiple_iterator_method(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        match name {
+            b"__construct" | b"setflags" => {
+                let Value::Int(flags) = self.lookup(b"flags").unwrap() else {
+                    unreachable!()
+                };
+                object.object_storage.borrow_mut().as_mut().unwrap().flags = flags;
+                return Ok(Value::Null);
+            }
+            b"getflags" => {
+                return Ok(Value::Int(
+                    object.object_storage.borrow().as_ref().unwrap().flags,
+                ));
+            }
+            b"countiterators" => {
+                return Ok(Value::Int(
+                    object
+                        .object_storage
+                        .borrow()
+                        .as_ref()
+                        .unwrap()
+                        .indices
+                        .len() as i64,
+                ));
+            }
+            b"attachiterator" | b"detachiterator" | b"containsiterator" => {
+                let value = self.lookup(b"iterator").unwrap();
+                if name == b"containsiterator" {
+                    return Ok(Value::Bool(
+                        self.object_storage_native_read(object, &value).is_some(),
+                    ));
+                }
+                if name == b"detachiterator" {
+                    self.object_storage_detach(object, &value, line)?;
+                    object
+                        .object_storage
+                        .borrow_mut()
+                        .as_mut()
+                        .unwrap()
+                        .rewind();
+                    return Ok(Value::Null);
+                }
+                let info = self.lookup(b"info").unwrap();
+                if info != Value::Null {
+                    object
+                        .object_storage
+                        .borrow_mut()
+                        .as_mut()
+                        .unwrap()
+                        .rewind();
+                    loop {
+                        let old = object
+                            .object_storage
+                            .borrow()
+                            .as_ref()
+                            .unwrap()
+                            .current()
+                            .map(|e| e.info.clone());
+                        let Some(old) = old else {
+                            break;
+                        };
+                        if info.identical(&old, line)? {
+                            return Err(self.array_iterator_exception(
+                                b"InvalidArgumentException",
+                                "Key duplication error".into(),
+                                line,
+                            ));
+                        }
+                        Self::multiple_iterator_advance(object);
+                    }
+                }
+                self.object_storage_attach(object, value, info, line)?;
+                return Ok(Value::Null);
+            }
+            _ => (),
+        }
+        let (empty, expect) = {
+            let data = object.object_storage.borrow();
+            let data = data.as_ref().unwrap();
+            (data.indices.is_empty(), data.flags & 1 != 0)
+        };
+        let collect = matches!(name, b"current" | b"key");
+        if empty {
+            if collect {
+                return Err(self.array_iterator_exception(
+                    b"RuntimeException",
+                    format!(
+                        "Called {}() on an invalid iterator",
+                        String::from_utf8_lossy(name)
+                    ),
+                    line,
+                ));
+            }
+            return Ok(if name == b"valid" {
+                Value::Bool(false)
+            } else {
+                Value::Null
+            });
+        }
+        object
+            .object_storage
+            .borrow_mut()
+            .as_mut()
+            .unwrap()
+            .rewind();
+        let mut result = PhpArray::default();
+        loop {
+            let entry = {
+                let data = object.object_storage.borrow();
+                let data = data.as_ref().unwrap();
+                data.current()
+                    .map(|entry| (data.position, entry.object.clone(), entry.info.clone()))
+            };
+            let Some((position, Value::Object(iterator), original_info)) = entry else {
+                break;
+            };
+            if matches!(name, b"rewind" | b"next") {
+                let value = self.multiple_iterator_call(&iterator, name, line)?;
+                drop(value);
+                self.drain_destructors(Ok(()), line)?;
+            } else {
+                let valid = self.multiple_iterator_call(&iterator, b"valid", line)?;
+                let is_valid = matches!(valid, Value::Bool(true));
+                drop(valid);
+                self.drain_destructors(Ok(()), line)?;
+                if name == b"valid" {
+                    if expect != is_valid {
+                        return Ok(Value::Bool(!expect));
+                    }
+                } else {
+                    let value = if is_valid {
+                        self.multiple_iterator_call(&iterator, name, line)?
+                    } else if object.object_storage.borrow().as_ref().unwrap().flags & 1 != 0 {
+                        return Err(self.array_iterator_exception(
+                            b"RuntimeException",
+                            format!(
+                                "Called {}() with non valid sub iterator",
+                                String::from_utf8_lossy(name)
+                            ),
+                            line,
+                        ));
+                    } else {
+                        Value::Null
+                    };
+                    let (flags, info) = {
+                        let data = object.object_storage.borrow();
+                        let data = data.as_ref().unwrap();
+                        (
+                            data.flags,
+                            data.entries
+                                .get(position)
+                                .and_then(Option::as_ref)
+                                .map(|e| e.info.clone())
+                                .unwrap_or(original_info),
+                        )
+                    };
+                    let key = if flags & 2 != 0 {
+                        match info {
+                            Value::Int(key) => ArrayKey::Int(key),
+                            Value::String(key) => {
+                                ArrayKey::from_value(&Value::String(key), line, self)?
+                            }
+                            _ => {
+                                return Err(self.array_iterator_exception(
+                                    b"InvalidArgumentException",
+                                    "Sub-Iterator is associated with NULL".into(),
+                                    line,
+                                ));
+                            }
+                        }
+                    } else {
+                        result.append_key(line)?
+                    };
+                    result.insert(key, value);
+                }
+            }
+            Self::multiple_iterator_advance(object);
+        }
+        Ok(if collect {
+            Value::Array(Rc::new(result))
+        } else if name == b"valid" {
+            Value::Bool(expect)
+        } else {
+            Value::Null
+        })
+    }
+
     fn object_storage_hash(
         &mut self,
         storage: &Rc<PhpObject>,
         value: &Value,
         line: usize,
     ) -> Result<ArrayKey, Error> {
+        if storage.class.is_a(b"MultipleIterator") {
+            return Ok(ArrayKey::Int(object_id(value).unwrap() as i64));
+        }
         let method = objects::method(&storage.class, b"getHash").unwrap();
         if matches!(method.native, Some(NativeMethod::ObjectStorage)) {
             return Ok(ArrayKey::Int(object_id(value).unwrap() as i64));
@@ -320,6 +598,9 @@ impl Runtime {
             .next()
             .unwrap()
             .to_vec();
+        if object.class.is_a(b"MultipleIterator") && name != b"__debuginfo" {
+            return self.multiple_iterator_method(&object, &name, line);
+        }
         match name.as_slice() {
             b"attach" | b"detach" | b"contains" | b"offsetset" | b"offsetunset"
             | b"offsetexists" | b"offsetget" | b"gethash" => {

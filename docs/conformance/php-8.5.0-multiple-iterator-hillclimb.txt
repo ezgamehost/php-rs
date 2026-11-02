@@ -1,0 +1,49 @@
+PHP 8.5.0 MultipleIterator hillclimb
+Baseline: e1d1bf997bf2f2042fed8d460295061313e1b0f8
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 494 passed, 190 failed, 94 unsupported
+After: 778 cases; 497 passed, 187 failed, 94 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/spl/tests/bug70053.phpt
+NEW PASS: ext/spl/tests/gh19094.phpt
+NEW PASS: ext/spl/tests/multiple_iterator_001.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 123 passed, 12 failed, 28 unsupported
+After: 163 cases; 123 passed, 12 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match cloning, flag reset, default serialization,
+object-keyed dimension access, flag changes during current(), and constructor defaults.
+Additional SPL classes, collector accounting, and complete reentrant mutation
+and destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-multiple-*2.log.

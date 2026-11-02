@@ -64,7 +64,7 @@ impl Runtime {
     }
 
     pub(super) fn check_array_access(&self, object: &PhpObject, line: usize) -> Result<(), Error> {
-        if object.class.is_a(b"ArrayAccess") {
+        if object.class.is_a(b"ArrayAccess") || object.class.is_a(b"MultipleIterator") {
             Ok(())
         } else {
             Err(Error::new(
@@ -109,6 +109,15 @@ impl Runtime {
                         });
                 }
                 b"offsetSet" => {
+                    if object.class.is_a(b"MultipleIterator")
+                        && !matches!(&values[0], Value::Object(value) if value.class.is_a(b"Iterator"))
+                    {
+                        return Err(Error::new(
+                            ErrorKind::TypeError,
+                            "Can only attach objects that implement the Iterator interface",
+                            line,
+                        ));
+                    }
                     self.object_storage_attach(
                         object,
                         values[0].clone(),
@@ -123,6 +132,13 @@ impl Runtime {
                 }
                 _ => (),
             }
+        }
+        if !object.class.is_a(b"ArrayAccess") {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!("Cannot use object of type {} as array", object.class_name),
+                line,
+            ));
         }
         let function = objects::method(&object.class, method).expect("ArrayAccess method");
         let target = self.unchecked_method_target(

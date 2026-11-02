@@ -28,7 +28,9 @@ impl Runtime {
         {
             *object.heap.get_mut() = Some(heap::HeapData::new(&object.class));
         }
-        if object.class.is_a(b"SplObjectStorage") && object.object_storage.get_mut().is_none() {
+        if (object.class.is_a(b"SplObjectStorage") || object.class.is_a(b"MultipleIterator"))
+            && object.object_storage.get_mut().is_none()
+        {
             *object.object_storage.get_mut() = Some(object_storage::ObjectStorageData::default());
         }
         let object = Rc::new(object);
