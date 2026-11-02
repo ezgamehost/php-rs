@@ -4,6 +4,31 @@ use super::*;
 use builtins::Builtin;
 
 impl Runtime {
+    pub(super) fn attribute_deprecation(
+        &mut self,
+        message: &[u8],
+        level: i64,
+        line: usize,
+        internal: bool,
+    ) -> Result<(), Error> {
+        self.diagnostics.last_fatal_trace = None;
+        let (file, line) = self.attribute_constant_location.as_ref().map_or_else(
+            || (self.diagnostics.source.name.clone(), line),
+            |(source, line)| (source.name.clone(), *line),
+        );
+        if !self.dispatch_error_handler(level, message, &file, line, internal.then_some(true))? {
+            self.diagnostics.output_position = self.output.len();
+            self.diagnostics
+                .display(level, "Deprecated", message, &file, line as i64);
+            if self.diagnostics.reporting & level != 0 {
+                self.diagnostics.messages.push(format!(
+                    "Deprecated: {} on line {line}",
+                    String::from_utf8_lossy(message)
+                ));
+            }
+        }
+        Ok(())
+    }
     pub(super) fn error_handler_builtin(
         &mut self,
         builtin: Builtin,
@@ -71,7 +96,7 @@ impl Runtime {
                 self.diagnostics.last_fatal_trace = (level == 256
                     && self.fatal_backtraces.unwrap_or(true))
                 .then(|| self.capture_trace());
-                if !self.dispatch_error_handler(level, &message, &file, line)? {
+                if !self.dispatch_error_handler(level, &message, &file, line, None)? {
                     let label = match level {
                         256 => "Fatal error",
                         512 => "Warning",
@@ -113,6 +138,7 @@ impl Runtime {
         message: &[u8],
         file: &[u8],
         line: usize,
+        internal: Option<bool>,
     ) -> Result<bool, Error> {
         if self.folding_constants
             || level & (1 | 4 | 16 | 32 | 64 | 128) != 0
@@ -151,7 +177,8 @@ impl Runtime {
                 Value::String(file.to_vec().into()),
                 Value::Int(line as i64),
             ];
-            let internal = self.trace_frames.last().is_some_and(|frame| frame.internal);
+            let internal = internal
+                .unwrap_or_else(|| self.trace_frames.last().is_some_and(|frame| frame.internal));
             self.call_callback_at(&target, &values, line, internal)
         })();
         self.diagnostics.compiling = compiling;
@@ -177,7 +204,7 @@ impl WarningSink for Runtime {
             .and_then(|(text, line)| line.parse::<usize>().ok().map(|line| (text, line)))
             .unwrap_or((text, 0));
         let file = self.diagnostics.source.name.clone();
-        if !self.dispatch_error_handler(level, text.as_bytes(), &file, line)? {
+        if !self.dispatch_error_handler(level, text.as_bytes(), &file, line, None)? {
             self.diagnostics.output_position = self.output.len();
             self.diagnostics.push_after_handler(message);
         }

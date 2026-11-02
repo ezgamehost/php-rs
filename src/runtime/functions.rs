@@ -332,7 +332,9 @@ impl Runtime {
         dynamic: bool,
         internal: bool,
     ) -> Result<Value, Error> {
-        if let Some(name) = target.magic_name.take() {
+        let forwarded;
+        let requested = target.magic_name.take();
+        let args = if let Some(name) = &requested {
             target.name = target.function.as_ref().unwrap().name.clone();
             let parameters = [magic_parameter()];
             let bound = self.bind_call_arguments(&parameters, args, &target, line)?;
@@ -342,17 +344,14 @@ impl Runtime {
                     line,
                 })
             };
-            return self.invoke_at(
-                target,
-                &[
-                    literal(Value::String(name.into())),
-                    literal(Value::Array(Rc::new(bound.extra))),
-                ],
-                line,
-                dynamic,
-                internal,
-            );
-        }
+            forwarded = [
+                literal(Value::String(name.clone().into())),
+                literal(Value::Array(Rc::new(bound.extra))),
+            ];
+            &forwarded[..]
+        } else {
+            args
+        };
         let function = &target.function;
         let builtin = target.builtin;
 
@@ -362,6 +361,7 @@ impl Runtime {
             builtin.unwrap().parameters()
         };
         let mut bound = self.bind_call_arguments(&parameters, args, &target, line)?;
+        self.deprecated_call(&target, requested.as_deref(), line, internal)?;
         bound.direct_positional = !dynamic
             && !internal
             && args

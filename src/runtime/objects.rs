@@ -36,7 +36,15 @@ impl Runtime {
                             .trait_uses
                             .iter()
                             .flat_map(|use_| &use_.names)
-                            .all(|name| self.find_class(name).is_some())
+                            .all(|name| {
+                                self.find_class(name).is_some_and(|class| {
+                                    !class
+                                        .declaration
+                                        .attributes
+                                        .iter()
+                                        .any(|a| a.name.eq_ignore_ascii_case(b"Deprecated"))
+                                })
+                            })
                         && !decl
                             .methods
                             .iter()
@@ -69,7 +77,26 @@ impl Runtime {
             self.load_class(name, decl.line)?;
         }
         for name in decl.trait_uses.iter().flat_map(|use_| &use_.names) {
-            self.load_class(name, decl.line)?;
+            if let Some(class) = self.load_class(name, decl.line)?
+                && class.declaration.is_trait
+                && let Some(attribute) = class
+                    .declaration
+                    .attributes
+                    .iter()
+                    .find(|a| a.name.eq_ignore_ascii_case(b"Deprecated"))
+            {
+                let mut message = b"Trait ".to_vec();
+                message.extend(&class.name);
+                message.extend(b" used by ");
+                message.extend(&decl.name);
+                message.extend(b" is deprecated");
+                message.extend(self.deprecation_suffix(
+                    attribute,
+                    Some(class.clone()),
+                    decl.line,
+                )?);
+                self.attribute_deprecation(&message, 16384, decl.line, false)?;
+            }
         }
         let class = self.link_class(decl)?;
         let name = class.name.to_ascii_lowercase();

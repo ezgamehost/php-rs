@@ -1,7 +1,168 @@
+// Altered Rust adaptation of PHP 8.5.0's Deprecated attribute diagnostics.
+// See THIRD_PARTY_NOTICES.md.
 use super::*;
 use crate::{ast::NativeMethod, object::Class};
 
 impl Runtime {
+    pub(super) fn deprecated_constant(
+        &mut self,
+        attributes: &[crate::ast::Attribute],
+        name: &[u8],
+        scope: Option<Rc<Class>>,
+        enum_case: bool,
+        line: usize,
+    ) -> Result<(), Error> {
+        let Some(attribute) = attributes
+            .iter()
+            .find(|a| a.name.eq_ignore_ascii_case(b"Deprecated"))
+        else {
+            return Ok(());
+        };
+        let guard = (
+            scope.as_ref().map_or(0, |class| Rc::as_ptr(class) as usize),
+            name.to_vec(),
+        );
+        if !self.deprecated_constants.insert(guard.clone()) {
+            return Ok(());
+        }
+        // Protect both attribute evaluation and the error handler: either may
+        // read this same constant, including through an alias of its class.
+        let result = (|| {
+            let mut message = if enum_case {
+                b"Enum case ".to_vec()
+            } else {
+                b"Constant ".to_vec()
+            };
+            if let Some(class) = &scope {
+                message.extend(&class.name);
+                message.extend(b"::");
+            }
+            message.extend(name);
+            message.extend(b" is deprecated");
+            message.extend(self.deprecation_suffix(attribute, scope, line)?);
+            self.attribute_deprecation(&message, 16384, line, false)
+        })();
+        self.deprecated_constants.remove(&guard);
+        result
+    }
+
+    pub(super) fn deprecated_call(
+        &mut self,
+        target: &functions::CallTarget,
+        requested: Option<&[u8]>,
+        line: usize,
+        internal: bool,
+    ) -> Result<(), Error> {
+        let Some(function) = &target.function else {
+            return Ok(());
+        };
+        let Some(attribute) = function
+            .attributes
+            .iter()
+            .find(|a| a.name.eq_ignore_ascii_case(b"Deprecated"))
+        else {
+            return Ok(());
+        };
+        let scope = target.context.as_ref().map(|c| c.scope.clone());
+        let suffix = self.deprecation_suffix(attribute, scope.clone(), line)?;
+        let mut message = if let Some(scope) = scope {
+            let name = requested.unwrap_or_else(|| {
+                if function.name.starts_with(b"{closure:") {
+                    &function.name
+                } else {
+                    function.name.rsplit(|b| *b == b':').next().unwrap()
+                }
+            });
+            let mut message = b"Method ".to_vec();
+            message.extend(&scope.name);
+            message.extend(b"::");
+            message.extend(name);
+            message
+        } else {
+            let mut message = b"Function ".to_vec();
+            message.extend(&function.name);
+            message
+        };
+        message.extend(b"() is deprecated");
+        message.extend(suffix);
+        self.attribute_deprecation(
+            &message,
+            if function.native.is_some() {
+                8192
+            } else {
+                16384
+            },
+            line,
+            internal,
+        )
+    }
+
+    pub(super) fn deprecation_suffix(
+        &mut self,
+        attribute: &crate::ast::Attribute,
+        scope: Option<Rc<Class>>,
+        line: usize,
+    ) -> Result<Vec<u8>, Error> {
+        if attribute.arguments.is_empty() {
+            return Ok(Vec::new());
+        }
+        // Attribute constants use the declaration's class scope. Construction
+        // uses the current call site and its strictness, as Zend does here.
+        let outer = std::mem::replace(
+            &mut self.class_context,
+            scope.map(|class| crate::object::ClassContext {
+                scope: class.clone(),
+                called: class,
+            }),
+        );
+        let outer_line = self
+            .attribute_evaluation_line
+            .replace((self.trace_frames.len(), line));
+        let arguments = (|| {
+            let mut result = Vec::new();
+            for argument in &attribute.arguments {
+                let expr = match argument {
+                    crate::ast::Argument::Positional(expr)
+                    | crate::ast::Argument::Named(_, expr) => expr,
+                    _ => unreachable!(),
+                };
+                let value = self.eval_default(expr)?;
+                let literal = Expr {
+                    kind: ExprKind::Literal(value),
+                    line,
+                };
+                result.push(match argument {
+                    crate::ast::Argument::Named(name, _) => {
+                        crate::ast::Argument::Named(name.clone(), literal)
+                    }
+                    _ => crate::ast::Argument::Positional(literal),
+                });
+            }
+            Ok::<_, Error>(result)
+        })();
+        self.attribute_evaluation_line = outer_line;
+        self.class_context = outer;
+        let arguments = arguments?;
+        let class = self.find_class(b"Deprecated").expect("built-in attribute");
+        let Value::Object(object) = self.instantiate_class(class, &arguments, true, line)? else {
+            unreachable!()
+        };
+        let properties = object.properties.borrow();
+        let mut suffix = Vec::new();
+        for (name, prefix) in [
+            (b"since".as_slice(), b" since ".as_slice()),
+            (b"message".as_slice(), b", ".as_slice()),
+        ] {
+            if let Some(Value::String(value)) = properties.get(&ArrayKey::String(name.to_vec()))
+                && !value.is_empty()
+            {
+                suffix.extend(prefix);
+                suffix.extend(value.bytes());
+            }
+        }
+        Ok(suffix)
+    }
+
     pub(super) fn builtin_attribute_class(&self, name: &[u8]) -> Option<Rc<Class>> {
         let (canonical, target, body, forbid_dynamic) = match name {
             b"attribute" => (

@@ -52,7 +52,21 @@ impl Runtime {
         if !self.in_constant_expression && name.bytes().eq_ignore_ascii_case(b"class") {
             return Ok(Value::String(class.name.clone().into()));
         }
-        self.read_class_constant(&class, &name.bytes(), diagnostic_class.as_deref(), line)
+        // Zend's constant-expression evaluator overrides diagnostic locations
+        // for scoped class constants, including diagnostics from nested handlers.
+        let outer_location = self.attribute_constant_location.clone();
+        if self
+            .attribute_evaluation_line
+            .is_some_and(|(depth, _)| depth == self.trace_frames.len())
+            && let Some(context) = &self.class_context
+        {
+            self.attribute_constant_location =
+                Some((context.scope.declaration.source.clone(), line));
+        }
+        let result =
+            self.read_class_constant(&class, &name.bytes(), diagnostic_class.as_deref(), line);
+        self.attribute_constant_location = outer_location;
+        result
     }
 
     pub(super) fn named_class_constant(
@@ -91,8 +105,13 @@ impl Runtime {
         {
             return Ok(Value::Bool(false));
         }
+        if defined {
+            let owner = class.constant_owner(name).expect("checked constant");
+            self.evaluate_class_constant(&owner, name, line)?;
+            return Ok(Value::Bool(true));
+        }
         let value = self.read_class_constant(&class, name, Some(&qualified[..split]), line)?;
-        Ok(if defined { Value::Bool(true) } else { value })
+        Ok(value)
     }
 
     fn read_class_constant(
@@ -146,7 +165,21 @@ impl Runtime {
                 line,
             ));
         }
-        self.evaluate_class_constant(&owner, name, line)
+        let value = self.evaluate_class_constant(&owner, name, line)?;
+        let constant = owner
+            .declaration
+            .constants
+            .iter()
+            .find(|c| c.name == name)
+            .expect("constant owner");
+        self.deprecated_constant(
+            &constant.attributes,
+            name,
+            Some(owner.clone()),
+            constant.is_enum_case,
+            line,
+        )?;
+        Ok(value)
     }
 
     fn can_access_constant(&self, owner: &Class, name: &[u8]) -> bool {

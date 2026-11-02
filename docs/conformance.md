@@ -2158,6 +2158,32 @@ the behavior; the notices file records the adaptations. Later snapshotted-proper
 mutation, `print_r` callback/output-buffer interleaving and cross-call recursion,
 arbitrary INI configuration, lazy objects, and other documented gaps remain.
 
+The [Deprecated attribute slice](conformance/php-8.5.0-deprecated-hillclimb.txt)
+adds **37 upstream Zend passes**, reaching **2371 / 2477 / 408**, with no
+regressions across all six suites (8,267 fixtures). The focused attribute set
+records **40 / 7 / 0**. Calls, global/class constant reads, enum cases, and trait
+use emit E_USER_DEPRECATED with binary-safe messages and optional `since` text.
+Attribute construction keeps caller strictness and declaration class scope;
+magic-call diagnostics retain the requested method name. Handler exceptions
+abort the call before entering its body, and internal callbacks retain internal
+trace frames. Constant guards span suffix evaluation and handler invocation,
+including aliases, nested messages, and throwing handlers. `defined` and
+reflection reads do not emit a warning for the queried constant. Deprecated
+traits defer binding so execution-time error handlers observe their warnings.
+Invalid class/interface/enum targets report compile errors, with delayed target
+validation handled by reflection.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. One temporary reference probe matches exact output and exit status
+for nested constant diagnostics and recursive handlers, including caller versus
+scoped constant-expression locations. No custom tests or generated matrices
+were added. PHP 8.5.0 `Zend/zend_execute.c`, `Zend/zend_constants.c`,
+`Zend/zend_ast.c`, `Zend/zend_attributes.c`, and `Zend/zend_inheritance.c` establish
+the behavior. The seven focused failures require destructors (two), `random_int`
+(three), `Closure::fromCallable` (one), or `Random\IntervalBoundary` (one).
+General constant-expression diagnostic overrides outside attribute deprecations
+and other documented runtime gaps remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2165,7 +2191,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2334 | 2514 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2371 | 2477 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

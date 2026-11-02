@@ -231,9 +231,20 @@ impl Parser {
             let canonical = match name.as_slice() {
                 b"allowdynamicproperties" => "AllowDynamicProperties",
                 b"attribute" => "Attribute",
+                b"deprecated" => "Deprecated",
                 _ => continue,
             };
-            let invalid = if class.is_trait {
+            let invalid = if canonical == "Deprecated" {
+                if class.is_trait {
+                    None
+                } else if class.is_interface {
+                    Some("interface")
+                } else if class.is_enum {
+                    Some("enum")
+                } else {
+                    Some("class")
+                }
+            } else if class.is_trait {
                 Some("trait")
             } else if class.is_interface {
                 Some("interface")
@@ -249,7 +260,12 @@ impl Parser {
             if let Some(kind) = invalid
                 && !delayed
             {
-                return Err(Error::parse(
+                return Err(Error::new(
+                    if canonical == "Deprecated" {
+                        crate::ErrorKind::CompileError
+                    } else {
+                        crate::ErrorKind::ParseError
+                    },
                     format!(
                         "Cannot apply #[\\{canonical}] to {kind} {}",
                         String::from_utf8_lossy(&class.name)

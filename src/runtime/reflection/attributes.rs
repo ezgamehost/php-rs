@@ -183,13 +183,24 @@ impl Runtime {
                 let canonical = match class.name.as_slice() {
                     b"Attribute" => Some("Attribute"),
                     b"AllowDynamicProperties" => Some("AllowDynamicProperties"),
+                    b"Deprecated" if owner.target == 1 => Some("Deprecated"),
                     _ => None,
                 };
                 if let Some(canonical) = canonical
                     && let Some(class) = &owner.class
                 {
                     let decl = &class.declaration;
-                    let invalid = if decl.is_trait {
+                    let invalid = if canonical == "Deprecated" {
+                        if decl.is_trait {
+                            None
+                        } else if decl.is_interface {
+                            Some("interface")
+                        } else if decl.is_enum {
+                            Some("enum")
+                        } else {
+                            Some("class")
+                        }
+                    } else if decl.is_trait {
                         Some("trait")
                     } else if decl.is_interface {
                         Some("interface")

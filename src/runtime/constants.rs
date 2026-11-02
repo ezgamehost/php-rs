@@ -108,6 +108,10 @@ impl Runtime {
     }
 
     pub(super) fn read_constant(&mut self, name: &[u8], line: usize) -> Result<Value, Error> {
+        let line = self
+            .attribute_evaluation_line
+            .filter(|(depth, _)| *depth == self.trace_frames.len())
+            .map_or(line, |(_, line)| line);
         let value = self.lookup_constant(name).ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
@@ -117,6 +121,12 @@ impl Runtime {
         })?;
         if name.strip_prefix(b"\\").unwrap_or(name) == b"E_STRICT" {
             self.warn(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"))?;
+        } else if let Some(constant) = self
+            .constants
+            .get(&key(name.strip_prefix(b"\\").unwrap_or(name)))
+            .cloned()
+        {
+            self.deprecated_constant(&constant.attributes, &constant.name, None, false, line)?;
         }
         Ok(value)
     }
