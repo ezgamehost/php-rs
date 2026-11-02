@@ -13,6 +13,35 @@ impl WarningSink for Vec<String> {
 
 pub(crate) const FATAL_ERRORS: i64 = 1 | 4 | 16 | 64 | 256 | 4096;
 
+pub(crate) struct LastError {
+    level: i64,
+    message: Vec<u8>,
+    file: Vec<u8>,
+    line: i64,
+}
+
+impl LastError {
+    pub fn value(&self, trace: Option<&std::rc::Rc<crate::PhpArray>>) -> crate::Value {
+        use crate::{ArrayKey, PhpArray, Value};
+        let mut fields = PhpArray::default();
+        for (key, value) in [
+            ("type", Value::Int(self.level)),
+            ("message", Value::String(self.message.clone().into())),
+            ("file", Value::String(self.file.clone().into())),
+            ("line", Value::Int(self.line)),
+        ] {
+            fields.insert(ArrayKey::String(key.as_bytes().to_vec()), value);
+        }
+        if let Some(trace) = trace {
+            fields.insert(
+                ArrayKey::String(b"trace".to_vec()),
+                Value::Array(trace.clone()),
+            );
+        }
+        Value::Array(std::rc::Rc::new(fields))
+    }
+}
+
 pub(crate) struct Diagnostics {
     pub messages: Vec<String>,
     pub reporting: i64,
@@ -21,6 +50,8 @@ pub(crate) struct Diagnostics {
     pub output_position: usize,
     pub events: Vec<Diagnostic>,
     pub stderr_closed: bool,
+    pub last_error: Option<LastError>,
+    pub last_fatal_trace: Option<std::rc::Rc<crate::PhpArray>>,
 }
 
 impl Default for Diagnostics {
@@ -33,12 +64,22 @@ impl Default for Diagnostics {
             output_position: 0,
             events: Vec::new(),
             stderr_closed: false,
+            last_error: None,
+            last_fatal_trace: None,
         }
     }
 }
 
 impl Diagnostics {
     pub fn display(&mut self, level: i64, label: &str, message: &[u8], file: &[u8], line: i64) {
+        // Only default reporting reaches here. Handled diagnostics do not
+        // replace the last error, while suppressed diagnostics still do.
+        self.last_error = Some(LastError {
+            level,
+            message: message.to_vec(),
+            file: file.to_vec(),
+            line,
+        });
         if self.reporting & level == 0 || self.stderr_closed {
             return;
         }
@@ -79,29 +120,34 @@ impl Diagnostics {
     }
 
     pub fn push(&mut self, message: String) {
+        self.last_fatal_trace = None;
+        self.push_after_handler(message);
+    }
+
+    pub fn push_after_handler(&mut self, message: String) {
         let level = self.level(&message);
+        let (label, text) = if let Some(text) = message.strip_prefix("Deprecated: ") {
+            ("Deprecated", text)
+        } else if let Some(text) = message.strip_prefix("Notice: ") {
+            ("Notice", text)
+        } else {
+            (
+                "Warning",
+                message.strip_prefix("Warning: ").unwrap_or(&message),
+            )
+        };
+        let (text, line) = text
+            .rsplit_once(" on line ")
+            .and_then(|(text, line)| line.parse::<usize>().ok().map(|line| (text, line)))
+            .unwrap_or((text, 0));
+        self.display(
+            level,
+            label,
+            text.as_bytes(),
+            &self.source.name.clone(),
+            line as i64,
+        );
         if self.reporting & level != 0 {
-            let (label, text) = if let Some(text) = message.strip_prefix("Deprecated: ") {
-                ("Deprecated", text)
-            } else if let Some(text) = message.strip_prefix("Notice: ") {
-                ("Notice", text)
-            } else {
-                (
-                    "Warning",
-                    message.strip_prefix("Warning: ").unwrap_or(&message),
-                )
-            };
-            let (text, line) = text
-                .rsplit_once(" on line ")
-                .and_then(|(text, line)| line.parse::<usize>().ok().map(|line| (text, line)))
-                .unwrap_or((text, 0));
-            self.display(
-                level,
-                label,
-                text.as_bytes(),
-                &self.source.name.clone(),
-                line as i64,
-            );
             self.messages.push(message);
         }
     }

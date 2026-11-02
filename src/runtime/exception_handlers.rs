@@ -61,6 +61,7 @@ impl Runtime {
                 let previous = self.diagnostics.events.len();
                 self.diagnostics
                     .display(1, "Fatal error", message.as_bytes(), b"Unknown", 0);
+                self.diagnostics.last_fatal_trace = None;
                 if self.diagnostics.events.len() > previous {
                     self.diagnostics
                         .events

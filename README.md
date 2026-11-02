@@ -308,6 +308,10 @@ new request. The CLI returns the low eight bits of the requested status.
   write diagnostics release storage borrows before dispatch and observe handler
   replacement of live variables/properties. Malformed-property dump notices,
   compound writes, and some nested mutation cases remain incomplete.
+- `error_get_last` returns the latest default-reported diagnostic, including
+  suppressed warnings and uncaught errors, as a fresh type/message/file/line array.
+  Handled diagnostics preserve the prior record. `error_clear_last` clears the
+  record and fatal backtrace; user fatal errors retain a trace for shutdown code.
 - `set_exception_handler`, `get_exception_handler`, and `restore_exception_handler`
   preserve callable identity and handler stacks, including null entries. Uncaught
   file/stdin exceptions dispatch at the request boundary; replacement handlers can

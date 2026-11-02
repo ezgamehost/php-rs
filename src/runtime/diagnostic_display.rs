@@ -31,6 +31,7 @@ impl Runtime {
             if error.kind == ErrorKind::UnwindExit {
                 return;
             }
+            self.diagnostics.last_fatal_trace = None;
             let error_object = self.materialize_error(error);
             let object = error_object.throwable.unwrap();
             let data = object.throwable.borrow().as_ref().unwrap().clone();

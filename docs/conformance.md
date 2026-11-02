@@ -2080,6 +2080,27 @@ execution order, copied ancestor arrays during callbacks, compound assignment,
 increment/decrement mutation, malformed-property dump notices, and other documented
 runtime gaps remain incomplete. Unsupported fixtures remain unsupported.
 
+The [last-error API slice](conformance/php-8.5.0-last-error-hillclimb.txt) adds
+**3 upstream passes**: one Zend fixture and both targeted standard API fixtures.
+Zend reaches **2284 / 2564 / 408**, with no regressions across the six full suites;
+all other full-suite counts remain unchanged. `error_get_last` exposes the latest
+default-reported diagnostic independently of suppression, preserving binary
+messages, source file, line, and severity. Handled diagnostics leave the prior
+record intact, and returned arrays can be modified without changing the record.
+`error_clear_last` clears both the record and separately retained fatal trace.
+User fatal traces are captured before dispatch, available to handlers and shutdown
+callbacks, and cleared by subsequent diagnostics.
+
+All 797 existing Rust tests, 57 project PHPT fixtures, formatting, and Clippy pass.
+Two temporary reference probes match exact output and exit status for suppression,
+handler fallback, nested errors, independent snapshots, binary messages, fatal
+traces, and shutdown clearing (statuses 0 and 255). No custom tests or generated
+matrices were added. PHP 8.5.0 `ext/standard/basic_functions.c`, `main/main.c`,
+`Zend/zend.c`, and the upstream fixtures establish the behavior. This supersedes
+earlier notes listing the last-error APIs as absent. Configurable fatal backtraces,
+compile-fatal trace capture, and the other documented gaps remain incomplete;
+the INI-based fatal-trace fixture is still unsupported.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2087,7 +2108,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2283 | 2565 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2284 | 2564 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

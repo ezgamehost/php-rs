@@ -11,6 +11,18 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         match builtin {
+            Builtin::ErrorGetLast => Ok(self
+                .diagnostics
+                .last_error
+                .as_ref()
+                .map_or(Value::Null, |error| {
+                    error.value(self.diagnostics.last_fatal_trace.as_ref())
+                })),
+            Builtin::ErrorClearLast => {
+                self.diagnostics.last_error = None;
+                self.diagnostics.last_fatal_trace = None;
+                Ok(Value::Null)
+            }
             Builtin::SetErrorHandler => {
                 let value = args[0].as_ref().unwrap();
                 self.native_callback(value, "set_error_handler", 1, true, line)?;
@@ -56,7 +68,7 @@ impl Runtime {
                     self.warn(format!("Deprecated: Passing E_USER_ERROR to trigger_error() is deprecated since 8.4, throw an exception or call exit with a string message instead on line {line}"))?;
                 }
                 let file = self.diagnostics.source.name.clone();
-                let trace = (level == 256).then(|| self.capture_trace());
+                self.diagnostics.last_fatal_trace = (level == 256).then(|| self.capture_trace());
                 if !self.dispatch_error_handler(level, &message, &file, line)? {
                     let label = match level {
                         256 => "Fatal error",
@@ -69,11 +81,11 @@ impl Runtime {
                     self.diagnostics
                         .display(level, label, &message, &file, line as i64);
                     if self.diagnostics.events.len() > previous
-                        && let Some(trace) = trace
+                        && let Some(trace) = &self.diagnostics.last_fatal_trace
                     {
                         let event = self.diagnostics.events.last_mut().unwrap();
                         event.rendered.extend_from_slice(b"Stack trace:\n");
-                        event.rendered.extend(traces::trace_string(&trace));
+                        event.rendered.extend(traces::trace_string(trace));
                         event.rendered.push(b'\n');
                     }
                     if self.diagnostics.reporting & level != 0 {
@@ -151,6 +163,7 @@ impl Runtime {
 
 impl WarningSink for Runtime {
     fn warn(&mut self, message: String) -> Result<(), Error> {
+        self.diagnostics.last_fatal_trace = None;
         let level = self.diagnostics.level(&message);
         let text = message
             .strip_prefix("Deprecated: ")
@@ -164,7 +177,7 @@ impl WarningSink for Runtime {
         let file = self.diagnostics.source.name.clone();
         if !self.dispatch_error_handler(level, text.as_bytes(), &file, line)? {
             self.diagnostics.output_position = self.output.len();
-            self.diagnostics.push(message);
+            self.diagnostics.push_after_handler(message);
         }
         Ok(())
     }

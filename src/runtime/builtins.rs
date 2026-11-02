@@ -145,6 +145,8 @@ pub(super) enum Builtin {
     FuncGetArgs,
     SetErrorHandler,
     GetErrorHandler,
+    ErrorGetLast,
+    ErrorClearLast,
     RestoreErrorHandler,
     TriggerError,
     ErrorReporting,
@@ -442,6 +444,8 @@ impl Builtin {
             b"func_get_args" => Self::FuncGetArgs,
             b"set_error_handler" => Self::SetErrorHandler,
             b"get_error_handler" => Self::GetErrorHandler,
+            b"error_get_last" => Self::ErrorGetLast,
+            b"error_clear_last" => Self::ErrorClearLast,
             b"restore_error_handler" => Self::RestoreErrorHandler,
             b"trigger_error" | b"user_error" => Self::TriggerError,
             b"error_reporting" => Self::ErrorReporting,
@@ -533,7 +537,10 @@ impl Builtin {
             Self::Autoload => &[("class", false, false), ("file_extensions", true, false)],
             Self::AutoloadExtensions => &[("file_extensions", true, false)],
             Self::SetErrorHandler => &[("callback", false, false), ("error_levels", true, false)],
-            Self::GetErrorHandler | Self::RestoreErrorHandler => &[],
+            Self::GetErrorHandler
+            | Self::RestoreErrorHandler
+            | Self::ErrorGetLast
+            | Self::ErrorClearLast => &[],
             Self::TriggerError => &[("message", false, false), ("error_level", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
             Self::SetExceptionHandler => &[("callback", false, false)],
@@ -979,6 +986,8 @@ impl Runtime {
         if matches!(
             builtin,
             Builtin::SetErrorHandler
+                | Builtin::ErrorGetLast
+                | Builtin::ErrorClearLast
                 | Builtin::GetErrorHandler
                 | Builtin::RestoreErrorHandler
                 | Builtin::TriggerError
@@ -1154,6 +1163,8 @@ impl Runtime {
             | Builtin::StrPad
             | Builtin::StrPbrk => self.byte_string_builtin(builtin, &args, line),
             Builtin::SetErrorHandler
+            | Builtin::ErrorGetLast
+            | Builtin::ErrorClearLast
             | Builtin::GetErrorHandler
             | Builtin::RestoreErrorHandler
             | Builtin::TriggerError
