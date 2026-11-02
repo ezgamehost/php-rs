@@ -59,6 +59,7 @@ pub(super) enum Builtin {
     SubstrCount,
     Levenshtein,
     SimilarText,
+    Phonetic(bool),
     Pack,
     Unpack,
     StrSpan(bool),
@@ -306,6 +307,8 @@ impl Builtin {
             b"substr_count" => Self::SubstrCount,
             b"levenshtein" => Self::Levenshtein,
             b"similar_text" => Self::SimilarText,
+            b"soundex" => Self::Phonetic(false),
+            b"metaphone" => Self::Phonetic(true),
             b"pack" => Self::Pack,
             b"unpack" => Self::Unpack,
             b"strspn" => Self::StrSpan(true),
@@ -830,6 +833,8 @@ impl Builtin {
             | Self::Bin2Hex
             | Self::Crc32
             | Self::Uuencode(_) => &[("string", false, false)],
+            Self::Phonetic(false) => &[("string", false, false)],
+            Self::Phonetic(true) => &[("string", false, false), ("max_phonemes", true, false)],
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
             Self::SlashEscape(true, true) => {
                 &[("string", false, false), ("characters", false, false)]
@@ -1202,6 +1207,7 @@ impl Builtin {
                             (Self::Digest(_, _), "binary") => Value::Bool(false),
                             (Self::Clock(_), _) => Value::Bool(false),
                             (Self::Levenshtein, _) => Value::Int(1),
+                            (Self::Phonetic(true), "max_phonemes") => Value::Int(0),
                             (Self::Unpack, "offset") => Value::Int(0),
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
@@ -1539,6 +1545,7 @@ impl Runtime {
             Builtin::SubstrCount => self.substring_count(&args, line),
             Builtin::Levenshtein => self.levenshtein(&args, line),
             Builtin::SimilarText => self.similar_text(&args, &references, line),
+            Builtin::Phonetic(metaphone) => self.phonetic(metaphone, &name, &args, line),
             Builtin::Pack => self.pack(&args, extra, line),
             Builtin::Unpack => self.unpack(&args, line),
             Builtin::StrSpan(included) => self.string_span(included, &args, line),

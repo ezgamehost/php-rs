@@ -1,0 +1,82 @@
+PHP 8.5.0 phonetic string hillclimb
+Baseline: 38c953bc784aa770269afc99e3f3c697c698762a
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 775 passed, 14 failed, 51 unsupported
+After: 840 cases; 775 passed, 14 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 458 passed, 120 failed, 152 unsupported
+After: 730 cases; 464 passed, 114 failed, 152 unsupported
+New passes: 6; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug44242.phpt
+NEW PASS: ext/standard/tests/strings/bug47443.phpt
+NEW PASS: ext/standard/tests/strings/bug48709.phpt
+NEW PASS: ext/standard/tests/strings/metaphone.phpt
+NEW PASS: ext/standard/tests/strings/soundex.phpt
+NEW PASS: ext/standard/tests/strings/soundex_basic.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,223 passed, 2,892 failed, 1,441 unsupported.
+Six new string passes; zero regressions across all ten suites.
+
+soundex implements PHP's four-byte encoding, including the initial letter,
+zero-code letters resetting duplicate handling, ignored nonletters, zero padding
+and processing bytes after NUL. metaphone implements PHP's traditional phonetic
+rules, initial-letter exceptions, input-letter duplicate suppression, and its
+C-string termination behavior. Output limits are checked between input letters,
+so X's two-character expansion can exceed the limit by one, matching PHP.
+Letter classification follows the C locale; general locale changes and PHP
+request memory limits remain unfinished.
+
+Direct PHP reference comparisons match representative words, initial-letter and
+consonant rules, punctuation, all alphabet letters, high bytes, interior NUL,
+empty/numeric strings, limits, weak/strict argument conversion, named arguments,
+Stringable input, negative-limit errors and reflection defaults.
+PHP source attribution is retained in THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-phonetic-*2.log.
+Rust validation logs: /tmp/php-rs-phonetic-{tests,clippy}1.log.

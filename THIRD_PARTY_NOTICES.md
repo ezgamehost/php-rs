@@ -706,6 +706,11 @@ Group. The latter uses an explicit work stack instead of native recursion.
 The PHP Group, originally authored by Chris Schneider. Its trace integration
 preserves native variadic-argument replacement during string conversion.
 
+`src/runtime/phonetics.rs` adapts PHP 8.5.0's `ext/standard/soundex.c` and
+`metaphone.c`, copyright (c) The PHP Group. The original authors include
+Bjørn Borud and Thies C. Arntzen; the Metaphone implementation derives from
+Michael G Schwern's CPAN Text-Metaphone-1.96 code.
+
 CRC32 in `src/digest.rs` adapts PHP 8.5.0's `ext/standard/crc32.c` and
 `crc32.h`, copyright (c) The PHP Group. Its lookup table is generated at compile
 time from the reflected AUTODIN II polynomial.

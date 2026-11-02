@@ -264,6 +264,9 @@ new request. The CLI returns the low eight bits of the requested status.
   deletion costs, including strings longer than 255 bytes. `similar_text` follows
   PHP's matching order and writes its percentage by reference, respecting typed
   properties. Both support native argument conversion and named arguments.
+- `soundex` and `metaphone` implement PHP's phonetic rules, including duplicate
+  handling, initial-letter exceptions and Metaphone output limits. Their letter
+  classification follows the C locale; general locale changes remain unfinished.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and
