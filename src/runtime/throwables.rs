@@ -9,6 +9,9 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
         b"traversable" => ("Traversable", None),
         b"iterator" => ("Iterator", None),
         b"iteratoraggregate" => ("IteratorAggregate", None),
+        b"seekableiterator" => ("SeekableIterator", None),
+        b"recursiveiterator" => ("RecursiveIterator", None),
+        b"outeriterator" => ("OuterIterator", None),
         b"unitenum" => ("UnitEnum", None),
         b"backedenum" => ("BackedEnum", None),
         b"stringable" => ("Stringable", None),
@@ -71,6 +74,12 @@ impl Runtime {
             "<?php interface Traversable {}".to_owned()
         } else if canonical == "IteratorAggregate" {
             "<?php interface IteratorAggregate extends Traversable { public function getIterator(): Traversable; }".to_owned()
+        } else if canonical == "SeekableIterator" {
+            "<?php interface SeekableIterator extends Iterator { public function seek(int $offset): void; }".to_owned()
+        } else if canonical == "RecursiveIterator" {
+            "<?php interface RecursiveIterator extends Iterator { public function hasChildren(): bool; public function getChildren(): ?RecursiveIterator; }".to_owned()
+        } else if canonical == "OuterIterator" {
+            "<?php interface OuterIterator extends Iterator { public function getInnerIterator(): ?Iterator; }".to_owned()
         } else if canonical == "Iterator" {
             "<?php interface Iterator extends Traversable {
                 public function current(): mixed;
@@ -127,7 +136,13 @@ impl Runtime {
                 function.native = Some(NativeMethod::Abstract);
                 if matches!(
                     canonical,
-                    "ArrayAccess" | "Countable" | "Iterator" | "IteratorAggregate"
+                    "ArrayAccess"
+                        | "Countable"
+                        | "Iterator"
+                        | "IteratorAggregate"
+                        | "SeekableIterator"
+                        | "RecursiveIterator"
+                        | "OuterIterator"
                 ) {
                     function.tentative_return_type = function.return_type.take();
                 }
@@ -151,7 +166,12 @@ impl Runtime {
             });
         }
         let parent = parent_name.and_then(|name| self.find_class(name.as_bytes()));
-        let interfaces = if matches!(canonical, "Iterator" | "IteratorAggregate") {
+        let interfaces = if matches!(
+            canonical,
+            "SeekableIterator" | "RecursiveIterator" | "OuterIterator"
+        ) {
+            vec![self.find_class(b"Iterator").unwrap()]
+        } else if matches!(canonical, "Iterator" | "IteratorAggregate") {
             vec![self.find_class(b"Traversable").unwrap()]
         } else if canonical == "BackedEnum" {
             vec![self.find_class(b"UnitEnum").unwrap()]
@@ -166,7 +186,10 @@ impl Runtime {
             Vec::new()
         };
         let mut methods = parent.as_ref().map_or_else(Vec::new, |p| p.methods.clone());
-        if matches!(canonical, "Throwable" | "BackedEnum") {
+        if matches!(
+            canonical,
+            "Throwable" | "BackedEnum" | "SeekableIterator" | "RecursiveIterator" | "OuterIterator"
+        ) {
             methods.extend(interfaces[0].methods.iter().cloned());
         }
         for own in &declaration.methods {

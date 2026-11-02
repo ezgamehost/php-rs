@@ -63,6 +63,10 @@ in `src/runtime/iterators.rs` adapt `Zend/zend_interfaces.c`,
 `Zend/zend_execute.c`, and `Zend/zend_vm_def.h`. These sources are copyright (c)
 Zend Technologies Ltd. The Zend license below also applies to these adaptations.
 
+Key handling in `src/runtime/iterator_helpers.rs` adapts PHP 8.5.0's
+`Zend/zend_API.c`, copyright (c) Zend Technologies Ltd. The Zend license below
+also applies to this adaptation.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -301,6 +305,11 @@ and `ext/standard/type.c`, copyright (c) The PHP Group.
 Iterable inspection in `src/runtime/builtins.rs` and `src/runtime/reflection.rs`
 adapts PHP 8.5.0's `ext/standard/type.c` and `ext/reflection/php_reflection.c`,
 copyright (c) The PHP Group.
+
+Iterator helpers in `src/runtime/iterator_helpers.rs` and SPL interface
+declarations in `src/runtime/throwables.rs` adapt PHP 8.5.0's
+`ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c)
+The PHP Group.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

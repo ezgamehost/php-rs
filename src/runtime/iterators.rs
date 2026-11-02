@@ -54,7 +54,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn iterator_method(
+    pub(super) fn iterator_method(
         &mut self,
         object: &Rc<PhpObject>,
         name: &[u8],
@@ -66,16 +66,16 @@ impl Runtime {
         self.invoke_at(target, &[], line, false, true)
     }
 
-    fn resolve_iterator(
+    pub(super) fn resolve_iterator(
         &mut self,
         object: &Rc<PhpObject>,
         by_reference: bool,
         line: usize,
     ) -> Result<Rc<PhpObject>, Error> {
         if object.class.is_a(b"IteratorAggregate") {
-            let returned = self
-                .iterator_method(object, b"getIterator", line)?
-                .dereferenced();
+            // Unlike current(), the aggregate hook inspects the raw return
+            // zval: a reference return is not accepted as an iterator object.
+            let returned = self.iterator_method(object, b"getIterator", line)?;
             let result = match &returned {
                 Value::Object(inner)
                     if inner.class.is_a(b"Traversable") && !Rc::ptr_eq(object, inner) =>
@@ -135,7 +135,10 @@ impl Runtime {
                 // assigning either target, and only if the loop requests it.
                 let current = self.iterator_method(&iterator, b"current", line)?;
                 let key = key_target
-                    .map(|_| self.iterator_method(&iterator, b"key", line))
+                    .map(|_| {
+                        self.iterator_method(&iterator, b"key", line)
+                            .map(|key| key.dereferenced())
+                    })
                     .transpose()?;
                 self.assign_target(value_target, current.dereferenced())?;
                 if let (Some(target), Some(key)) = (key_target, key) {

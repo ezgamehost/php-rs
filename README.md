@@ -77,6 +77,10 @@ new request. The CLI returns the low eight bits of the requested status.
   nested aggregates, callback ordering, exceptions, and reference restrictions.
   Iterable type checks, `is_iterable`, and reflection recognize these objects;
   interface methods expose PHP's tentative return types.
+- `iterator_to_array`, `iterator_count`, and `iterator_apply` support user iterators,
+  preserved references and keys, native callback argument rules, and early stopping.
+  Array conversion/counting also accept arrays. `SeekableIterator`,
+  `RecursiveIterator`, and `OuterIterator` extend the native Iterator interface.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

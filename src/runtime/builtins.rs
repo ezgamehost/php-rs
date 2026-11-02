@@ -61,6 +61,9 @@ pub(super) enum Builtin {
     Chr,
     Ord,
     Count,
+    IteratorToArray,
+    IteratorCount,
+    IteratorApply,
     VarDump,
     PrintR,
     VarExport,
@@ -267,6 +270,9 @@ impl Builtin {
             b"chr" => Self::Chr,
             b"ord" => Self::Ord,
             b"count" | b"sizeof" => Self::Count,
+            b"iterator_to_array" => Self::IteratorToArray,
+            b"iterator_count" => Self::IteratorCount,
+            b"iterator_apply" => Self::IteratorApply,
             b"var_dump" => Self::VarDump,
             b"print_r" => Self::PrintR,
             b"var_export" => Self::VarExport,
@@ -702,6 +708,13 @@ impl Builtin {
             Self::Chr => &[("codepoint", false, false)],
             Self::Ord => &[("character", false, false)],
             Self::Count => &[("value", false, false), ("mode", true, false)],
+            Self::IteratorToArray => &[("iterator", false, false), ("preserve_keys", true, false)],
+            Self::IteratorCount => &[("iterator", false, false)],
+            Self::IteratorApply => &[
+                ("iterator", false, false),
+                ("callback", false, false),
+                ("args", true, false),
+            ],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
             Self::Printf | Self::Sprintf => &[("format", false, false), ("values", false, true)],
             Self::Fprintf => &[
@@ -956,6 +969,7 @@ impl Builtin {
                                 Self::ArraySlice | Self::ArrayReverse | Self::ArrayChunk,
                                 "preserve_keys",
                             ) => Value::Bool(false),
+                            (Self::IteratorToArray, "preserve_keys") => Value::Bool(true),
                             (Self::CountChars, "mode") => Value::Int(0),
                             (Self::MtSeed, "mode") => Value::Int(0),
                             (Self::ArrayRand, "num") => Value::Int(1),
@@ -1486,6 +1500,9 @@ impl Runtime {
                 pending.map_or(Ok(Value::Null), Err)
             }
             Builtin::Count => self.count_value(first, args[1].as_ref(), &name, line),
+            Builtin::IteratorToArray => self.iterator_to_array(&args, line),
+            Builtin::IteratorCount => self.iterator_count(first, line),
+            Builtin::IteratorApply => self.iterator_apply(&args, line),
             Builtin::ArrayValues => {
                 let array = require_array(first, &name, 1, line)?;
                 let mut result = PhpArray::default();

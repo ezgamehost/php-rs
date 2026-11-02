@@ -61,6 +61,7 @@ mod functions;
 mod garbage_collection;
 mod inheritance;
 mod interfaces;
+mod iterator_helpers;
 mod iterators;
 mod jumps;
 mod loading;

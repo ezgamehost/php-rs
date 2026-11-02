@@ -2464,6 +2464,36 @@ return reflection, and iterable enum reflection. The implementation follows PHP
 Generators, fibers, iterator argument/array unpacking, SPL iterator containers and
 helpers, property hooks, deep recursion limits, and prior reflection gaps remain.
 
+The [iterator helper slice](conformance/php-8.5.0-iterator-helpers-hillclimb.txt)
+adds **two upstream passes**, with **zero regressions** across the six full suites.
+SPL reaches **28 / 656 / 94**; the other suite counts remain unchanged. The focused
+33-fixture helper set reaches **2 / 27 / 4**. Most remaining focused cases require
+SPL containers, generator execution, or property hooks; unsupported section
+combinations remain unsupported.
+
+iterator_to_array accepts arrays and user iterators, optionally preserves keys,
+retains reference-returning current values, converts keys with PHP diagnostics,
+and destroys replaced duplicate-key values at the native boundary. iterator_count
+uses rewind/valid/next without requesting values or keys. iterator_apply validates
+its Traversable, callback, and optional argument array in order, honors named
+arguments and references with native weak callback coercion, counts the final
+false callback result, and stops without advancing again. Callback and iterator
+exceptions propagate; the shared traversal releases iterators on failure.
+SeekableIterator, RecursiveIterator, and OuterIterator extend Iterator with native
+method signatures and tentative returns. Aggregate hooks now reject reference
+returns, matching PHP's raw return-value check, and keys are detached from returned
+references when fetched.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No new custom tests or generated matrices were added. Direct CLI
+reference checks cover method order, reference-preserving conversion, duplicate-key
+destruction, named callback references, weak callback coercion, early stopping,
+exception/error ordering, native interface inheritance and tentative types, and
+reference-returning aggregates. PHP 8.5.0's SPL iterator implementation and stubs,
+Zend interface hooks, and native array-key insertion establish these semantics.
+SPL iterator classes, generators, serialization, property hooks, deep recursion
+limits, and prior reflection gaps remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2473,7 +2503,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2514 | 2334 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 285 | 170 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 26 | 658 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 28 | 656 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 772 | 16 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
