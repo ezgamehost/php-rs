@@ -143,7 +143,8 @@ impl Runtime {
             return Err(Error::new(
                 ErrorKind::TypeError,
                 format!(
-                    "RecursiveIteratorIterator::__construct(): Argument #1 ($iterator) must be of type object, {} given",
+                    "{}(): Argument #1 ($iterator) must be of type object, {} given",
+                    String::from_utf8_lossy(&function.name),
                     builtins::debug_type(&value)
                 ),
                 line,

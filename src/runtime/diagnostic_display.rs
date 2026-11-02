@@ -27,17 +27,23 @@ impl Runtime {
     }
 
     pub(super) fn native_fatal(&mut self, message: &[u8], line: usize, capture: bool) -> Error {
+        self.native_fatal_at(message, &self.source.name.clone(), line, 1, capture)
+    }
+
+    pub(super) fn native_fatal_at(
+        &mut self,
+        message: &[u8],
+        file: &[u8],
+        line: usize,
+        level: i64,
+        capture: bool,
+    ) -> Error {
         self.diagnostics.last_fatal_trace =
             (capture && self.fatal_backtraces.unwrap_or(true)).then(|| self.capture_trace());
         self.diagnostics.output_position = self.output.len();
         let previous = self.diagnostics.events.len();
-        self.diagnostics.display(
-            1,
-            "Fatal error",
-            message,
-            &self.source.name.clone(),
-            line as i64,
-        );
+        self.diagnostics
+            .display(level, "Fatal error", message, file, line as i64);
         if self.diagnostics.events.len() > previous
             && let Some(trace) = &self.diagnostics.last_fatal_trace
         {

@@ -117,6 +117,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.
+- `RecursiveTreeIterator` renders recursive inputs with configurable prefix parts
+  and a postfix, with flags to bypass key/current formatting. It wraps inputs in
+  RecursiveCachingIterator for lookahead, accepts aggregates, preserves formatting
+  across reinitialization, and retains its current depth after a foreach break.
 - `SplDoublyLinkedList`, `SplQueue`, and `SplStack` provide native list storage,
   offsets, insertion/removal, count, debug output, and independent storage clones.
   Foreach cursors retain their starting mode and support FIFO/LIFO and delete/keep

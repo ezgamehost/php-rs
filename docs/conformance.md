@@ -2904,6 +2904,25 @@ The remaining AppendIterator fixture requires generators. Other SPL classes,
 collector accounting, INI configuration, and complete mutation/destructor timing
 remain unfinished.
 
+The [RecursiveTreeIterator slice](conformance/php-8.5.0-recursive-tree-hillclimb.txt)
+adds cached recursive tree rendering, key/current bypass flags, six configurable
+prefix parts, postfixes, entry rendering, and aggregate input construction.
+Prefix generation uses lookahead at each depth. Reinitialization preserves tree
+formatting, and breaking foreach retains the tree's traversal depth. Native
+constructor defaults expose their class-constant metadata. Missing native method
+implementations produce PHP's core fatal diagnostic rather than a Rust panic.
+
+This slice adds **seven upstream passes**, with **zero regressions** across all
+seven full suites (**8,430 fixtures**), all in SPL. SPL reaches **444 / 240 / 94**;
+other suite totals are unchanged. All **797 existing Rust tests**,
+**57 reference-checked project PHPT**, formatting, Clippy, and diff checks pass.
+No custom tests or matrices were added. Direct CLI comparisons match custom prefix
+parts, repeated construction, default constants, depth after breaking iteration,
+base-method current reads, closure argument rejection, and the missing-method
+fatal diagnostic. Remaining tree fixtures require INI support; additional SPL
+classes, collector accounting, and complete mutation/destructor timing remain
+unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2913,7 +2932,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2582 | 2266 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 437 | 247 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 444 | 240 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

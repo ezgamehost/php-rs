@@ -344,11 +344,14 @@ and `src/runtime/reference_paths.rs` follows the same source. Checked shared
 storage and callback-safe reads in `src/array.rs` support those operations and
 PHP's native splice mutation rules without unchecked shared-Rc writes.
 
-RecursiveIteratorIterator traversal, native frames, hooks, and lifecycle behavior
+RecursiveIteratorIterator traversal, native frames, hooks, and lifecycle behavior,
+and RecursiveTreeIterator construction and prefix/postfix rendering
 in `src/runtime/recursive_iterator.rs` adapt PHP 8.5.0's
 `ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c) The
 PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
-and garbage-collection edges follow those native handlers.
+and garbage-collection edges follow those native handlers. Missing native method
+fatal diagnostics follow `Zend/zend_interfaces.c` and the existing PHP diagnostic
+adaptation.
 
 IteratorIterator, filter/recursive/callback wrappers, ParentIterator, LimitIterator,
 NoRewindIterator, InfiniteIterator, EmptyIterator, CachingIterator,

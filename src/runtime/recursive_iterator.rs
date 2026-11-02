@@ -3,7 +3,7 @@
 use super::*;
 use crate::{
     PhpObject,
-    ast::NativeMethod,
+    ast::{Argument, NativeMethod},
     object::{Class, ObjectHandle},
 };
 
@@ -31,9 +31,39 @@ pub(crate) struct RecursiveIteratorData {
     flags: i64,
     max_depth: i64,
     in_iteration: bool,
+    tree: Option<TreeData>,
+}
+struct TreeData {
+    prefix: [Vec<u8>; 6],
+    postfix: Vec<u8>,
+}
+impl Default for TreeData {
+    fn default() -> Self {
+        Self {
+            prefix: [
+                b"".to_vec(),
+                b"| ".to_vec(),
+                b"  ".to_vec(),
+                b"|-".to_vec(),
+                b"\\-".to_vec(),
+                b"".to_vec(),
+            ],
+            postfix: Vec::new(),
+        }
+    }
 }
 
 impl RecursiveIteratorData {
+    pub(super) fn new(class: &Class) -> Self {
+        Self {
+            tree: class.is_a(b"RecursiveTreeIterator").then(TreeData::default),
+            frames: Vec::new(),
+            mode: 0,
+            flags: 0,
+            max_depth: 0,
+            in_iteration: false,
+        }
+    }
     pub(super) fn initialized(&self) -> bool {
         !self.frames.is_empty()
     }
@@ -82,6 +112,7 @@ fn depth(object: &PhpObject) -> usize {
 
 pub(super) fn native_iteration(object: &PhpObject) -> bool {
     object.recursive_iterator.borrow().is_some()
+        && !object.class.is_a(b"RecursiveTreeIterator")
         && [b"rewind".as_slice(), b"valid", b"current", b"key", b"next"]
             .iter()
             .all(|name| {
@@ -93,6 +124,9 @@ pub(super) fn native_iteration(object: &PhpObject) -> bool {
 
 impl Runtime {
     pub(super) fn builtin_recursive_iterator_class(&self, name: &[u8]) -> Option<Rc<Class>> {
+        if name == b"recursivetreeiterator" {
+            return Some(self.builtin_recursive_tree_iterator_class());
+        }
         if name != b"recursiveiteratoriterator" {
             return None;
         }
@@ -188,7 +222,14 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
-        let method = objects::method(&object.class, name).expect("recursive iterator method");
+        let Some(method) = objects::method(&object.class, name) else {
+            let message = format!(
+                "Couldn't find implementation for method {}::{}",
+                object.class_name,
+                String::from_utf8_lossy(&name.to_ascii_lowercase())
+            );
+            return Err(self.native_fatal_at(message.as_bytes(), b"Unknown", 0, 16, true));
+        };
         let target =
             self.unchecked_method_target(method, object.class.clone(), Some(object.clone()), line)?;
         let internal = self.trace_frames.last().is_some_and(|frame| frame.internal);
@@ -557,6 +598,11 @@ impl Runtime {
         let Some(Value::Object(object)) = self.lookup(b"this") else {
             unreachable!()
         };
+        let tree_method = self
+            .current_function
+            .as_ref()
+            .unwrap()
+            .starts_with(b"recursivetreeiterator::");
         let name = self
             .current_function
             .as_ref()
@@ -565,31 +611,72 @@ impl Runtime {
             .next()
             .unwrap()
             .to_vec();
+        if tree_method && name != b"__construct" {
+            return self.recursive_tree_method(&object, &name, line);
+        }
         match name.as_slice() {
             b"__construct" => {
-                let value = self.lookup(b"iterator").unwrap();
-                let Value::Object(mut inner) = value else {
-                    return Err(self.array_iterator_exception(b"InvalidArgumentException", "An instance of RecursiveIterator or IteratorAggregate creating it is required".into(), line));
-                };
-                if inner.class.is_a(b"IteratorAggregate") {
-                    let returned = self.recursive_call(&inner, b"getIterator", line)?;
+                let mut value = self.lookup(b"iterator").unwrap();
+                if let Value::Object(inner) = &value
+                    && inner.class.is_a(b"IteratorAggregate")
+                {
+                    let returned = self.recursive_call(inner, b"getIterator", line)?;
                     match returned {
-                        Value::Object(iterator) if iterator.class.is_a(b"Traversable") => inner = iterator,
+                        Value::Object(iterator) if iterator.class.is_a(b"Traversable") => value = Value::Object(iterator),
                         _ => return Err(self.array_iterator_exception(b"LogicException", format!("{}::getIterator() must return an object that implements Traversable", inner.class_name), line)),
                     }
                 }
+                if tree_method {
+                    let class = self.find_class(b"RecursiveCachingIterator").unwrap();
+                    let flags = self.lookup(b"cachingIteratorFlags").unwrap();
+                    let args = [value, flags]
+                        .into_iter()
+                        .map(|value| {
+                            Argument::Positional(Expr {
+                                line,
+                                kind: ExprKind::Literal(value),
+                            })
+                        })
+                        .collect::<Vec<_>>();
+                    value = self.instantiate_class(class, &args, true, line)?;
+                }
+                let Value::Object(inner) = value else {
+                    return Err(self.array_iterator_exception(b"InvalidArgumentException", "An instance of RecursiveIterator or IteratorAggregate creating it is required".into(), line));
+                };
                 if !inner.class.is_a(b"RecursiveIterator") {
                     return Err(self.array_iterator_exception(b"InvalidArgumentException", "An instance of RecursiveIterator or IteratorAggregate creating it is required".into(), line));
                 }
                 let mode = self.lookup(b"mode").unwrap().integer(line, self)? as i32 as i64;
                 let flags = self.lookup(b"flags").unwrap().integer(line, self)? as i32 as i64;
+                let tree = object
+                    .recursive_iterator
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .tree
+                    .take();
                 let old = object
                     .recursive_iterator
                     .borrow_mut()
-                    .replace(RecursiveIteratorData::default());
+                    .replace(RecursiveIteratorData {
+                        tree,
+                        frames: Vec::new(),
+                        mode: 0,
+                        flags: 0,
+                        max_depth: 0,
+                        in_iteration: false,
+                    });
                 drop(old);
                 self.drain_destructors(Ok(()), line)?;
+                let tree = object
+                    .recursive_iterator
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .tree
+                    .take();
                 *object.recursive_iterator.borrow_mut() = Some(RecursiveIteratorData {
+                    tree,
                     mode,
                     flags,
                     max_depth: -1,
@@ -685,5 +772,285 @@ impl Runtime {
             | b"nextelement" => Ok(Value::Null),
             _ => unreachable!(),
         }
+    }
+}
+
+impl Runtime {
+    fn builtin_recursive_tree_iterator_class(&self) -> Rc<Class> {
+        let name = b"recursivetreeiterator";
+        if let Some(class) = self.builtin_classes.borrow().get(name.as_slice()) {
+            return class.clone();
+        }
+        let code = b"<?php class RecursiveTreeIterator extends RecursiveIteratorIterator {
+            public const int BYPASS_CURRENT = 4, BYPASS_KEY = 8;
+            public const int PREFIX_LEFT = 0, PREFIX_MID_HAS_NEXT = 1, PREFIX_MID_LAST = 2, PREFIX_END_HAS_NEXT = 3, PREFIX_END_LAST = 4, PREFIX_RIGHT = 5;
+            public function __construct(RecursiveIterator|IteratorAggregate $iterator, int $flags = 8, int $cachingIteratorFlags = 16, int $mode = 1) {}
+            public function key(): mixed {}
+            public function current(): mixed {}
+            public function getPrefix(): string {}
+            public function setPostfix(string $postfix): void {}
+            public function setPrefixPart(int $part, string $value): void {}
+            public function getEntry(): string {}
+            public function getPostfix(): string {}
+        }";
+        let (mut statements, _, _) = parser::parse(lexer::lex(code).unwrap()).unwrap();
+        let Stmt::Class(mut declaration) = statements.remove(0) else {
+            unreachable!()
+        };
+        for method in &mut Rc::make_mut(&mut declaration).methods {
+            let method = Rc::make_mut(method);
+            // Avoid recursively bootstrapping native classes during parser folding.
+            for parameter in &mut method.parameters {
+                let constant = match parameter.name.as_slice() {
+                    b"flags" => Some(("RecursiveTreeIterator", "BYPASS_KEY")),
+                    b"cachingIteratorFlags" => Some(("CachingIterator", "CATCH_GET_CHILD")),
+                    b"mode" => Some(("RecursiveTreeIterator", "SELF_FIRST")),
+                    _ => None,
+                };
+                if let Some((class, constant)) = constant {
+                    parameter.default = Some(Expr {
+                        line: 0,
+                        kind: ExprKind::ScopedMember(
+                            Box::new(Expr {
+                                line: 0,
+                                kind: ExprKind::Constant(class.as_bytes().to_vec()),
+                            }),
+                            Box::new(Expr {
+                                line: 0,
+                                kind: ExprKind::Literal(Value::String(
+                                    constant.as_bytes().to_vec().into(),
+                                )),
+                            }),
+                        ),
+                    });
+                }
+            }
+            method.native = Some(NativeMethod::RecursiveIterator);
+            method.tentative_return_type = method.return_type.take();
+        }
+        let parent = self.find_class(b"RecursiveIteratorIterator").unwrap();
+        let mut methods = declaration.methods.clone();
+        let own: Vec<_> = methods
+            .iter()
+            .map(|m| {
+                m.name
+                    .rsplit(|b| *b == b':')
+                    .next()
+                    .unwrap()
+                    .to_ascii_lowercase()
+            })
+            .collect();
+        methods.extend(
+            parent
+                .methods
+                .iter()
+                .filter(|m| {
+                    !own.iter().any(|name| {
+                        m.name
+                            .rsplit(|b| *b == b':')
+                            .next()
+                            .unwrap()
+                            .eq_ignore_ascii_case(name)
+                    })
+                })
+                .cloned(),
+        );
+        let class = Rc::new(Class {
+            aliases: RefCell::default(),
+            name: declaration.name.clone(),
+            methods,
+            declaration,
+            parent: Some(parent),
+            interfaces: Vec::new(),
+            properties: Vec::new(),
+            static_properties: Vec::new(),
+            allow_dynamic: false,
+            forbid_dynamic: false,
+            defaults: RefCell::default(),
+            static_values: RefCell::default(),
+            constant_values: RefCell::default(),
+            evaluating_constants: RefCell::default(),
+            initialized: std::cell::Cell::new(false),
+            initializing: std::cell::Cell::new(false),
+        });
+        self.builtin_classes
+            .borrow_mut()
+            .insert(name.to_vec(), class.clone());
+        class
+    }
+    fn recursive_tree_prefix(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Vec<u8>, Error> {
+        frame(object, line)?;
+        let mut result = object
+            .recursive_iterator
+            .borrow()
+            .as_ref()
+            .unwrap()
+            .tree
+            .as_ref()
+            .unwrap()
+            .prefix[0]
+            .clone();
+        let mut level = 0;
+        loop {
+            let (inner, last) = {
+                let data = object.recursive_iterator.borrow();
+                let data = data.as_ref().unwrap();
+                let Some(frame) = data.frames.get(level) else {
+                    break;
+                };
+                (
+                    frame.borrow().object.clone(),
+                    level + 1 == data.frames.len(),
+                )
+            };
+            let has_next = self.recursive_call(&inner, b"hasNext", line)? == Value::Bool(true);
+            let part = match (last, has_next) {
+                (false, true) => 1,
+                (false, false) => 2,
+                (true, true) => 3,
+                (true, false) => 4,
+            };
+            result.extend(
+                &object
+                    .recursive_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .tree
+                    .as_ref()
+                    .unwrap()
+                    .prefix[part],
+            );
+            if last {
+                break;
+            }
+            level += 1;
+        }
+        result.extend(
+            &object
+                .recursive_iterator
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .tree
+                .as_ref()
+                .unwrap()
+                .prefix[5],
+        );
+        Ok(result)
+    }
+    fn recursive_tree_entry(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Vec<u8>, Error> {
+        let value = self.recursive_iterator_step(object, b"current", false, line)?;
+        if matches!(value, Value::Array(_)) {
+            Ok(b"Array".to_vec())
+        } else {
+            self.string_bytes(&value, line)
+        }
+    }
+    fn recursive_tree_method(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        if name == b"setpostfix" {
+            let value = self.lookup(b"postfix").unwrap().to_bytes();
+            object
+                .recursive_iterator
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .tree
+                .as_mut()
+                .unwrap()
+                .postfix = value;
+            return Ok(Value::Null);
+        }
+        if name == b"setprefixpart" {
+            let Value::Int(part) = self.lookup(b"part").unwrap() else {
+                unreachable!()
+            };
+            if !(0..=5).contains(&part) {
+                return Err(Error::new(
+                    ErrorKind::ValueError,
+                    "RecursiveTreeIterator::setPrefixPart(): Argument #1 ($part) must be a RecursiveTreeIterator::PREFIX_* constant",
+                    line,
+                ));
+            }
+            let value = self.lookup(b"value").unwrap().to_bytes();
+            object
+                .recursive_iterator
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .tree
+                .as_mut()
+                .unwrap()
+                .prefix[part as usize] = value;
+            return Ok(Value::Null);
+        }
+        frame(object, line)?;
+        if name == b"getprefix" {
+            return self
+                .recursive_tree_prefix(object, line)
+                .map(|v| Value::String(v.into()));
+        }
+        if name == b"getentry" {
+            return self
+                .recursive_tree_entry(object, line)
+                .map(|v| Value::String(v.into()));
+        }
+        if name == b"getpostfix" {
+            return Ok(Value::String(
+                object
+                    .recursive_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .tree
+                    .as_ref()
+                    .unwrap()
+                    .postfix
+                    .clone()
+                    .into(),
+            ));
+        }
+        let flags = object.recursive_iterator.borrow().as_ref().unwrap().flags;
+        let value = match name {
+            b"current" if flags & 4 != 0 => {
+                return self.recursive_iterator_step(object, name, false, line);
+            }
+            b"current" => self.recursive_tree_entry(object, line)?,
+            b"key" => {
+                let key = self.recursive_iterator_step(object, name, false, line)?;
+                if flags & 8 != 0 {
+                    return Ok(key);
+                }
+                self.string_bytes(&key, line)?
+            }
+            _ => unreachable!(),
+        };
+        let mut result = self.recursive_tree_prefix(object, line)?;
+        result.extend(value);
+        result.extend(
+            &object
+                .recursive_iterator
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .tree
+                .as_ref()
+                .unwrap()
+                .postfix,
+        );
+        Ok(Value::String(result.into()))
     }
 }

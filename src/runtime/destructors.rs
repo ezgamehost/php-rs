@@ -13,8 +13,9 @@ impl Runtime {
         if object.class.is_a(b"RecursiveIteratorIterator")
             && object.recursive_iterator.get_mut().is_none()
         {
-            *object.recursive_iterator.get_mut() =
-                Some(recursive_iterator::RecursiveIteratorData::default());
+            *object.recursive_iterator.get_mut() = Some(
+                recursive_iterator::RecursiveIteratorData::new(&object.class),
+            );
         }
         if object.class.is_a(b"SplFixedArray") && object.fixed_array.get_mut().is_none() {
             *object.fixed_array.get_mut() = Some(fixed_array::FixedArrayData::default());

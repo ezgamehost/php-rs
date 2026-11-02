@@ -1,0 +1,54 @@
+PHP 8.5.0 RecursiveTreeIterator hillclimb
+Baseline: a08a33c8cf702f658fb457abb237db5e8d1c075c
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 437 passed, 247 failed, 94 unsupported
+After: 778 cases; 444 passed, 240 failed, 94 unsupported
+New passes: 7; regressions: 0
+NEW PASS: ext/spl/tests/gh16054.phpt
+NEW PASS: ext/spl/tests/gh16604_1.phpt
+NEW PASS: ext/spl/tests/recursive_tree_iterator_001.phpt
+NEW PASS: ext/spl/tests/recursive_tree_iterator_003.phpt
+NEW PASS: ext/spl/tests/recursive_tree_iterator_006.phpt
+NEW PASS: ext/spl/tests/recursive_tree_iterator_007.phpt
+NEW PASS: ext/spl/tests/recursive_tree_iterator_setpostfix.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 123 passed, 12 failed, 28 unsupported
+After: 163 cases; 123 passed, 12 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match custom prefix parts, repeated construction, default
+constant metadata, depth after a foreach break, base current reads, closure argument
+rejection, and a missing native method core fatal (message, location, trace, exit).
+Remaining tree fixtures require INI support. Additional SPL classes, collector
+accounting, and complete mutation/destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-tree-*2.log.
