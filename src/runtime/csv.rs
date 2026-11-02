@@ -3,6 +3,161 @@
 use super::*;
 
 impl Runtime {
+    pub(super) fn stream_csv(
+        &mut self,
+        write: bool,
+        name: &str,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let stream = args[0].as_ref().unwrap();
+        self.validate_stream(stream, name, line)?;
+        let fields = if write {
+            let value = args[1].as_ref().unwrap();
+            let Value::Array(fields) = value else {
+                return Err(builtins::type_error(value, name, 2, "array", line));
+            };
+            Some(fields)
+        } else {
+            None
+        };
+        let length = if write {
+            None
+        } else {
+            args[1]
+                .as_ref()
+                .filter(|v| !matches!(v, Value::Null))
+                .map(|v| self.native_int_type(v, name, 2, line, "?int"))
+                .transpose()?
+        };
+        let separator = args[2]
+            .as_ref()
+            .map(|v| self.native_string(v, name, 3, line))
+            .transpose()?
+            .unwrap_or_else(|| b",".to_vec());
+        let enclosure = args[3]
+            .as_ref()
+            .map(|v| self.native_string(v, name, 4, line))
+            .transpose()?
+            .unwrap_or_else(|| b"\"".to_vec());
+        let escape = args[4]
+            .as_ref()
+            .map(|v| self.native_string(v, name, 5, line))
+            .transpose()?;
+        let eol = if write {
+            args[5]
+                .as_ref()
+                .filter(|v| !matches!(v, Value::Null))
+                .map(|v| self.native_string_type(v, name, 6, line, "?string"))
+                .transpose()?
+        } else {
+            None
+        };
+        for (position, parameter, bytes) in
+            [(3, "separator", &separator), (4, "enclosure", &enclosure)]
+        {
+            if bytes.len() != 1 {
+                return Err(Error::new(
+                    ErrorKind::ValueError,
+                    format!(
+                        "{name}(): Argument #{position} (${parameter}) must be a single character"
+                    ),
+                    line,
+                ));
+            }
+        }
+        let escape = if let Some(escape) = escape {
+            if escape.len() > 1 {
+                return Err(Error::new(
+                    ErrorKind::ValueError,
+                    format!("{name}(): Argument #5 ($escape) must be empty or a single character"),
+                    line,
+                ));
+            }
+            escape.first().copied()
+        } else {
+            self.warn(format!("Deprecated: {name}(): the $escape parameter must be provided as its default value will change on line {line}"))?;
+            Some(b'\\')
+        };
+        let (separator, enclosure) = (separator[0], enclosure[0]);
+        if let Some(fields) = fields {
+            let mut output = Vec::new();
+            let count = fields.len();
+            let mut index = 0;
+            let mut pending = None;
+            while let Some((_, field)) = fields.entry(index) {
+                // Native CSV conversion keeps building and writes the record
+                // after a conversion exception; later object callbacks stop.
+                let text = self.set_string(&field, line, &mut pending);
+                if pending
+                    .as_ref()
+                    .is_some_and(|e| e.kind == ErrorKind::UnwindExit)
+                {
+                    return Err(pending.unwrap());
+                }
+                let quoted = text.iter().any(|&b| {
+                    b == separator
+                        || b == enclosure
+                        || Some(b) == escape
+                        || matches!(b, b'\n' | b'\r' | b'\t' | b' ')
+                });
+                if quoted {
+                    output.push(enclosure);
+                    let mut escaped = false;
+                    for byte in text {
+                        if Some(byte) == escape {
+                            escaped = true;
+                        } else if !escaped && byte == enclosure {
+                            output.push(enclosure);
+                        } else {
+                            escaped = false;
+                        }
+                        output.push(byte);
+                    }
+                    output.push(enclosure);
+                } else {
+                    output.extend_from_slice(&text);
+                }
+                index += 1;
+                if index != count {
+                    output.push(separator);
+                }
+            }
+            output.extend_from_slice(eol.as_deref().unwrap_or(b"\n"));
+            let written = self.stream_operation(
+                streams::Operation::Write,
+                name,
+                &[
+                    Some(stream.clone()),
+                    Some(Value::String(output.into())),
+                    None,
+                ],
+                line,
+            );
+            if let Err(error) = &written {
+                self.set_error(error.clone(), &mut pending);
+            }
+            return pending.map_or(written, Err);
+        }
+        if length.is_some_and(|n| n < 0 || n == i64::MAX) {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                format!(
+                    "{name}(): Argument #2 ($length) must be between 0 and {}",
+                    i64::MAX - 1
+                ),
+                line,
+            ));
+        }
+        let limit = length.filter(|n| *n != 0).map(|n| n as usize);
+        let Some(text) = self.stream_read_line(stream, name, limit, line)? else {
+            return Ok(Value::Bool(false));
+        };
+        parse_record(text, separator, enclosure, escape, line, || {
+            self.stream_read_line(stream, name, None, line)
+        })
+    }
+
     pub(super) fn str_getcsv(
         &mut self,
         args: &[Option<Value>],
@@ -47,7 +202,7 @@ impl Runtime {
             self.warn(format!("Deprecated: str_getcsv(): the $escape parameter must be provided as its default value will change on line {line}"))?;
             Some(b'\\')
         };
-        parse_record(text, separator[0], enclosure[0], escape, line)
+        parse_record(text, separator[0], enclosure[0], escape, line, || Ok(None))
     }
 }
 
@@ -57,9 +212,10 @@ fn parse_record(
     enclosure: u8,
     escape: Option<u8>,
     line: usize,
+    mut next_line: impl FnMut() -> Result<Option<Vec<u8>>, Error>,
 ) -> Result<Value, Error> {
-    let length = text.len();
-    let limit = trailing_line_end(&text);
+    let mut length = text.len();
+    let mut limit = trailing_line_end(&text);
     // Native parsing can inspect the terminating NUL once after an opening
     // enclosure at EOF. Keep it explicit, including the NUL-escape behavior.
     text.push(0);
@@ -100,6 +256,17 @@ fn parse_record(
                             hunk = cursor;
                         }
                         field.extend_from_slice(&text[limit..length]);
+                        if let Some(next) = next_line()? {
+                            text = next;
+                            length = text.len();
+                            limit = trailing_line_end(&text);
+                            text.push(0);
+                            cursor = 0;
+                            hunk = 0;
+                            state = 0;
+                            width = character_width(&text, cursor, limit);
+                            continue;
+                        }
                         if cursor > limit {
                             if hunk == cursor {
                                 hunk -= 1;

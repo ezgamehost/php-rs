@@ -28,6 +28,10 @@ pub(super) enum Builtin {
     Wordwrap,
     Strtok,
     StrGetCsv,
+    StreamCsv(bool),
+    Fgets,
+    StreamGetContents,
+    FileLines,
     Basename,
     Dirname,
     Pathinfo,
@@ -211,6 +215,11 @@ impl Builtin {
             b"wordwrap" => Self::Wordwrap,
             b"strtok" => Self::Strtok,
             b"str_getcsv" => Self::StrGetCsv,
+            b"fgetcsv" => Self::StreamCsv(false),
+            b"fputcsv" => Self::StreamCsv(true),
+            b"fgets" => Self::Fgets,
+            b"stream_get_contents" => Self::StreamGetContents,
+            b"file" => Self::FileLines,
             b"basename" => Self::Basename,
             b"dirname" => Self::Dirname,
             b"pathinfo" => Self::Pathinfo,
@@ -570,6 +579,32 @@ impl Builtin {
                 ("length", true, false),
             ],
             Self::Unlink => &[("filename", false, false), ("context", true, false)],
+            Self::Fgets => &[("stream", false, false), ("length", true, false)],
+            Self::StreamGetContents => &[
+                ("stream", false, false),
+                ("length", true, false),
+                ("offset", true, false),
+            ],
+            Self::FileLines => &[
+                ("filename", false, false),
+                ("flags", true, false),
+                ("context", true, false),
+            ],
+            Self::StreamCsv(false) => &[
+                ("stream", false, false),
+                ("length", true, false),
+                ("separator", true, false),
+                ("enclosure", true, false),
+                ("escape", true, false),
+            ],
+            Self::StreamCsv(true) => &[
+                ("stream", false, false),
+                ("fields", false, false),
+                ("separator", true, false),
+                ("enclosure", true, false),
+                ("escape", true, false),
+                ("eol", true, false),
+            ],
             Self::Fopen => &[
                 ("filename", false, false),
                 ("mode", false, false),
@@ -1004,9 +1039,18 @@ impl Builtin {
                             (Self::ScalarValue(crate::ast::CastKind::Int), "base") => {
                                 Value::Int(10)
                             }
-                            (Self::StrGetCsv, "separator") => Value::String(b",".to_vec().into()),
-                            (Self::StrGetCsv, "enclosure") => Value::String(b"\"".to_vec().into()),
-                            (Self::StrGetCsv, "escape") => Value::String(b"\\".to_vec().into()),
+                            (Self::StrGetCsv | Self::StreamCsv(_), "separator") => {
+                                Value::String(b",".to_vec().into())
+                            }
+                            (Self::StrGetCsv | Self::StreamCsv(_), "enclosure") => {
+                                Value::String(b"\"".to_vec().into())
+                            }
+                            (Self::StrGetCsv | Self::StreamCsv(_), "escape") => {
+                                Value::String(b"\\".to_vec().into())
+                            }
+                            (Self::StreamCsv(true), "eol") => Value::String(b"\n".to_vec().into()),
+                            (Self::StreamGetContents, "offset") => Value::Int(-1),
+                            (Self::FileLines, "flags") => Value::Int(0),
                             (Self::Range, "step") => Value::Int(1),
                             (Self::Fopen | Self::FileGetContents, "use_include_path") => {
                                 Value::Bool(false)
@@ -1242,6 +1286,10 @@ impl Runtime {
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
             Builtin::Fopen => self.fopen(&args, line),
+            Builtin::StreamCsv(write) => self.stream_csv(write, &name, &args, line),
+            Builtin::Fgets => self.fgets(&name, &args, line),
+            Builtin::StreamGetContents => self.stream_get_contents(&name, &args, line),
+            Builtin::FileLines => self.file_lines(&args, line),
             Builtin::FileExists => self.file_path_operation(false, &args, line),
             Builtin::ClearStatCache => unreachable!("handled before required arguments"),
             Builtin::FileGetContents => self.file_get_contents(&args, line),

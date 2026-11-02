@@ -3028,6 +3028,27 @@ CLEAN sections remain excluded from runner pass counts. Custom wrappers,
 open_basedir, full stat/lstat arrays, permission-changing APIs, complete realpath
 caches, and tracking renamed working directories remain unfinished.
 
+The [CSV stream and line reader slice](conformance/php-8.5.0-csv-stream-hillclimb.txt)
+adds fgetcsv(), fputcsv(), fgets(), stream_get_contents(), and file(). The shared
+CSV parser reads additional physical lines inside quoted fields, preserving line
+endings and applying the length limit to the first read. CSV output supports
+custom separators, enclosures, escapes, and line endings. A field-conversion
+exception leaves native record assembly and writing intact before propagation;
+later object conversions are suppressed. Line and remainder reads maintain logical
+positions and EOF state, and file() handles FILE_* line-array flags.
+
+This slice adds **54 upstream passes**, with **zero regressions** across **nine
+full suites (9,399 fixtures)**: **53 file cases** and **one Zend case**. Zend reaches
+**2583 / 2265 / 408**, and file reaches **98 / 126 / 672**. Other suite totals are
+unchanged. All **797 existing Rust tests**, **57 reference-checked project PHPT**,
+formatting, Clippy, and diff checks pass. No custom tests or matrices were added.
+Direct PHP comparisons cover multiline and length-limited reads, escaping,
+positions, offsets, and conversion-exception write behavior. The separate
+stream_get_contents fixtures still require missing tmpfile() or unsupported
+SKIPIF sections. Configurable character locales, automatic legacy line-ending
+detection, custom wrappers/filters, and complete buffering/lifecycle semantics
+remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3035,7 +3056,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2582 | 2266 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2583 | 2265 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 538 | 146 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
@@ -3043,7 +3064,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
-| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 45 | 179 | 672 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 98 | 126 | 672 |
 | PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 6 | 1 | 66 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |

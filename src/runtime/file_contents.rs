@@ -6,6 +6,76 @@ use crate::resource::{Backend, Kind};
 use std::io::{Read, Seek, SeekFrom};
 
 impl Runtime {
+    pub(super) fn file_lines(
+        &mut self,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        const NAME: &str = "file";
+        let filename = self.native_string(args[0].as_ref().unwrap(), NAME, 1, line)?;
+        if filename.contains(&0) {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                "file(): Argument #1 ($filename) must not contain any null bytes",
+                line,
+            ));
+        }
+        let flags = args[1]
+            .as_ref()
+            .map(|v| self.native_int(v, NAME, 2, line))
+            .transpose()?
+            .unwrap_or(0);
+        let context = args[2].as_ref();
+        if let Some(value) = context
+            && !matches!(value, Value::Null | Value::Resource(_))
+        {
+            return Err(builtins::type_error(
+                value,
+                NAME,
+                3,
+                "resource or null",
+                line,
+            ));
+        }
+        if flags & !23 != 0 {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                "file(): Argument #2 ($flags) must be a valid flag value",
+                line,
+            ));
+        }
+        if flags & 16 == 0 || context.is_some_and(|v| !matches!(v, Value::Null)) {
+            self.stream_context(context, NAME, 3, line)?;
+        }
+        if filename.is_empty() {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                "Path must not be empty",
+                line,
+            ));
+        }
+        let opened = self.open_stream(NAME, &filename, b"rb", flags & 1 != 0, line)?;
+        if !matches!(opened, Value::Resource(_)) {
+            return Ok(Value::Bool(false));
+        }
+        let bytes = self.stream_contents_bytes(&opened, NAME, None, line)?;
+        let mut values = PhpArray::default();
+        for segment in bytes.split_inclusive(|b| *b == b'\n') {
+            let value = if flags & 2 != 0 && segment.ends_with(b"\n") {
+                let stripped = &segment[..segment.len() - 1];
+                stripped.strip_suffix(b"\r").unwrap_or(stripped)
+            } else {
+                segment
+            };
+            // PHP only skips blank lines when line endings are being removed.
+            if flags & 6 == 6 && value.is_empty() {
+                continue;
+            }
+            values.append(Value::String(value.to_vec().into()), line)?;
+        }
+        Ok(Value::Array(Rc::new(values)))
+    }
+
     pub(super) fn file_get_contents(
         &mut self,
         args: &[Option<Value>],

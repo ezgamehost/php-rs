@@ -261,6 +261,14 @@ new request. The CLI returns the low eight bits of the requested status.
   the SplFileInfo stat/lstat caches; chdir clears cached relative paths, and
   touch/rmdir clear metadata caches. Custom wrappers, open_basedir, realpath-cache
   behavior, and tracking a renamed working directory remain unfinished.
+- `fgetcsv` reads quoted records across physical lines, preserving embedded line
+  endings and respecting the first-line length limit. `fputcsv` writes escaped
+  fields with configurable separators, enclosures, escapes, and line endings;
+  field-conversion exceptions preserve PHP's write-before-propagation behavior.
+  `fgets`, `stream_get_contents`, and `file` provide line, remainder, and line-array
+  reads with length/offset controls and FILE_* flags. Configurable encodings,
+  automatic legacy line-ending detection, custom wrappers/filters, and complete
+  stream-buffering behavior remain unfinished.
 - `file_get_contents` reads local files and supported wrappers, with include-path
   lookup, positive/negative offsets, length limits, and native read diagnostics.
 - `opendir`, `readdir`, `rewinddir`, `closedir`, and `scandir` support local

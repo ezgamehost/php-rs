@@ -338,6 +338,10 @@ fn pathinfo_constant(name: &[u8]) -> Option<Value> {
         b"SCANDIR_SORT_ASCENDING" => 0,
         b"SCANDIR_SORT_DESCENDING" => 1,
         b"SCANDIR_SORT_NONE" => 2,
+        b"FILE_USE_INCLUDE_PATH" => 1,
+        b"FILE_IGNORE_NEW_LINES" => 2,
+        b"FILE_SKIP_EMPTY_LINES" => 4,
+        b"FILE_NO_DEFAULT_CONTEXT" => 16,
         _ => return None,
     }))
 }

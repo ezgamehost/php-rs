@@ -1,0 +1,117 @@
+PHP 8.5.0 CSV stream and line reader hillclimb
+Baseline: ef76074dcbf795e640d15742144eac57c7c78f3b
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2583 passed, 2265 failed, 408 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/foreach/bug34065.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 538 passed, 146 failed, 94 unsupported
+After: 778 cases; 538 passed, 146 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 45 passed, 179 failed, 672 unsupported
+After: 896 cases; 98 passed, 126 failed, 672 unsupported
+New passes: 53; regressions: 0
+NEW PASS: ext/standard/tests/file/bug12556.phpt
+NEW PASS: ext/standard/tests/file/bug22382.phpt
+NEW PASS: ext/standard/tests/file/bug26003.phpt
+NEW PASS: ext/standard/tests/file/bug40501.phpt
+NEW PASS: ext/standard/tests/file/bug52335.phpt
+NEW PASS: ext/standard/tests/file/bug66588.phpt
+NEW PASS: ext/standard/tests/file/feof_basic.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_error_conditions.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_tab_delimiter.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation1.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation10.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation11.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation12.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation13.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation14.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation15.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation16.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation17.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation18.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation19.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation2.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation20.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation21.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation22.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation23.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation29.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation30.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation31.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation32.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation33.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation6.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation7.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation8.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_variation9.phpt
+NEW PASS: ext/standard/tests/file/fgets_error.phpt
+NEW PASS: ext/standard/tests/file/fgets_variation1.phpt
+NEW PASS: ext/standard/tests/file/fgets_variation2.phpt
+NEW PASS: ext/standard/tests/file/fgets_variation3.phpt
+NEW PASS: ext/standard/tests/file/fgets_variation5.phpt
+NEW PASS: ext/standard/tests/file/fputcsv.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation1.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation10.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation11.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation12.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation13.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation16.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation17.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation5.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation6.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation7.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation8.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation9.phpt
+
+dir
+Before: 73 cases; 6 passed, 1 failed, 66 unsupported
+After: 73 cases; 6 passed, 1 failed, 66 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,399 fixtures; 4,870 passed, 2,903 failed, 1,626 unsupported.
+54 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct PHP comparisons match multiline/length-limited CSV reads, custom escapes,
+stream positions, zero-length/offset reads, and fgets length handling.
+Writer conversions retain the first exception, suppress later object conversions,
+write the assembled record, and then propagate the exception, matching PHP.
+Separately targeted stream_get_contents fixtures remain blocked by missing tmpfile()
+(two failures) or unsupported SKIPIF (one case); these are outside the nine suite totals.
+Configurable character locales, auto_detect_line_endings, custom wrappers/filters,
+and complete read-buffer and stream lifecycle semantics remain unfinished.
+Full log prefix: /tmp/php-rs-csv-stream-*3.log.

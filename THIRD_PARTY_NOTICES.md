@@ -275,6 +275,13 @@ Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 `ext/standard/type.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf as author.
 
+CSV stream reading/writing in `src/runtime/csv.rs` extends the existing CSV
+adaptation from PHP 8.5.0's `ext/standard/file.c`. Line and remainder readers in
+`src/runtime/streams.rs`, and file() line-array loading in
+`src/runtime/file_contents.rs`, follow `ext/standard/file.c`,
+`ext/standard/streamsfuncs.c`, and `main/streams/streams.c`, copyright (c) The PHP
+Group. These operations reuse the native string-conversion and stream helpers.
+
 `src/runtime/filesystem.rs` implements directory creation/removal, timestamps,
 request-local working directories, and metadata/access queries from PHP 8.5.0's
 `ext/standard/dir.c`, `file.c`, `filestat.c`, and `main/streams/plain_wrapper.c`,

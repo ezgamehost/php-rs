@@ -18,6 +18,193 @@ pub(super) enum Operation {
 }
 
 impl Runtime {
+    pub(super) fn stream_get_contents(
+        &mut self,
+        name: &str,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let value = args[0].as_ref().unwrap();
+        self.validate_stream(value, name, line)?;
+        let length = args[1]
+            .as_ref()
+            .filter(|v| !matches!(v, Value::Null))
+            .map(|v| self.native_int_type(v, name, 2, line, "?int"))
+            .transpose()?
+            .unwrap_or(-1);
+        let offset = args[2]
+            .as_ref()
+            .map(|v| self.native_int(v, name, 3, line))
+            .transpose()?
+            .unwrap_or(-1);
+        if length < -1 {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                format!("{name}(): Argument #2 ($length) must be greater than or equal to -1"),
+                line,
+            ));
+        }
+        if offset >= 0 {
+            let Value::Resource(resource) = value else {
+                unreachable!()
+            };
+            let position = {
+                let kind = resource.kind.borrow();
+                if let Kind::Stream(stream) = &*kind {
+                    stream.position as i64
+                } else {
+                    -1
+                }
+            };
+            if position >= 0 && offset != position {
+                let result = self.stream_operation(
+                    Operation::Seek,
+                    name,
+                    &[
+                        Some(value.clone()),
+                        Some(Value::Int(if offset > position {
+                            offset - position
+                        } else {
+                            offset
+                        })),
+                        Some(Value::Int(i64::from(offset > position))),
+                    ],
+                    line,
+                )?;
+                if result != Value::Int(0) {
+                    self.warn(format!(
+                        "{name}(): Failed to seek to position {offset} in the stream on line {line}"
+                    ))?;
+                    return Ok(Value::Bool(false));
+                }
+            }
+        }
+        self.stream_contents_bytes(value, name, (length >= 0).then_some(length as usize), line)
+            .map(|bytes| Value::String(bytes.into()))
+    }
+
+    pub(super) fn stream_contents_bytes(
+        &mut self,
+        value: &Value,
+        name: &str,
+        limit: Option<usize>,
+        line: usize,
+    ) -> Result<Vec<u8>, Error> {
+        self.validate_stream(value, name, line)?;
+        let Value::Resource(resource) = value else {
+            unreachable!()
+        };
+        let mut kind = resource.kind.borrow_mut();
+        let Kind::Stream(stream) = &mut *kind else {
+            unreachable!()
+        };
+        if limit == Some(0) || matches!(stream.backend, Backend::Directory(_)) {
+            return Ok(Vec::new());
+        }
+        if matches!(stream.backend, Backend::File(_) | Backend::StandardInput(_)) {
+            self.file_stat_cache = [None, None];
+        }
+        let mut bytes = Vec::new();
+        let mut buffer = [0; 8192];
+        loop {
+            let wanted = limit.map_or(buffer.len(), |limit| {
+                (limit - bytes.len()).min(buffer.len())
+            });
+            if wanted == 0 {
+                break;
+            }
+            match stream.backend.read(&mut buffer[..wanted]) {
+                Ok(0) => {
+                    stream.eof = true;
+                    break;
+                }
+                Ok(count) => {
+                    stream.position = stream.position.wrapping_add(count as u64);
+                    bytes.try_reserve(count).map_err(|_| {
+                        Error::new(ErrorKind::Error, "Unable to allocate string storage", line)
+                    })?;
+                    bytes.extend_from_slice(&buffer[..count]);
+                }
+                Err(error) => {
+                    drop(kind);
+                    self.warn(format!("Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)))?;
+                    break;
+                }
+            }
+        }
+        Ok(bytes)
+    }
+
+    pub(super) fn fgets(
+        &mut self,
+        name: &str,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let stream = args[0].as_ref().unwrap();
+        self.validate_stream(stream, name, line)?;
+        let length = args[1]
+            .as_ref()
+            .filter(|v| !matches!(v, Value::Null))
+            .map(|v| self.native_int_type(v, name, 2, line, "?int"))
+            .transpose()?;
+        if length.is_some_and(|n| n <= 0) {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                format!("{name}(): Argument #2 ($length) must be greater than 0"),
+                line,
+            ));
+        }
+        self.stream_read_line(stream, name, length.map(|n| n as usize - 1), line)
+            .map(|text| text.map_or(Value::Bool(false), |text| Value::String(text.into())))
+    }
+
+    pub(super) fn stream_read_line(
+        &mut self,
+        value: &Value,
+        name: &str,
+        limit: Option<usize>,
+        line: usize,
+    ) -> Result<Option<Vec<u8>>, Error> {
+        self.validate_stream(value, name, line)?;
+        let Value::Resource(resource) = value else {
+            unreachable!()
+        };
+        let mut kind = resource.kind.borrow_mut();
+        let Kind::Stream(stream) = &mut *kind else {
+            unreachable!()
+        };
+        if matches!(stream.backend, Backend::Directory(_)) {
+            return Ok(None);
+        }
+        if matches!(stream.backend, Backend::File(_) | Backend::StandardInput(_)) {
+            self.file_stat_cache = [None, None];
+        }
+        let mut text = Vec::new();
+        while limit.is_none_or(|limit| text.len() < limit) {
+            let mut byte = [0];
+            match stream.backend.read(&mut byte) {
+                Ok(0) => {
+                    stream.eof = true;
+                    break;
+                }
+                Ok(_) => {
+                    stream.position = stream.position.wrapping_add(1);
+                    text.push(byte[0]);
+                    if byte[0] == b'\n' {
+                        break;
+                    }
+                }
+                Err(error) => {
+                    drop(kind);
+                    self.warn(format!("Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)))?;
+                    return Ok((!text.is_empty()).then_some(text));
+                }
+            }
+        }
+        Ok((!text.is_empty()).then_some(text))
+    }
+
     pub(super) fn validate_stream(
         &self,
         value: &Value,
