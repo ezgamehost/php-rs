@@ -682,6 +682,11 @@ new request. The CLI returns the low eight bits of the requested status.
 - Public and readonly constructor property promotion, including typed parameters,
   argument coercion, inherited constructors, and assignment before the body runs.
   Parameter defaults remain separate from uninitialized property storage.
+- [Weak references](docs/conformance/php-8.5.0-weak-references-hillclimb.txt)
+  support `WeakReference::create()` and `get()` for objects and closures. Repeated
+  creation returns the same live wrapper without keeping its target alive. Object
+  identity survives destructor-queue moves and resurrection; reused numeric handles
+  do not revive expired references. Debug output exposes the current target.
 - Shallow object and closure cloning, inherited `__clone()` methods, and readonly
   reinitialization during cloning. PHP 8.5 `clone($object, $withProperties)` updates
   copied properties after `__clone()`, using the caller's access scope and internal

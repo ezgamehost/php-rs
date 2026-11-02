@@ -146,6 +146,7 @@ impl Runtime {
             || name == b"closure"
             || name == b"roundingmode"
             || name == b"propertyhooktype"
+            || name == b"weakreference"
             || self.builtin_throwable_class(&name).is_some()
             || self.builtin_array_iterator_class(&name).is_some()
             || self.builtin_recursive_iterator_class(&name).is_some()
@@ -230,7 +231,7 @@ impl Runtime {
         }
         if parent.as_ref().is_some_and(|p| p.declaration.is_final) {
             return Err(Error::new(
-                ErrorKind::Error,
+                ErrorKind::CompileError,
                 format!(
                     "Class {} cannot extend final class {}",
                     String::from_utf8_lossy(&decl.name),
@@ -384,6 +385,9 @@ impl Runtime {
             return Some(class);
         }
         if let Some(class) = self.builtin_array_iterator_class(&name) {
+            return Some(class);
+        }
+        if let Some(class) = self.builtin_weak_reference_class(&name) {
             return Some(class);
         }
         if let Some(class) = self.builtin_reflection_class(&name) {
@@ -549,6 +553,7 @@ impl Runtime {
         Ok(self.create_object(PhpObject {
             lazy: RefCell::default(),
             reflection: RefCell::default(),
+            weak_reference: RefCell::default(),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),

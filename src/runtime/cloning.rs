@@ -52,7 +52,8 @@ impl Runtime {
                 || object.class.is_a(b"ReflectionClassConstant")
                 || object.class.is_a(b"ReflectionConstant")
                 || object.class.is_a(b"ReflectionExtension")
-                || object.class.is_a(b"ReflectionReference"))
+                || object.class.is_a(b"ReflectionReference")
+                || object.class.is_a(b"WeakReference"))
         {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -145,6 +146,7 @@ impl Runtime {
         let object = self.create_object(PhpObject {
             lazy: RefCell::default(),
             reflection: RefCell::default(),
+            weak_reference: RefCell::default(),
             class: original.class.clone(),
             class_name: original.class_name.clone(),
             properties: RefCell::new(properties),

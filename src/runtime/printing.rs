@@ -38,6 +38,19 @@ impl Runtime {
         pending: &mut Option<Error>,
     ) -> Result<PhpArray, Error> {
         let Some(method) = objects::method(&object.class, b"__debugInfo") else {
+            if object.class.is_a(b"WeakReference") {
+                let mut properties = PhpArray::default();
+                properties.insert(
+                    ArrayKey::String(b"object".to_vec()),
+                    object
+                        .weak_reference
+                        .borrow()
+                        .as_ref()
+                        .and_then(weak_references::WeakReferenceData::get)
+                        .unwrap_or(Value::Null),
+                );
+                return Ok(properties);
+            }
             if let Some(instance) = object.lazy_instance() {
                 let mut properties = PhpArray::default();
                 properties.insert(

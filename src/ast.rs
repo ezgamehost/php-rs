@@ -162,6 +162,7 @@ pub(crate) enum NativeMethod {
     Abstract,
     Enum,
     Reflection,
+    WeakReference,
     AttributeConstruct,
     SensitiveValue,
     ThrowableConstruct,

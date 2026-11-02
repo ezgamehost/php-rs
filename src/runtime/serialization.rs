@@ -204,6 +204,7 @@ impl Runtime {
                 b"ReflectionAttribute",
                 b"ReflectionExtension",
                 b"ReflectionReference",
+                b"WeakReference",
             ]
             .iter()
             .any(|name| class.is_a(name));

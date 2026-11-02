@@ -52,6 +52,7 @@ pub struct PhpObject {
     pub(crate) property_cursor: RefCell<PropertyCursor>,
     pub(crate) property_iterators: RefCell<Vec<std::rc::Weak<RefCell<PropertyCursor>>>>,
     pub(crate) reflection: RefCell<Option<crate::runtime::reflection::ReflectionData>>,
+    pub(crate) weak_reference: RefCell<Option<crate::runtime::weak_references::WeakReferenceData>>,
     pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,
     pub(crate) properties: RefCell<PhpArray>,
@@ -120,7 +121,8 @@ pub(crate) enum Destruction {
 pub(crate) struct ObjectHandle {
     pub id: usize,
     pub destructor_called: Cell<bool>,
-    store: Weak<RefCell<ObjectStore>>,
+    pub identity: Rc<()>,
+    pub store: Weak<RefCell<ObjectStore>>,
 }
 
 impl ObjectHandle {
@@ -139,6 +141,7 @@ impl ObjectHandle {
         Self {
             id,
             destructor_called: Cell::new(false),
+            identity: Rc::new(()),
             store: Rc::downgrade(store),
         }
     }
@@ -197,6 +200,7 @@ impl Drop for PhpObject {
             property_cursor: std::mem::take(&mut self.property_cursor),
             property_iterators: std::mem::take(&mut self.property_iterators),
             reflection: std::mem::take(&mut self.reflection),
+            weak_reference: std::mem::take(&mut self.weak_reference),
             class: self.class.clone(),
             class_name: std::mem::take(&mut self.class_name),
             properties: std::mem::take(&mut self.properties),
@@ -209,6 +213,7 @@ impl Drop for PhpObject {
                 ObjectHandle {
                     id: 0,
                     destructor_called: Cell::new(true),
+                    identity: Rc::new(()),
                     store: Weak::new(),
                 },
             ),

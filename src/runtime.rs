@@ -158,6 +158,7 @@ mod utf8;
 mod uuencoding;
 mod variable_inspection;
 mod variables;
+pub(crate) mod weak_references;
 mod wordwrap;
 use offsets::{Access, Offset};
 use reference_paths::{unset as unset_path, write as write_path};
@@ -192,6 +193,7 @@ pub struct Runtime {
     pub variables: HashMap<Vec<u8>, Value>,
     reference_constraints: HashMap<usize, reference_types::Constraints>,
     reflection_reference_key: Option<[u8; 16]>,
+    weak_reference_cache: Rc<RefCell<HashMap<usize, std::rc::Weak<crate::PhpObject>>>>,
     scope: Scope,
     callers: Vec<Scope>,
     trace_frames: Vec<traces::TraceFrame>,

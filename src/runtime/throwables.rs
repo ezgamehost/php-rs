@@ -310,6 +310,9 @@ impl Runtime {
         if matches!(method, NativeMethod::Enum) {
             return self.native_enum_method(line);
         }
+        if matches!(method, NativeMethod::WeakReference) {
+            return self.native_weak_reference_method(line);
+        }
         if matches!(method, NativeMethod::Reflection) {
             return self.native_reflection_method(supplied, line);
         }
@@ -386,6 +389,7 @@ impl Runtime {
             unset_properties: RefCell::default(),
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
+            weak_reference: RefCell::default(),
         }));
         error
     }

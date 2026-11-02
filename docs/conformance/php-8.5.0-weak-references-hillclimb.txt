@@ -1,0 +1,112 @@
+PHP 8.5.0 weak reference hillclimb
+Baseline: d30a9ae48dfb69741f56f8f4c5ccdfff06af94d1
+
+zend
+Before: 5256 cases; 3060 passed, 1796 failed, 400 unsupported
+After: 5256 cases; 3070 passed, 1786 failed, 400 unsupported
+New passes: 10; regressions: 0
+NEW PASS: Zend/tests/gc/gc_048.phpt
+NEW PASS: Zend/tests/gc/gc_050.phpt
+NEW PASS: Zend/tests/lazy_objects/rfc/rfc_example_007.phpt
+NEW PASS: Zend/tests/readonly_classes/readonly_class_final_modifier.phpt
+NEW PASS: Zend/tests/weakrefs/gh13612.phpt
+NEW PASS: Zend/tests/weakrefs/weakrefs_002.phpt
+NEW PASS: Zend/tests/weakrefs/weakrefs_003.phpt
+NEW PASS: Zend/tests/weakrefs/weakrefs_004.phpt
+NEW PASS: Zend/tests/weakrefs/weakrefs_005.phpt
+NEW PASS: Zend/tests/weakrefs/weakrefs_debug_dump.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,087 passed, 2,133 failed, 1,456 unsupported.
+Net gain: ten upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match object/closure identity, expiration, cache
+  release, numeric handle reuse, raw property queries, cloning restrictions,
+  constructor bypass, destructor resurrection, and cyclic garbage collection.
+- Conditional final-class inheritance exits with status 255 and bypasses PHP
+  catch blocks. Fatal CLI comparisons ignore the existing leading blank line
+  difference and disable native fatal backtraces.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Add the final native WeakReference class with create/get and PHP's constructor,
+  dynamic-property, cloning, serialization, and constructor-bypass restrictions.
+- Each PHP object handle owns an identity token that moves with it through the
+  destructor queue. Weak references resolve that token through the object store,
+  preserving resurrection while rejecting reused numeric handles.
+- Closures use weak closure pointers. Neither kind of target is kept alive by
+  its wrapper. Repeated creation shares a live wrapper; dropping the wrapper
+  removes its weak cache entry.
+- Debug properties expose the current target without adding ordinary properties
+  or affecting casts, JSON, get_object_vars, or property_exists.
+- Extending a final class is a compile fatal, rather than a catchable Error.
+
+Remaining limits:
+- WeakMap, debug_zval_dump, get_declared_classes, and broader cycle-collection
+  behavior remain unfinished. The basic weakrefs_001 fixture still needs
+  debug_zval_dump. This focused gate does not establish full PHP conformance.

@@ -1,5 +1,10 @@
 # Third-party notices
 
+Weak-reference creation, lifetime, debug output, and restrictions in
+`src/runtime/weak_references.rs` and its integration sites follow PHP 8.5.0's
+`Zend/zend_weakrefs.c`, `zend_weakrefs.stub.php`, and `zend_objects.c`, copyright
+(c) Zend Technologies Ltd. The Zend license below applies to these adaptations.
+
 Reference reflection in `src/runtime/reflection/references.rs` follows PHP
 8.5.0's `ext/reflection/php_reflection.c` and `php_reflection.stub.php`, copyright
 (c) The PHP Group. It uses the existing SHA-1 and random-byte adaptations listed

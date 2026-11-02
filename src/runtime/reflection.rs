@@ -147,6 +147,7 @@ impl Runtime {
         Value::Object(self.create_object(PhpObject {
             lazy: RefCell::default(),
             reflection: RefCell::new(Some(data)),
+            weak_reference: RefCell::default(),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
@@ -477,7 +478,8 @@ impl Runtime {
                             && !class.is_a(b"ReflectionProperty")
                             && !class.is_a(b"ReflectionClassConstant")
                             && !class.is_a(b"ReflectionConstant")
-                            && !class.is_a(b"ReflectionExtension"))),
+                            && !class.is_a(b"ReflectionExtension")
+                            && !class.is_a(b"WeakReference"))),
             ),
             b"isinterface" => Value::Bool(decl.is_interface),
             b"istrait" => Value::Bool(decl.is_trait),
@@ -799,7 +801,9 @@ impl Runtime {
                     _ => Vec::new(),
                 };
                 if name == b"newinstancewithoutconstructor"
-                    && (class.is_a(b"InternalIterator") || class.is_a(b"ReflectionReference"))
+                    && (class.is_a(b"InternalIterator")
+                        || class.is_a(b"ReflectionReference")
+                        || class.is_a(b"WeakReference"))
                 {
                     return Err(self.reflection_error(format!("Class {} is an internal class marked as final that cannot be instantiated without invoking its constructor", class.display_name()), line));
                 }
