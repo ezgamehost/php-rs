@@ -1,5 +1,9 @@
 # Third-party notices
 
+Reflection modifier-name decoding in `src/runtime/reflection.rs` follows PHP
+8.5.0's `ext/reflection/php_reflection.c` and `php_reflection.stub.php`, copyright
+(c) The PHP Group. The PHP license below applies to these adaptations.
+
 Object initializer validation and deferred construction in `src/ast.rs`,
 `src/parser.rs`, and `src/runtime.rs` follow PHP 8.5.0's `Zend/zend_compile.c`
 and `Zend/zend_ast.c`. Contextual class diagnostics follow

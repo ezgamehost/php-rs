@@ -540,6 +540,10 @@ new request. The CLI returns the low eight bits of the requested status.
   Complete native method signatures, static-variable queries, full reflector
   interfaces, complete internal class layouts, closure-object reflection, and advanced
   default-expression folding remain unfinished.
+- [`Reflection::getModifierNames`](docs/conformance/php-8.5.0-modifier-names-hillclimb.txt)
+  reports abstract, final, virtual, visibility, asymmetric setter, static, and
+  readonly flags in PHP's order. Conflicting visibility bits and unknown flags
+  follow the native mask rules.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining

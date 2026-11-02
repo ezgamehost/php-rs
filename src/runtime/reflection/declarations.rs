@@ -3,6 +3,11 @@ use super::*;
 impl Runtime {
     pub(in crate::runtime) fn builtin_reflection_class(&self, name: &[u8]) -> Option<Rc<Class>> {
         let (canonical, parent_name, body) = match name {
+            b"reflection" => (
+                "Reflection",
+                None,
+                "public static function getModifierNames(int $modifiers): array {}",
+            ),
             b"reflectionclass" => (
                 "ReflectionClass",
                 None,
@@ -338,7 +343,11 @@ impl Runtime {
             unreachable!()
         };
         for method in &mut Rc::make_mut(&mut declaration).methods {
-            Rc::make_mut(method).native = Some(NativeMethod::Reflection);
+            let method = Rc::make_mut(method);
+            method.native = Some(NativeMethod::Reflection);
+            if canonical == "Reflection" {
+                method.tentative_return_type = method.return_type.take();
+            }
         }
         let parent = parent_name.and_then(|name| self.find_class(name.as_bytes()));
         let mut methods = parent.as_ref().map_or_else(Vec::new, |p| p.methods.clone());

@@ -208,11 +208,54 @@ impl Runtime {
         })
     }
 
+    fn reflection_modifier_names(&self, line: usize) -> Result<Value, Error> {
+        let Value::Int(modifiers) = self.lookup(b"modifiers").unwrap() else {
+            unreachable!()
+        };
+        let mut names = PhpArray::default();
+        for (flag, name) in [(64, "abstract"), (32, "final"), (512, "virtual")] {
+            if modifiers & flag != 0 {
+                names.append(string(name), line)?;
+            }
+        }
+        // Conflicting visibility bits do not designate any visibility.
+        let visibility = match modifiers & 7 {
+            1 => Some("public"),
+            2 => Some("protected"),
+            4 => Some("private"),
+            _ => None,
+        };
+        if let Some(name) = visibility {
+            names.append(string(name), line)?;
+        }
+        let set_visibility = match modifiers & (1024 | 2048 | 4096) {
+            2048 => Some("protected(set)"),
+            4096 => Some("private(set)"),
+            _ => None,
+        };
+        if let Some(name) = set_visibility {
+            names.append(string(name), line)?;
+        }
+        for (flag, name) in [(16, "static"), (128 | 65536, "readonly")] {
+            if modifiers & flag != 0 {
+                names.append(string(name), line)?;
+            }
+        }
+        Ok(Value::Array(Rc::new(names)))
+    }
+
     pub(super) fn native_reflection_method(
         &mut self,
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if self
+            .current_function
+            .as_ref()
+            .is_some_and(|name| name.ends_with(b"::getmodifiernames"))
+        {
+            return self.reflection_modifier_names(line);
+        }
         if self
             .current_function
             .as_ref()
