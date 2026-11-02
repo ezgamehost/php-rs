@@ -155,7 +155,7 @@ impl Runtime {
         })
     }
 
-    fn callable_name(&mut self, value: &Value, line: usize) -> Result<Vec<u8>, Error> {
+    pub(super) fn callable_name(&mut self, value: &Value, line: usize) -> Result<Vec<u8>, Error> {
         Ok(match value {
             Value::String(name) => name.to_vec(),
             Value::Array(array) => {

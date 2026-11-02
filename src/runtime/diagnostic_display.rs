@@ -3,14 +3,19 @@ use super::*;
 impl Runtime {
     /// Report an execution error as an uncaught PHP error. Call once at the
     /// request boundary, before reading/writing displayed output. This may run
-    /// a user-defined exception __toString(), including its output or exit().
+    /// a registered exception handler or user-defined exception __toString(),
+    /// including their output or exit(). A handled exception sets exit status 0.
     /// Execution APIs themselves continue returning errors without reporting them.
     pub fn report_uncaught(&mut self, error: &Error) {
         self.diagnostics.messages = std::mem::take(&mut self.warnings);
         self.diagnostics.output_position = self.output.len();
         let source =
             self.replace_source(Rc::new(crate::source::Source::memory(b"[no active file]")));
-        self.report_uncaught_inner(error.clone());
+        if self.uncaught_handler_allowed {
+            self.dispatch_uncaught(error.clone());
+        } else {
+            self.report_uncaught_inner(error.clone());
+        }
         self.replace_source(source);
         self.warnings = std::mem::take(&mut self.diagnostics.messages);
         self.variables = self
@@ -20,7 +25,7 @@ impl Runtime {
             .collect();
     }
 
-    fn report_uncaught_inner(&mut self, mut error: Error) {
+    pub(super) fn report_uncaught_inner(&mut self, mut error: Error) {
         loop {
             if error.kind == ErrorKind::UnwindExit {
                 return;

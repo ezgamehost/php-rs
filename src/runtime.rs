@@ -44,6 +44,7 @@ mod destructuring;
 mod diagnostic_display;
 mod directories;
 mod enums;
+mod exception_handlers;
 mod exporting;
 mod extract;
 mod extrema;
@@ -146,6 +147,9 @@ pub struct Runtime {
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
     resources: crate::resource::Store,
     default_directory: Option<Rc<crate::PhpResource>>,
+    exception_handler: Option<Value>,
+    exception_handlers: Vec<Option<Value>>,
+    uncaught_handler_allowed: bool,
 }
 struct Location {
     offset_reference: Option<variables::Cell>,

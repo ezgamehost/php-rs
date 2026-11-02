@@ -26,14 +26,15 @@ output and warnings when execution fails. `output_with_diagnostics()` interleave
 displayed nonfatal diagnostics with ordinary output; `write_output()` writes separate
 output/error streams in emission order. Source filenames and diagnostic levels are
 retained while the existing `output` and `warnings` fields remain separate.
-`report_uncaught(&error)` renders an execution error at the request boundary,
-including a user-defined exception `__toString()` and any output or exit it causes.
+`report_uncaught(&error)` handles an execution error at the request boundary,
+including registered exception handlers, user-defined exception `__toString()`,
+and any output or exit they cause. A successfully handled exception sets exit status 0.
 Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
 `Runtime::set_working_directory` configures relative path resolution for one
 request without changing the host process's working directory.
-`Runtime::exit_status()` reports termination requested by `exit`/`die`; execution
+`Runtime::exit_status()` reports request termination, including `exit`/`die`; execution
 returns successfully with `Value::Null`, preserving output and global state.
 A terminated request does not execute further PHP; create a new `Runtime` for a
 new request. The CLI returns the low eight bits of the requested status.
@@ -287,6 +288,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Exceptions thrown from `finally` retain the pending exception as their previous.
   Throwable string conversion includes saved traces and previous exceptions,
   honors subclass overrides, and terminates cyclic previous-exception chains.
+- `set_exception_handler`, `get_exception_handler`, and `restore_exception_handler`
+  preserve callable identity and handler stacks, including null entries. Uncaught
+  file/stdin exceptions dispatch at the request boundary; replacement handlers can
+  catch exceptions from an active handler. CLI `-r` and initial compilation errors
+  bypass handlers, following PHP. Shutdown callbacks remain unfinished.
 - `ErrorException` supports severity, custom filenames and signed line numbers,
   named arguments, and the final `getSeverity()` method. The 13 SPL exception
   classes support their native inheritance and constructors. Repeated native

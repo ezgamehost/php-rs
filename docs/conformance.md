@@ -1920,6 +1920,33 @@ Configurable locale case conversion remains unfinished; the comparison uses the
 default C-locale byte rules. PHP 8.5.0's `strnatcmp.c`, the wrappers in `string.c`,
 native signatures, upstream fixtures, and reference execution establish behavior.
 
+The [exception-handler slice](conformance/php-8.5.0-exception-handlers-hillclimb.txt)
+adds **sixteen upstream Zend passes**, bringing Zend to **2154 / 2694 / 408**.
+It implements `set_exception_handler`, `get_exception_handler`, and
+`restore_exception_handler`, retaining original callable values and null entries
+in the handler stack. Registration validates before changing the active handler.
+Dispatch resolves the saved callable again after the caller's scope has unwound.
+The active handler is temporarily cleared and stacked during invocation, so a
+newly installed handler can catch an exception thrown by the previous handler.
+
+Uncaught file/stdin exceptions dispatch through `Runtime::report_uncaught` after
+execution has unwound. Handled exceptions return process status 0; handler throws
+and explicit exits preserve native fatal/exit behavior. CLI `-r` and initial
+compilation failures bypass the handler; parse errors from runtime `eval` remain
+eligible. Reference probes match these boundaries, handler replacement/restoration,
+callback validation, private-method re-resolution, reference-bearing callback arrays,
+by-reference parameter warnings, and error/exit statuses.
+
+The focused directory plus getter fixture records **11 / 0 / 0**; all 29 Zend
+fixtures mentioning these APIs record **16 / 13 / 0**. These overlap the full Zend
+suite and are not counted twice. The other five tracked suites retain their totals,
+with zero regressions across all six. All 797 existing Rust tests and 57 project
+PHPT fixtures pass; formatting and Clippy pass. No custom tests or generated matrices
+were added. Shutdown callbacks, destructor timing, error handlers, output buffering,
+deprecation attributes, and closure-debug metadata still block related fixtures.
+Adapted rules from PHP 8.5.0 `Zend/zend_builtin_functions.c` and `Zend/zend.c`
+retain Zend license attribution.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1927,7 +1954,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2138 | 2710 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2154 | 2694 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

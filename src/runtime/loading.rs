@@ -38,7 +38,7 @@ impl Runtime {
 
     /// Execute a PHP document as standard input, preserving request state.
     pub fn execute(&mut self, source: &[u8]) -> Result<Value, Error> {
-        self.execute_document(source, self.memory_source(b"Standard input code"))
+        self.execute_document(source, self.memory_source(b"Standard input code"), true)
     }
 
     /// Execute PHP code without an opening tag, as with the CLI's -r option.
@@ -46,6 +46,7 @@ impl Runtime {
         self.execute_document(
             &code_document(code),
             self.memory_source(b"Command line code"),
+            false,
         )
     }
 
@@ -54,6 +55,7 @@ impl Runtime {
         if self.exit_status.is_some() {
             return Ok(Value::Null);
         }
+        self.uncaught_handler_allowed = false;
         let requested = path.as_ref();
         let path = fs::canonicalize(self.working_directory().join(requested)).map_err(|error| {
             Error::new(
@@ -69,10 +71,15 @@ impl Runtime {
                 1,
             )
         })?;
-        self.execute_document(&source, Rc::new(Source::file(&path)))
+        self.execute_document(&source, Rc::new(Source::file(&path)), true)
     }
 
-    fn execute_document(&mut self, code: &[u8], source: Rc<Source>) -> Result<Value, Error> {
+    fn execute_document(
+        &mut self,
+        code: &[u8],
+        source: Rc<Source>,
+        handle_exceptions: bool,
+    ) -> Result<Value, Error> {
         if self.exit_status.is_some() {
             return Ok(Value::Null);
         }
@@ -80,7 +87,8 @@ impl Runtime {
         self.diagnostics.output_position = self.output.len();
         self.diagnostics.messages = std::mem::take(&mut self.warnings);
         self.static_variables.remove(&None);
-        let result = self.execute_unit(code, source, Value::Null, None);
+        self.uncaught_handler_allowed = false;
+        let result = self.execute_unit(code, source, Value::Null, None, handle_exceptions);
         self.warnings = std::mem::take(&mut self.diagnostics.messages);
         self.variables = self
             .scope
@@ -99,6 +107,7 @@ impl Runtime {
         source: Rc<Source>,
         fallthrough: Value,
         frame: Option<traces::TraceFrame>,
+        handle_exceptions: bool,
     ) -> Result<Value, Error> {
         let (mut statements, warnings, strict) = lexer::lex(code)
             .and_then(|tokens| parser::parse_source(tokens, source.clone()))
@@ -116,6 +125,12 @@ impl Runtime {
         self.diagnostics.compiling = previous_compiling;
         self.diagnostics.source = diagnostic_source;
         prepared?;
+        // Only execution of a compiled entry script enables the uncaught
+        // handler. PHP's CLI -r and failures compiling the entry script bypass
+        // it; nested eval/include exceptions use the enclosing script boundary.
+        if handle_exceptions {
+            self.uncaught_handler_allowed = true;
+        }
         let previous_source = self.replace_source(source);
         let previous_strict = std::mem::replace(&mut self.strict_types, strict);
         let previous_function = self.current_function.take();
@@ -158,6 +173,7 @@ impl Runtime {
             source,
             Value::Null,
             Some(traces::TraceFrame::unit(self, b"eval", Some(line), None)),
+            false,
         )
     }
 
@@ -212,7 +228,7 @@ impl Runtime {
         let mut arguments = PhpArray::default();
         arguments.append(Value::String(source.name.clone().into()), line)?;
         let frame = traces::TraceFrame::unit(self, label.as_bytes(), Some(line), Some(arguments));
-        self.execute_unit(&code, source, Value::Int(1), Some(frame))
+        self.execute_unit(&code, source, Value::Int(1), Some(frame), false)
     }
 
     fn include_failure(
@@ -282,8 +298,13 @@ impl Runtime {
             // zend_execute uses the nearest user frame's symbol table, but
             // the loaded top-level code has no lexical class scope.
             let context = self.class_context.take();
-            let result =
-                self.execute_unit(&code, Rc::new(Source::file(&path)), Value::Int(1), None);
+            let result = self.execute_unit(
+                &code,
+                Rc::new(Source::file(&path)),
+                Value::Int(1),
+                None,
+                false,
+            );
             self.class_context = context;
             result?;
             if self.find_class(name).is_some() {

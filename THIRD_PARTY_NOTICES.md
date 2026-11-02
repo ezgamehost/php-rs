@@ -11,6 +11,11 @@ http://www.zend.com.
 Andi Gutmans, Zeev Suraski, and Nikita Popov as authors. The Zend license below
 also applies to this adaptation.
 
+`src/runtime/exception_handlers.rs` adapts handler registration and dispatch from
+PHP 8.5.0's `Zend/zend_builtin_functions.c` and `Zend/zend.c`, copyright (c)
+Zend Technologies Ltd., by Andi Gutmans and Zeev Suraski. The Zend license below
+also applies to this adaptation.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.

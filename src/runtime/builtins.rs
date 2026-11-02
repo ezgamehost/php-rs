@@ -143,6 +143,9 @@ pub(super) enum Builtin {
     FuncGetArg,
     FuncGetArgs,
     ErrorReporting,
+    SetExceptionHandler,
+    GetExceptionHandler,
+    RestoreExceptionHandler,
     AutoloadRegister,
     AutoloadUnregister,
     AutoloadFunctions,
@@ -430,6 +433,9 @@ impl Builtin {
             b"func_get_arg" => Self::FuncGetArg,
             b"func_get_args" => Self::FuncGetArgs,
             b"error_reporting" => Self::ErrorReporting,
+            b"set_exception_handler" => Self::SetExceptionHandler,
+            b"get_exception_handler" => Self::GetExceptionHandler,
+            b"restore_exception_handler" => Self::RestoreExceptionHandler,
             b"spl_autoload_register" => Self::AutoloadRegister,
             b"spl_autoload_unregister" => Self::AutoloadUnregister,
             b"spl_autoload_functions" => Self::AutoloadFunctions,
@@ -514,6 +520,8 @@ impl Builtin {
             Self::Autoload => &[("class", false, false), ("file_extensions", true, false)],
             Self::AutoloadExtensions => &[("file_extensions", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
+            Self::SetExceptionHandler => &[("callback", false, false)],
+            Self::GetExceptionHandler | Self::RestoreExceptionHandler => &[],
             Self::Strlen | Self::StrRev | Self::StrLower | Self::StrUpper | Self::Bin2Hex => {
                 &[("string", false, false)]
             }
@@ -939,6 +947,14 @@ impl Runtime {
         ) {
             return self.autoload_builtin(builtin, &args, line);
         }
+        if matches!(
+            builtin,
+            Builtin::SetExceptionHandler
+                | Builtin::GetExceptionHandler
+                | Builtin::RestoreExceptionHandler
+        ) {
+            return self.exception_handler_builtin(builtin, &args, line);
+        }
         if matches!(builtin, Builtin::ErrorReporting) {
             let previous = self.diagnostics.reporting;
             if let Some(value) = args[0]
@@ -1107,6 +1123,9 @@ impl Runtime {
             | Builtin::StrPad
             | Builtin::StrPbrk => self.byte_string_builtin(builtin, &args, line),
             Builtin::ErrorReporting
+            | Builtin::SetExceptionHandler
+            | Builtin::GetExceptionHandler
+            | Builtin::RestoreExceptionHandler
             | Builtin::AutoloadRegister
             | Builtin::AutoloadUnregister
             | Builtin::AutoloadFunctions
