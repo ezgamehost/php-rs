@@ -472,7 +472,7 @@ impl Runtime {
                     ),
                 ));
             }
-            if !self.compatible_method(function, &inherited, class) {
+            if !self.compatible_method_loaded(function, &inherited, class)? {
                 return Err(fatal(
                     self,
                     format!(
@@ -492,8 +492,143 @@ impl Runtime {
         parent: &FunctionDecl,
         class: &Class,
     ) -> bool {
-        if parent.returns_reference && !child.returns_reference {
+        self.method_type_constraints(child, parent, class)
+            .is_some_and(|pairs| {
+                pairs
+                    .iter()
+                    .all(|(narrow, wide)| self.type_subset(narrow.as_ref(), wide.as_ref(), class))
+            })
+    }
+
+    pub(super) fn compatible_method_loaded(
+        &mut self,
+        child: &FunctionDecl,
+        parent: &FunctionDecl,
+        class: &Class,
+    ) -> Result<bool, Error> {
+        for name in self.method_type_dependencies(child, parent, class) {
+            self.load_class(name.as_bytes(), child.line)?;
+        }
+        Ok(self.compatible_method(child, parent, class))
+    }
+
+    pub(super) fn method_variance_unresolved(&self, class: &Class) -> bool {
+        for required in &class.declaration.trait_requirements {
+            if let Some(actual) = objects::method(class, method_name(required))
+                && !self
+                    .method_type_dependencies(&actual, required, class)
+                    .is_empty()
+            {
+                return true;
+            }
+        }
+        let Some(parent) = &class.parent else {
             return false;
+        };
+        for actual in &class.declaration.methods {
+            let name = method_name(actual);
+            let Some(mut required) = objects::method(parent, name) else {
+                continue;
+            };
+            if required.visibility == crate::ast::Visibility::Private {
+                continue;
+            }
+            if name.eq_ignore_ascii_case(b"__construct") {
+                let Some(prototype) = abstract_constructor(parent) else {
+                    continue;
+                };
+                required = prototype;
+            }
+            if !self
+                .method_type_dependencies(actual, &required, class)
+                .is_empty()
+            {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn method_type_dependencies(
+        &self,
+        child: &FunctionDecl,
+        parent: &FunctionDecl,
+        class: &Class,
+    ) -> Vec<String> {
+        let Some(pairs) = self.method_type_constraints(child, parent, class) else {
+            return Vec::new();
+        };
+        let mut missing = Vec::new();
+        for (narrow, wide) in pairs {
+            if self.type_subset(narrow.as_ref(), wide.as_ref(), class) {
+                continue;
+            }
+            let (Some(narrow), Some(wide)) = (narrow, wide) else {
+                continue;
+            };
+            let members = |ty: &TypeDecl| -> Vec<String> {
+                ty.members
+                    .iter()
+                    .flat_map(|name| {
+                        if name == "iterable" {
+                            vec!["Traversable".to_owned()]
+                        } else if matches!(
+                            name.as_str(),
+                            "int"
+                                | "float"
+                                | "string"
+                                | "bool"
+                                | "true"
+                                | "false"
+                                | "null"
+                                | "array"
+                                | "object"
+                                | "mixed"
+                                | "callable"
+                                | "void"
+                                | "never"
+                                | "static"
+                        ) {
+                            Vec::new()
+                        } else {
+                            vec![name.clone()]
+                        }
+                    })
+                    .collect()
+            };
+            let narrow = members(&narrow);
+            let wide = members(&wide);
+            if narrow.is_empty() || wide.is_empty() {
+                continue;
+            }
+            for name in narrow.into_iter().chain(wide) {
+                if !class.name.eq_ignore_ascii_case(name.as_bytes())
+                    && self.find_class(name.as_bytes()).is_none()
+                    && !self
+                        .linking_classes
+                        .contains_key(&name.as_bytes().to_ascii_lowercase())
+                    && !missing
+                        .iter()
+                        .any(|known: &String| known.eq_ignore_ascii_case(&name))
+                {
+                    missing.push(name);
+                }
+            }
+        }
+        missing
+    }
+
+    // Arity/reference failures are final without autoloading. Only structurally
+    // compatible signatures contribute contravariant parameter and covariant
+    // return constraints that can depend on unresolved classes.
+    fn method_type_constraints(
+        &self,
+        child: &FunctionDecl,
+        parent: &FunctionDecl,
+        class: &Class,
+    ) -> Option<Vec<(Option<TypeDecl>, Option<TypeDecl>)>> {
+        if parent.returns_reference && !child.returns_reference {
+            return None;
         }
         let required = |f: &FunctionDecl| {
             f.parameters
@@ -502,16 +637,17 @@ impl Runtime {
                 .map_or(0, |i| i + 1)
         };
         if required(child) > required(parent) {
-            return false;
+            return None;
         }
         let child_variadic = child.parameters.last().is_some_and(|p| p.variadic);
         let parent_variadic = parent.parameters.last().is_some_and(|p| p.variadic);
         if parent_variadic && !child_variadic {
-            return false;
+            return None;
         }
         if !child_variadic && child.parameters.len() < parent.parameters.len() {
-            return false;
+            return None;
         }
+        let mut pairs = Vec::new();
         for index in 0..child.parameters.len().max(parent.parameters.len()) {
             let parent_param = parent
                 .parameters
@@ -522,28 +658,23 @@ impl Runtime {
                 .get(index)
                 .or_else(|| child.parameters.last().filter(|p| p.variadic));
             if let Some(parent_param) = parent_param {
-                let Some(child_param) = child_param else {
-                    return false;
-                };
+                let child_param = child_param?;
                 if parent_param.by_reference != child_param.by_reference {
-                    return false;
+                    return None;
                 }
                 let parent_type = self.signature_type(parent_param.ty.as_ref(), parent, class);
                 let child_type = self.signature_type(child_param.ty.as_ref(), child, class);
-                if !self.type_subset(parent_type.as_ref(), child_type.as_ref(), class) {
-                    return false;
-                }
+                pairs.push((parent_type, child_type));
             }
         }
-        parent.return_type.is_none()
-            || child.return_type.is_some()
-                && self.type_subset(
-                    self.signature_type(child.return_type.as_ref(), child, class)
-                        .as_ref(),
-                    self.signature_type(parent.return_type.as_ref(), parent, class)
-                        .as_ref(),
-                    class,
-                )
+        if parent.return_type.is_some() {
+            child.return_type.as_ref()?;
+            pairs.push((
+                self.signature_type(child.return_type.as_ref(), child, class),
+                self.signature_type(parent.return_type.as_ref(), parent, class),
+            ));
+        }
+        Some(pairs)
     }
 
     fn signature_type(
@@ -563,6 +694,27 @@ impl Runtime {
         };
         ty = class_type(&ty, scope);
         Some(ty)
+    }
+
+    fn declared_class_is_a(&self, name: &[u8], target: &[u8], seen: &mut HashSet<Vec<u8>>) -> bool {
+        if name.eq_ignore_ascii_case(target) {
+            return true;
+        }
+        if let Some(class) = self.find_class(name) {
+            return class.is_a(target);
+        }
+        let key = name.to_ascii_lowercase();
+        if !seen.insert(key.clone()) {
+            return false;
+        }
+        let Some(declaration) = self.linking_classes.get(&key) else {
+            return false;
+        };
+        declaration
+            .parent
+            .iter()
+            .chain(&declaration.interfaces)
+            .any(|parent| self.declared_class_is_a(parent, target, seen))
     }
 
     pub(super) fn type_subset(
@@ -633,11 +785,14 @@ impl Runtime {
                 if !builtin && w == "object" {
                     return true;
                 }
+                let wide_class = self.find_class(w.as_bytes());
+                let wide_name = wide_class
+                    .as_ref()
+                    .map_or(w.as_bytes(), |c| c.name.as_slice());
                 if n.as_bytes().eq_ignore_ascii_case(&class.name) {
-                    return class.is_a(w.as_bytes());
+                    return class.is_a(wide_name);
                 }
-                self.find_class(n.as_bytes())
-                    .is_some_and(|c| c.is_a(w.as_bytes()))
+                self.declared_class_is_a(n.as_bytes(), wide_name, &mut HashSet::new())
             })
         })
     }

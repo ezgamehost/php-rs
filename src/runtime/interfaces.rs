@@ -82,7 +82,7 @@ impl Runtime {
                         String::from_utf8_lossy(&implementation.name),
                         String::from_utf8_lossy(method_visibility::declaring_name(required))
                     ))
-                } else if !self.compatible_method(&implementation, required, class) {
+                } else if !self.compatible_method_loaded(&implementation, required, class)? {
                     Some(format!(
                         "Declaration of {} must be compatible with {}",
                         self.inheritance_method_signature(&implementation, class),

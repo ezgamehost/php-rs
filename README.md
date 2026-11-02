@@ -791,6 +791,10 @@ new request. The CLI returns the low eight bits of the requested status.
   report final overrides, staticness changes, narrowed visibility, incompatible
   signatures, and missing abstract members as compile fatals. Signatures retain
   canonical types, parameter defaults, references, variadics, and return types.
+- [Method variance dependencies](docs/conformance/php-8.5.0-method-variance-hillclimb.txt)
+  defer comparisons that need unresolved class types, load those dependencies at
+  declaration execution, and recognize class aliases. Recursive loading can
+  inspect pending declarations without autoloading the same class again.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

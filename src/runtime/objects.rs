@@ -55,7 +55,9 @@ impl Runtime {
                             .is_none_or(|name| self.find_class(name).is_some()) =>
                 {
                     let class = self.link_class(decl.clone())?;
-                    if self.property_variance_unresolved(&class) {
+                    if self.property_variance_unresolved(&class)
+                        || self.method_variance_unresolved(&class)
+                    {
                         continue;
                     }
                     self.classes
@@ -70,6 +72,20 @@ impl Runtime {
         Ok(())
     }
     pub(super) fn register_class(&mut self, decl: Rc<ClassDecl>) -> Result<(), Error> {
+        // Variance checks triggered while loading a parent may need this
+        // declaration's ancestry before a linked Class can be constructed.
+        let name = decl.name.to_ascii_lowercase();
+        let previous = self.linking_classes.insert(name.clone(), decl.clone());
+        let result = self.register_class_inner(decl);
+        if let Some(previous) = previous {
+            self.linking_classes.insert(name, previous);
+        } else {
+            self.linking_classes.remove(&name);
+        }
+        result
+    }
+
+    fn register_class_inner(&mut self, decl: Rc<ClassDecl>) -> Result<(), Error> {
         if let Some(parent) = &decl.parent {
             self.load_class(parent, decl.line)?;
         }

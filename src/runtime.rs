@@ -188,6 +188,7 @@ pub struct Runtime {
     property_guards: HashSet<(usize, Vec<u8>, magic_properties::Magic)>,
     autoloaders: Vec<Option<autoload::Autoloader>>,
     autoloading: HashSet<Vec<u8>>,
+    linking_classes: HashMap<Vec<u8>, Rc<crate::ast::ClassDecl>>,
     autoload_extensions: Option<Vec<u8>>,
     /// Global inputs before execute, and the global values after it returns.
     pub variables: HashMap<Vec<u8>, Value>,

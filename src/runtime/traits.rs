@@ -395,7 +395,7 @@ impl Runtime {
                     status(actual.is_static),
                     class.display_name()
                 ))
-            } else if !self.compatible_method(&actual, required, class) {
+            } else if !self.compatible_method_loaded(&actual, required, class)? {
                 Some(format!(
                     "Declaration of {} must be compatible with {}",
                     self.inheritance_method_signature(&actual, class),
