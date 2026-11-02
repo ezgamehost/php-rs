@@ -398,6 +398,14 @@ impl Runtime {
         include: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        let resolved_include = if include {
+            self.resolve_include(filename, name, line)?
+        } else {
+            None
+        };
+        let filename = resolved_include
+            .as_ref()
+            .map_or(filename, |path| path.as_os_str().as_encoded_bytes());
         let mode = mode.split(|byte| *byte == 0).next().unwrap();
         let standard = match filename {
             b"php://stdin" => Some((0, b"STDIN".as_slice())),
@@ -463,18 +471,7 @@ impl Runtime {
                 filename
             };
             let path = crate::source::path_from_bytes(bytes);
-            let mut resolved = self.working_directory().join(&path);
-            if include
-                && !path.is_absolute()
-                && !bytes.starts_with(b"./")
-                && !bytes.starts_with(b"../")
-                && !resolved.exists()
-            {
-                let source_path = self.source.directory.join(path);
-                if source_path.exists() {
-                    resolved = source_path;
-                }
-            }
+            let resolved = self.working_directory().join(&path);
             let mut options = OpenOptions::new();
             options
                 .read(readable)

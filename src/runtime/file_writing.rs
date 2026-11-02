@@ -185,22 +185,7 @@ impl Runtime {
         // A native plain-file mapping advances the position without probing EOF.
         // Native mmap requires a page-aligned offset; an unaligned offset falls
         // back to reads and probes EOF. Preserve that observable distinction.
-        let remaining = {
-            let kind = source.kind.borrow();
-            if let Kind::Stream(stream) = &*kind
-                && let Backend::File(file) = &stream.backend
-                && (stream.mode.starts_with(b"r") || stream.mode.contains(&b'+'))
-                && mapping_aligned(stream.position)
-            {
-                file.metadata()
-                    .ok()
-                    .filter(|metadata| metadata.is_file())
-                    .and_then(|metadata| metadata.len().checked_sub(stream.position))
-                    .filter(|&size| size > 0)
-            } else {
-                None
-            }
-        };
+        let remaining = mapped_remaining(source);
         let mut count = 0_u64;
         let mut bytes = [0; 8192];
         loop {
@@ -250,22 +235,48 @@ impl Runtime {
             ));
         }
         let opened = self.open_stream(NAME, &filename, b"rb", include, line)?;
-        let Value::Resource(resource) = opened else {
+        if !matches!(opened, Value::Resource(_)) {
             return Ok(Value::Bool(false));
+        }
+        self.stream_passthru(&opened, NAME, line)
+    }
+
+    pub(super) fn stream_passthru(
+        &mut self,
+        value: &Value,
+        name: &str,
+        line: usize,
+    ) -> Result<Value, Error> {
+        self.validate_stream(value, name, line)?;
+        let Value::Resource(resource) = value else {
+            unreachable!()
         };
-        let mut count = 0_i64;
+        let remaining = mapped_remaining(resource);
+        let mut count = 0_u64;
         let mut bytes = [0; 8192];
         loop {
-            match self.read_transfer_chunk(&resource, &mut bytes, NAME, line)? {
+            if remaining == Some(count) {
+                break;
+            }
+            let length = remaining.map_or(bytes.len(), |size| {
+                (size - count).min(bytes.len() as u64) as usize
+            });
+            match self.read_transfer_chunk(resource, &mut bytes[..length], name, line)? {
                 Some(0) => break,
                 Some(read) => {
                     self.emit_output(&bytes[..read])?;
-                    count = count.saturating_add(read as i64);
+                    count = count.saturating_add(read as u64);
                 }
-                None => return Ok(Value::Int(if count == 0 { -1 } else { count })),
+                None => {
+                    return Ok(Value::Int(if count == 0 {
+                        -1
+                    } else {
+                        count.min(i64::MAX as u64) as i64
+                    }));
+                }
             }
         }
-        Ok(Value::Int(count))
+        Ok(Value::Int(count.min(i64::MAX as u64) as i64))
     }
 
     fn file_transfer_path(&self, filename: &[u8], name: &str, line: usize) -> Result<(), Error> {
@@ -312,6 +323,28 @@ impl Runtime {
             }
         }
     }
+}
+
+fn mapped_remaining(resource: &Rc<PhpResource>) -> Option<u64> {
+    let kind = resource.kind.borrow();
+    let Kind::Stream(stream) = &*kind else {
+        return None;
+    };
+    let metadata = match &stream.backend {
+        Backend::File(file) if stream.mode.starts_with(b"r") || stream.mode.contains(&b'+') => {
+            file.metadata().ok()?
+        }
+        Backend::StandardInput(reader) => reader.get_ref().metadata().ok()?,
+        Backend::Temporary(inner) => return mapped_remaining(inner),
+        _ => return None,
+    };
+    if !mapping_aligned(stream.position) || !metadata.is_file() {
+        return None;
+    }
+    metadata
+        .len()
+        .checked_sub(stream.position)
+        .filter(|&size| size > 0)
 }
 
 fn mapping_aligned(position: u64) -> bool {

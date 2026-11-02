@@ -226,7 +226,7 @@ impl Runtime {
                     .transpose()?
                     .or_else(|| self.autoload_extensions.clone())
                     .unwrap_or_else(|| b".inc,.php".to_vec());
-                self.default_autoload(&name, &extensions)?;
+                self.default_autoload(&name, &extensions, line)?;
                 Ok(Value::Null)
             }
             _ => unreachable!(),

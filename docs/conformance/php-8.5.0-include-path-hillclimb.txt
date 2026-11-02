@@ -1,0 +1,97 @@
+PHP 8.5.0 include paths and stream passthrough hillclimb
+Baseline: a45ad61a6123f3138796c8508469420c555ee22e
+
+zend
+Before: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+After: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/gh10232.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 240 passed, 148 failed, 508 unsupported
+After: 896 cases; 259 passed, 129 failed, 508 unsupported
+New passes: 19; regressions: 0
+NEW PASS: ext/standard/tests/file/bug35740.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_variation1.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_variation2.phpt
+NEW PASS: ext/standard/tests/file/file_put_contents_variation4.phpt
+NEW PASS: ext/standard/tests/file/file_put_contents_variation5.phpt
+NEW PASS: ext/standard/tests/file/file_put_contents_variation6.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation12.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation13.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation16.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation17.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation5.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation6.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation7.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation8.phpt
+NEW PASS: ext/standard/tests/file/fopen_variation9.phpt
+NEW PASS: ext/standard/tests/file/fpassthru_basic.phpt
+NEW PASS: ext/standard/tests/file/fpassthru_variation.phpt
+NEW PASS: ext/standard/tests/file/readfile_variation6.phpt
+NEW PASS: ext/standard/tests/file/readfile_variation7.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 26 passed, 80 failed, 51 unsupported
+After: 157 cases; 27 passed, 79 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/streams/stream_resolve_include_path.phpt
+
+Total: 9,556 fixtures; 5,110 passed, 3,005 failed, 1,441 unsupported.
+21 new passes (19 file, 1 streams, 1 Zend); zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+get_include_path/set_include_path maintain request-local configuration, with
+empty-value rejection and path argument validation. stream_resolve_include_path,
+source loading, default autoloading and file functions share canonical lookup,
+path-entry order, file URLs and executing-source-directory fallback.
+Source/autoload/file opening falls back to the working directory after lookup
+fails; new writes do not create files in a configured include directory.
+fpassthru shares readfile output and native mapped/read-based EOF behavior.
+Direct PHP comparisons match configured-vs-explicit relative lookup, writes to
+existing/new files, canonical stream URIs, source inclusion, default autoload
+fallback, and passthrough positions and EOF for aligned, unaligned and memory reads.
+Initial runs encountered fixture directories left by earlier undefined-function
+failures; the fixtures now reach their own teardown. The two final full runs
+pass those cases without mkdir warnings. No corpus fixtures were modified.
+Include-path INI integration, custom/network wrappers, realpath-cache behavior
+and complete native buffering remain unfinished.
+Final upstream logs: /tmp/php-rs-include-*4.log.
+Rust validation logs: /tmp/php-rs-include-{tests,clippy}2.log.

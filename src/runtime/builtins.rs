@@ -94,6 +94,7 @@ pub(super) enum Builtin {
     FileGetContents,
     FilePutContents,
     ReadFile,
+    Fpassthru,
     Unlink,
     Stream(streams::Operation),
     GetClass,
@@ -171,6 +172,7 @@ pub(super) enum Builtin {
     Defined,
     Constant,
     GetIncludedFiles,
+    IncludePath(include_paths::Operation),
     FuncNumArgs,
     FuncGetArg,
     FuncGetArgs,
@@ -231,6 +233,7 @@ impl Builtin {
             b"tempnam" => Self::TemporaryName,
             b"sys_get_temp_dir" => Self::TemporaryDirectory,
             b"stream_get_meta_data" => Self::Stream(streams::Operation::Metadata),
+            b"fpassthru" => Self::Fpassthru,
             b"fstat" => Self::Stream(streams::Operation::Stat),
             b"stream_get_contents" => Self::StreamGetContents,
             b"file" => Self::FileLines,
@@ -553,6 +556,9 @@ impl Builtin {
             b"defined" => Self::Defined,
             b"constant" => Self::Constant,
             b"get_included_files" | b"get_required_files" => Self::GetIncludedFiles,
+            b"get_include_path" => Self::IncludePath(include_paths::Operation::Get),
+            b"set_include_path" => Self::IncludePath(include_paths::Operation::Set),
+            b"stream_resolve_include_path" => Self::IncludePath(include_paths::Operation::Resolve),
             b"func_num_args" => Self::FuncNumArgs,
             b"func_get_arg" => Self::FuncGetArg,
             b"func_get_args" => Self::FuncGetArgs,
@@ -593,6 +599,9 @@ impl Builtin {
                 &[("filename", false, false)]
             }
             Self::Filesystem(filesystem::Operation::Getcwd) => &[],
+            Self::IncludePath(include_paths::Operation::Get) => &[],
+            Self::IncludePath(include_paths::Operation::Set) => &[("include_path", false, false)],
+            Self::IncludePath(include_paths::Operation::Resolve) => &[("filename", false, false)],
             Self::Filesystem(filesystem::Operation::Chdir) => &[("directory", false, false)],
             Self::Filesystem(filesystem::Operation::Mkdir) => &[
                 ("directory", false, false),
@@ -687,7 +696,7 @@ impl Builtin {
                 ("offset", false, false),
                 ("whence", true, false),
             ],
-            Self::Stream(_) => &[("stream", false, false)],
+            Self::Stream(_) | Self::Fpassthru => &[("stream", false, false)],
             Self::GetClass => &[("object", true, false)],
             Self::Clone => &[("object", false, false), ("withProperties", true, false)],
             Self::GetParentClass => &[("object_or_class", true, false)],
@@ -1282,6 +1291,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::IncludePath(operation) = builtin {
+            return self.include_path_builtin(operation, &name, &args, line);
+        }
         if matches!(builtin, Builtin::ArrayShuffle) {
             return self.shuffle_array(args, references, line);
         }
@@ -1370,6 +1382,7 @@ impl Runtime {
             Builtin::FileGetContents => self.file_get_contents(&args, line),
             Builtin::FilePutContents => self.file_put_contents(&args, line),
             Builtin::ReadFile => self.readfile(&args, line),
+            Builtin::Fpassthru => self.stream_passthru(first, &name, line),
             Builtin::Unlink => self.file_path_operation(true, &args, line),
             Builtin::Stream(operation) => self.stream_operation(operation, &name, &args, line),
             Builtin::ResourceInfo(id) => {
@@ -1591,6 +1604,7 @@ impl Runtime {
             Builtin::Exit
             | Builtin::Math(_)
             | Builtin::GetIncludedFiles
+            | Builtin::IncludePath(_)
             | Builtin::GetDefinedVars
             | Builtin::Compact
             | Builtin::FuncNumArgs

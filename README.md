@@ -262,8 +262,9 @@ new request. The CLI returns the low eight bits of the requested status.
   with append mode, exclusive locking before truncation, and PHP's continued
   scalar-array writes after a string conversion throws. `readfile` sends file bytes to
   output and returns the transferred count. FILE_APPEND and LOCK_* constants are
-  available; custom wrappers, configurable include paths, and complete native
-  buffering remain unfinished.
+  available; custom wrappers and complete native buffering remain unfinished.
+  `fpassthru` outputs the remainder of an open stream, preserving native position,
+  EOF, and read-error behavior without closing it.
 - `tmpfile`, `tempnam`, and `sys_get_temp_dir` provide temporary streams and named
   files, with atomic exclusive creation, private permissions, PHP prefix handling,
   cached TMPDIR selection, and fallback notices. Temporary stream files survive
@@ -564,6 +565,12 @@ new request. The CLI returns the low eight bits of the requested status.
 - `$GLOBALS` element reads/writes, nested mutation, probes, and unsetting, with
   independent whole-array snapshots and compile-time mutation restrictions.
   Symbol-table ordering preserves compiled variable slots and dynamic names.
+- `get_include_path`, `set_include_path`, and `stream_resolve_include_path` provide
+  request-local include-path configuration and canonical path lookup. Source
+  loading, default autoloading, and file functions share search order, explicit
+  relative/absolute paths, file URLs, and executing-source-directory fallback.
+  New files still go to the working directory when no existing path match is found.
+  INI integration, custom/network wrappers, and realpath-cache behavior remain unfinished.
 - `eval`, local-file `include`/`require` and their `_once` variants, preserving
   caller variables, per-unit strictness, return values, and canonical file identity.
   Loaded functions retain their defining source directory for later includes.
@@ -725,9 +732,8 @@ Other `declare` directives and output handlers are not implemented. Destructor
 timing during complex expressions and reentrant mutations remains incomplete.
 Automatic initialization and scope handling for the other superglobals are not
 implemented; `$GLOBALS` currently exposes the variables created by PHP code or
-provided through `Runtime::variables`. File loading currently
-uses the working directory and the executing source directory; configurable
-`include_path`, general stream wrappers, and PHP configuration remain incomplete.
+provided through `Runtime::variables`. Include-path INI integration, general
+stream wrappers, and PHP configuration remain incomplete.
 Complete object interpolation,
 some scalar edge cases, complete
 syntax validation, resource limits, and exact PHP diagnostic formatting also

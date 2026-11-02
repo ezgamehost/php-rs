@@ -650,3 +650,9 @@ Government shall have only "Restricted Rights" as defined in Clause
 authors grant the U.S. Government and others acting in its behalf
 permission to use and distribute the software in accordance with the
 terms specified in this license.
+
+`src/runtime/include_paths.rs` and its loading, autoloading, and stream integration
+adapt PHP 8.5.0's `main/fopen_wrappers.c`, `main/streams/streams.c`, and
+`ext/standard/basic_functions.c` and `streamsfuncs.c`, copyright (c) The PHP Group.
+Stream passthrough in `src/runtime/file_writing.rs` follows `ext/standard/file.c`
+and `main/streams/streams.c`, reusing the existing file-transfer adaptation.

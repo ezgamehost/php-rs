@@ -68,6 +68,7 @@ mod function_arguments;
 mod functions;
 mod garbage_collection;
 pub(crate) mod heap;
+mod include_paths;
 mod inheritance;
 mod interfaces;
 mod iterator_helpers;
@@ -185,6 +186,7 @@ pub struct Runtime {
     source: Rc<crate::source::Source>,
     included_files: Vec<std::path::PathBuf>,
     included_set: HashSet<std::path::PathBuf>,
+    include_path: Option<Vec<u8>>,
     working_directory: Option<std::path::PathBuf>,
     temporary_directory: Option<Vec<u8>>,
     file_stat_cache: [Option<(Vec<u8>, std::fs::Metadata)>; 2],

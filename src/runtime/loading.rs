@@ -206,7 +206,12 @@ impl Runtime {
         if let Some(end) = name.iter().position(|b| *b == 0) {
             return self.include_failure(label, &name[..end], required, line);
         }
-        let resolved = self.resolve_include(name);
+        let resolved = self
+            .resolve_include(name, label, line)?
+            .map(Ok)
+            .unwrap_or_else(|| {
+                fs::canonicalize(self.working_directory().join(path_from_bytes(name)))
+            });
         let loaded = match resolved {
             Ok(path) => {
                 if once && self.included_set.contains(&path) {
@@ -260,12 +265,15 @@ impl Runtime {
         if required {
             Err(Error::new(
                 ErrorKind::Error,
-                format!("Failed opening required '{name}'"),
+                format!(
+                    "Failed opening required '{name}' (include_path='{}')",
+                    String::from_utf8_lossy(self.include_path_bytes())
+                ),
                 line,
             ))
         } else {
             self.warn(format!(
-                "{label}(): Failed opening '{name}' for inclusion on line {line}"
+                "{label}(): Failed opening '{name}' for inclusion (include_path='{}') on line {line}", String::from_utf8_lossy(self.include_path_bytes())
             ))?;
             Ok(Value::Bool(false))
         }
@@ -277,19 +285,12 @@ impl Runtime {
         }
     }
 
-    fn resolve_include(&self, name: &[u8]) -> std::io::Result<PathBuf> {
-        let path = path_from_bytes(name);
-        // With the default include path, search the current working directory
-        // before the executing file's directory. Explicit ./ and ../ paths
-        // are always relative to the working directory.
-        if path.is_absolute() || name.starts_with(b"./") || name.starts_with(b"../") {
-            return fs::canonicalize(self.working_directory().join(path));
-        }
-        fs::canonicalize(self.working_directory().join(&path))
-            .or_else(|_| fs::canonicalize(self.source.directory.join(path)))
-    }
-
-    pub(super) fn default_autoload(&mut self, name: &[u8], extensions: &[u8]) -> Result<(), Error> {
+    pub(super) fn default_autoload(
+        &mut self,
+        name: &[u8],
+        extensions: &[u8],
+        line: usize,
+    ) -> Result<(), Error> {
         let mut base = name.to_ascii_lowercase();
         for byte in &mut base {
             if *byte == b'\\' {
@@ -303,7 +304,12 @@ impl Runtime {
             }
             let mut filename = base.clone();
             filename.extend(extension);
-            let Ok(path) = self.resolve_include(&filename) else {
+            let path = self
+                .resolve_include(&filename, "spl_autoload", line)?
+                .or_else(|| {
+                    fs::canonicalize(self.working_directory().join(path_from_bytes(&filename))).ok()
+                });
+            let Some(path) = path else {
                 continue;
             };
             if self.included_set.contains(&path) {

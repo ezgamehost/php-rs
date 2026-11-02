@@ -256,7 +256,7 @@ impl Runtime {
         Ok(Value::Bool(true))
     }
 
-    fn stat_path_bytes<'a>(
+    pub(super) fn stat_path_bytes<'a>(
         &mut self,
         filename: &'a [u8],
         name: &str,
