@@ -114,7 +114,7 @@ fn metaphone_bytes(input: &[u8], limit: usize, line: usize) -> Result<Vec<u8>, E
     // can exceed it by one. PHP always uses the traditional algorithm.
     while index < word.len() && (limit == 0 || output.len() < limit) {
         let byte = at(index);
-        let previous = index.checked_sub(1).map_or(0, &at);
+        let previous = index.checked_sub(1).map_or(0, at);
         let next = at(index + 1);
         let after_next = at(index + 2);
         let mut skip = 0;
@@ -148,8 +148,8 @@ fn metaphone_bytes(input: &[u8], limit: usize, line: usize) -> Result<Vec<u8>, E
             }
             b'G' => {
                 if next == b'H' {
-                    let back3 = index.checked_sub(3).map_or(0, &at);
-                    let back4 = index.checked_sub(4).map_or(0, &at);
+                    let back3 = index.checked_sub(3).map_or(0, at);
+                    let back4 = index.checked_sub(4).map_or(0, at);
                     if !b"BDH".contains(&back3) && back4 != b'H' {
                         output.push(b'F');
                         skip = 1;

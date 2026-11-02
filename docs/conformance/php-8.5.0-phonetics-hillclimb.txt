@@ -79,4 +79,7 @@ Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
 cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
 git diff --check. No test files or fixtures added.
 Upstream logs: /tmp/php-rs-phonetic-*2.log.
-Rust validation logs: /tmp/php-rs-phonetic-{tests,clippy}1.log.
+Rust validation logs: /tmp/php-rs-phonetic-{tests,clippy}{1,3}.log.
+CI's newer Clippy identified three unnecessary closure borrows after the initial
+push. Those borrows were removed without changing phonetic behavior; the existing
+Rust tests and local lint checks were rerun for the correction.
