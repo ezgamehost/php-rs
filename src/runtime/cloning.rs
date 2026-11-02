@@ -124,6 +124,13 @@ impl Runtime {
             class: original.class.clone(),
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),
+            array_iterator: RefCell::new(
+                original
+                    .array_iterator
+                    .borrow()
+                    .as_ref()
+                    .map(|data| array_iterator::ArrayIteratorData::cloned_from(original, data)),
+            ),
             property_cursor: RefCell::new(original.property_cursor.borrow().clone()),
             property_iterators: RefCell::default(),
             unset_properties: RefCell::new(original.unset_properties.borrow().clone()),

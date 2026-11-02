@@ -206,6 +206,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::new(properties),
+            array_iterator: RefCell::default(),
             property_cursor: RefCell::default(),
             property_iterators: RefCell::default(),
             unset_properties: RefCell::default(),

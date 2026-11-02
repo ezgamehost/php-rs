@@ -133,6 +133,7 @@ impl Runtime {
             || name == b"closure"
             || name == b"roundingmode"
             || self.builtin_throwable_class(&name).is_some()
+            || self.builtin_array_iterator_class(&name).is_some()
         {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -330,6 +331,9 @@ impl Runtime {
         if let Some(class) = self.builtin_classes.borrow().get(&name) {
             return Some(class.clone());
         }
+        if let Some(class) = self.builtin_array_iterator_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_reflection_class(&name) {
             return Some(class);
         }
@@ -519,6 +523,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            array_iterator: RefCell::default(),
             property_cursor: RefCell::default(),
             property_iterators: RefCell::default(),
             unset_properties: RefCell::default(),

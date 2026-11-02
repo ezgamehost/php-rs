@@ -186,7 +186,12 @@ impl Runtime {
 
     pub(super) fn object_variables(&self, object: &PhpObject) -> PhpArray {
         let mut result = PhpArray::default();
-        for (key, value) in object.export_properties().entries() {
+        let properties = if object.array_iterator.borrow().is_some() {
+            object.snapshot()
+        } else {
+            object.export_properties()
+        };
+        for (key, value) in properties.entries() {
             if !self.property_key_visible(object, key) {
                 continue;
             }

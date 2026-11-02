@@ -4,7 +4,10 @@ use super::*;
 use crate::{PhpObject, ast::Visibility, object::Destruction};
 
 impl Runtime {
-    pub(super) fn create_object(&self, object: PhpObject) -> Rc<PhpObject> {
+    pub(super) fn create_object(&self, mut object: PhpObject) -> Rc<PhpObject> {
+        if object.class.is_a(b"ArrayIterator") && object.array_iterator.get_mut().is_none() {
+            *object.array_iterator.get_mut() = Some(array_iterator::ArrayIteratorData::default());
+        }
         let object = Rc::new(object);
         self.object_store
             .borrow_mut()

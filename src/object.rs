@@ -52,6 +52,8 @@ pub struct PhpObject {
     pub(crate) properties: RefCell<PhpArray>,
     pub(crate) unset_properties: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
+    // Native backing storage is released after ordinary object properties.
+    pub(crate) array_iterator: RefCell<Option<crate::runtime::array_iterator::ArrayIteratorData>>,
     pub(crate) object_id: usize,
     // Release the handle after fields that may own other PHP objects.
     pub(crate) _handle: ObjectHandle,
@@ -170,6 +172,7 @@ impl Drop for PhpObject {
         // payload and handle to the request's queue. No strong references to
         // the old allocation remain; the destructor may resurrect this one.
         let object = Rc::new(Self {
+            array_iterator: std::mem::take(&mut self.array_iterator),
             property_cursor: std::mem::take(&mut self.property_cursor),
             property_iterators: std::mem::take(&mut self.property_iterators),
             reflection: std::mem::take(&mut self.reflection),
@@ -263,6 +266,13 @@ impl PhpObject {
     pub(crate) fn export_properties(&self) -> PhpArray {
         if self.hides_properties() {
             PhpArray::default()
+        } else if self
+            .array_iterator
+            .borrow()
+            .as_ref()
+            .is_some_and(|data| data.flags & 1 == 0)
+        {
+            crate::runtime::array_iterator::export_storage(self)
         } else {
             self.snapshot()
         }

@@ -60,6 +60,9 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
+        if array_iterator::native_iteration(object) {
+            return self.array_iterator_step(object, name, true, line);
+        }
         let method = objects::method(&object.class, name).expect("Iterator interface method");
         let target =
             self.unchecked_method_target(method, object.class.clone(), Some(object.clone()), line)?;
@@ -94,7 +97,7 @@ impl Runtime {
             drop(returned);
             return self.drain_destructors(result, line);
         }
-        if by_reference {
+        if by_reference && !array_iterator::native_iteration(object) {
             return Err(Error::new(
                 ErrorKind::Error,
                 "An iterator cannot be used with foreach by reference",
@@ -133,17 +136,49 @@ impl Runtime {
                 // Keep the raw current result alive through the body, including
                 // references, as PHP's iterator cache does. Fetch key before
                 // assigning either target, and only if the loop requests it.
-                let current = self.iterator_method(&iterator, b"current", line)?;
+                let current = if by_reference {
+                    let key = self
+                        .array_iterator_key(&iterator)
+                        .expect("valid native iterator");
+                    Value::Reference(self.array_iterator_reference(&iterator, &key, line)?)
+                } else {
+                    self.iterator_method(&iterator, b"current", line)?
+                };
                 let key = key_target
                     .map(|_| {
                         self.iterator_method(&iterator, b"key", line)
                             .map(|key| key.dereferenced())
                     })
                     .transpose()?;
-                self.assign_target(value_target, current.dereferenced())?;
+                if by_reference {
+                    let Value::Reference(reference) = &current else {
+                        unreachable!()
+                    };
+                    if matches!(value_target.kind, ExprKind::Destructure(_)) {
+                        self.destructure_reference(value_target, reference.clone())?;
+                    } else {
+                        let mut target = self.location(value_target)?;
+                        self.bind_reference_location(
+                            &mut target,
+                            reference.clone(),
+                            value_target.line,
+                        )?;
+                    }
+                } else {
+                    self.assign_target(value_target, current.dereferenced())?;
+                }
                 if let (Some(target), Some(key)) = (key_target, key) {
                     self.assign_target(target, key.dereferenced())?;
                 }
+                // Native array iteration points into storage, without the
+                // persistent current-result cache used by user Iterator hooks.
+                let current = if array_iterator::native_iteration(&iterator) {
+                    drop(current);
+                    self.drain_destructors(Ok(()), line)?;
+                    None
+                } else {
+                    Some(current)
+                };
                 let flow = self.block(std::slice::from_ref(body));
                 drop(current);
                 match self.drain_destructors(flow, line)? {

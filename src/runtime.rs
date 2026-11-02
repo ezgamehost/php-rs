@@ -16,6 +16,7 @@ mod array_callbacks;
 mod array_column;
 mod array_cursor;
 mod array_inspection;
+pub(crate) mod array_iterator;
 mod array_join;
 mod array_segments;
 mod array_sets;

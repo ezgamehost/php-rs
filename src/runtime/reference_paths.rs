@@ -271,6 +271,34 @@ fn finish(
                 keys = &mut keys[consumed..];
                 runtime.check_array_access(&object, line)?;
                 let key = keys[0].argument();
+                if array_iterator::native_offset_get(&object)
+                    && !(keys.len() == 1
+                        && matches!(mutation, Mutation::Write(_) | Mutation::Unset))
+                {
+                    if keys[0].is_append() {
+                        runtime.warn_indirect_array_access(&object, &Value::Null, line)?;
+                        if !matches!(mutation, Mutation::Bind(_)) {
+                            result = Step::Follow(cell(Value::Null), 1);
+                            continue;
+                        }
+                    } else {
+                        let key =
+                            runtime.array_iterator_offset_key(&object, &key, b"offsetget", line)?;
+                        keys[0].cache_array_key(key.clone());
+                        match array_iterator::storage(&object) {
+                            array_iterator::Storage::Array(source) => {
+                                result = Step::Follow(source, 0);
+                                continue;
+                            }
+                            array_iterator::Storage::Object(_) => {
+                                let reference =
+                                    runtime.array_iterator_reference(&object, &key, line)?;
+                                result = Step::Follow(reference, 1);
+                                continue;
+                            }
+                        }
+                    }
+                }
                 if keys.len() == 1 {
                     match mutation {
                         Mutation::Write(value) => {

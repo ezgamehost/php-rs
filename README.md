@@ -81,6 +81,11 @@ new request. The CLI returns the low eight bits of the requested status.
   preserved references and keys, native callback argument rules, and early stopping.
   Array conversion/counting also accept arrays. `SeekableIterator`,
   `RecursiveIterator`, and `OuterIterator` extend the native Iterator interface.
+- `ArrayIterator` provides native array/object storage, cursor methods, offsets,
+  append, count, array copies, debug output, and shared-storage cloning with
+  independent cursors. Native iteration supports references and typed backing
+  properties; storage participates in destruction and cycle collection.
+  Sorting, serialization, `ARRAY_AS_PROPS`, and native comparison remain incomplete.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

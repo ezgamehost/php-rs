@@ -139,6 +139,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            array_iterator: RefCell::default(),
             property_cursor: RefCell::default(),
             property_iterators: RefCell::default(),
             unset_properties: RefCell::default(),

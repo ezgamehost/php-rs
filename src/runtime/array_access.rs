@@ -138,14 +138,36 @@ impl Runtime {
         self.check_array_access(&object, line)?;
         let key = offset.argument();
         if access != Access::Read {
-            let exists = self
-                .array_access_call(&object, b"offsetExists", vec![key.clone()], line)?
-                .is_truthy();
-            if !exists {
-                return Ok(Value::Null);
-            }
-            if access == Access::Probe {
-                return Ok(Value::Bool(true));
+            let native_exists = object.array_iterator.borrow().is_some()
+                && objects::method(&object.class, b"offsetExists").is_some_and(|method| {
+                    matches!(method.native, Some(crate::ast::NativeMethod::ArrayIterator))
+                });
+            if native_exists {
+                let native_key =
+                    self.array_iterator_offset_key(&object, &key, b"offsetexists", line)?;
+                let value = array_iterator::storage(&object)
+                    .read(&native_key)
+                    .map(|value| value.dereferenced());
+                if access == Access::Probe {
+                    return Ok(if value.is_some_and(|value| value != Value::Null) {
+                        Value::Bool(true)
+                    } else {
+                        Value::Null
+                    });
+                }
+                if array_iterator::native_offset_get(&object) || value.is_none() {
+                    return Ok(value.unwrap_or(Value::Null));
+                }
+            } else {
+                let exists = self
+                    .array_access_call(&object, b"offsetExists", vec![key.clone()], line)?
+                    .is_truthy();
+                if !exists {
+                    return Ok(Value::Null);
+                }
+                if access == Access::Probe {
+                    return Ok(Value::Bool(true));
+                }
             }
         }
         self.array_access_call(&object, b"offsetGet", vec![key], line)

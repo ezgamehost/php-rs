@@ -2494,6 +2494,39 @@ Zend interface hooks, and native array-key insertion establish these semantics.
 SPL iterator classes, generators, serialization, property hooks, deep recursion
 limits, and prior reflection gaps remain incomplete.
 
+The [ArrayIterator storage slice](conformance/php-8.5.0-array-iterator-hillclimb.txt)
+adds **36 upstream passes**, with **zero regressions** across the six full suites:
+ten Zend and 26 SPL. Zend reaches **2524 / 2324 / 408** and SPL **54 / 630 / 94**;
+the other full-suite counts are unchanged. This is native ArrayIterator storage
+and iteration support, not a claim that its complete API is implemented.
+
+ArrayIterator now constructs array or object storage, exposes cursor movement and
+seek errors, reads/writes/unsets offsets, appends, counts, returns array copies,
+and provides native debug output. Clones retain their original as backing storage
+and have independent cursors. Native iteration bypasses method dispatch until an
+Iterator method is overridden, preserves raw reference values for helper calls,
+and permits foreach by reference, including typed-property/readonly checks on
+object backing. Direct native offset paths support nested writes and references;
+isset distinguishes null slots from offsetExists. Object backing emits PHP 8.5's
+deprecation, uses string property keys, and skips non-public properties during
+iteration/counting. STD_PROP_LIST controls casts/export; constructor reentry
+accumulates flags while setFlags replaces them.
+
+The new native payload follows object construction, cloning, destructor transfer,
+and cycle collection. Ordinary properties are destroyed before backing storage.
+Existing Rust tests (797), reference-checked project PHPT (57), formatting, and
+Clippy pass; no custom tests or matrices were added. Direct PHP CLI comparisons
+also match storage sharing, cursor independence, offset reference mutation,
+null-slot queries, casts, seek failure state, offset errors, reference iteration,
+cycle counts, destruction order, constructor reentry flags, and numeric properties
+on object backing. The implementation follows PHP 8.5.0's SPL array source/stubs.
+
+Remaining ArrayIterator work includes sorting methods, serialization/Serializable,
+ARRAY_AS_PROPS routing, native object comparison, exact overloaded-object rejection,
+and some cursor mutation/diagnostic edges. RecursiveArrayIterator and ArrayObject
+are not implemented by this slice. Other existing generator, fiber, property-hook,
+reflection, and runtime gaps remain.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2501,9 +2534,9 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2514 | 2334 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2524 | 2324 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 285 | 170 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 28 | 656 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 54 | 630 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 772 | 16 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

@@ -246,6 +246,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::ArrayIterator) {
+            return self.native_array_iterator_method(supplied, line);
+        }
         if matches!(method, NativeMethod::Enum) {
             return self.native_enum_method(line);
         }
@@ -272,6 +275,7 @@ impl Runtime {
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
             NativeMethod::ThrowableToString
+            | NativeMethod::ArrayIterator
             | NativeMethod::AttributeConstruct
             | NativeMethod::SensitiveValue
             | NativeMethod::Reflection
@@ -346,6 +350,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::default(),
+            array_iterator: RefCell::default(),
             property_cursor: RefCell::default(),
             property_iterators: RefCell::default(),
             unset_properties: RefCell::default(),

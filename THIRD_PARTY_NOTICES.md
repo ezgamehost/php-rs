@@ -311,6 +311,11 @@ declarations in `src/runtime/throwables.rs` adapt PHP 8.5.0's
 `ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c)
 The PHP Group.
 
+ArrayIterator storage and cursor behavior in `src/runtime/array_iterator.rs`,
+with integration in object lifetime, cloning, offsets, iteration, and property
+export, adapts PHP 8.5.0's `ext/spl/spl_array.c` and
+`ext/spl/spl_array.stub.php`, copyright (c) The PHP Group.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

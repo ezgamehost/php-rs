@@ -51,13 +51,19 @@ impl Runtime {
         let mut index = 0;
         while index < nodes.len() {
             let children: Vec<Value> = match &nodes[index].value {
-                Value::Object(object) => object
-                    .properties
-                    .borrow()
-                    .entries()
-                    .iter()
-                    .map(|(_, value)| value.clone())
-                    .collect(),
+                Value::Object(object) => {
+                    let mut values: Vec<_> = object
+                        .properties
+                        .borrow()
+                        .entries()
+                        .iter()
+                        .map(|(_, value)| value.clone())
+                        .collect();
+                    if let Some(data) = object.array_iterator.borrow().as_ref() {
+                        values.push(Value::Indirect(data.storage.clone()));
+                    }
+                    values
+                }
                 Value::Array(array) => array
                     .entries()
                     .iter()
@@ -134,6 +140,8 @@ impl Runtime {
                     count += 1;
                     let properties = std::mem::take(&mut *object.properties.borrow_mut());
                     drop(properties);
+                    let native = object.array_iterator.borrow_mut().take();
+                    drop(native);
                 }
                 Value::Array(_) => count += 1,
                 Value::Reference(cell) | Value::Indirect(cell) => {
