@@ -89,7 +89,8 @@ new request. The CLI returns the low eight bits of the requested status.
   `ARRAY_AS_PROPS` routes property access and references to backing offsets.
   Native comparisons inspect backing storage and ordinary properties.
   `__serialize`/`__unserialize` preserve backing storage, flags, ordinary members,
-  and iterator classes. Legacy Serializable methods remain incomplete.
+  and iterator classes. Legacy `Serializable` methods encode and restore the SPL
+  format with shared reference tables and deferred object hooks.
 - `ArrayObject` shares native storage, offsets, flags, sorting, and property routing,
   with storage exchange, independent storage clones, and configurable iterator
   factories. Its iterators share live storage and skip user constructors.
@@ -103,8 +104,8 @@ new request. The CLI returns the low eight bits of the requested status.
 - `SplDoublyLinkedList`, `SplQueue`, and `SplStack` provide native list storage,
   offsets, insertion/removal, count, debug output, and independent storage clones.
   Foreach cursors retain their starting mode and support FIFO/LIFO and delete/keep
-  traversal. `__serialize`/`__unserialize` hooks are available; legacy Serializable
-  methods remain incomplete.
+  traversal. Both magic serialization hooks and legacy `Serializable` methods
+  are available. Legacy restoration replaces list contents and preserves references.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,
@@ -291,7 +292,8 @@ new request. The CLI returns the low eight bits of the requested status.
   and `max_depth`, and defers magic restoration hooks until the graph is parsed.
   Unknown/disallowed classes become `__PHP_Incomplete_Class`, with restricted
   property/method access and preservation of their original serialized class name.
-  Legacy SPL serialization, INI configuration, and complete lifecycle compatibility
+  Native legacy formats are supported for ArrayObject/ArrayIterator and linked
+  lists. Other SPL classes, INI configuration, and complete lifecycle compatibility
   remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and

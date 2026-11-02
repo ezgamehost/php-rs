@@ -32,7 +32,7 @@ pub(super) struct UnserializeState {
     depth: usize,
 }
 
-enum Failure {
+pub(super) enum Failure {
     Syntax,
     Runtime(Error),
 }
@@ -41,7 +41,7 @@ impl From<Error> for Failure {
         Self::Runtime(error)
     }
 }
-type Parsed<T> = Result<T, Failure>;
+pub(super) type Parsed<T> = Result<T, Failure>;
 
 #[derive(Clone)]
 enum Container {
@@ -62,9 +62,10 @@ enum Task {
         slot: Cell,
     },
 }
-struct Decoder<'a> {
+pub(super) struct Decoder<'a> {
     bytes: &'a [u8],
-    pos: usize,
+    pub(super) pos: usize,
+    function: String,
     state: Rc<RefCell<UnserializeState>>,
     line: usize,
 }
@@ -203,6 +204,7 @@ impl Runtime {
         let first_slot = state.borrow().slots.len();
         let mut decoder = Decoder {
             bytes: &bytes,
+            function: "unserialize".into(),
             pos: 0,
             state: state.clone(),
             line,
@@ -236,44 +238,99 @@ impl Runtime {
         state.borrow_mut().depth = old_depth;
         self.unserialization = previous.clone();
         if previous.is_none() {
-            // Resolve parser slot indirections before user callbacks can mutate the graph.
-            for array in &state.borrow().arrays {
-                let entries: Vec<_> = array.iter().collect();
-                array.mutate_shared(|table| {
-                    for (key, value) in entries {
-                        table.insert(key, value);
-                    }
-                });
-            }
-            for object in &state.borrow().objects {
-                let entries: Vec<_> = object.properties.borrow().iter().collect();
-                let mut props = object.properties.borrow_mut();
-                for (key, value) in entries {
-                    props.insert(key, value);
-                }
-            }
-            let hooks = std::mem::take(&mut state.borrow_mut().hooks);
-            for hook in hooks {
-                if result.is_err() {
-                    hook.object._handle.destructor_called.set(true);
-                    continue;
-                }
-                let name = if hook.data.is_some() {
-                    b"__unserialize".as_slice()
-                } else {
-                    b"__wakeup"
-                };
-                let values = hook.data.into_iter().map(Value::Array).collect::<Vec<_>>();
-                result = self.unserialize_hook(&hook.object, name, &values, true, line);
-                if result.is_err() {
-                    hook.object._handle.destructor_called.set(true);
-                }
-            }
+            result = self.finish_unserialization(&state, result, line);
         }
+
         drop(state);
         let value = root.borrow().dereferenced();
         drop(root);
         self.drain_destructors(result.map(|()| value), line)
+    }
+
+    pub(super) fn unserialize_native(
+        &mut self,
+        bytes: &[u8],
+        function: &str,
+        line: usize,
+        action: impl FnOnce(&mut Self, &mut Decoder<'_>) -> Parsed<()>,
+    ) -> Result<Value, Error> {
+        let previous = self.unserialization.clone();
+        let state = previous.clone().unwrap_or_default();
+        self.unserialization = Some(state.clone());
+        let depth = state.borrow().depth;
+        let mut decoder = Decoder {
+            bytes,
+            function: function.into(),
+            pos: 0,
+            state: state.clone(),
+            line,
+        };
+        let parsed = action(self, &mut decoder);
+        let offset_error = matches!(parsed, Err(Failure::Syntax)).then_some(decoder.pos);
+        let mut result = match parsed {
+            Ok(()) | Err(Failure::Syntax) => Ok(()),
+            Err(Failure::Runtime(error)) => Err(error),
+        };
+        drop(decoder);
+        state.borrow_mut().depth = depth;
+        self.unserialization = previous.clone();
+        if previous.is_none() {
+            result = self.finish_unserialization(&state, result, line);
+        }
+        drop(state);
+        if let Some(offset) = offset_error {
+            result = Err(self.array_iterator_exception(
+                b"UnexpectedValueException",
+                format!("Error at offset {offset} of {} bytes", bytes.len()),
+                line,
+            ));
+        }
+        self.drain_destructors(result.map(|()| Value::Null), line)
+    }
+
+    fn finish_unserialization(
+        &mut self,
+        state: &Rc<RefCell<UnserializeState>>,
+        mut result: Result<(), Error>,
+        line: usize,
+    ) -> Result<(), Error> {
+        // Resolve parser slot indirections before user callbacks can mutate the graph.
+        for array in &state.borrow().arrays {
+            let entries: Vec<_> = array.iter().collect();
+            array.mutate_shared(|table| {
+                for (key, value) in entries {
+                    table.insert(key, value);
+                }
+            });
+        }
+        for object in &state.borrow().objects {
+            if let Some(data) = object.linked_list.borrow_mut().as_mut() {
+                data.finish_unserialization();
+            }
+            let entries: Vec<_> = object.properties.borrow().iter().collect();
+            let mut props = object.properties.borrow_mut();
+            for (key, value) in entries {
+                props.insert(key, value);
+            }
+        }
+        let hooks = std::mem::take(&mut state.borrow_mut().hooks);
+        for hook in hooks {
+            if result.is_err() {
+                hook.object._handle.destructor_called.set(true);
+                continue;
+            }
+            let name = if hook.data.is_some() {
+                b"__unserialize".as_slice()
+            } else {
+                b"__wakeup"
+            };
+            let values = hook.data.into_iter().map(Value::Array).collect::<Vec<_>>();
+            result = self.unserialize_hook(&hook.object, name, &values, true, line);
+            if result.is_err() {
+                hook.object._handle.destructor_called.set(true);
+            }
+        }
+        result
     }
 
     fn unserialize_hook(
@@ -307,15 +364,51 @@ impl Runtime {
 }
 
 impl Decoder<'_> {
+    pub(super) fn peek(&self) -> Option<u8> {
+        self.bytes.get(self.pos).copied()
+    }
+    pub(super) fn value(&mut self, runtime: &mut Runtime) -> Parsed<Cell> {
+        let slot = cell(Value::Null);
+        self.parse(runtime, slot.clone())?;
+        Ok(slot)
+    }
+    pub(super) fn track_native_object(&self, object: &Rc<PhpObject>) {
+        self.state.borrow_mut().objects.push(object.clone());
+    }
+    pub(super) fn load_native_members(
+        &self,
+        runtime: &mut Runtime,
+        object: &Rc<PhpObject>,
+        members: &PhpArray,
+    ) -> Parsed<()> {
+        // Keep parser buckets live until the outermost decode completes: a later R
+        // can turn an already loaded member into a shared reference.
+        let entries: Vec<_> = members
+            .entries()
+            .iter()
+            .map(|(key, value)| {
+                let value = match value {
+                    Value::Indirect(slot) => Value::Indirect(slot.clone()),
+                    value => value.clone(),
+                };
+                (key.clone(), value)
+            })
+            .collect();
+        for (key, value) in entries {
+            runtime.load_native_object_member(object, key, value, self.line)?;
+        }
+        Ok(())
+    }
     fn warning(&self, runtime: &mut Runtime, message: impl AsRef<str>) -> Parsed<()> {
         runtime.warn(format!(
-            "Warning: unserialize(): {} on line {}",
+            "Warning: {}(): {} on line {}",
+            self.function,
             message.as_ref(),
             self.line
         ))?;
         Ok(())
     }
-    fn expect(&mut self, byte: u8) -> Parsed<()> {
+    pub(super) fn expect(&mut self, byte: u8) -> Parsed<()> {
         if self.bytes.get(self.pos) != Some(&byte) {
             return Err(Failure::Syntax);
         }
@@ -418,8 +511,8 @@ impl Decoder<'_> {
         self.expect(terminator)?;
         if escaped {
             runtime.warn(format!(
-                "Deprecated: unserialize(): Unserializing the 'S' format is deprecated on line {}",
-                self.line
+                "Deprecated: {}(): Unserializing the 'S' format is deprecated on line {}",
+                self.function, self.line
             ))?;
         }
         Ok(output)

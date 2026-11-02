@@ -359,7 +359,8 @@ loading follows `Zend/zend_API.c`. Property inspection and
 `get_mangled_object_vars` follow `Zend/zend_builtin_functions.c`.
 
 SplDoublyLinkedList, SplQueue, and SplStack storage, cursor behavior, cloning,
-offsets, debug output, and serialization hooks in `src/runtime/linked_list.rs`
+offsets, debug output, serialization hooks, and legacy Serializable methods
+in `src/runtime/linked_list.rs`
 adapt PHP 8.5.0's `ext/spl/spl_dllist.c`, `.h`, and `.stub.php`, copyright (c)
 The PHP Group. Shared iterator wrappers in `src/runtime/native_iterator.rs`
 follow `Zend/zend_interfaces.c` and the SPL native handlers. The shared member
@@ -368,8 +369,8 @@ loader in `src/runtime/objects.rs` follows `Zend/zend_API.c`.
 Serialization encoding, reference tables, and magic hooks in
 `src/runtime/serialization.rs` adapt PHP 8.5.0's `ext/standard/var.c`, copyright
 (c) The PHP Group, by Jani Lehtimäki, Thies C. Arntzen, and Sascha Schumann.
-ArrayObject/ArrayIterator serialization hooks in `src/runtime/array_iterator.rs`
-follow `ext/spl/spl_array.c` and `.stub.php`, copyright (c) The PHP Group.
+ArrayObject/ArrayIterator serialization hooks and legacy Serializable methods
+in `src/runtime/array_iterator.rs` follow `ext/spl/spl_array.c` and `.stub.php`, copyright (c) The PHP Group.
 
 Serialized input parsing, reference tables, class filtering, depth limits, typed
 property restoration, and deferred hooks in `src/runtime/unserialization.rs`

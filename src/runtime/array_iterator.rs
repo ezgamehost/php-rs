@@ -152,6 +152,112 @@ pub(super) fn native_iteration(object: &PhpObject) -> bool {
 }
 
 impl Runtime {
+    fn array_iterator_serialize(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        self.serialize_native(line, |runtime, state, output| {
+            let (flags, backing) = {
+                let data = object.array_iterator.borrow();
+                let data = data.as_ref().unwrap();
+                (data.flags, data.storage.borrow().clone())
+            };
+            let is_self = matches!(backing, Value::Null);
+            output.extend(b"x:");
+            runtime.encode_serialized(
+                &Value::Int(flags | if is_self { 0x01000000 } else { 0 }),
+                state,
+                output,
+                0,
+                line,
+            )?;
+            if !is_self {
+                runtime.encode_serialized(&backing, state, output, 0, line)?;
+                output.push(b';');
+            }
+            output.extend(b"m:");
+            let members = Value::Array(Rc::new(runtime.mangled_object_variables(object)));
+            runtime.encode_serialized(&members, state, output, 0, line)
+        })
+    }
+
+    fn array_iterator_unserialize(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        use unserialization::Failure;
+        let bytes = self.lookup(b"data").unwrap().to_bytes();
+        if bytes.is_empty() {
+            return Ok(Value::Null);
+        }
+        self.array_iterator_check_mutation(object, line)?;
+        self.unserialize_native(
+            &bytes,
+            &format!("{}::unserialize", array_base(object)),
+            line,
+            |runtime, decoder| {
+                decoder.track_native_object(object);
+                decoder.expect(b'x')?;
+                decoder.expect(b':')?;
+                let flags = decoder.value(runtime)?;
+                let Value::Int(flags) = *flags.borrow() else {
+                    return Err(Failure::Syntax);
+                };
+                if flags & 0x01000000 != 0 {
+                    let old = {
+                        let mut data = object.array_iterator.borrow_mut();
+                        let data = data.as_mut().unwrap();
+                        data.flags = flags & 0xffff;
+                        data.storage.replace(Value::Null)
+                    };
+                    drop(old);
+                    runtime.drain_destructors(Ok(()), line)?;
+                } else {
+                    if !matches!(decoder.peek(), Some(b'a' | b'O' | b'C' | b'r')) {
+                        return Err(Failure::Syntax);
+                    }
+                    let slot = decoder.value(runtime)?;
+                    let value = slot.borrow().clone();
+                    if !matches!(value, Value::Array(_) | Value::Object(_)) {
+                        return Err(Failure::Syntax);
+                    }
+                    object.array_iterator.borrow_mut().as_mut().unwrap().flags = flags & 0xffff;
+                    if let Value::Array(array) = value {
+                        // Transfer the parsed array without copying away its pending reference slots.
+                        let old = object
+                            .array_iterator
+                            .borrow()
+                            .as_ref()
+                            .unwrap()
+                            .storage
+                            .replace(Value::Array(array));
+                        *slot.borrow_mut() = Value::Null;
+                        drop(old);
+                        runtime.drain_destructors(Ok(()), line)?;
+                    } else {
+                        runtime.array_iterator_set_storage(
+                            object,
+                            value,
+                            None,
+                            "unserialize",
+                            line,
+                        )?;
+                    }
+                    decoder.expect(b';')?;
+                }
+                decoder.expect(b'm')?;
+                decoder.expect(b':')?;
+                let members = decoder.value(runtime)?;
+                let Value::Array(members) = members.borrow().clone() else {
+                    return Err(Failure::Syntax);
+                };
+                decoder.load_native_members(runtime, object, &members)
+            },
+        )
+    }
+
     fn array_object_iterator_class(
         &mut self,
         method: &str,
@@ -368,6 +474,8 @@ impl Runtime {
             public function offsetUnset(mixed $key): void {}
             public function append(mixed $value): void {}
             public function getArrayCopy(): array {}
+            public function serialize(): string {}
+            public function unserialize(string $data): void {}
             public function __serialize(): array {}
             public function __unserialize(array $data): void {}
             public function count(): int {}
@@ -390,7 +498,7 @@ impl Runtime {
             .to_owned()
         } else {
             format!(
-                "<?php class {canonical} implements {interface}, ArrayAccess, Countable {{ {constructor} {common} {extra} public function __debugInfo(): array {{}} }}"
+                "<?php class {canonical} implements {interface}, ArrayAccess, Serializable, Countable {{ {constructor} {common} {extra} public function __debugInfo(): array {{}} }}"
             )
         };
         let (mut statements, _, _) =
@@ -418,7 +526,12 @@ impl Runtime {
             interfaces: if recursive {
                 vec![interface.as_bytes()]
             } else {
-                vec![interface.as_bytes(), b"ArrayAccess", b"Countable"]
+                vec![
+                    interface.as_bytes(),
+                    b"ArrayAccess",
+                    b"Serializable",
+                    b"Countable",
+                ]
             }
             .iter()
             .map(|name| self.find_class(name).unwrap())
@@ -548,6 +661,8 @@ impl Runtime {
                 self.array_iterator_sort(&object, &name, line)
             }
             b"count" => Ok(Value::Int(storage(&object).keys().len() as i64)),
+            b"serialize" => self.array_iterator_serialize(&object, line),
+            b"unserialize" => self.array_iterator_unserialize(&object, line),
             b"__serialize" => {
                 let data = object.array_iterator.borrow();
                 let data = data.as_ref().unwrap();

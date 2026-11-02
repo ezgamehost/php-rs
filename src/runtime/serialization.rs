@@ -50,6 +50,21 @@ impl Runtime {
         self.drain_destructors(result.map(|()| Value::String(output.into())), line)
     }
 
+    pub(super) fn serialize_native(
+        &mut self,
+        line: usize,
+        action: impl FnOnce(&mut Self, &Rc<RefCell<SerializeState>>, &mut Vec<u8>) -> Result<(), Error>,
+    ) -> Result<Value, Error> {
+        let previous = self.serialization.clone();
+        let state = previous.clone().unwrap_or_default();
+        self.serialization = Some(state.clone());
+        let mut output = Vec::new();
+        let result = action(self, &state, &mut output);
+        self.serialization = previous;
+        drop(state);
+        self.drain_destructors(result.map(|()| Value::String(output.into())), line)
+    }
+
     fn serialization_hook(
         &mut self,
         object: &Rc<PhpObject>,
@@ -72,7 +87,7 @@ impl Runtime {
         result
     }
 
-    fn encode_serialized(
+    pub(super) fn encode_serialized(
         &mut self,
         value: &Value,
         state: &Rc<RefCell<SerializeState>>,

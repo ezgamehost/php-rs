@@ -2804,6 +2804,27 @@ separate Throwable payload and native exception restoration limitations.
 Configurable traces, property hooks, legacy SPL Serializable formats, and complete
 exception-handler and lifecycle compatibility remain unfinished.
 
+The [legacy SPL serialization slice](conformance/php-8.5.0-legacy-spl-serialization-hillclimb.txt)
+adds the Serializable interface and serialize()/unserialize() methods to
+ArrayObject, ArrayIterator, and SplDoublyLinkedList, including their subclasses.
+The native formats share the existing encoder and decoder reference tables;
+nested decoding inherits allowed_classes and defers magic hooks until the
+outermost decode completes. Array storage, flags, self backing, and ordinary
+members are restored in native order, with partial changes retained on malformed
+input. ArrayObject rejects restoration during sorting. Linked-list restoration
+replaces the old contents; serialization stops safely when a callback removes the
+next node. Malformed data reports offset exceptions and warnings attributed to
+the native method.
+
+This slice adds **16 upstream passes**, with **zero regressions** across all seven
+full suites (**8,430 fixtures**): thirteen SPL and three serialization. Totals are
+**329 / 355 / 94** for SPL and **119 / 16 / 28** for serialization; other suites
+are unchanged. All **797 existing Rust tests**, **57 reference-checked project
+PHPT**, formatting, Clippy, and diff checks pass. No custom tests or matrices were
+added. This supersedes earlier limitations on legacy serialization for these
+classes. SplObjectStorage, other missing SPL classes, INI configuration, and
+complete mutation/destructor timing remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2813,12 +2834,12 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2575 | 2273 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 316 | 368 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 329 | 355 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
-| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 116 | 19 | 28 |
+| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 119 | 16 | 28 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

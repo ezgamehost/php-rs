@@ -1,0 +1,60 @@
+PHP 8.5.0 legacy SPL serialization hillclimb
+Baseline: 8f3727b6236a89e6ca0331f20c445d766f70955f
+
+zend
+Before: 5256 cases; 2575 passed, 2273 failed, 408 unsupported
+After: 5256 cases; 2575 passed, 2273 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 316 passed, 368 failed, 94 unsupported
+After: 778 cases; 329 passed, 355 failed, 94 unsupported
+New passes: 13; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_unserialize_empty_string.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug74669.phpt
+NEW PASS: ext/spl/tests/bug45826.phpt
+NEW PASS: ext/spl/tests/bug67539.phpt
+NEW PASS: ext/spl/tests/bug70068.phpt
+NEW PASS: ext/spl/tests/bug70166.phpt
+NEW PASS: ext/spl/tests/bug70169.phpt
+NEW PASS: ext/spl/tests/bug70366.phpt
+NEW PASS: ext/spl/tests/bug70730.phpt
+NEW PASS: ext/spl/tests/bug73029.phpt
+NEW PASS: ext/spl/tests/bug75673.phpt
+NEW PASS: ext/spl/tests/bug77298.phpt
+NEW PASS: ext/spl/tests/gh16589.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 116 passed, 19 failed, 28 unsupported
+After: 163 cases; 119 passed, 16 failed, 28 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/standard/tests/serialize/bug71311.phpt
+NEW PASS: ext/standard/tests/serialize/bug72785.phpt
+NEW PASS: ext/standard/tests/serialize/bug73341.phpt
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+SplObjectStorage, remaining SPL classes, INI configuration, and complete mutation/
+destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-legacy-spl-*2.log.

@@ -103,6 +103,12 @@ impl LinkedListData {
         }
         array
     }
+    pub(super) fn finish_unserialization(&mut self) {
+        for node in &self.nodes {
+            let value = node.value.borrow().clone();
+            *node.value.borrow_mut() = value;
+        }
+    }
     pub(super) fn values(&self) -> Vec<Value> {
         self.nodes
             .iter()
@@ -157,6 +163,81 @@ pub(super) fn has_current(cursor: &Cursor) -> bool {
 }
 
 impl Runtime {
+    fn linked_list_serialize(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        self.serialize_native(line, |runtime, state, output| {
+            let (flags, mut current) = {
+                let data = object.linked_list.borrow();
+                let data = data.as_ref().unwrap();
+                (data.flags, data.nodes.front().cloned())
+            };
+            runtime.encode_serialized(&Value::Int(flags), state, output, 0, line)?;
+            while let Some(node) = current {
+                let next = node.next.borrow().upgrade();
+                let Some(value) = node.value.borrow().clone() else {
+                    break;
+                };
+                output.push(b':');
+                runtime.encode_serialized(&value, state, output, 0, line)?;
+                // Serialization hooks can remove the next node. Retain its handle
+                // across the callback, then stop if it is no longer in the list.
+                current = next.filter(|node| node.value.borrow().is_some());
+            }
+            Ok(())
+        })
+    }
+
+    fn linked_list_unserialize(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        use unserialization::Failure;
+        let bytes = self.lookup(b"data").unwrap().to_bytes();
+        if bytes.is_empty() {
+            return Ok(Value::Null);
+        }
+        loop {
+            let old = {
+                let mut data = object.linked_list.borrow_mut();
+                let data = data.as_mut().unwrap();
+                let Some(index) = data.nodes.len().checked_sub(1) else {
+                    break;
+                };
+                data.remove(index, Removal::Pop)
+            };
+            drop(old);
+            self.drain_destructors(Ok(()), line)?;
+        }
+        self.unserialize_native(
+            &bytes,
+            "SplDoublyLinkedList::unserialize",
+            line,
+            |runtime, decoder| {
+                decoder.track_native_object(object);
+                let flags = decoder.value(runtime)?;
+                let Value::Int(flags) = *flags.borrow() else {
+                    return Err(Failure::Syntax);
+                };
+                object.linked_list.borrow_mut().as_mut().unwrap().flags = flags as i32 as i64;
+                while decoder.peek() == Some(b':') {
+                    decoder.pos += 1;
+                    let slot = decoder.value(runtime)?;
+                    let mut data = object.linked_list.borrow_mut();
+                    let data = data.as_mut().unwrap();
+                    data.insert(data.nodes.len(), Value::Indirect(slot));
+                }
+                if !matches!(decoder.peek(), None | Some(0)) {
+                    return Err(Failure::Syntax);
+                }
+                Ok(())
+            },
+        )
+    }
+
     pub(super) fn builtin_linked_list_class(&self, name: &[u8]) -> Option<Rc<Class>> {
         if !matches!(name, b"spldoublylinkedlist" | b"splqueue" | b"splstack") {
             return None;
@@ -166,7 +247,7 @@ impl Runtime {
         }
         let base = name == b"spldoublylinkedlist";
         let code: &[u8] = if base {
-            b"<?php class SplDoublyLinkedList implements Iterator, Countable, ArrayAccess {
+            b"<?php class SplDoublyLinkedList implements Iterator, Countable, ArrayAccess, Serializable {
             public const int IT_MODE_LIFO = 2, IT_MODE_FIFO = 0, IT_MODE_DELETE = 1, IT_MODE_KEEP = 0;
             public function add(int $index, mixed $value): void {}
             public function pop(): mixed {}
@@ -190,6 +271,8 @@ impl Runtime {
             public function prev(): void {}
             public function next(): void {}
             public function valid(): bool {}
+            public function serialize(): string {}
+            public function unserialize(string $data): void {}
             public function __serialize(): array {}
             public function __unserialize(array $data): void {}
         }"
@@ -222,10 +305,15 @@ impl Runtime {
             declaration,
             parent,
             interfaces: if base {
-                [b"Iterator".as_slice(), b"Countable", b"ArrayAccess"]
-                    .iter()
-                    .map(|name| self.find_class(name).unwrap())
-                    .collect()
+                [
+                    b"Iterator".as_slice(),
+                    b"Countable",
+                    b"ArrayAccess",
+                    b"Serializable",
+                ]
+                .iter()
+                .map(|name| self.find_class(name).unwrap())
+                .collect()
             } else {
                 Vec::new()
             },
@@ -528,6 +616,8 @@ impl Runtime {
                 );
                 Ok(Value::Array(Rc::new(array)))
             }
+            b"serialize" => self.linked_list_serialize(&object, line),
+            b"unserialize" => self.linked_list_unserialize(&object, line),
             b"__serialize" => {
                 let data = object.linked_list.borrow();
                 let data = data.as_ref().unwrap();
