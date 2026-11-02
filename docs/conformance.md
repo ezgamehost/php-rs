@@ -2557,6 +2557,40 @@ precise overloaded-object rejection, and remaining cursor/diagnostic edges are
 still incomplete. ArrayObject, RecursiveArrayIterator, and the previously listed
 runtime and PHPT-harness gaps remain outside this slice.
 
+The [ArrayObject slice](conformance/php-8.5.0-array-object-hillclimb.txt) adds
+**110 upstream passes**, with **zero regressions** across the six full suites:
+nine Zend, two reflection, 98 SPL, and one array fixture. Zend reaches
+**2533 / 2315 / 408**, reflection **287 / 168 / 37**, SPL **153 / 531 / 94**,
+and arrays **773 / 15 / 52**. Strings and math retain their previous counts.
+
+ArrayObject now shares the native array/object backing, offsets, flags, property
+routing, sorting, counting, and debug handlers. exchangeArray returns the previous
+storage and replaces the live backing; getIterator creates the configured
+ArrayIterator subclass with shared storage and flags, bypassing its constructor.
+Iterator class names are autoloaded, validated, and retained canonically. Native
+allocation also permits abstract iterator subclasses as PHP does. ArrayObject
+clones duplicate backing data; ArrayIterator clones continue to share their source.
+
+Native ArrayObject/ArrayIterator comparison examines backing symbol tables before
+ordinary properties, including PHP's class-check ordering and self-backed case.
+Iterator wrappers now reserve an object-store handle and release it after the
+iterator data, matching visible ID reuse. Sorted object dumps retain native
+property order. Writes and references through $this offsets are allowed while
+reassignment of $this remains rejected. Native array/object parameter errors use
+PHP's legacy parser label, and incompatible Closure backing is rejected.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, Clippy,
+and diff checks pass. Two additional upstream fixtures outside the six suites pass
+(get_object_vars_variation_005 and general_functions/bug47027); they are not counted
+in the 110-pass increase. Direct PHP comparisons match factory constructor bypass,
+shared iterator storage after exchange, independent clones, class-validation state,
+$this offset references, native comparison, and abstract iterator factories. No
+custom tests or matrices were added.
+
+Serializable/serialization, RecursiveArrayIterator and other SPL iterator classes,
+exact overloaded-object handling beyond Closure/enum checks, cursor mutation edges,
+and previously listed runtime/harness limitations remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2564,11 +2598,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2524 | 2324 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 285 | 170 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 55 | 629 | 94 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2533 | 2315 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 287 | 168 | 37 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 153 | 531 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 772 | 16 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 399 | 179 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

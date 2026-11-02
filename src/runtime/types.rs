@@ -208,7 +208,16 @@ impl Runtime {
                 format!(
                     "{}(): Argument #{position} (${}) must be of type {ty}, {given} given{site}",
                     String::from_utf8_lossy(&function.name),
-                    String::from_utf8_lossy(&param.name)
+                    String::from_utf8_lossy(&param.name),
+                    ty = if matches!(
+                        function.native,
+                        Some(crate::ast::NativeMethod::ArrayIterator)
+                    ) && param.name == b"array"
+                    {
+                        "array".to_owned()
+                    } else {
+                        ty.to_string()
+                    }
                 ),
                 if function.native.is_none() {
                     function.line

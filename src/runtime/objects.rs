@@ -465,6 +465,35 @@ impl Runtime {
         self.instantiate_class(class, args, true, line)
     }
 
+    // Native factories may allocate a class without the instantiability and
+    // constructor checks performed by PHP's `new` expression.
+    pub(super) fn allocate_class_object(
+        &mut self,
+        class: Rc<Class>,
+        line: usize,
+    ) -> Result<Rc<PhpObject>, Error> {
+        self.initialize_class(&class)?;
+        let properties = self.property_defaults(&class)?;
+        let handle = self.allocate_object_handle();
+        let object_id = handle.id;
+        let throwable = self.throwable_data(&class, line);
+        Ok(self.create_object(PhpObject {
+            reflection: RefCell::default(),
+            throwable: RefCell::new(throwable),
+            class_name: String::from_utf8_lossy(&class.name).into_owned(),
+            class,
+            properties: RefCell::new(properties),
+            array_iterator: RefCell::default(),
+            properties_reordered: std::cell::Cell::new(false),
+            property_cursor: RefCell::default(),
+            property_iterators: RefCell::default(),
+            unset_properties: RefCell::default(),
+            reinitializable: RefCell::default(),
+            object_id,
+            _handle: handle,
+        }))
+    }
+
     pub(super) fn instantiate_class(
         &mut self,
         class: Rc<Class>,
@@ -512,26 +541,7 @@ impl Runtime {
         if call_constructor && let Some(constructor) = method(&class, b"__construct") {
             self.check_method_access(&constructor, line)?;
         }
-        self.initialize_class(&class)?;
-        let properties = self.property_defaults(&class)?;
-        let handle = self.allocate_object_handle();
-        let object_id = handle.id;
-        let throwable = self.throwable_data(&class, line);
-        let object = self.create_object(PhpObject {
-            reflection: RefCell::default(),
-            throwable: RefCell::new(throwable),
-            class_name: String::from_utf8_lossy(&class.name).into_owned(),
-            class,
-            properties: RefCell::new(properties),
-            array_iterator: RefCell::default(),
-            properties_reordered: std::cell::Cell::new(false),
-            property_cursor: RefCell::default(),
-            property_iterators: RefCell::default(),
-            unset_properties: RefCell::default(),
-            reinitializable: RefCell::default(),
-            object_id,
-            _handle: handle,
-        });
+        let object = self.allocate_class_object(class, line)?;
         if !call_constructor {
             return Ok(Value::Object(object));
         }

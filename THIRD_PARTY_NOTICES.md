@@ -311,10 +311,15 @@ declarations in `src/runtime/throwables.rs` adapt PHP 8.5.0's
 `ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c)
 The PHP Group.
 
-ArrayIterator storage, cursor, sorting, and property routing in `src/runtime/array_iterator.rs`,
+ArrayIterator and ArrayObject storage, cursor, sorting, and property routing in `src/runtime/array_iterator.rs`,
 with integration in object lifetime, cloning, offsets, iteration, and property
 export, adapts PHP 8.5.0's `ext/spl/spl_array.c` and
 `ext/spl/spl_array.stub.php`, copyright (c) The PHP Group.
+
+Native array-object comparison in `src/runtime/comparison.rs` also adapts
+`ext/spl/spl_array.c`. Iterator wrapper handle lifetime in `src/runtime/iterators.rs`
+and `src/runtime/iterator_helpers.rs` follows `Zend/zend_iterators.c`, copyright
+(c) The PHP Group.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

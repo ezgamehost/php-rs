@@ -1,0 +1,343 @@
+PHP 8.5.0 ArrayObject storage, factories, and native comparison hillclimb
+
+Baseline: 28e59d4b6f37bbd5063978171e43d69bcb7798ef
+Reference: PHP 8.5.0, local CLI build
+Full six-suite comparison: 8,267 upstream fixtures
+
+ZEND
+
+Before: 5256 cases; 2524 passed, 2324 failed, 408 unsupported
+After: 5256 cases; 2533 passed, 2315 failed, 408 unsupported
+New passes: 9; regressions: 0
+NEW PASS: Zend/tests/ArrayAccess/bug68896.phpt
+NEW PASS: Zend/tests/indirect_function_call/indirect_method_call_005.phpt
+NEW PASS: Zend/tests/magic_methods/bug36214.phpt
+NEW PASS: Zend/tests/namespaces/bug42819.phpt
+NEW PASS: Zend/tests/namespaces/ns_035.phpt
+NEW PASS: Zend/tests/namespaces/ns_036.phpt
+NEW PASS: Zend/tests/offsets/appending_containers.phpt
+NEW PASS: Zend/tests/offsets/array_offset.phpt
+NEW PASS: Zend/tests/unset/unset_cv10.phpt
+
+Most frequent remaining failure messages:
+4: Expected "Parse error: syntax error, unexpected token \"exit\", expecting identifier in %s
+4: Expected "NULL\n", got "object(Test)#2 (0) {\n}\n"
+4: Expected "Fatal error: Duplicate type Foo is redundant in %s
+2: Expected "Array\n(\n    [0] => 123\n)\nArray\n(\n    [0] => 123\n)\n", got "Array\n(\n    [0] => Array\n *RECURSION*\n)\nArray\n(\n    [0] => 123\n)\n"
+2: Expected "Warning: Constant __COMPILER_HALT_OFFSET__ already defined, this will be an error in PHP 9 in %s
+2: Expected "Parse error: syntax error, unexpected token \"exit\", expecting \"(\" in %s
+2: Expected "NULL\nobject(Test)#2 (0) {\n}\n", got "object(Test)#3 (0) {\n}\nobject(Test)#3 (0) {\n}\n"
+2: Expected "object(Test)#3 (0) {\n}\nNULL\n", got "object(Test)#3 (0) {\n}\nobject(Test)#4 (0) {\n}\n"
+2: Expected "Cannot increment Foo\nobject(Foo)#1 (0) {\n}\nCannot decrement Foo\nobject(Foo)#1 (0) {\n}\nCannot increment Foo\nobject(Foo)#1 (0) {\n}\nCannot decrement Foo\nobject(Foo
+2: Expected "The float 1.0E+42 is not representable as an int, cast occurred\nbool(false)\n", got "The float 1.0E+42 is not representable as an int, cast occurred\nbool(true)\n"
+1: Expected "done\n", got "\nFatal error: Uncaught Error: Call to undefined function highlight_string() in /private/tmp/php-rs-reference/php-8.5.0/Zend/tests/67468.php:2\nStack trace:
+1: Expected "Fatal error: Class NotAbstract declares abstract method bar() and must therefore be declared abstract in %s on line %d\n", got "\nParse error: A class with abstract metho
+1: Expected "Fatal error: Multiple access type modifiers are not allowed in %s on line %d\n", got "\nParse error: Multiple access type modifiers are not allowed in /private/tmp/php-rs
+1: Expected "Fatal error: Multiple access type modifiers are not allowed in %s on line %d\n", got "\nParse error: Multiple access type modifiers are not allowed in /private/tmp/php-rs
+1: Expected "Fatal error: Multiple final modifiers are not allowed in %s on line %d\n", got "\nParse error: Duplicate class modifier in /private/tmp/php-rs-reference/php-8.5.0/Zend/te
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+REFLECTION
+
+Before: 492 cases; 285 passed, 170 failed, 37 unsupported
+After: 492 cases; 287 passed, 168 failed, 37 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionClass_isIterateable_basic.phpt
+NEW PASS: ext/reflection/tests/bug61388.phpt
+
+Most frequent remaining failure messages:
+1: Expected "Method [ <user, overwrites Foo, prototype Foo> public method func ] {\n  @@ %s010.php 7 - 8\n}\n", got "\nFatal error: Uncaught Error: Object of class ReflectionMethod co
+1: Expected "ReflectionException\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getClasses() in /private/tmp/php-rs-reference/php-8.5.0/ext/refl
+1: Expected "sleep\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getFunctions() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests
+1: Expected "int(0)\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getConstants() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/test
+1: Expected "Class [ <user> class Foo ] {\n  @@ %s017.php 2-4\n\n  - Constants [1] {\n    Constant [ public string test ] { ok }\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static
+1: Expected "array(2) {\n  [0]=>\n  string(5) \"final\"\n  [1]=>\n  string(9) \"protected\"\n}\n", got "\nFatal error: Uncaught Error: Class \"Reflection\" not found in /private/tmp/p
+1: Expected "string(8) \"standard\"\n", got "\nFatal error: Uncaught ReflectionException: Function sleep() does not exist in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tes
+1: Expected "Object of class [ <user> class C1 ] {\n  @@ %s\n\n  - Constants [0] {\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static methods [0] {\n  }\n\n  - Properties [3] {\n 
+1: Expected "Reflection\n\nReflection => enabled\n\ndate\n\ndate/time support => enabled\ntimelib version => %s\n\"Olson\" Timezone Database Version => %s\nTimezone Database => %s\nDe
+1: Expected "Cannot fetch information from a closed Generator\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/027.php
+1: Expected "object(ReflectionGenerator)#%d (0) {\n}\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/028.php
+1: Expected "Cannot directly instantiate ReflectionAttribute\n", got "\nFatal error: Uncaught ArgumentCountError: ReflectionAttribute::__construct() expects exactly 0 arguments, 3 giv
+1: Expected "Attribute [ Foo ]\nAttribute [ Bar ] {\n  - Arguments [2] {\n    Argument #0 [ a = 'foo' ]\n    Argument #1 [ b = 1234 ]\n  }\n}\nAttribute [ Baz ] {\n  - Arguments [2] {
+1: Expected "int(2)\nConstant [ public int X ] { 2 }\nClass [ <user> class C ] {\n  @@ %s 12-15\n\n  - Constants [2] {\n    Constant [ public int X ] { 2 }\n    Constant [ public int 
+1: Expected "Class [ <user> class A ] {\n  @@ %s 2-5\n\n  - Constants [2] {\n    Constant [ public int A ] { 8 }\n    Constant [ public array B ] { Array }\n  }\n\n  - Static properti
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+SPL
+
+Before: 778 cases; 55 passed, 629 failed, 94 unsupported
+After: 778 cases; 153 passed, 531 failed, 94 unsupported
+New passes: 98; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_clone_other_std_props.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_dump_during_sort.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_enum.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_exchange_array_during_sorting.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_get_object_vars.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_illegal_offset.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_modify_shared_object_properties.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_proptable_canonicalization.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_sort_different_backing_storage.phpt
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_std_props_no_recursion.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic3.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic4.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic5.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic6.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_basic7.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_error1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject___construct_error2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_asort_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_asort_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_clone_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_clone_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_clone_basic3.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_count_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_exchangeArray_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_exchangeArray_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_exchangeArray_basic3.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_getFlags_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_getFlags_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_getIteratorClass_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_ksort_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_ksort_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_magicMethods1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_magicMethods2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_magicMethods3.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_magicMethods4.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_magicMethods5.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_magicMethods6.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_natcasesort_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_natsort_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_offsetExists_nullcheck.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_setFlags_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_setFlags_basic2.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_setIteratorClass_error1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_uasort_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_uasort_error1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_uksort_basic1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/arrayObject_uksort_error1.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_001.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_002.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_003.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_004.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_007.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_008.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_010.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_015.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_017.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_018.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_021.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_022.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_024.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_026.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_027.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_028.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug31346.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug41691.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug45614.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug54323.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug69845.phpt
+NEW PASS: ext/spl/tests/ArrayObject/gh16646.phpt
+NEW PASS: ext/spl/tests/ArrayObject/gh16646_2.phpt
+NEW PASS: ext/spl/tests/bug28822.phpt
+NEW PASS: ext/spl/tests/bug33136.phpt
+NEW PASS: ext/spl/tests/bug34548.phpt
+NEW PASS: ext/spl/tests/bug36825.phpt
+NEW PASS: ext/spl/tests/bug36941.phpt
+NEW PASS: ext/spl/tests/bug40036.phpt
+NEW PASS: ext/spl/tests/bug40442.phpt
+NEW PASS: ext/spl/tests/bug41692.phpt
+NEW PASS: ext/spl/tests/bug45622.phpt
+NEW PASS: ext/spl/tests/bug45622b.phpt
+NEW PASS: ext/spl/tests/bug52861.phpt
+NEW PASS: ext/spl/tests/bug53515.phpt
+NEW PASS: ext/spl/tests/bug61326.phpt
+NEW PASS: ext/spl/tests/bug61347.phpt
+NEW PASS: ext/spl/tests/bug62059.phpt
+NEW PASS: ext/spl/tests/bug62978.phpt
+NEW PASS: ext/spl/tests/bug66834.phpt
+NEW PASS: ext/spl/tests/bug67360.phpt
+NEW PASS: ext/spl/tests/bug69335.phpt
+NEW PASS: ext/spl/tests/bug70303.phpt
+NEW PASS: ext/spl/tests/bug73686.phpt
+NEW PASS: ext/spl/tests/bug74058.phpt
+NEW PASS: ext/spl/tests/bug80719.phpt
+NEW PASS: ext/spl/tests/gh18018.phpt
+NEW PASS: ext/spl/tests/gh18304.phpt
+NEW PASS: ext/spl/tests/spl_001.phpt
+
+Most frequent remaining failure messages:
+1: Expected "Fatal error: Uncaught ArgumentCountError: AppendIterator::__construct() expects exactly 0 arguments, 1 given in %s:%d\nStack trace:\n#0 %s(%d): AppendIterator->__construc
+1: Expected "MyArrayIterator\n", got "\nFatal error: Uncaught Error: Call to undefined function serialize() in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayO
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Done\n", got "\nFatal error: Uncaught Error: Call to undefined method ArrayObject::unserialize() in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/Arra
+1: Expected "01234123, Joe\n00000014, Bob\n", got "\nFatal error: Uncaught Error: Class \"FilterIterator\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObje
+1: Expected "1\n21\n221\n222\n231\n3\n", got "\nFatal error: Uncaught Error: Class \"RecursiveIteratorIterator\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/Arr
+1: Expected "1\n21\n221\n222\n231\n3\n", got "\nFatal error: Uncaught Error: Class \"RecursiveIteratorIterator\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/Arr
+1: Expected "array(2) {\n  [0]=>\n  string(3) \"one\"\n  [1]=>\n  int(1)\n}\narray(2) {\n  [0]=>\n  string(3) \"two\"\n  [1]=>\n  int(2)\n}\narray(2) {\n  [0]=>\n  string(5) \"three\"
+1: Expected "===Array===\n0=>zero\n1=>one\n2=>two\n===Append===\n3=>three\n4=>four\n===Object===\n\nDeprecated: ArrayIterator::__construct(): Using an object as a backing array for Ar
+1: Expected "int(0)\nint(1)\nint(2)\nint(3)\nint(0)\nint(1)\nint(2)\nint(3)\n", got "\nFatal error: Uncaught Error: Class \"IteratorIterator\" not found in /private/tmp/php-rs-referen
+1: Expected "int(1)\nint(2)\nint(3)\nint(4)\n\nFatal error: Uncaught Error: An iterator cannot be used with foreach by reference in %s:%d\nStack trace:\n#0 {main}\n  thrown in %s on l
+1: Expected "object(Name)#1 (4) {\n  [\"var\"]=>\n  string(1) \"a\"\n  [\"bar\":protected]=>\n  string(1) \"b\"\n  [\"foo\":\"Name\":private]=>\n  string(1) \"c\"\n  [\"storage\":\"Ar
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "===Default with array===\n1 => apple\n1 => grape\n===Public Property===\n\nDeprecated: ArrayIterator::__construct(): Using an object as a backing array for ArrayIterator 
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+ARRAY
+
+Before: 840 cases; 772 passed, 16 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/array/bug40191.phpt
+
+Most frequent remaining failure messages:
+1: Expected "--- Testing: [\"single element\"] ---\nFirst: \"single element\"\nLast: \"single element\"\n--- Testing: [\"hello world\",1] ---\nFirst: \"hello world\"\nLast: 1\n--- Tes
+1: Expected "*** Testing array_product() : variation - using non numeric values ***\nboolean (true)\nint(1)\n\nboolean (false)\nint(0)\n\nstring\n\nWarning: array_product(): Multiplic
+1: Expected "array_product() version:\n\nWarning: array_product(): Multiplication is not supported on type resource in %s on line %d\nint(30)\narray_reduce() version:\nUnsupported ope
+1: Expected "array_sum() version:\n\nWarning: array_sum(): Addition is not supported on type resource in %s on line %d\nint(13)\narray_reduce() version:\nUnsupported operand types: in
+1: Expected "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  string(3) \"one\"\n}\narray(2) {\n  [0]=>\n  int(2)\n  [1]=>\n  string(3) \"two\"\n}\narray(2) {\n  [0]=>\n  int(3)\n  [1]=>\n  
+1: Expected "val: v; key: k\nFirst value: k\nDone\n", got "val: v; key: k\n\nFatal error: Uncaught Error: Call to undefined function flush() in /private/tmp/php-rs-reference/php-8.5.0
+1: Expected "gen_xml(prefix=/Docs/)\ngen_xml(prefix=/Docs/@)\n/Docs/@Version=1.0\ngen_xml(prefix=/Docs/@) end\ngen_xml(prefix=/Docs/@)\n/Docs/@ProducerName=xxxxxxxx\ngen_xml(prefix=/D
+1: Expected "7: foo%00bar\n", got "7: \nFatal error: Uncaught Error: Call to undefined function urlencode() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/array/bug1458
+1: Malformed PHPT: Content before first PHPT section
+1: Expected "array(2) {\n  [1]=>\n  int(18)\n  [2]=>\n  int(52)\n}\narray(2) {\n  [1]=>\n  int(18)\n  [2]=>\n  int(52)\n}\narray(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\narray(2
+1: Expected "array(1) {\n  [\"A%0B\"]=>\n  string(11) \"Hello world\"\n}\narray (\n  'A' . \"\\0\" . 'B' => 'Hello world',\n)array(1) %s{\n  [\"A%0B\"]=>\n  string(11) \"Hello world\"
+1: Expected "Cannot call compact() dynamically\n", got "\nFatal error: Uncaught Error: Call to undefined function ob_start() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/te
+1: Expected "array(1) refcount(%d){\n  [\"test\"]=>\n  string(3) \"xxx\" interned\n}\n", got "\nFatal error: Uncaught Error: Call to undefined function debug_zval_dump() in /private/t
+1: Expected "array_map(): Argument #2 ($array) must be of type array, null given\narray_map(): Argument #2 ($array) must be of type array, null given\npreg_replace_callback(): Argumen
+1: Expected "EXTR_OVERWRITE\n  Exception: Cannot re-assign $this\n  Exception: Cannot re-assign $this\n\nEXTR_SKIP\n  extract() = 0\n  $this = Extract\n  $v_this = NULL\n  extract() =
+
+Unsupported section combinations:
+29: INI
+9: SKIPIF
+8: INI, SKIPIF
+5: EXTENSIONS
+1: CLEAN
+
+STRINGS
+
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 399 passed, 179 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "Warning: highlight_file(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+1: Expected "delimiter: |\ndelimiter: |\n", got "\nFatal error: Uncaught Error: Call to undefined function set_time_limit() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tes
+1: Expected "c3a0c3a1\nc3a0c3a1\n", got "c3a0c3a1\n\nFatal error: Uncaught Error: Call to undefined function htmlspecialchars() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard
+1: Expected "string(0) \"\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strin
+1: Expected "array(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2]=>\n  int(9)\n}\narray(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2
+1: Expected "Warning: Array to string conversion in %s on line %d\na:4:{i:0;s:19:\"This is strung one.\";i:1;s:19:\"This is strung two.\";i:2;s:5:\"Array\";i:3;s:22:\"This is a last s
+1: Expected "string(4) \"&lt;\"\nstring(5) \"&#38;\"\nstring(8) \"&#38;lt;\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/ph
+1: Expected "Alive!\n", got "\nFatal error: Uncaught Error: Call to undefined function ini_set() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug27276.php:2\n
+1: Expected "foo = bar\nbar = foo\n", got "\nFatal error: Uncaught Error: Call to undefined function sscanf() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug
+1: Expected "string(42) \"e28082e28089e28098e280a0e280b2e28184e282ac\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/php-rs-r
+1: Expected "array(1) {\n  [1]=>\n  string(3) \"181\"\n}\narray(1) {\n  [1]=>\n  string(2) \"18\"\n}\narray(1) {\n  [1]=>\n  string(1) \"1\"\n}\n", got "\nFatal error: Uncaught Error:
+1: Expected "a: array(1) {\n  [1]=>\n  string(2) \"a0\"\n}\naa: array(1) {\n  [1]=>\n  string(2) \"aa\"\n}\naaa: array(1) {\n  [1]=>\n  string(4) \"aaa0\"\n}\naaaa: array(1) {\n  [1]=
+1: Expected "cbd056ba\n", got "\nFatal error: Uncaught Error: Call to undefined function crc32() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug36306.php:9\n
+1: Expected "int(1)\nDone\n", got "\nFatal error: Uncaught Error: Call to undefined function sscanf() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug38322.ph
+1: Expected "array(2) {\n  [0]=>\n  string(3) \"one\"\n  [1]=>\n  string(3) \"two\"\n}\narray(2) {\n  [0]=>\n  string(3) \"two\"\n  [1]=>\n  string(3) \"one\"\n}\n--\nstring(3) \"one\
+
+Unsupported section combinations:
+84: SKIPIF
+40: INI
+11: INI, SKIPIF
+7: EXTENSIONS, INI
+5: CLEAN, INI
+3: EXTENSIONS
+2: ENV, SKIPIF
+
+MATH
+
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "string(2775) \"-2,000.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1: Expected "float(1%f)\nstring(%d) \"d:1%s;\"\nfloat(1%f)\nfloat(-1%f)\nstring(%d) \"d:-1%s;\"\nfloat(-1%f)\nfloat(-INF)\nstring(7) \"d:-INF;\"\nfloat(-INF)\nfloat(INF)\nstring(6) \"
+
+Unsupported section combinations:
+56: INI
+41: SKIPIF
+20: INI, SKIPIF
+
+Additional upstream fixtures, outside the six-suite baseline:
+Reference: PHP 8.5 (/private/tmp/php-rs-reference/php-8.5.0/sapi/cli/php)
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/class_object/get_object_vars_variation_005.phpt PASS
+/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/general_functions/bug47027.phpt PASS
+2 passed, 0 failed, 0 unsupported
+
+Six-suite improvement: 110 new passes (9 Zend, 2 reflection, 98 SPL, 1 array),
+zero regressions. The two additional fixtures are supplementary measurements,
+not included in the 110-pass increase.
+
+ArrayObject shares native array/object storage, offsets, flags, property routing,
+sorting, counting, and debug output. exchangeArray returns a copy of old storage
+and replaces the live backing, honoring the sort guard and inherited flags.
+getIterator creates the selected ArrayIterator subclass without invoking its
+constructor and shares backing storage and flags. Iterator class selection
+supports autoloading, canonical names, validation, and preserving old state when
+validation fails. Native factory allocation accepts abstract iterator subclasses,
+while ordinary new/reflection construction retains instantiability checks.
+ArrayObject clones duplicate backing data; ArrayIterator clones keep sharing.
+
+ArrayObject/ArrayIterator comparison follows backing symbol table comparison with
+ordinary property comparison and PHP's class-check ordering, skipping duplicate
+property comparison for self-backed objects. Iterator wrappers consume an object
+store handle and release it after their iterator data. Sorted object dumps retain
+native property order. Writes/references through $this offsets work, while direct
+$this reassignment remains rejected. Native array|object parameter errors retain
+PHP's legacy array label; Closure backing is rejected after its deprecation.
+
+All 797 existing Rust tests and 57 reference-checked project PHPT pass.
+Formatting, Clippy, and diff checks pass. No custom tests or matrices added.
+Direct PHP CLI comparisons match factory constructor bypass, custom classes and
+flags, shared iterator storage after exchange, independent clones, failed class
+selection state, $this offset references, native object comparison (including
+self-backed/different-class cases), and abstract iterator factories. Output and
+exit status match; reference settings: display_errors=stderr and log_errors=0.
+
+Final logs: /tmp/php-rs-array-object-{suite}4.log, tests4.log, project4.log,
+extra4.log, and clippy4.log. Intermediate results informed fixes; only final
+full-suite results above establish the measured gain.
+
+Implementation sources: PHP 8.5.0 ext/spl/spl_array.c and spl_array.stub.php,
+plus Zend/zend_iterators.c for iterator wrapper handle lifetime.
+
+Remaining gaps include Serializable/serialization, RecursiveArrayIterator and
+other SPL iterator classes, precise overloaded-object rejection beyond Closure
+and enum checks, cursor mutation/diagnostic edges, and earlier runtime/harness
+limitations. Unsupported sections are not passes.

@@ -799,7 +799,10 @@ impl Runtime {
         if let Some((root, mut path)) = self.array_iterator_property_path(location) {
             return reference_paths::write_cell(cell(root), &mut path.keys, new_value, line, self);
         }
-        if location.object.is_none() && location.static_class.is_none() && location.name == b"this"
+        if location.object.is_none()
+            && location.static_class.is_none()
+            && location.name == b"this"
+            && location.keys.is_empty()
         {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }

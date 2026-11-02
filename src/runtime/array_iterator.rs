@@ -10,6 +10,7 @@ use crate::{
 pub(crate) struct ArrayIteratorData {
     pub storage: variables::Cell,
     pub flags: i64,
+    iterator_class: Option<Rc<Class>>,
     sorting: usize,
     cursor: PropertyCursor,
 }
@@ -19,6 +20,7 @@ impl Default for ArrayIteratorData {
         Self {
             storage: cell(Value::Array(Rc::new(PhpArray::default()))),
             flags: 0,
+            iterator_class: None,
             sorting: 0,
             cursor: PropertyCursor::default(),
         }
@@ -28,14 +30,17 @@ impl Default for ArrayIteratorData {
 impl ArrayIteratorData {
     pub(super) fn cloned_from(object: &Rc<PhpObject>, data: &Self) -> Self {
         Self {
-            // PHP ArrayIterator clones retain the original as backing storage;
-            // the new object's cursor is independent and starts at the beginning.
+            // ArrayObject clones duplicate storage; ArrayIterator clones retain
+            // the original. Both start with an independent cursor.
             storage: cell(if matches!(*data.storage.borrow(), Value::Null) {
                 Value::Null
+            } else if object.class.is_a(b"ArrayObject") {
+                Value::Array(Rc::new(storage(object).snapshot()))
             } else {
                 Value::Object(object.clone())
             }),
             flags: data.flags,
+            iterator_class: data.iterator_class.clone(),
             sorting: 0,
             cursor: PropertyCursor::default(),
         }
@@ -45,6 +50,14 @@ impl ArrayIteratorData {
 pub(super) enum Storage {
     Array(variables::Cell),
     Object(Rc<PhpObject>),
+}
+
+fn array_base(object: &PhpObject) -> &'static str {
+    if object.class.is_a(b"ArrayIterator") {
+        "ArrayIterator"
+    } else {
+        "ArrayObject"
+    }
 }
 
 impl Storage {
@@ -136,6 +149,86 @@ pub(super) fn native_iteration(object: &PhpObject) -> bool {
 }
 
 impl Runtime {
+    fn array_object_iterator_class(
+        &mut self,
+        method: &str,
+        position: usize,
+        line: usize,
+    ) -> Result<Rc<Class>, Error> {
+        let name = self.lookup(b"iteratorClass").unwrap().to_bytes();
+        if let Some(class) = self.load_class(&name, line)?
+            && class.is_a(b"ArrayIterator")
+        {
+            return Ok(class);
+        }
+        Err(Error::new(
+            ErrorKind::TypeError,
+            format!(
+                "ArrayObject::{method}(): Argument #{position} ($iteratorClass) must be a class name derived from ArrayIterator, {} given",
+                String::from_utf8_lossy(&name)
+            ),
+            line,
+        ))
+    }
+
+    fn array_iterator_set_storage(
+        &mut self,
+        object: &Rc<PhpObject>,
+        value: Value,
+        flags: Option<i64>,
+        method: &str,
+        line: usize,
+    ) -> Result<(), Error> {
+        let inherit_flags = flags.is_none();
+        let mut flags = flags.unwrap_or(0) & 0xffff;
+        let base = array_base(object);
+        if matches!(value, Value::Object(_) | Value::Closure(_)) {
+            self.warn(format!("Deprecated: {base}::{method}(): Using an object as a backing array for {base} is deprecated, as it allows violating class constraints and invariants on line {line}"))?;
+        }
+        let value = match value {
+            Value::Array(array) => Value::Array(Rc::new((*array).clone())),
+            Value::Object(backing) => {
+                if backing.class.declaration.is_enum {
+                    return Err(self.array_iterator_exception(
+                        b"InvalidArgumentException",
+                        format!("Enums are not compatible with {}", object.class_name),
+                        line,
+                    ));
+                }
+                if inherit_flags && let Some(data) = backing.array_iterator.borrow().as_ref() {
+                    flags = data.flags;
+                }
+                if Rc::ptr_eq(object, &backing) {
+                    Value::Null
+                } else {
+                    Value::Object(backing)
+                }
+            }
+            Value::Closure(_) => {
+                return Err(self.array_iterator_exception(
+                    b"InvalidArgumentException",
+                    format!(
+                        "Overloaded object of type Closure is not compatible with {}",
+                        object.class_name
+                    ),
+                    line,
+                ));
+            }
+            _ => unreachable!("native array|object parameter"),
+        };
+        let old = {
+            let mut state = object.array_iterator.borrow_mut();
+            let data = state.as_mut().unwrap();
+            // Construction and exchange accumulate public flags. setFlags is
+            // the operation that replaces them. Keep active sort slots stable.
+            data.flags |= flags;
+            data.cursor = PropertyCursor::default();
+            data.storage.replace(value)
+        };
+        drop(old);
+        self.drain_destructors(Ok(()), line)
+    }
+
     pub(super) fn array_iterator_property(&self, object: &PhpObject, name: &[u8]) -> bool {
         object
             .array_iterator
@@ -203,16 +296,31 @@ impl Runtime {
     }
 
     pub(super) fn builtin_array_iterator_class(&self, name: &[u8]) -> Option<Rc<Class>> {
-        if name != b"arrayiterator" {
-            return None;
-        }
+        let (canonical, interface) = match name {
+            b"arrayiterator" => ("ArrayIterator", "SeekableIterator"),
+            b"arrayobject" => ("ArrayObject", "IteratorAggregate"),
+            _ => return None,
+        };
         if let Some(class) = self.builtin_classes.borrow().get(name) {
             return Some(class.clone());
         }
-        let code =
-            b"<?php class ArrayIterator implements SeekableIterator, ArrayAccess, Countable {
+        let extra = if name == b"arrayobject" {
+            "public function __construct(array|object $array = [], int $flags = 0, string $iteratorClass = ArrayIterator::class) {}
+            public function getIterator(): Iterator {}
+            public function exchangeArray(array|object $array): array {}
+            public function setIteratorClass(string $iteratorClass): void {}
+            public function getIteratorClass(): string {}"
+        } else {
+            "public function __construct(array|object $array = [], int $flags = 0) {}
+            public function rewind(): void {}
+            public function current(): mixed {}
+            public function key(): string|int|null {}
+            public function next(): void {}
+            public function valid(): bool {}
+            public function seek(int $offset): void {}"
+        };
+        let common = "
             public const int STD_PROP_LIST = 1, ARRAY_AS_PROPS = 2;
-            public function __construct(array|object $array = [], int $flags = 0) {}
             public function offsetExists(mixed $key): bool {}
             public function offsetGet(mixed $key): mixed {}
             public function offsetSet(mixed $key, mixed $value): void {}
@@ -227,17 +335,13 @@ impl Runtime {
             public function uasort(callable $callback): true {}
             public function uksort(callable $callback): true {}
             public function natsort(): true {}
-            public function natcasesort(): true {}
-            public function rewind(): void {}
-            public function current(): mixed {}
-            public function key(): string|int|null {}
-            public function next(): void {}
-            public function valid(): bool {}
-            public function seek(int $offset): void {}
-            public function __debugInfo(): array {}
-        }";
+            public function natcasesort(): true {}";
+        let (constructor, extra) = extra.split_once('\n').unwrap();
+        let code = format!(
+            "<?php class {canonical} implements {interface}, ArrayAccess, Countable {{ {constructor} {common} {extra} public function __debugInfo(): array {{}} }}"
+        );
         let (mut statements, _, _) =
-            parser::parse(lexer::lex(code).expect("native ArrayIterator source"))
+            parser::parse(lexer::lex(code.as_bytes()).expect("native SPL array source"))
                 .expect("native ArrayIterator declaration");
         let Stmt::Class(mut declaration) = statements.remove(0) else {
             unreachable!()
@@ -253,7 +357,7 @@ impl Runtime {
             methods: declaration.methods.clone(),
             declaration,
             parent: None,
-            interfaces: [b"SeekableIterator".as_slice(), b"ArrayAccess", b"Countable"]
+            interfaces: [interface.as_bytes(), b"ArrayAccess", b"Countable"]
                 .iter()
                 .map(|name| self.find_class(name).unwrap())
                 .collect(),
@@ -295,54 +399,76 @@ impl Runtime {
                 if supplied == 0 {
                     return Ok(Value::Null);
                 }
+                let flags = self.lookup(b"flags").unwrap().integer(line, self)?;
+                if supplied > 2 {
+                    let class = self.array_object_iterator_class("__construct", 3, line)?;
+                    object
+                        .array_iterator
+                        .borrow_mut()
+                        .as_mut()
+                        .unwrap()
+                        .iterator_class = Some(class);
+                }
                 let value = self.lookup(b"array").unwrap().dereferenced();
-                let mut flags = self.lookup(b"flags").unwrap().integer(line, self)? & 0xffff;
-                let value = match value {
-                    Value::Array(array) => Value::Array(Rc::new((*array).clone())),
-                    Value::Object(backing) => {
-                        self.warn(format!("Deprecated: ArrayIterator::__construct(): Using an object as a backing array for ArrayIterator is deprecated, as it allows violating class constraints and invariants on line {line}"))?;
-                        if backing.class.declaration.is_enum {
-                            return Err(self.array_iterator_exception(
-                                b"InvalidArgumentException",
-                                "Enums are not compatible with ArrayIterator".into(),
-                                line,
-                            ));
-                        }
-                        if supplied == 1
-                            && let Some(data) = backing.array_iterator.borrow().as_ref()
-                        {
-                            flags = data.flags;
-                        }
-                        if Rc::ptr_eq(&object, &backing) {
-                            Value::Null
-                        } else {
-                            Value::Object(backing)
-                        }
-                    }
-                    value => {
-                        return Err(builtins::type_error(
-                            &value,
-                            "ArrayIterator::__construct",
-                            1,
-                            "array|object",
-                            line,
-                        ));
-                    }
-                };
-                // Reinitialization accumulates public flags; setFlags() is the
-                // API that replaces them. Storage/cursor are replaced below.
-                flags |= object.array_iterator.borrow().as_ref().unwrap().flags;
-                let old = {
-                    let mut state = object.array_iterator.borrow_mut();
-                    let data = state.as_mut().unwrap();
-                    data.flags = flags;
-                    data.cursor = PropertyCursor::default();
-                    // Keep the storage slot and active sort guard alive across
-                    // constructor calls made from a comparison callback.
-                    data.storage.replace(value)
-                };
-                drop(old);
+                self.array_iterator_set_storage(
+                    &object,
+                    value,
+                    (supplied > 1).then_some(flags),
+                    "__construct",
+                    line,
+                )?;
                 self.drain_destructors(Ok(Value::Null), line)
+            }
+            b"exchangearray" => {
+                self.array_iterator_check_mutation(&object, line)?;
+                let old = Value::Array(Rc::new(storage(&object).snapshot()));
+                let value = self.lookup(b"array").unwrap().dereferenced();
+                let result = self
+                    .array_iterator_set_storage(&object, value, None, "exchangeArray", line)
+                    .map(|_| old);
+                self.drain_destructors(result, line)
+            }
+            b"setiteratorclass" => {
+                let class = self.array_object_iterator_class("setIteratorClass", 1, line)?;
+                object
+                    .array_iterator
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .iterator_class = Some(class);
+                Ok(Value::Null)
+            }
+            b"getiteratorclass" | b"getiterator" => {
+                let (class, flags) = {
+                    let data = object.array_iterator.borrow();
+                    let data = data.as_ref().unwrap();
+                    (
+                        data.iterator_class
+                            .clone()
+                            .unwrap_or_else(|| self.find_class(b"ArrayIterator").unwrap()),
+                        data.flags,
+                    )
+                };
+                if name == b"getiteratorclass" {
+                    return Ok(Value::String(class.name.clone().into()));
+                }
+                // Native getIterator allocates the configured iterator directly;
+                // user constructors are not invoked and storage remains shared.
+                let iterator = self.allocate_class_object(class, line)?;
+                {
+                    let mut state = iterator.array_iterator.borrow_mut();
+                    let data = state.as_mut().unwrap();
+                    data.storage.replace(Value::Object(object.clone()));
+                    data.flags = flags;
+                    data.iterator_class = object
+                        .array_iterator
+                        .borrow()
+                        .as_ref()
+                        .unwrap()
+                        .iterator_class
+                        .clone();
+                }
+                Ok(Value::Object(iterator))
             }
             b"getflags" => Ok(Value::Int(
                 object.array_iterator.borrow().as_ref().unwrap().flags,
@@ -369,7 +495,9 @@ impl Runtime {
                     .clone();
                 if !matches!(backing, Value::Null) {
                     properties.insert(
-                        ArrayKey::String(b"\0ArrayIterator\0storage".to_vec()),
+                        ArrayKey::String(
+                            format!("\0{}\0storage", array_base(&object)).into_bytes(),
+                        ),
                         backing,
                     );
                 }

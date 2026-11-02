@@ -110,7 +110,7 @@ impl Runtime {
                 .as_bytes(),
             )?;
             let mut keys = Vec::new();
-            if !custom {
+            if !custom && !object.properties_reordered.get() {
                 keys.extend(
                     object
                         .class

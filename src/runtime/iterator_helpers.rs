@@ -11,6 +11,7 @@ impl Runtime {
         mut visit: impl FnMut(&mut Runtime, &Rc<PhpObject>) -> Result<bool, Error>,
     ) -> Result<(), Error> {
         let iterator = self.resolve_iterator(object, false, line)?;
+        let wrapper = self.allocate_object_handle();
         let result = (|| {
             drop(self.iterator_method(&iterator, b"rewind", line)?);
             self.drain_destructors(Ok(()), line)?;
@@ -30,6 +31,8 @@ impl Runtime {
             Ok(())
         })();
         drop(iterator);
+        let result = self.drain_destructors(result, line);
+        drop(wrapper);
         self.drain_destructors(result, line)
     }
 

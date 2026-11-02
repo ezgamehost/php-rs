@@ -148,7 +148,7 @@ impl Runtime {
         if source.object.is_some() || source.static_class.is_some() {
             return self.location_reference(&mut source, line);
         }
-        if source.name == b"this" {
+        if source.name == b"this" && source.keys.is_empty() {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }
         if source.name == b"GLOBALS" && !source.global {
@@ -200,6 +200,7 @@ impl Runtime {
             if location.object.is_none()
                 && location.static_class.is_none()
                 && location.name == b"this"
+                && location.keys.is_empty()
             {
                 return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
             }
@@ -221,7 +222,7 @@ impl Runtime {
         if target.object.is_some() || target.static_class.is_some() {
             return self.bind_property_reference(target, reference, line);
         }
-        if target.name == b"this" {
+        if target.name == b"this" && target.keys.is_empty() {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));
         }
         if target.name == b"GLOBALS" && !target.global {

@@ -117,6 +117,9 @@ impl Runtime {
         line: usize,
     ) -> Result<Flow, Error> {
         let iterator = self.resolve_iterator(&object, by_reference, line)?;
+        // Zend iterator wrappers occupy an object-store handle even though
+        // they are not exposed as PHP values. Release it after the iterator.
+        let wrapper = self.allocate_object_handle();
         let mut source = Some(object);
         let result = (|| {
             drop(self.iterator_method(&iterator, b"rewind", line)?);
@@ -193,6 +196,7 @@ impl Runtime {
         })();
         drop(iterator);
         let result = self.drain_destructors(result, line);
+        drop(wrapper);
         drop(source);
         self.drain_destructors(result, line)
     }

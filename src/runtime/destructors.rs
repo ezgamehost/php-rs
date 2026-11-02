@@ -5,7 +5,9 @@ use crate::{PhpObject, ast::Visibility, object::Destruction};
 
 impl Runtime {
     pub(super) fn create_object(&self, mut object: PhpObject) -> Rc<PhpObject> {
-        if object.class.is_a(b"ArrayIterator") && object.array_iterator.get_mut().is_none() {
+        if (object.class.is_a(b"ArrayIterator") || object.class.is_a(b"ArrayObject"))
+            && object.array_iterator.get_mut().is_none()
+        {
             *object.array_iterator.get_mut() = Some(array_iterator::ArrayIteratorData::default());
         }
         let object = Rc::new(object);

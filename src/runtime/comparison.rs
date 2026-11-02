@@ -34,9 +34,11 @@ impl Runtime {
                 if Rc::ptr_eq(a, b) {
                     return Ok(Some(Ordering::Equal));
                 }
+                let native_arrays =
+                    a.array_iterator.borrow().is_some() && b.array_iterator.borrow().is_some();
                 if a.class.declaration.is_enum
                     || b.class.declaration.is_enum
-                    || !a.class.name.eq_ignore_ascii_case(&b.class.name)
+                    || (!native_arrays && !a.class.name.eq_ignore_ascii_case(&b.class.name))
                 {
                     return Ok(None);
                 }
@@ -48,7 +50,34 @@ impl Runtime {
                         line,
                     ));
                 }
-                let result = self.compare_arrays(&a.snapshot(), &b.snapshot(), line, seen);
+                let result = (|| {
+                    if native_arrays {
+                        use array_iterator::Storage;
+                        let left = array_iterator::storage(a);
+                        let right = array_iterator::storage(b);
+                        let same = match (&left, &right) {
+                            (Storage::Array(a), Storage::Array(b)) => Rc::ptr_eq(a, b),
+                            (Storage::Object(a), Storage::Object(b)) => Rc::ptr_eq(a, b),
+                            _ => false,
+                        };
+                        let order = if same {
+                            Some(Ordering::Equal)
+                        } else {
+                            self.compare_arrays(&left.snapshot(), &right.snapshot(), line, seen)?
+                        };
+                        // SPL compares backing symbol tables first, before
+                        // ordinary properties (and their class identity check).
+                        let own_properties = matches!(&left, Storage::Object(object) if Rc::ptr_eq(object, a))
+                            && matches!(&right, Storage::Object(object) if Rc::ptr_eq(object, b));
+                        if order != Some(Ordering::Equal) || own_properties {
+                            return Ok(order);
+                        }
+                    }
+                    if !a.class.name.eq_ignore_ascii_case(&b.class.name) {
+                        return Ok(None);
+                    }
+                    self.compare_arrays(&a.snapshot(), &b.snapshot(), line, seen)
+                })();
                 seen.remove(&pair);
                 result?
             }
