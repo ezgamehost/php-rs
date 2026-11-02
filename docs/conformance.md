@@ -3124,6 +3124,25 @@ metadata remains incomplete even though callback identity matches. Network/custo
 wrapper behavior, notification delivery, and complete resource-cycle collection
 remain unfinished.
 
+The [chmod permissions slice](conformance/php-8.5.0-chmod-hillclimb.txt) adds
+Unix permission updates for files and directories, follows symlink targets, and
+invalidates cached metadata on success. Path and wrapper diagnostics preserve
+PHP's plain-file and file-URL forms. Unknown-wrapper warning exceptions remain
+pending while native chmod still executes, using the working directory after
+any error-handler changes.
+
+This slice adds **29 upstream passes**, with **zero regressions** across **ten
+full suites (9,556 fixtures)**. All gains are in the file suite, which reaches
+**180 / 208 / 508**; total results reach **5,007 passed / 3,108 failed / 1,441
+unsupported**. All **797 existing Rust tests**, **57 reference-checked project
+PHPT**, formatting, Clippy, and diff checks pass. No custom tests or matrices were
+added. The unchanged FILE sections of chmod_basic and chmod_variation1 separately
+match PHP and EXPECT for **4,096 file modes** and **512 directory modes**; their
+SKIPIF sections remain unsupported and they are excluded from pass gains. Direct
+comparisons cover symlinks, cached metadata, modes, paths, diagnostics, pending
+exceptions, and directory changes from warning handlers. Custom metadata wrappers,
+open_basedir, and non-Unix permission behavior remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3139,7 +3158,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
-| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 151 | 237 | 508 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 180 | 208 | 508 |
 | PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 18 | 11 | 44 |
 | PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 26 | 80 | 51 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

@@ -9,6 +9,7 @@ pub(super) enum Operation {
     Mkdir,
     Rmdir,
     Touch,
+    Chmod,
     Chdir,
     Getcwd,
     Stat(&'static [u8]),
@@ -33,7 +34,7 @@ impl Runtime {
             return self.filesystem_stat(&filename, query, name, line);
         }
         if filename.contains(&0) {
-            let parameter = if matches!(operation, Operation::Touch) {
+            let parameter = if matches!(operation, Operation::Touch | Operation::Chmod) {
                 "filename"
             } else {
                 "directory"
@@ -56,6 +57,76 @@ impl Runtime {
             .working_directory()
             .join(crate::source::path_from_bytes(bytes));
         match operation {
+            Operation::Chmod => {
+                let mode = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
+                let mut pending = None;
+                let scheme_len = filename
+                    .iter()
+                    .take_while(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'-' | b'.'))
+                    .count();
+                let protocol = scheme_len > 1
+                    && filename.get(scheme_len) == Some(&b':')
+                    && (filename[scheme_len..].starts_with(b"://")
+                        || filename.starts_with(b"data:"));
+                if protocol {
+                    let scheme = &filename[..scheme_len];
+                    let scheme_lower = scheme.to_ascii_lowercase();
+                    let unsupported = if scheme_lower == b"file" {
+                        !bytes.is_empty()
+                            && !bytes.starts_with(b"/")
+                            && !filename.get(..17).is_some_and(|prefix| {
+                                prefix.eq_ignore_ascii_case(b"file://localhost/")
+                            })
+                    } else if matches!(
+                        scheme_lower.as_slice(),
+                        b"php" | b"glob" | b"data" | b"http" | b"ftp"
+                    ) {
+                        true
+                    } else {
+                        if let Err(error) = self.warn(format!("{name}(): Unable to find the wrapper \"{}\" - did you forget to enable it when you configured PHP? on line {line}", String::from_utf8_lossy(&scheme[..scheme.len().min(31)]))) {
+                            if error.kind == ErrorKind::UnwindExit { return Err(error); }
+                            // Native wrapper lookup leaves the exception pending
+                            // while chmod still attempts ordinary file access.
+                            pending = Some(self.materialize_error(error));
+                        }
+                        false
+                    };
+                    if unsupported {
+                        self.warn(format!(
+                            "{name}(): Cannot call chmod() for a non-standard stream on line {line}"
+                        ))?;
+                        return Ok(Value::Bool(false));
+                    }
+                }
+                let path = self
+                    .working_directory()
+                    .join(crate::source::path_from_bytes(bytes));
+                let result = if bytes.is_empty() {
+                    Err(io::Error::from_raw_os_error(2))
+                } else {
+                    chmod(&path, mode)
+                };
+                if let Err(error) = result {
+                    if let Some(pending) = pending {
+                        return Err(pending);
+                    }
+                    let prefix = if file_url && !bytes.is_empty() {
+                        format!("{name}({})", String::from_utf8_lossy(bytes))
+                    } else {
+                        format!("{name}()")
+                    };
+                    let operation = if file_url { "Operation failed: " } else { "" };
+                    self.warn(format!(
+                        "{prefix}: {operation}{} on line {line}",
+                        streams::io_message(&error)
+                    ))?;
+                    return Ok(Value::Bool(false));
+                }
+                self.file_stat_cache = [None, None];
+                if let Some(pending) = pending {
+                    return Err(pending);
+                }
+            }
             Operation::Mkdir => {
                 let mode = args[1]
                     .as_ref()
@@ -342,5 +413,16 @@ fn touch(path: &Path, times: Option<(i64, i64)>) -> io::Result<()> {
 
 #[cfg(not(all(unix, target_pointer_width = "64")))]
 fn touch(_: &Path, _: Option<(i64, i64)>) -> io::Result<()> {
+    Err(io::Error::from(io::ErrorKind::Unsupported))
+}
+
+#[cfg(unix)]
+fn chmod(path: &Path, mode: i64) -> io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    fs::set_permissions(path, fs::Permissions::from_mode(mode as u32))
+}
+
+#[cfg(not(unix))]
+fn chmod(_: &Path, _: i64) -> io::Result<()> {
     Err(io::Error::from(io::ErrorKind::Unsupported))
 }

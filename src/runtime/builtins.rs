@@ -347,6 +347,7 @@ impl Builtin {
             b"mkdir" => Self::Filesystem(filesystem::Operation::Mkdir),
             b"rmdir" => Self::Filesystem(filesystem::Operation::Rmdir),
             b"touch" => Self::Filesystem(filesystem::Operation::Touch),
+            b"chmod" => Self::Filesystem(filesystem::Operation::Chmod),
             b"chdir" => Self::Filesystem(filesystem::Operation::Chdir),
             b"getcwd" => Self::Filesystem(filesystem::Operation::Getcwd),
             b"is_file" => Self::Filesystem(filesystem::Operation::Stat(b"isfile")),
@@ -595,6 +596,9 @@ impl Builtin {
             ],
             Self::Filesystem(filesystem::Operation::Rmdir) => {
                 &[("directory", false, false), ("context", true, false)]
+            }
+            Self::Filesystem(filesystem::Operation::Chmod) => {
+                &[("filename", false, false), ("permissions", false, false)]
             }
             Self::Filesystem(filesystem::Operation::Touch) => &[
                 ("filename", false, false),

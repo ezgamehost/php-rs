@@ -1,0 +1,100 @@
+PHP 8.5.0 chmod permissions hillclimb
+Baseline: b8537b12598a40d2bf52bb59d6e14bd02f082f2f
+
+zend
+Before: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+After: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 151 passed, 237 failed, 508 unsupported
+After: 896 cases; 180 passed, 208 failed, 508 unsupported
+New passes: 29; regressions: 0
+NEW PASS: ext/standard/tests/file/007_variation1.phpt
+NEW PASS: ext/standard/tests/file/007_variation10.phpt
+NEW PASS: ext/standard/tests/file/007_variation14.phpt
+NEW PASS: ext/standard/tests/file/007_variation17.phpt
+NEW PASS: ext/standard/tests/file/007_variation18.phpt
+NEW PASS: ext/standard/tests/file/007_variation19.phpt
+NEW PASS: ext/standard/tests/file/007_variation2.phpt
+NEW PASS: ext/standard/tests/file/007_variation20.phpt
+NEW PASS: ext/standard/tests/file/007_variation21.phpt
+NEW PASS: ext/standard/tests/file/007_variation22.phpt
+NEW PASS: ext/standard/tests/file/007_variation3.phpt
+NEW PASS: ext/standard/tests/file/007_variation4.phpt
+NEW PASS: ext/standard/tests/file/007_variation5.phpt
+NEW PASS: ext/standard/tests/file/007_variation6.phpt
+NEW PASS: ext/standard/tests/file/007_variation9.phpt
+NEW PASS: ext/standard/tests/file/chmod_error.phpt
+NEW PASS: ext/standard/tests/file/fgets_basic.phpt
+NEW PASS: ext/standard/tests/file/file_basic.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_basic.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_error.phpt
+NEW PASS: ext/standard/tests/file/fread_variation2.phpt
+NEW PASS: ext/standard/tests/file/fread_variation4.phpt
+NEW PASS: ext/standard/tests/file/fseek_dir_basic.phpt
+NEW PASS: ext/standard/tests/file/fseek_ftell_rewind_basic1.phpt
+NEW PASS: ext/standard/tests/file/fseek_ftell_rewind_variation1.phpt
+NEW PASS: ext/standard/tests/file/fseek_ftell_rewind_variation3.phpt
+NEW PASS: ext/standard/tests/file/fseek_ftell_rewind_variation5.phpt
+NEW PASS: ext/standard/tests/file/fseek_ftell_rewind_variation7.phpt
+NEW PASS: ext/standard/tests/file/unlink_variation6.phpt
+
+dir
+Before: 73 cases; 18 passed, 11 failed, 44 unsupported
+After: 73 cases; 18 passed, 11 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 26 passed, 80 failed, 51 unsupported
+After: 157 cases; 26 passed, 80 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,007 passed, 3,108 failed, 1,441 unsupported.
+29 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+Separately executing the unchanged FILE sections of chmod_basic.phpt and
+chmod_variation1.phpt matches reference PHP and EXPECT for all 4,096 file modes
+and 512 directory modes. Their SKIPIF sections remain unsupported, so these
+two fixtures are not included in the runner pass gains.
+Direct PHP comparisons match symlink following, stat-cache invalidation, negative
+modes, path/wrapper diagnostics, null bytes, pending warning exceptions and a
+warning handler changing the working directory before native chmod executes.
+fseek_dir_basic initially encountered its leftover directory from an earlier
+missing-chmod failure, then removed it. The final full run and a subsequent
+isolated rerun pass and leave no generated directory.
+Custom metadata wrappers, open_basedir and non-Unix permissions remain unfinished.
+Full logs: /tmp/php-rs-chmod-*2.log.

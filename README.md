@@ -271,6 +271,11 @@ new request. The CLI returns the low eight bits of the requested status.
   exposes supported wrapper types, modes, URI, EOF, seekability, and buffered input
   counts; memory and temporary streams honor append mode. Configurable
   sys_temp_dir/open_basedir and complete stream metadata/buffering remain unfinished.
+- `chmod` changes Unix file/directory permissions, follows symlinks, and clears
+  cached metadata on success. It preserves native path/wrapper diagnostics and
+  permission changes that occur while a wrapper warning exception is pending.
+  Custom metadata wrappers, open_basedir checks, and Windows permissions remain
+  unfinished.
 - `mkdir`, `rmdir`, and `touch` create directories, remove empty directories, and
   update file timestamps without truncating existing contents. Recursive mkdir
   resolves dot components and applies native permission/umask behavior. `chdir`

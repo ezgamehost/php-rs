@@ -295,7 +295,7 @@ adaptation from PHP 8.5.0's `ext/standard/file.c`. Line and remainder readers in
 `ext/standard/streamsfuncs.c`, and `main/streams/streams.c`, copyright (c) The PHP
 Group. These operations reuse the native string-conversion and stream helpers.
 
-`src/runtime/filesystem.rs` implements directory creation/removal, timestamps,
+`src/runtime/filesystem.rs` implements directory creation/removal, permission changes, timestamps,
 request-local working directories, and metadata/access queries from PHP 8.5.0's
 `ext/standard/dir.c`, `file.c`, `filestat.c`, and `main/streams/plain_wrapper.c`,
 copyright (c) The PHP Group. These operations reuse the native access adapter and
