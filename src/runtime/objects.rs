@@ -662,13 +662,12 @@ impl Runtime {
         }
         Ok(Value::Null)
     }
-    pub(super) fn write_property_value(
+    pub(super) fn prepare_property_write(
         &mut self,
         object: &PhpObject,
         name: &[u8],
-        value: Value,
         line: usize,
-    ) -> Result<Value, Error> {
+    ) -> Result<ArrayKey, Error> {
         if matches!(name, b"name" | b"class")
             && (object.class.is_a(b"ReflectionClass")
                 || object.class.is_a(b"ReflectionFunctionAbstract")
@@ -690,7 +689,6 @@ impl Runtime {
                 line,
             ));
         }
-        let value = value.dereferenced();
         if name.first() == Some(&0) {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -726,6 +724,18 @@ impl Runtime {
                 String::from_utf8_lossy(name)
             ))?;
         }
+        Ok(key)
+    }
+
+    pub(super) fn write_property_value(
+        &mut self,
+        object: &PhpObject,
+        name: &[u8],
+        value: Value,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let key = self.prepare_property_write(object, name, line)?;
+        let value = value.dereferenced();
         let value = if let Some(owner) = self.instance_property_owner(&object.class, name) {
             let property = owner
                 .declaration

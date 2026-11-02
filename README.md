@@ -304,9 +304,10 @@ new request. The CLI returns the low eight bits of the requested status.
   false return requests default reporting. Active handlers are disabled during
   invocation, with replacement/restored handlers honored. Exceptions and exits
   propagate synchronously. Handleable compile warnings from eval/includes also
-  dispatch; compile-only warnings bypass user handlers. Array/reference write
-  traversal, string-offset preparation, malformed-property dump notices, and
-  several mutation-during-warning cases remain incomplete.
+  dispatch; compile-only warnings bypass user handlers. Array-key and string-offset
+  write diagnostics release storage borrows before dispatch and observe handler
+  replacement of live variables/properties. Malformed-property dump notices,
+  compound writes, and some nested mutation cases remain incomplete.
 - `set_exception_handler`, `get_exception_handler`, and `restore_exception_handler`
   preserve callable identity and handler stacks, including null entries. Uncaught
   file/stdin exceptions dispatch at the request boundary; replacement handlers can

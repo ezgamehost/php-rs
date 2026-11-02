@@ -1,4 +1,5 @@
 use super::*;
+use std::rc::Weak;
 use variables::Cell;
 
 /// Traversal stops at each shared reference. The owner is released before the
@@ -6,6 +7,9 @@ use variables::Cell;
 enum Step {
     Follow(Cell, usize),
     Object(Rc<crate::PhpObject>, usize),
+    Key(Rc<PhpArray>, usize, bool),
+    ConvertedFalse(Rc<PhpArray>, usize),
+    InvalidString(Value, &'static str),
     Done(Value),
 }
 enum Mutation {
@@ -60,8 +64,11 @@ fn step(
     if matches!(mutation, Mutation::Unset) {
         return match value {
             Value::Array(array) => {
-                let key = offset.array_key(line, true, warnings)?;
-                let array = Rc::make_mut(array);
+                Rc::make_mut(array);
+                let Some(key) = offset.cached_array_key() else {
+                    return Ok(Step::Key(array.clone(), 0, true));
+                };
+                let array = Rc::get_mut(array).unwrap();
                 if rest.is_empty() {
                     array.remove(&key);
                     Ok(Step::Done(Value::Null))
@@ -85,18 +92,17 @@ fn step(
         };
     }
     if let Value::String(bytes) = value {
-        if !rest.is_empty() {
-            return Err(Error::new(
-                ErrorKind::Error,
-                "Cannot use string offset as an array",
-                line,
-            ));
-        }
         if offset.is_append() {
             return Err(Error::new(
                 ErrorKind::Error,
                 "[] operator not supported for strings",
                 line,
+            ));
+        }
+        if !rest.is_empty() {
+            return Ok(Step::InvalidString(
+                offset.value(line)?.dereferenced(),
+                "Cannot use string offset as an array",
             ));
         }
         return match mutation {
@@ -108,20 +114,19 @@ fn step(
                 warnings,
             )
             .map(Step::Done),
-            _ => Err(Error::new(
-                ErrorKind::Error,
+            _ => Ok(Step::InvalidString(
+                offset.value(line)?.dereferenced(),
                 "Cannot create references to/from string offsets",
-                line,
             )),
         };
     }
     if matches!(value, Value::Null | Value::Bool(false)) {
-        if matches!(value, Value::Bool(false)) {
-            warnings.warn(format!(
-                "Deprecated: Automatic conversion of false to array on line {line}"
-            ))?;
+        let was_false = matches!(value, Value::Bool(false));
+        let array = Rc::new(PhpArray::default());
+        *value = Value::Array(array.clone());
+        if was_false {
+            return Ok(Step::ConvertedFalse(array, 0));
         }
-        *value = Value::Array(Rc::new(PhpArray::default()));
     }
     let Value::Array(array) = value else {
         return Err(Error::new(
@@ -130,12 +135,17 @@ fn step(
             line,
         ));
     };
-    let array = Rc::make_mut(array);
-    let key = if offset.is_append() {
-        array.append_key(line)?
+    Rc::make_mut(array);
+    let key = if let Some(key) = offset.cached_array_key() {
+        key
+    } else if offset.is_append() {
+        let key = array.append_key(line)?;
+        offset.cache_array_key(key.clone());
+        key
     } else {
-        offset.array_key(line, false, warnings)?
+        return Ok(Step::Key(array.clone(), 0, false));
     };
+    let array = Rc::get_mut(array).unwrap();
     if array.get(&key).is_none() {
         array.insert(key.clone(), Value::Null);
     }
@@ -152,8 +162,96 @@ fn advance(result: Step) -> Result<Step, Error> {
     Ok(match result {
         Step::Follow(reference, consumed) => Step::Follow(reference, consumed + 1),
         Step::Object(object, consumed) => Step::Object(object, consumed + 1),
+        Step::Key(array, consumed, unset) => Step::Key(array, consumed + 1, unset),
+        Step::ConvertedFalse(array, consumed) => Step::ConvertedFalse(array, consumed + 1),
         result => result,
     })
+}
+
+/// Borrowed roots are VM temporaries; live variable roots are weak so unsetting
+/// the variable during a diagnostic can invalidate the pending write.
+enum Root<'a> {
+    Value(&'a mut Value),
+    Property(Rc<crate::PhpObject>, ArrayKey),
+    Cell {
+        reference: Weak<RefCell<Value>>,
+        _temporary: Option<Cell>,
+    },
+}
+impl Root<'_> {
+    fn cell(reference: Cell) -> Self {
+        let temporary = (Rc::strong_count(&reference) == 1).then(|| reference.clone());
+        Self::Cell {
+            reference: Rc::downgrade(&reference),
+            _temporary: temporary,
+        }
+    }
+    fn with_mut<T>(&mut self, action: impl FnOnce(&mut Value) -> T) -> Option<T> {
+        match self {
+            Self::Value(value) => Some(action(value)),
+            Self::Property(object, key) => {
+                Some(action(object.properties.borrow_mut().get_mut(key)?))
+            }
+            Self::Cell { reference, .. } => Some(action(&mut reference.upgrade()?.borrow_mut())),
+        }
+    }
+    fn contains_array(&mut self, keys: &[Offset], array: &Rc<PhpArray>) -> bool {
+        self.with_mut(|mut value| {
+            for offset in keys {
+                let Value::Array(parent) = value else {
+                    return false;
+                };
+                let Some(key) = offset.cached_array_key() else {
+                    return false;
+                };
+                // Inspection only: no COW and no borrows cross PHP execution.
+                let Some(next) = Rc::get_mut(parent).and_then(|parent| parent.get_mut(&key)) else {
+                    return false;
+                };
+                value = next;
+            }
+            matches!(value, Value::Array(current) if Rc::ptr_eq(current, array))
+        })
+        .unwrap_or(false)
+    }
+}
+
+fn run_step(
+    mut root: Root<'_>,
+    keys: &mut [Offset],
+    mutation: &Mutation,
+    line: usize,
+    runtime: &mut Runtime,
+) -> Result<Step, Error> {
+    loop {
+        let Some(result) =
+            root.with_mut(|value| step(value, keys, mutation, line, &mut runtime.diagnostics))
+        else {
+            return Ok(Step::Done(Value::Null));
+        };
+        let (array, consumed, strict_count) = match result? {
+            Step::Key(array, consumed, unset) => {
+                keys[consumed].array_key(line, unset, runtime)?;
+                (array, consumed, !unset)
+            }
+            Step::ConvertedFalse(array, consumed) => {
+                runtime.warn(format!("Deprecated: Automatic conversion of false to array is deprecated on line {line}"))?;
+                (array, consumed, false)
+            }
+            Step::InvalidString(offset, message) => {
+                offsets::string_index(&offset, line, Access::Read, runtime)?;
+                return Err(Error::new(ErrorKind::Error, message, line));
+            }
+            result => return Ok(result),
+        };
+        if !root.contains_array(&keys[..consumed], &array)
+            || (strict_count && Rc::strong_count(&array) != 2)
+        {
+            return Ok(Step::Done(Value::Null));
+        }
+        // Drop the guard before traversing again; all evaluated keys (including
+        // append positions) are cached, so resumption cannot repeat an append.
+    }
 }
 
 fn finish(
@@ -165,6 +263,9 @@ fn finish(
 ) -> Result<Value, Error> {
     loop {
         match result {
+            Step::Key(..) | Step::ConvertedFalse(..) | Step::InvalidString(..) => {
+                unreachable!("diagnostic handled before following a path")
+            }
             Step::Done(value) => return Ok(value),
             Step::Object(object, consumed) => {
                 keys = &mut keys[consumed..];
@@ -222,13 +323,7 @@ fn finish(
                 {
                     runtime.check_reference_array_init(&reference, line)?;
                 }
-                result = step(
-                    &mut reference.borrow_mut(),
-                    keys,
-                    mutation,
-                    line,
-                    &mut runtime.diagnostics,
-                )?;
+                result = run_step(Root::cell(reference), keys, mutation, line, runtime)?;
             }
         }
     }
@@ -242,9 +337,39 @@ pub(super) fn write(
     runtime: &mut Runtime,
 ) -> Result<Value, Error> {
     let mutation = Mutation::Write(replacement);
-    let result = step(value, keys, &mutation, line, &mut runtime.diagnostics)?;
+    let result = run_step(Root::Value(value), keys, &mutation, line, runtime)?;
     finish(result, keys, &mutation, line, runtime)
 }
+pub(super) fn write_property(
+    object: Rc<crate::PhpObject>,
+    key: ArrayKey,
+    keys: &mut [Offset],
+    replacement: Value,
+    line: usize,
+    runtime: &mut Runtime,
+) -> Result<Value, Error> {
+    let mutation = Mutation::Write(replacement);
+    let result = run_step(Root::Property(object, key), keys, &mutation, line, runtime)?;
+    finish(result, keys, &mutation, line, runtime)
+}
+
+pub(super) fn unset_property(
+    object: Rc<crate::PhpObject>,
+    key: ArrayKey,
+    keys: &mut [Offset],
+    line: usize,
+    runtime: &mut Runtime,
+) -> Result<(), Error> {
+    let result = run_step(
+        Root::Property(object, key),
+        keys,
+        &Mutation::Unset,
+        line,
+        runtime,
+    )?;
+    finish(result, keys, &Mutation::Unset, line, runtime).map(|_| ())
+}
+
 pub(super) fn write_cell(
     reference: Cell,
     keys: &mut [Offset],
@@ -261,13 +386,7 @@ pub(super) fn unset(
     line: usize,
     runtime: &mut Runtime,
 ) -> Result<(), Error> {
-    let result = step(
-        value,
-        keys,
-        &Mutation::Unset,
-        line,
-        &mut runtime.diagnostics,
-    )?;
+    let result = run_step(Root::Value(value), keys, &Mutation::Unset, line, runtime)?;
     finish(result, keys, &Mutation::Unset, line, runtime).map(|_| ())
 }
 pub(super) fn unset_cell(
@@ -301,10 +420,11 @@ pub(super) fn acquire(
         line,
         runtime,
     )?;
-    let Value::Reference(reference) = result else {
-        unreachable!()
-    };
-    Ok(reference)
+    // An invalidated fetch yields a disposable reference, never a revived slot.
+    Ok(match result {
+        Value::Reference(reference) => reference,
+        value => cell(value),
+    })
 }
 pub(super) fn bind(
     root: Cell,

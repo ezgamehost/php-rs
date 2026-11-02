@@ -140,6 +140,18 @@ impl Runtime {
             .expect("property owner");
         let mut value = stored.as_ref().map_or(Value::Null, |c| c.borrow().clone());
         self.check_property_array_init(location, &value, line)?;
+        if !location.keys.is_empty() {
+            drop(value);
+            let stored = stored.unwrap_or_else(|| {
+                let stored = cell(Value::Null);
+                owner
+                    .static_values
+                    .borrow_mut()
+                    .insert(location.name.clone(), stored.clone());
+                stored
+            });
+            return reference_paths::write_cell(stored, &mut location.keys, new_value, line, self);
+        }
         let object_offset =
             !location.keys.is_empty() && matches!(value.dereferenced(), Value::Object(_));
         let result = write_path(&mut value, &mut location.keys, new_value, line, self)?;

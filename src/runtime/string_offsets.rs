@@ -10,48 +10,40 @@ enum Storage {
 }
 struct PendingWrite {
     buffer: StringBuffer,
-    position: usize,
+    offset: Value,
     original_len: usize,
     path: Vec<(usize, ArrayKey)>,
 }
 enum Preparation {
     Reference(variables::Cell, usize),
     Ordinary,
-    Ignored,
+    ArrayKey {
+        array: Rc<PhpArray>,
+        path: Vec<(usize, ArrayKey)>,
+    },
     Character(PendingWrite),
 }
 
 impl Storage {
-    fn prepare(
-        &self,
-        keys: &mut [Offset],
-        line: usize,
-        warnings: &mut dyn WarningSink,
-    ) -> Result<Preparation, Error> {
+    fn prepare(&self, keys: &mut [Offset], line: usize) -> Result<Preparation, Error> {
         match self {
             Self::Cell(cell) => match cell.upgrade() {
-                Some(cell) => prepare(
-                    &mut cell.borrow_mut(),
-                    keys,
-                    line,
-                    warnings,
-                    &mut Vec::new(),
-                ),
+                Some(cell) => prepare(&mut cell.borrow_mut(), keys, line, &mut Vec::new()),
                 None => Ok(Preparation::Ordinary),
             },
             Self::Property(object, key) => match object.properties.borrow_mut().get_mut(key) {
-                Some(value) => prepare(value, keys, line, warnings, &mut Vec::new()),
+                Some(value) => prepare(value, keys, line, &mut Vec::new()),
                 None => Ok(Preparation::Ordinary),
             },
         }
     }
 
-    fn with_current_buffer<T>(
+    fn with_current_value<T>(
         &self,
         path: &[(usize, ArrayKey)],
-        action: impl FnOnce(&PhpString) -> T,
+        action: impl FnOnce(&Value) -> T,
     ) -> Option<T> {
-        fn follow<'a>(mut value: &'a Value, path: &[(usize, ArrayKey)]) -> Option<&'a PhpString> {
+        fn follow<'a>(mut value: &'a Value, path: &[(usize, ArrayKey)]) -> Option<&'a Value> {
             for (identity, key) in path {
                 let Value::Array(array) = value else {
                     return None;
@@ -61,10 +53,7 @@ impl Storage {
                 }
                 value = array.get(key)?;
             }
-            match value {
-                Value::String(buffer) => Some(buffer),
-                _ => None,
-            }
+            Some(value)
         }
         match self {
             Self::Cell(cell) => Some(action(follow(&cell.upgrade()?.borrow(), path)?)),
@@ -72,6 +61,18 @@ impl Storage {
                 Some(action(follow(object.properties.borrow().get(key)?, path)?))
             }
         }
+    }
+
+    fn with_current_buffer<T>(
+        &self,
+        path: &[(usize, ArrayKey)],
+        action: impl FnOnce(&PhpString) -> T,
+    ) -> Option<T> {
+        self.with_current_value(path, |value| match value {
+            Value::String(buffer) => Some(action(buffer)),
+            _ => None,
+        })
+        .flatten()
     }
 }
 
@@ -82,7 +83,7 @@ impl Runtime {
         replacement: &Value,
         line: usize,
     ) -> Result<Option<Value>, Error> {
-        if location.keys.is_empty() || !self.can_stringify(replacement) {
+        if location.keys.is_empty() {
             return Ok(None);
         }
         let storage = if let Some(object) = &location.object {
@@ -114,14 +115,12 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         let temporary = cell(value);
-        if self.can_stringify(&replacement)
-            && let Some(result) = self.assign_string_storage(
-                Storage::Cell(Rc::downgrade(&temporary)),
-                keys,
-                &replacement,
-                line,
-            )?
-        {
+        if let Some(result) = self.assign_string_storage(
+            Storage::Cell(Rc::downgrade(&temporary)),
+            keys,
+            &replacement,
+            line,
+        )? {
             return Ok(result);
         }
         reference_paths::write_cell(temporary, keys, replacement, line, self)
@@ -135,9 +134,19 @@ impl Runtime {
         line: usize,
     ) -> Result<Option<Value>, Error> {
         let pending = loop {
-            match storage.prepare(keys, line, &mut self.diagnostics)? {
+            match storage.prepare(keys, line)? {
                 Preparation::Ordinary => return Ok(None),
-                Preparation::Ignored => return Ok(Some(Value::Null)),
+                Preparation::ArrayKey { array, path } => {
+                    // Conversion can run PHP. Keep only the array guard across
+                    // that call, then abandon a replaced or newly shared table.
+                    keys[path.len()].array_key(line, false, self)?;
+                    let current = storage.with_current_value(&path, |value| {
+                        matches!(value, Value::Array(current) if Rc::ptr_eq(current, &array))
+                    }).unwrap_or(false);
+                    if !current || Rc::strong_count(&array) != 2 {
+                        return Ok(Some(Value::Null));
+                    }
+                }
                 Preparation::Character(pending) => break pending,
                 Preparation::Reference(reference, consumed) => {
                     storage = Storage::Cell(Rc::downgrade(&reference));
@@ -145,7 +154,15 @@ impl Runtime {
                 }
             }
         };
-        // No variable, property, array, or string is borrowed across this call.
+        // No variable, property, array, or string is borrowed across PHP calls.
+        let index = offsets::string_index(&pending.offset, line, Access::Read, self)?.unwrap();
+        if !pending.buffer.retained() {
+            return Ok(Some(Value::Null));
+        }
+        let Some(position) = offsets::position(index, pending.original_len) else {
+            self.warn(format!("Illegal string offset {index} on line {line}"))?;
+            return Ok(Some(Value::Null));
+        };
         let bytes = self.string_bytes(replacement, line)?;
         if !pending.buffer.retained() {
             return Ok(Some(Value::Null));
@@ -161,17 +178,15 @@ impl Runtime {
             self.warn(format!(
                 "Only the first byte will be assigned to the string offset on line {line}"
             ))?;
+            if !pending.buffer.retained() {
+                return Ok(Some(Value::Null));
+            }
         }
-        if pending.position >= pending.original_len {
+        if position >= pending.original_len {
             // Extension resumes with the original buffer, including copies
             // retained by PHP code during conversion, then restores that buffer
             // to the destination value slot if it still exists.
-            offsets::assign_character(
-                &mut pending.buffer.pending_bytes(),
-                pending.position,
-                byte,
-                line,
-            )?;
+            offsets::assign_character(&mut pending.buffer.pending_bytes(), position, byte, line)?;
             storage.with_current_buffer(&pending.path, |current| {
                 current.replace_buffer(&pending.buffer)
             });
@@ -182,8 +197,8 @@ impl Runtime {
             let mut current = current.pending_bytes();
             // PHP's in-bounds decision uses the pre-conversion length. Avoid
             // extending a shorter replacement (or writing beyond its storage).
-            if pending.position < current.len() {
-                current[pending.position] = byte;
+            if position < current.len() {
+                current[position] = byte;
             }
         }
         Ok(Some(Value::String(vec![byte].into())))
@@ -194,7 +209,6 @@ fn prepare(
     value: &mut Value,
     keys: &mut [Offset],
     line: usize,
-    warnings: &mut dyn WarningSink,
     path: &mut Vec<(usize, ArrayKey)>,
 ) -> Result<Preparation, Error> {
     let Some((offset, rest)) = keys.split_first_mut() else {
@@ -220,21 +234,22 @@ fn prepare(
                 ));
             }
             buffer.separate();
-            let index =
-                offsets::string_index(offset.value(line)?, line, Access::Read, warnings)?.unwrap();
-            let Some(position) = offsets::position(index, buffer.len()) else {
-                warnings.warn(format!("Illegal string offset {index} on line {line}"))?;
-                return Ok(Preparation::Ignored);
-            };
             Ok(Preparation::Character(PendingWrite {
                 buffer: buffer.retain(),
-                position,
+                offset: offset.value(line)?.dereferenced(),
                 original_len: buffer.len(),
                 path: path.clone(),
             }))
         }
         Value::Array(array) if !offset.is_append() => {
-            let key = offset.array_key(line, false, warnings)?;
+            // PHP separates the table before key conversion can call a handler.
+            Rc::make_mut(array);
+            let Some(key) = offset.cached_array_key() else {
+                return Ok(Preparation::ArrayKey {
+                    array: array.clone(),
+                    path: path.clone(),
+                });
+            };
             if array.get(&key).is_none() {
                 return Ok(Preparation::Ordinary);
             }
@@ -245,7 +260,6 @@ fn prepare(
                 Rc::get_mut(array).unwrap().get_mut(&key).unwrap(),
                 rest,
                 line,
-                warnings,
                 path,
             );
             path.pop();

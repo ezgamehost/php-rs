@@ -2056,6 +2056,30 @@ semantics, last-error APIs, destructor/attribute diagnostics, and other document
 runtime gaps remain unfinished. This supersedes earlier notes listing all error
 handler APIs as absent; PHP/Zend attribution covers the adapted dispatch rules.
 
+The [write-diagnostic slice](conformance/php-8.5.0-write-warnings-hillclimb.txt)
+adds **7 upstream Zend passes**, reaching **2283 / 2565 / 408**, with no
+regressions across all 8,267 fixtures in the six tracked suites. Other full-suite
+counts are unchanged. Array-key conversion and false-to-array diagnostics now
+invoke PHP handlers after releasing storage borrows. Traversal caches evaluated
+keys and append positions while suspended; invalidated destinations abandon the
+pending write. False conversion installs the array before notifying the handler.
+Instance and static property dimensions use live storage rather than overwriting
+handler changes with a detached snapshot.
+
+String writes retain their buffer across offset conversion, replacement conversion,
+and truncation warnings, propagating handler exceptions and abandoning invalidated
+writes. All 797 existing Rust tests, 57 reference-checked project PHPT, formatting,
+and Clippy pass. A temporary reference probe matches exact output and status for
+null-key replacement, false conversion, property/static storage, string invalidation,
+nested append resumption, and array copies made by handlers. No custom tests or
+generated matrices were added. PHP 8.5.0 `Zend/zend_execute.c` and upstream fixtures
+establish the behavior; the notices file covers the adapted storage guards.
+
+This supersedes the earlier write-traversal limitation above. Nested lvalue
+execution order, copied ancestor arrays during callbacks, compound assignment,
+increment/decrement mutation, malformed-property dump notices, and other documented
+runtime gaps remain incomplete. Unsupported fixtures remain unsupported.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2063,7 +2087,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2276 | 2572 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2283 | 2565 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

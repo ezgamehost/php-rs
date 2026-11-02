@@ -26,6 +26,14 @@ pub(super) struct Offset {
     array_key: Option<ArrayKey>,
 }
 impl Offset {
+    pub(super) fn cached_array_key(&self) -> Option<ArrayKey> {
+        self.array_key.clone()
+    }
+
+    pub(super) fn cache_array_key(&mut self, key: ArrayKey) {
+        self.array_key = Some(key);
+    }
+
     pub(super) fn argument(&self) -> Value {
         self.value.clone().unwrap_or(Value::Null)
     }

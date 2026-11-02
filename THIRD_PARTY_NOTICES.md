@@ -21,6 +21,11 @@ PHP 8.5.0's `Zend/zend_builtin_functions.c` and `Zend/zend.c`, copyright (c)
 Zend Technologies Ltd., by Andi Gutmans and Zeev Suraski. The Zend license below
 also applies to these adaptations.
 
+`src/runtime/reference_paths.rs` and `src/runtime/string_offsets.rs` adapt
+write diagnostic ordering and storage guards from PHP 8.5.0's
+`Zend/zend_execute.c`, copyright (c) Zend Technologies Ltd. The Zend license
+below also applies to these adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.

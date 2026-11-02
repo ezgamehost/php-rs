@@ -500,15 +500,13 @@ impl Runtime {
                                 object.unset_properties.borrow_mut().insert(key.clone());
                             }
                         } else {
-                            let stored = object.properties.borrow().get(&key).cloned();
-                            if let Some(mut value) = stored {
-                                let object_offset =
-                                    matches!(value.dereferenced(), Value::Object(_));
-                                unset_path(&mut value, &mut location.keys, target.line, self)?;
-                                if !object_offset {
-                                    object.properties.borrow_mut().insert(key, value);
-                                }
-                            }
+                            reference_paths::unset_property(
+                                object.clone(),
+                                key,
+                                &mut location.keys,
+                                target.line,
+                                self,
+                            )?;
                         }
                     } else if location.keys.is_empty() {
                         self.location_scope(&location).remove(&location.name);
@@ -742,32 +740,48 @@ impl Runtime {
             }
         }
         self.check_readonly_write(location, false, line)?;
-        if let Some(result) = self.string_offset_assignment(location, &new_value, line)? {
-            return Ok(result);
-        }
         if let Some(object) = &location.object {
             if location.keys.is_empty() {
                 return self.write_property_value(object, &location.name, new_value, line);
             }
-            let key = self.instance_property_key(object, &location.name);
-            let mut value = object
+            let object = object.clone();
+            let key = self.instance_property_key(&object, &location.name);
+            let value = object
                 .properties
                 .borrow()
                 .get(&key)
                 .cloned()
                 .unwrap_or(Value::Null);
             self.check_property_array_init(location, &value, line)?;
-            let object_offset = matches!(value.dereferenced(), Value::Object(_));
-            let result = write_path(&mut value, &mut location.keys, new_value, line, self)?;
-            if object_offset {
+            if matches!(value.dereferenced(), Value::Object(_)) {
+                return self.write_overloaded_path(value, &mut location.keys, new_value, line);
+            }
+            drop(value);
+            self.prepare_property_write(&object, &location.name, line)?;
+            if object.properties.borrow().get(&key).is_none() {
+                object
+                    .properties
+                    .borrow_mut()
+                    .insert(key.clone(), Value::Null);
+            }
+            if let ArrayKey::String(name) = &key {
+                object.reinitializable.borrow_mut().remove(name);
+                object.unset_properties.borrow_mut().remove(name);
+            }
+            if let Some(result) = self.string_offset_assignment(location, &new_value, line)? {
                 return Ok(result);
             }
-            let value = self.write_property_value(object, &location.name, value, line)?;
-            return Ok(if location.keys.is_empty() {
-                value
-            } else {
-                result
-            });
+            return reference_paths::write_property(
+                object,
+                key,
+                &mut location.keys,
+                new_value,
+                line,
+                self,
+            );
+        }
+        if let Some(result) = self.string_offset_assignment(location, &new_value, line)? {
+            return Ok(result);
         }
         if location.static_class.is_some() {
             return self.write_static_location(location, new_value, line);
