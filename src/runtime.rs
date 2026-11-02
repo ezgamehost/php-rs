@@ -91,6 +91,7 @@ mod number_format;
 pub(crate) mod object_storage;
 mod objects;
 mod offsets;
+mod packing;
 mod path_parts;
 mod printing;
 mod property_references;

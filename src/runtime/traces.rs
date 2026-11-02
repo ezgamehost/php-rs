@@ -20,6 +20,12 @@ fn put(array: &mut PhpArray, key: &[u8], value: Value) {
 }
 
 impl TraceFrame {
+    pub(super) fn replace_native_argument(&mut self, index: usize, value: Value) {
+        if let Some(arguments) = &mut self.arguments {
+            arguments.insert(ArrayKey::Int(index as i64), value);
+        }
+    }
+
     pub(super) fn call_site(&self) -> Option<(Vec<u8>, usize)> {
         let file = self.fields.get(&ArrayKey::String(b"file".to_vec()))?;
         let Value::Int(line) = self.fields.get(&ArrayKey::String(b"line".to_vec()))? else {

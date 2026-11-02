@@ -1,0 +1,104 @@
+PHP 8.5.0 binary packing hillclimb
+Baseline: 9b2f97020f2d1c913eacc7a452a374a18cd91aaa
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 775 passed, 14 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/array/bug24766.phpt
+
+strings
+Before: 730 cases; 436 passed, 142 failed, 152 unsupported
+After: 730 cases; 451 passed, 127 failed, 152 unsupported
+New passes: 15; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug35817.phpt
+NEW PASS: ext/standard/tests/strings/bug36148.phpt
+NEW PASS: ext/standard/tests/strings/bug61038.phpt
+NEW PASS: ext/standard/tests/strings/bug69522.phpt
+NEW PASS: ext/standard/tests/strings/bug70487.phpt
+NEW PASS: ext/standard/tests/strings/bug75075.phpt
+NEW PASS: ext/standard/tests/strings/bug78833.phpt
+NEW PASS: ext/standard/tests/strings/gh10940.phpt
+NEW PASS: ext/standard/tests/strings/pack_A.phpt
+NEW PASS: ext/standard/tests/strings/pack_Z.phpt
+NEW PASS: ext/standard/tests/strings/pack_arrays.phpt
+NEW PASS: ext/standard/tests/strings/pack_float.phpt
+NEW PASS: ext/standard/tests/strings/unpack_bug68225.phpt
+NEW PASS: ext/standard/tests/strings/unpack_error.phpt
+NEW PASS: ext/standard/tests/strings/unpack_offset.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/serialize/bug68976.phpt
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,210 passed, 2,905 failed, 1,441 unsupported.
+17 new passes (15 strings, one array, one serialization); zero regressions
+across all ten suites.
+
+pack/unpack implement PHP 8.5's integer, floating-point, padded/NUL-terminated
+string, hexadecimal, padding and cursor formats. Integer widths and byte order
+follow the format; the runtime continues to use 64-bit PHP integers. Formats
+support repeat counts and stars; unpack supports offsets, 200-byte field names,
+numeric keys, repeated field suffixes, overwrites, and bounds/overflow checks.
+The parser preserves native format validation and warning order. String-star
+conversion replaces the call argument and updates the active trace, releasing
+objects at the native point. Pending exceptions suppress later conversion
+callbacks/warnings, while later format errors retain the original exception as
+previous. Destructor exceptions after successful conversion leave the string
+installed and permit format parsing to continue.
+
+Direct PHP comparisons cover every numeric format, signed/unsigned boundaries,
+float byte order, NaN/infinity and overflow warnings, binary strings, odd hex
+counts, invalid hex characters (including NUL), zero counts, cursor rewind and
+absolute movement, short inputs, field names and numeric keys, strict argument
+handling, named arguments, reflection defaults, callback/trace/destructor order,
+exception precedence and restored warning delivery. PHP's unpack parameter is
+named string, while its offset diagnostic intentionally refers to data.
+Existing pack64 and pack FILE bodies were also exercised directly during
+implementation; unsupported fixture sections were not rewritten or counted as
+suite passes. General engine diagnostic blank-line formatting and binary
+non-UTF-8 diagnostic messages remain limitations. This slice does not implement
+request memory limits or a 32-bit PHP integer model.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Final upstream logs: /tmp/php-rs-packing-*4.log.
+Rust validation logs: /tmp/php-rs-packing-{tests,clippy}4.log.

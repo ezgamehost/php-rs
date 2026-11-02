@@ -701,3 +701,7 @@ copyright (c) The PHP Group.
 `ext/standard/levenshtein.c` (original author Hartmut Holzgraefe) and the
 `similar_text` implementation in `ext/standard/string.c`, copyright (c) The PHP
 Group. The latter uses an explicit work stack instead of native recursion.
+
+`src/runtime/packing.rs` adapts PHP 8.5.0's `ext/standard/pack.c`, copyright (c)
+The PHP Group, originally authored by Chris Schneider. Its trace integration
+preserves native variadic-argument replacement during string conversion.

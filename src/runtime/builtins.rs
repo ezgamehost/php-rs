@@ -57,6 +57,8 @@ pub(super) enum Builtin {
     SubstrCount,
     Levenshtein,
     SimilarText,
+    Pack,
+    Unpack,
     StrSpan(bool),
     Explode,
     Implode(&'static str),
@@ -299,6 +301,8 @@ impl Builtin {
             b"substr_count" => Self::SubstrCount,
             b"levenshtein" => Self::Levenshtein,
             b"similar_text" => Self::SimilarText,
+            b"pack" => Self::Pack,
+            b"unpack" => Self::Unpack,
             b"strspn" => Self::StrSpan(true),
             b"strcspn" => Self::StrSpan(false),
             b"explode" => Self::Explode,
@@ -955,7 +959,14 @@ impl Builtin {
             Self::Serialize => &[("value", false, false)],
             Self::Unserialize => &[("data", false, false), ("options", true, false)],
             Self::VarDump => &[("value", false, false), ("values", false, true)],
-            Self::Printf | Self::Sprintf => &[("format", false, false), ("values", false, true)],
+            Self::Printf | Self::Sprintf | Self::Pack => {
+                &[("format", false, false), ("values", false, true)]
+            }
+            Self::Unpack => &[
+                ("format", false, false),
+                ("string", false, false),
+                ("offset", true, false),
+            ],
             Self::Fprintf => &[
                 ("stream", false, false),
                 ("format", false, false),
@@ -1182,6 +1193,7 @@ impl Builtin {
                             (Self::Digest(_, _), "binary") => Value::Bool(false),
                             (Self::Clock(_), _) => Value::Bool(false),
                             (Self::Levenshtein, _) => Value::Int(1),
+                            (Self::Unpack, "offset") => Value::Int(0),
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
@@ -1513,6 +1525,8 @@ impl Runtime {
             Builtin::SubstrCount => self.substring_count(&args, line),
             Builtin::Levenshtein => self.levenshtein(&args, line),
             Builtin::SimilarText => self.similar_text(&args, &references, line),
+            Builtin::Pack => self.pack(&args, extra, line),
+            Builtin::Unpack => self.unpack(&args, line),
             Builtin::StrSpan(included) => self.string_span(included, &args, line),
             Builtin::Explode => self.explode_string(&args, line),
             Builtin::Implode(name) => self.implode_strings(name, direct_positional, &args, line),

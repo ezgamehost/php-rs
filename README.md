@@ -261,6 +261,10 @@ new request. The CLI returns the low eight bits of the requested status.
   deletion costs, including strings longer than 255 bytes. `similar_text` follows
   PHP's matching order and writes its percentage by reference, respecting typed
   properties. Both support native argument conversion and named arguments.
+- `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
+  padding and cursor formats, including explicit byte order, repeat counts,
+  named unpacked fields and input offsets. Packing preserves conversion and
+  warning order, including pending exceptions and `*` string-argument replacement.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fgetc`, `fwrite`/`fputs`, `feof`,
   `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
