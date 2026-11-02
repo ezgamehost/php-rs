@@ -1,0 +1,67 @@
+PHP 8.5.0 caching iterator hillclimb
+Baseline: b483b8d78b9c11b8efd31f28169e626c50f0edaa
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 405 passed, 279 failed, 94 unsupported
+After: 778 cases; 424 passed, 260 failed, 94 unsupported
+New passes: 19; regressions: 0
+NEW PASS: ext/spl/tests/bug31348.phpt
+NEW PASS: ext/spl/tests/gh16574.phpt
+NEW PASS: ext/spl/tests/iterator_001.phpt
+NEW PASS: ext/spl/tests/iterator_003.phpt
+NEW PASS: ext/spl/tests/iterator_026.phpt
+NEW PASS: ext/spl/tests/iterator_027.phpt
+NEW PASS: ext/spl/tests/iterator_036.phpt
+NEW PASS: ext/spl/tests/iterator_037.phpt
+NEW PASS: ext/spl/tests/iterator_043.phpt
+NEW PASS: ext/spl/tests/iterator_044.phpt
+NEW PASS: ext/spl/tests/iterator_045.phpt
+NEW PASS: ext/spl/tests/iterator_046.phpt
+NEW PASS: ext/spl/tests/iterator_047.phpt
+NEW PASS: ext/spl/tests/iterator_056.phpt
+NEW PASS: ext/spl/tests/spl_caching_iterator_constructor_flags.phpt
+NEW PASS: ext/spl/tests/spl_cachingiterator___toString_basic.phpt
+NEW PASS: ext/spl/tests/spl_iterator_caching_count_basic.phpt
+NEW PASS: ext/spl/tests/spl_iterator_caching_count_error.phpt
+NEW PASS: ext/spl/tests/spl_iterator_caching_getcache_error.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 123 passed, 12 failed, 28 unsupported
+After: 163 cases; 123 passed, 12 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match shared cache writes/unsets/resets, null-entry probes,
+lookahead, constructor default constants, and __toString return-type metadata.
+A self-referencing cache with an otherwise unreachable empty ArrayIterator exposes
+a remaining collector-accounting mismatch: Rust reports 4, reference PHP reports 2.
+Collector accounting, additional SPL classes, INI configuration, and complete
+mutation/destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-caching-*4.log.

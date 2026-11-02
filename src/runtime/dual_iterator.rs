@@ -11,6 +11,8 @@ pub(crate) struct DualIteratorData {
     current: Option<Value>,
     inner_current: Option<Value>,
     key: Option<Value>,
+    // The native iterator handle is released before its retained inner object.
+    _wrapper: ObjectHandle,
     inner: Rc<PhpObject>,
     iterator: Rc<PhpObject>,
     callback: Option<functions::CallTarget>,
@@ -18,7 +20,30 @@ pub(crate) struct DualIteratorData {
     position: i64,
     offset: i64,
     limit: i64,
-    _wrapper: ObjectHandle,
+    caching: Option<CachingData>,
+}
+struct CachingData {
+    flags: i64,
+    cache: Rc<PhpArray>,
+    children: Option<Value>,
+    string: Option<Value>,
+    recursive: bool,
+}
+const CACHE_PUBLIC: i64 = 0xffff;
+const CACHE_VALID: i64 = 0x10000;
+const FULL_CACHE: i64 = 0x100;
+
+fn caching_flags(flags: i64, function: &str, position: usize, line: usize) -> Result<(), Error> {
+    if (flags & 15).count_ones() > 1 {
+        return Err(Error::new(
+            ErrorKind::ValueError,
+            format!(
+                "{function}(): Argument #{position} ($flags) must contain only one of CachingIterator::CALL_TOSTRING, CachingIterator::TOSTRING_USE_KEY, CachingIterator::TOSTRING_USE_CURRENT, or CachingIterator::TOSTRING_USE_INNER"
+            ),
+            line,
+        ));
+    }
+    Ok(())
 }
 impl DualIteratorData {
     pub(super) fn values(&self) -> Vec<Value> {
@@ -26,6 +51,11 @@ impl DualIteratorData {
             Value::Object(self.inner.clone()),
             Value::Object(self.iterator.clone()),
         ];
+        if let Some(cache) = &self.caching {
+            values.push(Value::Array(cache.cache.clone()));
+            values.extend(cache.children.iter().cloned());
+            values.extend(cache.string.iter().cloned());
+        }
         values.extend(self.current.iter().cloned());
         values.extend(self.inner_current.iter().cloned());
         values.extend(self.key.iter().cloned());
@@ -108,6 +138,18 @@ impl Runtime {
                 "public function __construct(Iterator $iterator, int $offset = 0, int $limit = -1) {} public function rewind(): void {} public function valid(): bool {} public function next(): void {} public function seek(int $offset): int {} public function getPosition(): int {}",
                 None,
             ),
+            b"cachingiterator" => (
+                "CachingIterator",
+                Some("IteratorIterator"),
+                "public const int CALL_TOSTRING = 1, TOSTRING_USE_KEY = 2, TOSTRING_USE_CURRENT = 4, TOSTRING_USE_INNER = 8, CATCH_GET_CHILD = 16, FULL_CACHE = 256; public function __construct(Iterator $iterator, int $flags = 1) {} public function rewind(): void {} public function valid(): bool {} public function next(): void {} public function hasNext(): bool {} public function __toString(): string {} public function getFlags(): int {} public function setFlags(int $flags): void {} public function offsetGet($key): mixed {} public function offsetSet($key, mixed $value): void {} public function offsetUnset($key): void {} public function offsetExists($key): bool {} public function getCache(): array {} public function count(): int {}",
+                Some("ArrayAccess, Countable, Stringable"),
+            ),
+            b"recursivecachingiterator" => (
+                "RecursiveCachingIterator",
+                Some("CachingIterator"),
+                "public function __construct(Iterator $iterator, int $flags = 1) {} public function hasChildren(): bool {} public function getChildren(): ?RecursiveCachingIterator {}",
+                Some("RecursiveIterator"),
+            ),
             b"norewinditerator" => (
                 "NoRewindIterator",
                 Some("IteratorIterator"),
@@ -147,8 +189,33 @@ impl Runtime {
         };
         for method in &mut Rc::make_mut(&mut declaration).methods {
             let method = Rc::make_mut(method);
+            // Install native constant defaults after parsing, so constant folding
+            // does not recursively construct the same builtin class.
+            if matches!(name, b"cachingiterator" | b"recursivecachingiterator") {
+                for parameter in &mut method.parameters {
+                    if parameter.name == b"flags" && parameter.default.is_some() {
+                        parameter.default = Some(Expr {
+                            line: 0,
+                            kind: ExprKind::ScopedMember(
+                                Box::new(Expr {
+                                    line: 0,
+                                    kind: ExprKind::Constant(canonical.as_bytes().to_vec()),
+                                }),
+                                Box::new(Expr {
+                                    line: 0,
+                                    kind: ExprKind::Literal(Value::String(
+                                        b"CALL_TOSTRING".to_vec().into(),
+                                    )),
+                                }),
+                            ),
+                        });
+                    }
+                }
+            }
             method.native = Some(NativeMethod::DualIterator);
-            method.tentative_return_type = method.return_type.take();
+            if !method.name.ends_with(b"::__toString") {
+                method.tentative_return_type = method.return_type.take();
+            }
         }
         let parent = parent.map(|p| self.find_class(p.as_bytes()).unwrap());
         let mut methods = declaration.methods.clone();
@@ -186,8 +253,9 @@ impl Runtime {
             declaration,
             parent,
             interfaces: interface
-                .map(|i| self.find_class(i.as_bytes()).unwrap())
                 .into_iter()
+                .flat_map(|i| i.split(", "))
+                .map(|i| self.find_class(i.as_bytes()).unwrap())
                 .collect(),
             properties: Vec::new(),
             static_properties: Vec::new(),
@@ -233,6 +301,8 @@ impl Runtime {
                 data.current.take(),
                 data.key.take(),
                 data.inner_current.take(),
+                data.caching.as_mut().and_then(|c| c.children.take()),
+                data.caching.as_mut().and_then(|c| c.string.take()),
             )
         };
         drop(old);
@@ -408,6 +478,9 @@ impl Runtime {
         if object.dual_iterator.borrow().is_none() {
             return Err(missing(line));
         }
+        if owner == b"cachingiterator" {
+            return self.caching_iterator_step(object, name, line);
+        }
         if owner == b"norewinditerator" {
             let value = self.dual_inner_step(object, name, line)?;
             return Ok(if name == b"valid" {
@@ -572,6 +645,26 @@ impl Runtime {
                     }
                 }
             }
+            let caching = if matches!(owner, b"cachingiterator" | b"recursivecachingiterator") {
+                let Value::Int(flags) = self.lookup(b"flags").unwrap() else {
+                    unreachable!()
+                };
+                let constructor = if owner == b"cachingiterator" {
+                    "CachingIterator::__construct"
+                } else {
+                    "RecursiveCachingIterator::__construct"
+                };
+                caching_flags(flags, constructor, 2, line)?;
+                Some(CachingData {
+                    flags: flags & CACHE_PUBLIC,
+                    cache: Rc::new(PhpArray::default()),
+                    children: None,
+                    string: None,
+                    recursive: owner == b"recursivecachingiterator",
+                })
+            } else {
+                None
+            };
             let callback_value = self.lookup(b"callback");
             let callback = prepared_callback;
             let iterator = self.resolve_iterator(&inner, false, line)?;
@@ -587,12 +680,16 @@ impl Runtime {
                 position: 0,
                 offset,
                 limit,
+                caching,
                 _wrapper: wrapper,
             });
             return Ok(Value::Null);
         }
         if matches!(name, b"rewind" | b"next" | b"valid" | b"current" | b"key") {
             return self.dual_iterator_step_owned(&object, name, owner, false, line);
+        }
+        if matches!(owner, b"cachingiterator" | b"recursivecachingiterator") {
+            return self.caching_iterator_method(&object, name, line);
         }
         let inner = self
             .dual_iterator_inner(&object)
@@ -643,6 +740,333 @@ impl Runtime {
             b"getposition" => Ok(Value::Int(
                 object.dual_iterator.borrow().as_ref().unwrap().position,
             )),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Runtime {
+    fn caching_iterator_next(&mut self, object: &Rc<PhpObject>, line: usize) -> Result<(), Error> {
+        let fetched = self.dual_fetch(object, true, line);
+        if !matches!(fetched, Ok(true)) {
+            object
+                .dual_iterator
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .caching
+                .as_mut()
+                .unwrap()
+                .flags &= !CACHE_VALID;
+            return fetched.map(drop);
+        }
+        let (flags, recursive, inner, key, value) = {
+            let mut data = object.dual_iterator.borrow_mut();
+            let data = data.as_mut().unwrap();
+            let cache = data.caching.as_mut().unwrap();
+            cache.flags |= CACHE_VALID;
+            (
+                cache.flags,
+                cache.recursive,
+                data.inner.clone(),
+                data.key.clone().unwrap(),
+                data.current.clone().unwrap(),
+            )
+        };
+        if flags & FULL_CACHE != 0 {
+            let key = ArrayKey::from_value(&key, line, self)?;
+            {
+                let mut data = object.dual_iterator.borrow_mut();
+                let cache = &mut data.as_mut().unwrap().caching.as_mut().unwrap().cache;
+                cache.mutate_shared(|cache| cache.insert(key, value.dereferenced()));
+            }
+            self.drain_destructors(Ok(()), line)?;
+        }
+        if recursive {
+            let result = (|| {
+                if self
+                    .dual_call(&inner, b"hasChildren", &[], line)?
+                    .is_truthy()
+                {
+                    let child = self.dual_call(&inner, b"getChildren", &[], line)?;
+                    let class = self.find_class(b"RecursiveCachingIterator").unwrap();
+                    let flags = object
+                        .dual_iterator
+                        .borrow()
+                        .as_ref()
+                        .unwrap()
+                        .caching
+                        .as_ref()
+                        .unwrap()
+                        .flags;
+                    let args = [
+                        literal(child, line),
+                        literal(Value::Int(flags & CACHE_PUBLIC), line),
+                    ];
+                    let child = self.instantiate_class(class, &args, true, line)?;
+                    object
+                        .dual_iterator
+                        .borrow_mut()
+                        .as_mut()
+                        .unwrap()
+                        .caching
+                        .as_mut()
+                        .unwrap()
+                        .children = Some(child);
+                }
+                Ok(())
+            })();
+            let catch = object
+                .dual_iterator
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .caching
+                .as_ref()
+                .unwrap()
+                .flags
+                & 16
+                != 0;
+            if !catch {
+                result?;
+            }
+        }
+        // Read flags again: a child callback may have changed them.
+        let flags = object
+            .dual_iterator
+            .borrow()
+            .as_ref()
+            .unwrap()
+            .caching
+            .as_ref()
+            .unwrap()
+            .flags;
+        if flags & 9 != 0 {
+            let source = if flags & 8 != 0 {
+                Value::Object(inner)
+            } else {
+                value
+            };
+            let string = Value::String(self.string_bytes(&source, line)?.into());
+            object
+                .dual_iterator
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .caching
+                .as_mut()
+                .unwrap()
+                .string = Some(string);
+        }
+        self.dual_inner_step(object, b"next", line)?;
+        let mut data = object.dual_iterator.borrow_mut();
+        let data = data.as_mut().unwrap();
+        data.position = data.position.wrapping_add(1);
+        Ok(())
+    }
+    fn caching_iterator_step(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        match name {
+            b"valid" => Ok(Value::Bool(
+                object
+                    .dual_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .caching
+                    .as_ref()
+                    .is_some_and(|c| c.flags & CACHE_VALID != 0),
+            )),
+            b"rewind" => {
+                self.dual_rewind(object, line)?;
+                let old = {
+                    let mut data = object.dual_iterator.borrow_mut();
+                    data.as_mut()
+                        .unwrap()
+                        .caching
+                        .as_mut()
+                        .unwrap()
+                        .cache
+                        .mutate_shared(std::mem::take)
+                };
+                drop(old);
+                self.drain_destructors(Ok(()), line)?;
+                self.caching_iterator_next(object, line)?;
+                Ok(Value::Null)
+            }
+            b"next" => {
+                self.caching_iterator_next(object, line)?;
+                Ok(Value::Null)
+            }
+            _ => unreachable!(),
+        }
+    }
+    fn caching_iterator_method(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let flags = object
+            .dual_iterator
+            .borrow()
+            .as_ref()
+            .ok_or_else(|| missing(line))?
+            .caching
+            .as_ref()
+            .ok_or_else(|| missing(line))?
+            .flags;
+        match name {
+            b"hasnext" => Ok(Value::Bool(
+                self.dual_inner_step(object, b"valid", line)?.is_truthy(),
+            )),
+            b"haschildren" => Ok(Value::Bool(
+                object
+                    .dual_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .caching
+                    .as_ref()
+                    .unwrap()
+                    .children
+                    .is_some(),
+            )),
+            b"getchildren" => Ok(object
+                .dual_iterator
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .caching
+                .as_ref()
+                .unwrap()
+                .children
+                .clone()
+                .unwrap_or(Value::Null)),
+            b"getflags" => Ok(Value::Int(flags)),
+            b"setflags" => {
+                let Value::Int(new_flags) = self.lookup(b"flags").unwrap() else {
+                    unreachable!()
+                };
+                caching_flags(new_flags, "CachingIterator::setFlags", 1, line)?;
+                for (flag, label) in [(1, "CALL_TO_STRING"), (8, "TOSTRING_USE_INNER")] {
+                    if flags & flag != 0 && new_flags & flag == 0 {
+                        return Err(self.array_iterator_exception(
+                            b"InvalidArgumentException",
+                            format!("Unsetting flag {label} is not possible"),
+                            line,
+                        ));
+                    }
+                }
+                let old = {
+                    let mut data = object.dual_iterator.borrow_mut();
+                    let cache = data.as_mut().unwrap().caching.as_mut().unwrap();
+                    let old = (new_flags & FULL_CACHE != 0 && flags & FULL_CACHE == 0)
+                        .then(|| cache.cache.mutate_shared(std::mem::take));
+                    cache.flags = (cache.flags & !CACHE_PUBLIC) | (new_flags & CACHE_PUBLIC);
+                    old
+                };
+                drop(old);
+                self.drain_destructors(Ok(Value::Null), line)
+            }
+            b"__tostring" => {
+                if flags & 15 == 0 {
+                    return Err(self.array_iterator_exception(
+                        b"BadMethodCallException",
+                        format!(
+                            "{} does not fetch string value (see CachingIterator::__construct)",
+                            object.class.display_name()
+                        ),
+                        line,
+                    ));
+                }
+                let value = {
+                    let data = object.dual_iterator.borrow();
+                    let data = data.as_ref().unwrap();
+                    if flags & 2 != 0 {
+                        data.key.clone()
+                    } else if flags & 4 != 0 {
+                        data.current.clone()
+                    } else {
+                        data.caching.as_ref().unwrap().string.clone()
+                    }
+                }
+                .unwrap_or(Value::Null);
+                Ok(Value::String(self.string_bytes(&value, line)?.into()))
+            }
+            b"getcache" | b"count" | b"offsetget" | b"offsetset" | b"offsetexists"
+            | b"offsetunset" => {
+                if flags & FULL_CACHE == 0 {
+                    return Err(self.array_iterator_exception(
+                        b"BadMethodCallException",
+                        format!(
+                            "{} does not use a full cache (see CachingIterator::__construct)",
+                            object.class.display_name()
+                        ),
+                        line,
+                    ));
+                }
+                if name == b"getcache" {
+                    return Ok(Value::Array(
+                        object
+                            .dual_iterator
+                            .borrow()
+                            .as_ref()
+                            .unwrap()
+                            .caching
+                            .as_ref()
+                            .unwrap()
+                            .cache
+                            .clone(),
+                    ));
+                }
+                if name == b"count" {
+                    return Ok(Value::Int(
+                        object
+                            .dual_iterator
+                            .borrow()
+                            .as_ref()
+                            .unwrap()
+                            .caching
+                            .as_ref()
+                            .unwrap()
+                            .cache
+                            .len() as i64,
+                    ));
+                }
+                let key_value = self.lookup(b"key").unwrap();
+                let key = ArrayKey::from_value(&key_value, line, self)?;
+                let value = {
+                    let mut data = object.dual_iterator.borrow_mut();
+                    let cache = &mut data.as_mut().unwrap().caching.as_mut().unwrap().cache;
+                    match name {
+                        b"offsetget" => cache.get(&key),
+                        b"offsetexists" => Some(Value::Bool(cache.get(&key).is_some())),
+                        b"offsetset" => {
+                            cache.mutate_shared(|cache| {
+                                cache.insert(key, self.lookup(b"value").unwrap())
+                            });
+                            Some(Value::Null)
+                        }
+                        b"offsetunset" => {
+                            cache.mutate_shared(|cache| cache.remove(&key));
+                            Some(Value::Null)
+                        }
+                        _ => unreachable!(),
+                    }
+                };
+                if value.is_none() {
+                    self.warn(format!(
+                        "Undefined array key \"{}\" on line {line}",
+                        String::from_utf8_lossy(&key_value.to_bytes())
+                    ))?;
+                }
+                self.drain_destructors(Ok(value.unwrap_or(Value::Null).dereferenced()), line)
+            }
             _ => unreachable!(),
         }
     }

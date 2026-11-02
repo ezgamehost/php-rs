@@ -105,6 +105,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Callback filters retain callable access scope; native wrapper storage participates
   in cycle collection. Additional SPL iterator classes and full lifecycle timing
   remain incomplete.
+- `CachingIterator` and `RecursiveCachingIterator` provide one-element lookahead,
+  string-conversion modes, full-cache array access, and recursive child caching.
+  Returned cache arrays observe native writes and resets; recursive caches can
+  suppress child-fetch exceptions. Cached values participate in cycle collection,
+  whose counts and complete lifecycle behavior remain incomplete.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.

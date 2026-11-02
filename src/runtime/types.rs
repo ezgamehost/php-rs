@@ -162,6 +162,26 @@ impl Runtime {
                 },
             };
             &offset_type
+        } else if matches!(
+            function.native,
+            Some(crate::ast::NativeMethod::DualIterator)
+        ) && function.name.starts_with(b"CachingIterator::")
+            && param.name == b"key"
+        {
+            offset_type = TypeDecl {
+                members: vec!["string".into()],
+            };
+            &offset_type
+        } else if matches!(
+            function.native,
+            Some(crate::ast::NativeMethod::DualIterator)
+        ) && function.name == b"RecursiveCachingIterator::__construct"
+            && param.name == b"iterator"
+        {
+            offset_type = TypeDecl {
+                members: vec!["RecursiveIterator".into()],
+            };
+            &offset_type
         } else if let Some(ty) = &param.ty {
             ty
         } else {

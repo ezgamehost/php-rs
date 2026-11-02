@@ -695,7 +695,15 @@ impl Runtime {
         if function.is_none()
             && let Some(inner) = self.dual_iterator_inner(&object)
         {
-            return self.resolve_method(Value::Object(inner), name, line);
+            let missing = format!(
+                "Call to undefined method {}::{}()",
+                inner.class_name,
+                String::from_utf8_lossy(name)
+            );
+            match self.resolve_method(Value::Object(inner), name, line) {
+                Err(error) if error.kind == ErrorKind::Error && error.message == missing => {}
+                result => return result,
+            }
         }
         let function = function.ok_or_else(|| {
             Error::new(
