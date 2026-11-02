@@ -3085,6 +3085,26 @@ reference-checked project PHPT**, formatting, Clippy, and diff checks pass. No
 custom tests or matrices were added. SKIPIF, INI, ENV, EXTENSIONS, and other
 unsupported sections remain excluded from pass counts.
 
+The [file output slice](conformance/php-8.5.0-file-write-hillclimb.txt) adds
+file_put_contents() and readfile(), plus FILE_APPEND and LOCK_* constants.
+File writes accept scalars, Stringable objects, arrays, and open stream inputs.
+Append mode and exclusive locking preserve existing contents until the lock is
+acquired. Array conversion exceptions preserve the first exception while later
+scalar entries still write; later object callbacks are suppressed. Stream copying
+starts at the current position and preserves source ownership. readfile() emits
+bytes and returns the transferred count. File wrapper prefixes are case insensitive.
+
+This slice adds **18 upstream passes**, with **zero regressions** across **ten
+full suites (9,556 fixtures)**: **12 file**, **four Zend**, **one SPL**, and **one
+streams** case. Results reach **4,964 passed / 3,151 failed / 1,441 unsupported**.
+All **797 existing Rust tests**, **57 reference-checked project PHPT**, formatting,
+Clippy, and diff checks pass. No custom tests or matrices were added. Direct PHP
+comparisons cover conversion exceptions, stream positions and EOF, invalid and
+read-only sources, directory errors, transfer counts, and wrapper prefixes. A
+two-process lock check confirms waiting without truncating and writing after
+release. Configurable include paths, custom wrappers/filters, complete buffering,
+platform-specific copy optimizations, and non-Unix behavior remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3092,17 +3112,17 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2583 | 2273 | 400 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2587 | 2269 | 400 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 549 | 176 | 53 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 550 | 175 | 53 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 774 | 15 | 51 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
-| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 135 | 253 | 508 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 147 | 241 | 508 |
 | PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 18 | 11 | 44 |
-| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 15 | 91 | 51 |
+| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 16 | 90 | 51 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

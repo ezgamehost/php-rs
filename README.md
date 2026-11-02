@@ -254,6 +254,12 @@ new request. The CLI returns the low eight bits of the requested status.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
   spill-to-disk, context configuration, and general
   wrapper registration remain unfinished.
+- `file_put_contents` writes scalars, Stringable objects, arrays, and stream data,
+  with append mode, exclusive locking before truncation, and PHP's continued
+  scalar-array writes after a string conversion throws. `readfile` sends file bytes to
+  output and returns the transferred count. FILE_APPEND and LOCK_* constants are
+  available; custom wrappers, configurable include paths, and complete native
+  buffering remain unfinished.
 - `tmpfile`, `tempnam`, and `sys_get_temp_dir` provide temporary streams and named
   files, with atomic exclusive creation, private permissions, PHP prefix handling,
   cached TMPDIR selection, and fallback notices. Temporary stream files survive

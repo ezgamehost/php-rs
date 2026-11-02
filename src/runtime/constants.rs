@@ -342,6 +342,11 @@ fn pathinfo_constant(name: &[u8]) -> Option<Value> {
         b"FILE_IGNORE_NEW_LINES" => 2,
         b"FILE_SKIP_EMPTY_LINES" => 4,
         b"FILE_NO_DEFAULT_CONTEXT" => 16,
+        b"FILE_APPEND" => 8,
+        b"LOCK_SH" => 1,
+        b"LOCK_EX" => 2,
+        b"LOCK_UN" => 3,
+        b"LOCK_NB" => 4,
         _ => return None,
     }))
 }

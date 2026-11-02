@@ -1,0 +1,85 @@
+PHP 8.5.0 file_put_contents and readfile hillclimb
+Baseline: 223558be472b2165f58897efdcf54ceb1d41348e
+
+zend
+Before: 5256 cases; 2583 passed, 2273 failed, 400 unsupported
+After: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+New passes: 4; regressions: 0
+NEW PASS: Zend/tests/autoload/bug63741.phpt
+NEW PASS: Zend/tests/bug60771.phpt
+NEW PASS: Zend/tests/bug78396.phpt
+NEW PASS: Zend/tests/constants/class_constants_003.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 549 passed, 176 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/gh12721.phpt
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 135 passed, 253 failed, 508 unsupported
+After: 896 cases; 147 passed, 241 failed, 508 unsupported
+New passes: 12; regressions: 0
+NEW PASS: ext/standard/tests/file/bug39538.phpt
+NEW PASS: ext/standard/tests/file/bug39673.phpt
+NEW PASS: ext/standard/tests/file/bug45985.phpt
+NEW PASS: ext/standard/tests/file/bug53848.phpt
+NEW PASS: ext/standard/tests/file/bug61961.phpt
+NEW PASS: ext/standard/tests/file/file_error.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_file_put_contents_basic.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_file_put_contents_error.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_file_put_contents_variation1.phpt
+NEW PASS: ext/standard/tests/file/file_put_contents_variation1.phpt
+NEW PASS: ext/standard/tests/file/file_put_contents_variation2.phpt
+NEW PASS: ext/standard/tests/file/readfile_variation9.phpt
+
+dir
+Before: 73 cases; 18 passed, 11 failed, 44 unsupported
+After: 73 cases; 18 passed, 11 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 15 passed, 91 failed, 51 unsupported
+After: 157 cases; 16 passed, 90 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/streams/stream_get_meta_data_file_variation4.phpt
+
+Total: 9,556 fixtures; 4,964 passed, 3,151 failed, 1,441 unsupported.
+18 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+Direct PHP comparisons match scalar/array writes, conversion-exception effects,
+closed/invalid sources, stream positions and tested EOF behavior, directory/read-only
+stream errors, readfile transfer counts and case-insensitive file wrappers.
+A two-process lock check confirms waiting for LOCK_EX without premature truncation,
+then successful writing after the external holder releases the lock.
+Configurable include paths, custom wrappers/filters, full stream buffering,
+platform-specific copy optimizations and non-Unix behavior remain unfinished.
+Full logs: /tmp/php-rs-file-write-*3.log.

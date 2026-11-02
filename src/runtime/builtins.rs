@@ -90,6 +90,8 @@ pub(super) enum Builtin {
     Filesystem(filesystem::Operation),
     ClearStatCache,
     FileGetContents,
+    FilePutContents,
+    ReadFile,
     Unlink,
     Stream(streams::Operation),
     GetClass,
@@ -365,6 +367,8 @@ impl Builtin {
 
             b"clearstatcache" => Self::ClearStatCache,
             b"file_get_contents" => Self::FileGetContents,
+            b"file_put_contents" => Self::FilePutContents,
+            b"readfile" => Self::ReadFile,
             b"unlink" => Self::Unlink,
             b"fclose" => Self::Stream(streams::Operation::Close),
             b"fread" => Self::Stream(streams::Operation::Read),
@@ -577,6 +581,17 @@ impl Builtin {
             Self::ClearStatCache => &[
                 ("clear_realpath_cache", true, false),
                 ("filename", true, false),
+            ],
+            Self::FilePutContents => &[
+                ("filename", false, false),
+                ("data", false, false),
+                ("flags", true, false),
+                ("context", true, false),
+            ],
+            Self::ReadFile => &[
+                ("filename", false, false),
+                ("use_include_path", true, false),
+                ("context", true, false),
             ],
             Self::FileGetContents => &[
                 ("filename", false, false),
@@ -1059,11 +1074,12 @@ impl Builtin {
                             }
                             (Self::StreamCsv(true), "eol") => Value::String(b"\n".to_vec().into()),
                             (Self::StreamGetContents, "offset") => Value::Int(-1),
-                            (Self::FileLines, "flags") => Value::Int(0),
+                            (Self::FileLines | Self::FilePutContents, "flags") => Value::Int(0),
                             (Self::Range, "step") => Value::Int(1),
-                            (Self::Fopen | Self::FileGetContents, "use_include_path") => {
-                                Value::Bool(false)
-                            }
+                            (
+                                Self::Fopen | Self::FileGetContents | Self::ReadFile,
+                                "use_include_path",
+                            ) => Value::Bool(false),
                             (Self::FileGetContents, "offset") => Value::Int(0),
                             (Self::Stream(streams::Operation::Seek), "whence") => Value::Int(0),
                             (Self::ArraySort(_) | Self::Extract, "flags") => Value::Int(0),
@@ -1308,6 +1324,8 @@ impl Runtime {
             Builtin::FileExists => self.file_path_operation(false, &args, line),
             Builtin::ClearStatCache => unreachable!("handled before required arguments"),
             Builtin::FileGetContents => self.file_get_contents(&args, line),
+            Builtin::FilePutContents => self.file_put_contents(&args, line),
+            Builtin::ReadFile => self.readfile(&args, line),
             Builtin::Unlink => self.file_path_operation(true, &args, line),
             Builtin::Stream(operation) => self.stream_operation(operation, &name, &args, line),
             Builtin::ResourceInfo(id) => {

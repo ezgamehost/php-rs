@@ -453,7 +453,14 @@ impl Runtime {
         let backend = if memory {
             Backend::Memory(Cursor::new(Vec::new()))
         } else {
-            let bytes = filename.strip_prefix(b"file://").unwrap_or(filename);
+            let bytes = if filename
+                .get(..7)
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(b"file://"))
+            {
+                &filename[7..]
+            } else {
+                filename
+            };
             let path = crate::source::path_from_bytes(bytes);
             let mut resolved = self.working_directory().join(&path);
             if include

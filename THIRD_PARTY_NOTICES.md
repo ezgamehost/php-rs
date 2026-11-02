@@ -255,7 +255,8 @@ PHP 8.5.0's `ext/standard/array.c`, copyright (c) The PHP Group. The source list
 Andi Gutmans, Zeev Suraski, Rasmus Lerdorf, Andrei Zmievski, Stig Venaas, and
 Jason Greene as authors.
 
-`src/runtime/file_contents.rs` and `src/runtime/csv.rs` contain altered Rust
+`src/runtime/file_contents.rs`, `src/runtime/file_writing.rs`, and
+`src/runtime/csv.rs` contain altered Rust
 adaptations of PHP 8.5.0's `ext/standard/file.c` and `main/streams/streams.c`,
 copyright (c) The PHP Group.
 Their authors include Rasmus Lerdorf, Stig Bakken, Andi Gutmans, Zeev Suraski,
