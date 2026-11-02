@@ -279,7 +279,8 @@ impl Parser {
         let class = self.resolve_class_name(&name);
         let (function, function_fallback) = self.resolve_name(&name, Symbol::Function);
         let (constant, constant_fallback) = self.resolve_name(&name, Symbol::Constant);
-        if class == function
+        if class == name
+            && class == function
             && class == constant
             && function_fallback.is_none()
             && constant_fallback.is_none()
@@ -287,6 +288,7 @@ impl Parser {
             ExprKind::Constant(class)
         } else {
             ExprKind::NamespacedName(Box::new(ResolvedName {
+                original: name,
                 class,
                 function,
                 constant,

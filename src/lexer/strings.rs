@@ -239,7 +239,23 @@ impl Lexer<'_> {
                 if self.pos == digit_start {
                     return Err(Error::parse("Invalid string interpolation offset", line));
                 }
-                Kind::Value(Value::String(self.source[start..self.pos].to_vec().into()))
+                let digits = &self.source[digit_start..self.pos];
+                let number = (digits.len() == 1 || digits[0] != b'0')
+                    .then(|| std::str::from_utf8(digits).ok()?.parse::<i64>().ok())
+                    .flatten();
+                let number = number.and_then(|n| {
+                    if start == digit_start {
+                        Some(n)
+                    } else if n == 0 {
+                        None
+                    } else {
+                        Some(-n)
+                    }
+                });
+                Kind::Value(number.map_or_else(
+                    || Value::String(self.source[start..self.pos].to_vec().into()),
+                    Value::Int,
+                ))
             };
             tokens.push(Token {
                 doc_comment: None,

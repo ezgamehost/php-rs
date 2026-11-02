@@ -24,6 +24,7 @@ mod array_stack;
 mod array_transform;
 mod array_user_sets;
 mod array_walk;
+mod assertions;
 mod attributes;
 mod autoload;
 mod base64;
@@ -117,6 +118,7 @@ pub struct Runtime {
     diagnostics: Diagnostics,
     dump_guards: HashSet<(bool, usize)>,
     deprecated_constants: HashSet<(usize, Vec<u8>)>,
+    assertion_options: assertions::Options,
     attribute_evaluation_line: Option<(usize, usize)>,
     attribute_constant_location: Option<(Rc<crate::source::Source>, usize)>,
     fatal_backtraces: Option<bool>,

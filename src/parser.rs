@@ -9,6 +9,7 @@ use crate::{
 };
 
 use std::{collections::HashSet, rc::Rc};
+mod assertions;
 mod attributes;
 mod cloning;
 mod closures;
@@ -561,6 +562,13 @@ impl Parser {
         let Kind::Word(name) = self.token().kind.clone() else {
             return Err(Error::parse("Expected function name", line));
         };
+        if !method && name.eq_ignore_ascii_case(b"assert") {
+            return Err(Error::new(
+                crate::ErrorKind::CompileError,
+                "Defining a custom assert() function is not allowed, as the function has special semantics",
+                line,
+            ));
+        }
         if name.contains(&b'\\') || is_magic_constant(&name) {
             return Err(Error::parse(
                 "Function declarations require an unqualified name",
@@ -1183,7 +1191,9 @@ impl Parser {
                     }
                     ExprKind::Callable(Box::new(lhs))
                 } else {
-                    ExprKind::Call(Box::new(lhs), self.arguments()?)
+                    let mut args = self.arguments()?;
+                    assertions::add_description(&lhs, &mut args, line);
+                    ExprKind::Call(Box::new(lhs), args)
                 };
                 lhs = Expr { kind, line };
                 continue;

@@ -38,6 +38,12 @@ Deprecated and NoDiscard attribute diagnostics in `src/runtime/attributes.rs`,
 Technologies Ltd. The Zend license
 below also applies to these adaptations.
 
+Assertion descriptions in `src/parser/assertions.rs`, call compilation in
+`src/parser.rs`, and numeric interpolation offsets in `src/lexer/strings.rs`
+adapt PHP 8.5.0's `Zend/zend_ast.c`, `Zend/zend_compile.c`, and
+`Zend/zend_language_scanner.l`, copyright (c) Zend Technologies Ltd. The Zend
+license below also applies to these adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -246,6 +252,10 @@ and Zeev Suraski.
 `src/runtime/dumping.rs` adapts dump traversal and diagnostic ordering from
 PHP 8.5.0's `ext/standard/var.c`, copyright (c) The PHP Group, by Jani Lehtimäki,
 Thies C. Arntzen, and Sascha Schumann.
+
+`src/runtime/assertions.rs` adapts assertion checks, options, callbacks, and
+bailout behavior from PHP 8.5.0's `ext/standard/assert.c`, copyright (c) The PHP
+Group, by Thies C. Arntzen.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

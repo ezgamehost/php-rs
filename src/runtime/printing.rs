@@ -58,7 +58,7 @@ impl Runtime {
         match value {
             Value::Array(properties) => Ok((*properties).clone()),
             Value::Null => {
-                self.defer_dump_warning(format!("Deprecated: Returning null from {}::__debugInfo() is deprecated, return an empty array instead on line {line}", object.class_name), pending)?;
+                self.defer_warning(format!("Deprecated: Returning null from {}::__debugInfo() is deprecated, return an empty array instead on line {line}", object.class_name), pending)?;
                 Ok(PhpArray::default())
             }
             _ => Err(self.native_fatal(b"__debuginfo() must return an array", line, true)),
@@ -156,7 +156,7 @@ impl Runtime {
                         }
                     }
                     Err(message) => {
-                        self.defer_dump_warning(
+                        self.defer_warning(
                             format!("Notice: {message} on line {line}"),
                             &mut state.pending,
                         )?;

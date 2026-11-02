@@ -4,6 +4,8 @@ use crate::ast::Parameter;
 #[derive(Debug, Clone, Copy)]
 pub(super) enum Builtin {
     Exit,
+    Assert,
+    AssertOptions,
     Clone,
     Strlen,
     StrRepeat,
@@ -165,6 +167,8 @@ impl Builtin {
     pub(super) fn lookup(name: &[u8]) -> Option<Self> {
         Some(match name {
             b"exit" | b"die" => Self::Exit,
+            b"assert" => Self::Assert,
+            b"assert_options" => Self::AssertOptions,
             b"clone" => Self::Clone,
             b"strlen" => Self::Strlen,
             b"str_repeat" => Self::StrRepeat,
@@ -464,6 +468,8 @@ impl Builtin {
     }
     pub(super) fn parameters(self) -> Vec<Parameter> {
         let definitions: &[(&str, bool, bool)] = match self {
+            Self::AssertOptions => &[("option", false, false), ("value", true, false)],
+            Self::Assert => &[("assertion", false, false), ("description", true, false)],
             Self::ResourceInfo(_) => &[("resource", false, false)],
             Self::FileExists => &[("filename", false, false)],
             Self::FileGetContents => &[
@@ -1178,6 +1184,8 @@ impl Runtime {
             | Builtin::AutoloadCall
             | Builtin::Autoload
             | Builtin::AutoloadExtensions => unreachable!(),
+            Builtin::AssertOptions => self.assert_options(&args, line),
+            Builtin::Assert => self.assert_value(&args, line),
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::StrRepeat
             | Builtin::StrRev

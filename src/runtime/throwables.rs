@@ -32,6 +32,7 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
         b"divisionbyzeroerror" => ("DivisionByZeroError", Some("ArithmeticError")),
         b"compileerror" => ("CompileError", Some("Error")),
         b"parseerror" => ("ParseError", Some("CompileError")),
+        b"assertionerror" => ("AssertionError", Some("Error")),
         b"valueerror" => ("ValueError", Some("Error")),
         b"unhandledmatcherror" => ("UnhandledMatchError", Some("Error")),
         _ => return None,
@@ -324,6 +325,7 @@ impl Runtime {
             (b"CompileError", ErrorKind::CompileError),
             (b"ValueError", ErrorKind::ValueError),
             (b"UnhandledMatchError", ErrorKind::UnhandledMatchError),
+            (b"AssertionError", ErrorKind::AssertionError),
         ]
         .into_iter()
         .find_map(|(class, kind)| object.class.is_a(class).then_some(kind))

@@ -2,7 +2,7 @@
 use super::*;
 
 impl Runtime {
-    pub(super) fn defer_dump_warning(
+    pub(super) fn defer_warning(
         &mut self,
         message: String,
         pending: &mut Option<Error>,
@@ -251,7 +251,7 @@ impl Runtime {
             match crate::object::property_name(raw) {
                 Ok(decoded) => Some(decoded),
                 Err(message) => {
-                    self.defer_dump_warning(format!("Notice: {message} on line {line}"), pending)?;
+                    self.defer_warning(format!("Notice: {message} on line {line}"), pending)?;
                     None
                 }
             }

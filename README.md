@@ -405,6 +405,12 @@ new request. The CLI returns the low eight bits of the requested status.
   methods, nullsafe calls, pipes, and suppressed expressions. Assignment and
   `(void)` consume the result. Attribute messages use caller strictness; throwing
   handlers prevent execution, and `Deprecated` diagnostics run first.
+- Default-enabled `assert` validates descriptions, throws supplied Throwable
+  objects unchanged, and creates AssertionError with code 1 on failure. Direct
+  calls receive generated descriptions for supported expressions and declarations.
+  `assert_options` controls activation, callbacks, warnings, exceptions, and
+  bailout, including PHP 8.5 deprecations. Assertion INI configuration and complete
+  AST description coverage remain unfinished.
 - Lexical `__LINE__`, `__FILE__`, `__DIR__`, `__FUNCTION__`, `__METHOD__`,
   `__CLASS__`, `__NAMESPACE__`, and `__TRAIT__`, including the using class for
   trait `__CLASS__` and the original defining trait for `__TRAIT__`/`__METHOD__`.

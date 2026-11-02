@@ -54,6 +54,14 @@ impl Runtime {
         internal: bool,
     ) -> Result<(), Error> {
         let Some(function) = &target.function else {
+            if matches!(target.builtin, Some(builtins::Builtin::AssertOptions)) {
+                self.attribute_diagnostic(
+                    b"Function assert_options() is deprecated since 8.3",
+                    8192,
+                    line,
+                    internal,
+                )?;
+            }
             return Ok(());
         };
         // Zend reports Deprecated first, and stops if its handler throws.

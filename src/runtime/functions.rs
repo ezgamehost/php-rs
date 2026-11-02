@@ -648,6 +648,9 @@ impl Runtime {
             this,
             context,
         } = target;
+        if matches!(builtin, Some(Builtin::Assert)) && !self.assertion_options.active {
+            return Ok(Value::Bool(true));
+        }
         if builtin.is_some() || function.as_ref().is_some_and(|f| f.native.is_some()) {
             if matches!(builtin, Some(Builtin::ArrayUserSort(_))) {
                 // PHP resets this request-wide flag on native entry, including

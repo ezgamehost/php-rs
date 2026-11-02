@@ -63,6 +63,7 @@ pub(crate) struct InterpolationPart {
 /// Dynamic strings deliberately do not carry this lexical namespace context.
 #[derive(Debug, Clone)]
 pub(crate) struct ResolvedName {
+    pub original: Vec<u8>,
     pub class: Vec<u8>,
     pub function: Vec<u8>,
     pub constant: Vec<u8>,
@@ -361,6 +362,7 @@ pub(crate) struct ClassConstant {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Promotion {
+    pub is_final: bool,
     pub visibility: Visibility,
     pub set_visibility: Option<Visibility>,
     pub is_readonly: bool,

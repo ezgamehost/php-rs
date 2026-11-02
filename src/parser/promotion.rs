@@ -9,13 +9,28 @@ impl Parser {
         let mut visibility = None;
         let mut set_visibility = None;
         let mut readonly = false;
-        while self.is("public") || self.is("protected") || self.is("private") || self.is("readonly")
+        let mut is_final = false;
+        while self.is("public")
+            || self.is("protected")
+            || self.is("private")
+            || self.is("readonly")
+            || self.is("final")
         {
             if !allowed {
                 return Err(Error::parse(
                     "Cannot declare promoted property outside a constructor",
                     self.token().line,
                 ));
+            }
+            if self.eat("final") {
+                if is_final {
+                    return Err(Error::parse(
+                        "Duplicate promotion modifier",
+                        self.token().line,
+                    ));
+                }
+                is_final = true;
+                continue;
             }
             if self.eat("readonly") {
                 if readonly {
@@ -50,11 +65,14 @@ impl Parser {
             }
         }
         Ok(
-            (visibility.is_some() || set_visibility.is_some() || readonly).then_some(Promotion {
-                visibility: visibility.unwrap_or(Visibility::Public),
-                set_visibility,
-                is_readonly: readonly,
-            }),
+            (visibility.is_some() || set_visibility.is_some() || readonly || is_final).then_some(
+                Promotion {
+                    is_final,
+                    visibility: visibility.unwrap_or(Visibility::Public),
+                    set_visibility,
+                    is_readonly: readonly,
+                },
+            ),
         )
     }
 
@@ -111,8 +129,9 @@ impl Parser {
                 declaring_class: Vec::new(),
                 visibility: promotion.visibility,
                 set_visibility,
-                is_final: set_visibility == Visibility::Private
-                    && promotion.visibility != Visibility::Private,
+                is_final: promotion.is_final
+                    || (set_visibility == Visibility::Private
+                        && promotion.visibility != Visibility::Private),
                 name: param.name.clone(),
                 ty: param.ty.clone(),
                 is_readonly,

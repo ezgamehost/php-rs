@@ -2209,6 +2209,31 @@ added. PHP 8.5.0 `Zend/zend_execute.c`, `Zend/zend_vm_def.h`,
 Remaining focused failures require DateTimeImmutable, Random\IntervalBoundary,
 and property hooks; four extension/INI fixtures remain unsupported.
 
+The [assertion slice](conformance/php-8.5.0-assert-hillclimb.txt) adds **20
+upstream Zend passes**, reaching **2405 / 2443 / 408**, with no regressions across
+all six suites (8,267 fixtures). The focused Zend/assert-dependent set records
+**16 / 1 / 26**; standard assertion fixtures record **2 / 0 / 18**. Assertions
+are enabled by default. `assert` validates descriptions, throws supplied
+Throwable objects unchanged, invokes configured callbacks, and creates
+AssertionError with code 1, preserving callback exceptions as previous errors.
+`assert_options` controls activation, callbacks, warnings, exceptions, and
+bailout; it and the ASSERT_* constants emit PHP 8.5 deprecations. Direct calls
+receive compiler-generated descriptions for supported expressions, closures,
+and class declarations. Source name spelling and numeric interpolation offsets
+are preserved, and constructor promotion now accepts final properties.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No new custom tests or generated matrices were added. Extracted
+FILE sections from 19 upstream INI fixtures whose settings match the implemented
+defaults were also compared directly: 15 match exact output and exit status;
+four require `preg_match`, `ini_get`, `ini_set`, or generator syntax. These manual
+checks do not change their unsupported PHPT classification. PHP 8.5.0
+`ext/standard/assert.c`, `Zend/zend_ast.c`, `Zend/zend_compile.c`, and
+`Zend/zend_language_scanner.l` establish the behavior. Assertion INI configuration,
+disabled assertion compilation, complete AST description coverage (including
+complex statements, traits, and original magic-constant spelling), binary warning
+messages, and the remaining operator type errors are unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2216,7 +2241,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2385 | 2463 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2405 | 2443 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

@@ -47,26 +47,28 @@ impl Runtime {
         } else {
             name.to_vec()
         };
-        let extension = if matches!(
-            name,
-            b"COUNT_NORMAL"
-                | b"COUNT_RECURSIVE"
-                | b"CASE_LOWER"
-                | b"CASE_UPPER"
-                | b"ARRAY_FILTER_USE_BOTH"
-                | b"ARRAY_FILTER_USE_KEY"
-                | b"STR_PAD_LEFT"
-                | b"STR_PAD_RIGHT"
-                | b"STR_PAD_BOTH"
-                | b"DIRECTORY_SEPARATOR"
-                | b"PATH_SEPARATOR"
-                | b"INF"
-                | b"NAN"
-                | b"PHP_ROUND_HALF_UP"
-                | b"PHP_ROUND_HALF_DOWN"
-                | b"PHP_ROUND_HALF_EVEN"
-                | b"PHP_ROUND_HALF_ODD"
-        ) || math_constant(name).is_some()
+        let extension = if name.starts_with(b"ASSERT_")
+            || matches!(
+                name,
+                b"COUNT_NORMAL"
+                    | b"COUNT_RECURSIVE"
+                    | b"CASE_LOWER"
+                    | b"CASE_UPPER"
+                    | b"ARRAY_FILTER_USE_BOTH"
+                    | b"ARRAY_FILTER_USE_KEY"
+                    | b"STR_PAD_LEFT"
+                    | b"STR_PAD_RIGHT"
+                    | b"STR_PAD_BOTH"
+                    | b"DIRECTORY_SEPARATOR"
+                    | b"PATH_SEPARATOR"
+                    | b"INF"
+                    | b"NAN"
+                    | b"PHP_ROUND_HALF_UP"
+                    | b"PHP_ROUND_HALF_DOWN"
+                    | b"PHP_ROUND_HALF_EVEN"
+                    | b"PHP_ROUND_HALF_ODD"
+            )
+            || math_constant(name).is_some()
             || sort_constant(name).is_some()
             || seek_constant(name).is_some()
             || pathinfo_constant(name).is_some()
@@ -76,7 +78,7 @@ impl Runtime {
         } else {
             "Core"
         };
-        let attributes = if name == b"E_STRICT" {
+        let attributes = if name == b"E_STRICT" || assertion_constant(name).is_some() {
             let argument = |name: &[u8], value: &[u8]| {
                 crate::ast::Argument::Named(
                     name.to_vec(),
@@ -89,8 +91,15 @@ impl Runtime {
             vec![Attribute {
                 name: b"Deprecated".to_vec(),
                 arguments: vec![
-                    argument(b"since", b"8.4"),
-                    argument(b"message", b"the error level was removed"),
+                    argument(b"since", if name == b"E_STRICT" { b"8.4" } else { b"8.3" }),
+                    argument(
+                        b"message",
+                        if name == b"E_STRICT" {
+                            b"the error level was removed"
+                        } else {
+                            b"as assert_options() is deprecated"
+                        },
+                    ),
                 ],
                 line: 0,
             }]
@@ -119,13 +128,12 @@ impl Runtime {
                 line,
             )
         })?;
-        if name.strip_prefix(b"\\").unwrap_or(name) == b"E_STRICT" {
+        let name = name.strip_prefix(b"\\").unwrap_or(name);
+        if name == b"E_STRICT" {
             self.warn(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"))?;
-        } else if let Some(constant) = self
-            .constants
-            .get(&key(name.strip_prefix(b"\\").unwrap_or(name)))
-            .cloned()
-        {
+        } else if assertion_constant(name).is_some() {
+            self.warn(format!("Deprecated: Constant {} is deprecated since 8.3, as assert_options() is deprecated on line {line}", String::from_utf8_lossy(name)))?;
+        } else if let Some(constant) = self.constants.get(&key(name)).cloned() {
             self.deprecated_constant(&constant.attributes, &constant.name, None, false, line)?;
         }
         Ok(value)
@@ -215,7 +223,21 @@ fn seek_constant(name: &[u8]) -> Option<Value> {
     }))
 }
 
+fn assertion_constant(name: &[u8]) -> Option<i64> {
+    Some(match name {
+        b"ASSERT_ACTIVE" => 1,
+        b"ASSERT_CALLBACK" => 2,
+        b"ASSERT_BAIL" => 3,
+        b"ASSERT_WARNING" => 4,
+        b"ASSERT_EXCEPTION" => 5,
+        _ => return None,
+    })
+}
+
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = assertion_constant(name) {
+        return Some(Value::Int(value));
+    }
     if let Some(value) = pathinfo_constant(name) {
         return Some(value);
     }

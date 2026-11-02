@@ -768,7 +768,7 @@ impl Parser {
         let class = if let Kind::Word(name) = self.token().kind.clone() {
             self.pos += 1;
             Expr {
-                kind: ExprKind::Constant(self.resolve_class_name(&name)),
+                kind: self.resolve_identifier(name),
                 line,
             }
         } else {
@@ -819,7 +819,7 @@ impl Parser {
             {
                 self.pos += 1;
                 Expr {
-                    kind: ExprKind::Constant(self.resolve_class_name(&name)),
+                    kind: self.resolve_identifier(name),
                     line,
                 }
             }
@@ -827,7 +827,7 @@ impl Parser {
             Kind::Symbol(s) if s == "$" || s == "(" => self.expr(24)?,
             _ => return Err(Error::parse("Expected class name", line)),
         };
-        if !matches!(target.kind, ExprKind::Constant(_)) {
+        if target.static_class_name().is_none() {
             loop {
                 if self.eat("[") {
                     let key = self.expr(0)?;
