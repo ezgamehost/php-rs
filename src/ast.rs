@@ -153,6 +153,7 @@ pub(crate) enum NativeMethod {
     LinkedList,
     ObjectStorage,
     Heap,
+    FileInfo,
     DualIterator,
     ArrayIterator,
     Abstract,

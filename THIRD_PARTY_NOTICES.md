@@ -377,6 +377,14 @@ adapt PHP 8.5.0's `ext/spl/spl_heap.c` and `ext/spl/spl_heap.stub.php`, copyrigh
 callbacks, corruption and locking rules, native iteration, cloning, debug output,
 serialization, and cycle-collection integration follow those native handlers.
 
+SplFileInfo path handling, metadata, class factories, cloning, debug output,
+and serialization restrictions in `src/runtime/file_info.rs` and its integration
+adapt PHP 8.5.0's `ext/spl/spl_directory.c` and `.stub.php`, copyright (c) The PHP
+Group, including work by Marcus Boerger. Stat/lstat caching, access checks, and
+`clearstatcache` follow `ext/standard/filestat.c`; invalidation during file I/O
+follows `main/streams/plain_wrapper.c`. Path components reuse the string and
+Zend dirname adaptations described above.
+
 SplDoublyLinkedList, SplQueue, and SplStack storage, cursor behavior, cloning,
 offsets, debug output, serialization hooks, and legacy Serializable methods
 in `src/runtime/linked_list.rs`

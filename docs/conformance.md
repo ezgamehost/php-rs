@@ -2955,6 +2955,24 @@ object-keyed dimension access, flag changes during current(), and constructor
 default values. Additional SPL classes, collector accounting, and complete mutation
 and destructor timing remain unfinished.
 
+The [SplFileInfo slice](conformance/php-8.5.0-file-info-hillclimb.txt) adds
+path components, metadata and access queries, symlink targets, canonical paths,
+cloning, debug output, info-class factories, and serialization restrictions.
+The native payload preserves path spelling separately from filesystem resolution.
+Request stat/lstat caches follow PHP's file-I/O invalidation and can be reset by
+clearstatcache(). Metadata queries target the supported Unix hosts.
+
+This slice adds **21 upstream passes**, with **zero regressions** across all seven
+full suites (**8,430 fixtures**): 20 in SPL and one in serialization. SPL reaches
+**517 / 167 / 94**, and serialization reaches **124 / 11 / 28**; other suite totals
+are unchanged. All **797 existing Rust tests**, **57 reference-checked project PHPT**,
+formatting, Clippy, and diff checks pass. No custom tests or matrices were added.
+Direct CLI comparisons match path spelling, cloning, uninitialized state, factory
+restrictions, serialization rejection, metadata/access queries, and stat-cache
+invalidation. SplFileObject and openFile(), directory iterator classes, custom
+stream wrappers, PHP's realpath cache, and complete mutation/destructor timing
+remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2964,12 +2982,12 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2582 | 2266 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 497 | 187 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 517 | 167 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
-| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 123 | 12 | 28 |
+| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

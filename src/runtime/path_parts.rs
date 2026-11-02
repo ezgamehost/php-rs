@@ -101,7 +101,7 @@ impl Runtime {
     }
 }
 
-fn basename(path: &[u8]) -> &[u8] {
+pub(super) fn basename(path: &[u8]) -> &[u8] {
     let end = path.iter().rposition(|&b| b != b'/').map_or(0, |i| i + 1);
     let start = path[..end]
         .iter()
@@ -110,7 +110,7 @@ fn basename(path: &[u8]) -> &[u8] {
     &path[start..end]
 }
 
-fn dirname(path: &[u8]) -> Vec<u8> {
+pub(super) fn dirname(path: &[u8]) -> Vec<u8> {
     if path.is_empty() {
         return Vec::new();
     }

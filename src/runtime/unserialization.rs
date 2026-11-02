@@ -89,6 +89,7 @@ fn native_serialization_forbidden(class: &Class) -> bool {
         || [
             b"Closure".as_slice(),
             b"InternalIterator",
+            b"SplFileInfo",
             b"SensitiveParameterValue",
             b"ReflectionClass",
             b"ReflectionFunctionAbstract",

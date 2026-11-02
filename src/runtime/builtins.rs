@@ -80,6 +80,7 @@ pub(super) enum Builtin {
     ResourceInfo(bool),
     Fopen,
     FileExists,
+    ClearStatCache,
     FileGetContents,
     Unlink,
     Stream(streams::Operation),
@@ -323,6 +324,7 @@ impl Builtin {
             b"get_resource_type" => Self::ResourceInfo(false),
             b"fopen" => Self::Fopen,
             b"file_exists" => Self::FileExists,
+            b"clearstatcache" => Self::ClearStatCache,
             b"file_get_contents" => Self::FileGetContents,
             b"unlink" => Self::Unlink,
             b"fclose" => Self::Stream(streams::Operation::Close),
@@ -515,6 +517,10 @@ impl Builtin {
             Self::StrShuffle => &[("string", false, false)],
             Self::ResourceInfo(_) => &[("resource", false, false)],
             Self::FileExists => &[("filename", false, false)],
+            Self::ClearStatCache => &[
+                ("clear_realpath_cache", true, false),
+                ("filename", true, false),
+            ],
             Self::FileGetContents => &[
                 ("filename", false, false),
                 ("use_include_path", true, false),
@@ -1173,10 +1179,21 @@ impl Runtime {
         if let Builtin::ArrayWalk(recursive) = builtin {
             return self.array_walk(recursive, &name, args, references, line);
         }
+        if matches!(builtin, Builtin::ClearStatCache) {
+            if let Some(value) = &args[0] {
+                self.native_bool(value, &name, 1, line)?;
+            }
+            if let Some(value) = &args[1] {
+                self.native_string(value, &name, 2, line)?;
+            }
+            self.file_stat_cache = [None, None];
+            return Ok(Value::Null);
+        }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
             Builtin::Fopen => self.fopen(&args, line),
             Builtin::FileExists => self.file_path_operation(false, &args, line),
+            Builtin::ClearStatCache => unreachable!("handled before required arguments"),
             Builtin::FileGetContents => self.file_get_contents(&args, line),
             Builtin::Unlink => self.file_path_operation(true, &args, line),
             Builtin::Stream(operation) => self.stream_operation(operation, &name, &args, line),

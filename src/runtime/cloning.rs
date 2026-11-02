@@ -133,6 +133,7 @@ impl Runtime {
             ),
             object_storage: RefCell::default(),
             heap: RefCell::new(original.heap.borrow().clone()),
+            file_info: RefCell::new(original.file_info.borrow().clone()),
             dual_iterator: RefCell::default(),
             linked_list: RefCell::new(
                 original

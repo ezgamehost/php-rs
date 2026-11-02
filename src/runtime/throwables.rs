@@ -279,6 +279,9 @@ impl Runtime {
         if matches!(method, NativeMethod::DualIterator) {
             return self.native_dual_iterator_method(line, None);
         }
+        if matches!(method, NativeMethod::FileInfo) {
+            return self.native_file_info_method(line);
+        }
         if matches!(method, NativeMethod::Heap) {
             return self.native_heap_method(line);
         }
@@ -360,6 +363,7 @@ impl Runtime {
             linked_list: RefCell::default(),
             object_storage: RefCell::default(),
             heap: RefCell::default(),
+            file_info: RefCell::default(),
             dual_iterator: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),

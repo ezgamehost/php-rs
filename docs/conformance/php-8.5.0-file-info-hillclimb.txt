@@ -1,0 +1,68 @@
+PHP 8.5.0 SplFileInfo hillclimb
+Baseline: 4c267837308a7804aa14fa17e253bd6294d05775
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 497 passed, 187 failed, 94 unsupported
+After: 778 cases; 517 passed, 167 failed, 94 unsupported
+New passes: 20; regressions: 0
+NEW PASS: ext/spl/tests/SplFileInfo_001.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_getGroup_error.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_getInode_error.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_getOwner_error.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_getPerms_error.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_setFileClass_error.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_setInfoClass_basic.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_setInfoClass_error.phpt
+NEW PASS: ext/spl/tests/SplFileinfo_debugInfo_basic.phpt
+NEW PASS: ext/spl/tests/SplFileinfo_getBasename_basic.phpt
+NEW PASS: ext/spl/tests/SplFileinfo_getFilename_basic.phpt
+NEW PASS: ext/spl/tests/bug48361.phpt
+NEW PASS: ext/spl/tests/bug62328.phpt
+NEW PASS: ext/spl/tests/bug64023.phpt
+NEW PASS: ext/spl/tests/bug65213.phpt
+NEW PASS: ext/spl/tests/bug69264.phpt
+NEW PASS: ext/spl/tests/bug77431.phpt
+NEW PASS: ext/spl/tests/bug79987.phpt
+NEW PASS: ext/spl/tests/gh11338.phpt
+NEW PASS: ext/spl/tests/gh7809.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 123 passed, 12 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/serialize/bug81111.phpt
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match path spelling, cloning, uninitialized state, factory
+restrictions, serialization rejection, metadata/access queries, stat-cache
+invalidation, symlinks, canonical paths, ownership, permissions, and timestamps.
+SplFileObject and openFile(), directory iterator classes, custom stream wrappers,
+PHP's realpath cache, and complete mutation/destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-file-info-*2.log.

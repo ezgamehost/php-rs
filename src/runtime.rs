@@ -56,6 +56,7 @@ mod exporting;
 mod extract;
 mod extrema;
 mod file_contents;
+pub(crate) mod file_info;
 pub(crate) mod fixed_array;
 mod foreach;
 mod formatting;
@@ -178,6 +179,7 @@ pub struct Runtime {
     included_files: Vec<std::path::PathBuf>,
     included_set: HashSet<std::path::PathBuf>,
     working_directory: Option<std::path::PathBuf>,
+    file_stat_cache: [Option<(Vec<u8>, std::fs::Metadata)>; 2],
     exit_status: Option<i32>,
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
     collecting_cycles: bool,

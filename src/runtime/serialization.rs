@@ -191,6 +191,7 @@ impl Runtime {
         let class = &object.class;
         let forbidden = class.name.contains(&0)
             || class.is_a(b"InternalIterator")
+            || class.is_a(b"SplFileInfo")
             || class.is_a(b"SensitiveParameterValue")
             || [
                 b"ReflectionClass".as_slice(),

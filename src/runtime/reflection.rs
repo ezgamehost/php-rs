@@ -141,6 +141,7 @@ impl Runtime {
             linked_list: RefCell::default(),
             object_storage: RefCell::default(),
             heap: RefCell::default(),
+            file_info: RefCell::default(),
             dual_iterator: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),

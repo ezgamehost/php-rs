@@ -137,6 +137,7 @@ impl Runtime {
             || self.builtin_recursive_iterator_class(&name).is_some()
             || self.builtin_fixed_array_class(&name).is_some()
             || self.builtin_dual_iterator_class(&name).is_some()
+            || self.builtin_file_info_class(&name).is_some()
             || self.builtin_heap_class(&name).is_some()
             || self.builtin_object_storage_class(&name).is_some()
             || self.builtin_linked_list_class(&name).is_some()
@@ -340,6 +341,9 @@ impl Runtime {
         if let Some(class) = self.builtin_dual_iterator_class(&name) {
             return Some(class);
         }
+        if let Some(class) = self.builtin_file_info_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_heap_class(&name) {
             return Some(class);
         }
@@ -520,6 +524,7 @@ impl Runtime {
             linked_list: RefCell::default(),
             object_storage: RefCell::default(),
             heap: RefCell::default(),
+            file_info: RefCell::default(),
             dual_iterator: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),

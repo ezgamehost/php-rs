@@ -33,6 +33,9 @@ impl Runtime {
         {
             *object.object_storage.get_mut() = Some(object_storage::ObjectStorageData::default());
         }
+        if object.class.is_a(b"SplFileInfo") && object.file_info.get_mut().is_none() {
+            *object.file_info.get_mut() = Some(file_info::FileInfoData::default());
+        }
         let object = Rc::new(object);
         self.object_store
             .borrow_mut()

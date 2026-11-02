@@ -142,6 +142,12 @@ new request. The CLI returns the low eight bits of the requested status.
   as corrupted; mutation guards and recovery follow native heap behavior.
   Stored values participate in cycle collection. Complete reentrant mutation
   and destructor timing remain unfinished.
+- `SplFileInfo` provides path components, metadata and access queries, symlink
+  targets, canonical paths, cloning, debug output, and file-info class factories.
+  Native stat/lstat caches are cleared by `clearstatcache()` and ordinary file I/O.
+  File-info objects cannot be serialized. `openFile()` still requires the missing
+  SplFileObject implementation; directory iterator classes, custom stream wrappers,
+  and PHP's realpath cache remain unfinished.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,

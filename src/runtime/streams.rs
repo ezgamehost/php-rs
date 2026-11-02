@@ -140,6 +140,7 @@ impl Runtime {
             ))?;
             Ok(Value::Bool(false))
         } else {
+            self.file_stat_cache = [None, None];
             Ok(Value::Bool(true))
         }
     }
@@ -224,7 +225,10 @@ impl Runtime {
                 .create_new(first == b'x')
                 .truncate(first == b'w');
             match options.open(resolved) {
-                Ok(file) => Backend::File(file),
+                Ok(file) => {
+                    self.file_stat_cache = [None, None];
+                    Backend::File(file)
+                }
                 Err(error) => {
                     self.open_warning(name, filename, &io_message(&error), line)?;
                     return Ok(Value::Bool(false));
@@ -372,6 +376,17 @@ impl Runtime {
                 }
                 _ => {}
             }
+        }
+        // Plain streams invalidate PHP's request stat cache when their I/O may
+        // change access, modification, or inode-change times.
+        if (matches!(operation, Operation::Read)
+            || (matches!(operation, Operation::Write) && !data.is_empty()))
+            && matches!(
+                stream.backend,
+                Backend::File(_) | Backend::StandardInput(_) | Backend::StandardOutput(_)
+            )
+        {
+            self.file_stat_cache = [None, None];
         }
         if matches!(operation, Operation::Read)
             && let Backend::StandardInput(reader) = &mut stream.backend
