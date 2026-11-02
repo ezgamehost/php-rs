@@ -102,6 +102,14 @@ impl Runtime {
             Err(error) if error.kind == ErrorKind::UnwindExit && error.message.is_empty() => {
                 Ok(Value::Null)
             }
+            Err(mut error) if error.kind == ErrorKind::UnwindExit && error.throwable.is_some() => {
+                // The internal unwind has reached the embedding boundary.
+                // Preserve the public class-linking error kind while retaining
+                // the CompileError payload for native diagnostic rendering.
+                self.uncaught_handler_allowed = false;
+                error.kind = ErrorKind::Error;
+                Err(error)
+            }
             result => result,
         }
     }

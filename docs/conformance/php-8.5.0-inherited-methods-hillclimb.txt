@@ -1,0 +1,190 @@
+PHP 8.5.0 inherited method diagnostic hillclimb
+Baseline: 3b6c7de0573b169b33c1952dedaff06d34bd0f74
+
+zend
+Before: 5256 cases; 3090 passed, 1766 failed, 400 unsupported
+After: 5256 cases; 3175 passed, 1681 failed, 400 unsupported
+New passes: 85; regressions: 0
+NEW PASS: Zend/tests/anon/gh15994.phpt
+NEW PASS: Zend/tests/bug64988.phpt
+NEW PASS: Zend/tests/enum/gh7792_1.phpt
+NEW PASS: Zend/tests/inheritance/abstract_inheritance_003.phpt
+NEW PASS: Zend/tests/inheritance/argument_restriction_001.phpt
+NEW PASS: Zend/tests/inheritance/argument_restriction_002.phpt
+NEW PASS: Zend/tests/inheritance/argument_restriction_003.phpt
+NEW PASS: Zend/tests/inheritance/argument_restriction_005.phpt
+NEW PASS: Zend/tests/inheritance/argument_restriction_006.phpt
+NEW PASS: Zend/tests/inheritance/bug44414.phpt
+NEW PASS: Zend/tests/inheritance/bug62814.phpt
+NEW PASS: Zend/tests/inheritance/bug70957.phpt
+NEW PASS: Zend/tests/inheritance/bug71428.1.phpt
+NEW PASS: Zend/tests/inheritance/bug71428.3.phpt
+NEW PASS: Zend/tests/inheritance/bug72119.phpt
+NEW PASS: Zend/tests/inheritance/bug73987.phpt
+NEW PASS: Zend/tests/inheritance/bug73987_1.phpt
+NEW PASS: Zend/tests/inheritance/bug73987_2.phpt
+NEW PASS: Zend/tests/inheritance/bug73987_3.phpt
+NEW PASS: Zend/tests/inheritance/constructor_abstract_grantparent.phpt
+NEW PASS: Zend/tests/inheritance/gh9407.phpt
+NEW PASS: Zend/tests/inheritance/interface_constructor_prototype_001.phpt
+NEW PASS: Zend/tests/magic_methods/bug51421.phpt
+NEW PASS: Zend/tests/magic_methods/bug61970_1.phpt
+NEW PASS: Zend/tests/magic_methods/bug61970_2.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_008.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_inheritance_rules_non_trivial_01.phpt
+NEW PASS: Zend/tests/magic_methods/magic_methods_inheritance_rules_non_trivial_02.phpt
+NEW PASS: Zend/tests/nullable_types/contravariant_nullable_return_fails.phpt
+NEW PASS: Zend/tests/nullable_types/covariant_nullable_param_fails.phpt
+NEW PASS: Zend/tests/object_types/missing_return_type_inheritance_in_class.phpt
+NEW PASS: Zend/tests/object_types/missing_return_type_inheritance_in_interface.phpt
+NEW PASS: Zend/tests/objects/objects_008.phpt
+NEW PASS: Zend/tests/parameter_default_values/userland_declaration_error_class_const.phpt
+NEW PASS: Zend/tests/parameter_default_values/userland_declaration_error_const.phpt
+NEW PASS: Zend/tests/return_types/009.phpt
+NEW PASS: Zend/tests/return_types/031.phpt
+NEW PASS: Zend/tests/return_types/bug71978.phpt
+NEW PASS: Zend/tests/return_types/inheritance001.phpt
+NEW PASS: Zend/tests/return_types/inheritance002.phpt
+NEW PASS: Zend/tests/return_types/inheritance003.phpt
+NEW PASS: Zend/tests/return_types/never_no_variance.phpt
+NEW PASS: Zend/tests/return_types/rfc004.phpt
+NEW PASS: Zend/tests/traits/bug60153.phpt
+NEW PASS: Zend/tests/traits/bug62358.phpt
+NEW PASS: Zend/tests/traits/bug69084.phpt
+NEW PASS: Zend/tests/traits/bug69467.phpt
+NEW PASS: Zend/tests/traits/bug78776.phpt
+NEW PASS: Zend/tests/traits/bug81192.phpt
+NEW PASS: Zend/tests/traits/bugs/abstract-methods01.phpt
+NEW PASS: Zend/tests/traits/error_014.phpt
+NEW PASS: Zend/tests/traits/interface_002.phpt
+NEW PASS: Zend/tests/traits/language019.phpt
+NEW PASS: Zend/tests/type_declarations/iterable/iterable_004.phpt
+NEW PASS: Zend/tests/type_declarations/iterable/iterable_005.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_parameter_inheritance_error1.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_parameter_inheritance_error2.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_parameter_inheritance_error3.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_parameter_inheritance_error4.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_return_inheritance_error1.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_return_inheritance_error2.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_return_inheritance_error3.phpt
+NEW PASS: Zend/tests/type_declarations/parameter_type_variance.phpt
+NEW PASS: Zend/tests/type_declarations/parameter_type_variance_2.phpt
+NEW PASS: Zend/tests/type_declarations/union_types/variance/invalid_001.phpt
+NEW PASS: Zend/tests/type_declarations/union_types/variance/invalid_002.phpt
+NEW PASS: Zend/tests/type_declarations/union_types/variance/invalid_003.phpt
+NEW PASS: Zend/tests/type_declarations/variance/class_order_autoload_error1.phpt
+NEW PASS: Zend/tests/type_declarations/variance/class_order_autoload_error2.phpt
+NEW PASS: Zend/tests/type_declarations/variance/infinite_recursion.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/static_to_self_in_non_final_class.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/union_to_union_1.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/union_to_union_2.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/union_to_union_5.phpt
+NEW PASS: Zend/tests/type_declarations/variance/override_static_with_self/union_to_union_6.phpt
+NEW PASS: Zend/tests/type_declarations/variance/parent_in_class_failure2.phpt
+NEW PASS: Zend/tests/type_declarations/variance/static_variance_failure.phpt
+NEW PASS: Zend/tests/typehints/bug60573.phpt
+NEW PASS: Zend/tests/typehints/bug60573_2.phpt
+NEW PASS: Zend/tests/variadic/adding_additional_optional_parameter_error.phpt
+NEW PASS: Zend/tests/variadic/illegal_variadic_override_ref.phpt
+NEW PASS: Zend/tests/variadic/illegal_variadic_override_type.phpt
+NEW PASS: Zend/tests/variadic/non_variadic_implements_variadic_error.phpt
+NEW PASS: Zend/tests/variadic/variadic_changed_byref_error.phpt
+NEW PASS: Zend/tests/variadic/variadic_changed_typehint_error.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,192 passed, 2,028 failed, 1,456 unsupported.
+Net gain: 85 upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match final, staticness, visibility, interface,
+  abstract-member, and signature diagnostics. Compile failures bypass catches
+  and exception handlers while preserving shutdown execution. CLI comparisons
+  combine stdout/stderr, normalize the leading fatal newline, and disable
+  native fatal backtraces. An existing optional-before-required deprecation
+  wording difference remains; the resulting fatal signature matches.
+- No new tests, upstream fixture changes, or dependencies.
+
+Implementation:
+- Inherited method and interface compatibility failures use deferred compile
+  fatals, retaining the original method source and line. Final, staticness,
+  abstractness, and visibility checks use native ordering and diagnostics.
+  At the public execution boundary the unwind becomes ErrorKind::Error,
+  preserving the embedding API while retaining the native CompileError payload
+  and bypassing registered exception handlers.
+- Compatibility messages include parameter and return types, contextual class
+  names, canonical union ordering, references, variadics, tentative native
+  returns, and defaults. Strings abbreviate after ten bytes; array and constant
+  defaults retain their native representations. Defaults before required
+  parameters are omitted from declaration signatures.
+- Abstract-member completeness reports counts and up to three named methods,
+  with native anonymous-class and enum wording. Missing property hooks retain
+  priority over ordinary property redeclaration errors.
+
+Remaining limits:
+- Trait-specific compatibility, unresolved/autoloaded type relationships,
+  complex initializer formatting, and other declaration diagnostics remain
+  incomplete. This focused gate does not establish full PHP conformance.

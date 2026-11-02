@@ -2,6 +2,21 @@ use super::*;
 use crate::{ast::ClassDecl, object::Class};
 
 impl Runtime {
+    pub(super) fn inheritance_method_signature(
+        &self,
+        function: &FunctionDecl,
+        class: &Class,
+    ) -> String {
+        let declaring = method_visibility::declaring_name(function);
+        let owner = self.find_class(declaring);
+        let owner = if declaring.eq_ignore_ascii_case(&class.name) {
+            class
+        } else {
+            owner.as_deref().unwrap_or(class)
+        };
+        method_signature_with_types(function, |ty| typed_properties::type_label(ty, owner), true)
+    }
+
     pub(super) fn link_interfaces(&self, declaration: &ClassDecl) -> Result<Vec<Rc<Class>>, Error> {
         let mut interfaces = Vec::<Rc<Class>>::new();
         for name in &declaration.interfaces {
@@ -36,18 +51,35 @@ impl Runtime {
             for required in &interface.methods {
                 let name = required.name.rsplit(|b| *b == b':').next().unwrap();
                 let implementation = objects::method(class, name).expect("interface method linked");
-                if implementation.visibility != crate::ast::Visibility::Public
-                    || implementation.is_static != required.is_static
-                    || !self.compatible_method(&implementation, required, class)
-                {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        format!(
-                            "Declaration of {}() must be compatible with {}()",
-                            String::from_utf8_lossy(&implementation.name),
-                            String::from_utf8_lossy(&required.name)
-                        ),
-                        class.declaration.line,
+                let message = if implementation.is_static != required.is_static {
+                    let status = |is_static| if is_static { "static" } else { "non static" };
+                    Some(format!(
+                        "Cannot make {} method {}() {} in class {}",
+                        status(required.is_static),
+                        String::from_utf8_lossy(&required.name),
+                        status(implementation.is_static),
+                        class.display_name()
+                    ))
+                } else if implementation.visibility != crate::ast::Visibility::Public {
+                    Some(format!(
+                        "Access level to {}() must be public (as in class {})",
+                        String::from_utf8_lossy(&implementation.name),
+                        String::from_utf8_lossy(method_visibility::declaring_name(required))
+                    ))
+                } else if !self.compatible_method(&implementation, required, class) {
+                    Some(format!(
+                        "Declaration of {} must be compatible with {}",
+                        self.inheritance_method_signature(&implementation, class),
+                        self.inheritance_method_signature(required, class)
+                    ))
+                } else {
+                    None
+                };
+                if let Some(message) = message {
+                    return Err(self.deferred_compile_fatal_at(
+                        message,
+                        &implementation.source,
+                        implementation.line,
                     ));
                 }
             }
@@ -140,34 +172,38 @@ impl Runtime {
 }
 
 pub(super) fn method_signature(function: &FunctionDecl) -> String {
+    method_signature_with_types(function, ToString::to_string, false)
+}
+
+fn method_signature_with_types(
+    function: &FunctionDecl,
+    type_label: impl Fn(&crate::ast::TypeDecl) -> String,
+    include_tentative: bool,
+) -> String {
+    let required = function
+        .parameters
+        .iter()
+        .rposition(|p| p.default.is_none() && !p.variadic)
+        .map_or(0, |i| i + 1);
     let parameters = function
         .parameters
         .iter()
-        .map(|p| {
+        .enumerate()
+        .map(|(index, p)| {
             let mut parameter = format!(
                 "{}{}{}${}",
-                p.ty.as_ref().map_or(String::new(), |ty| format!("{ty} ")),
+                p.ty.as_ref()
+                    .map_or(String::new(), |ty| format!("{} ", type_label(ty))),
                 if p.by_reference { "&" } else { "" },
                 if p.variadic { "..." } else { "" },
                 String::from_utf8_lossy(&p.name)
             );
-            if let Some(Expr {
-                kind: ExprKind::Literal(value),
-                ..
-            }) = &p.default
+            if index >= required
+                && !p.variadic
+                && let Some(default) = &p.default
             {
                 parameter.push_str(" = ");
-                parameter.push_str(&match value {
-                    Value::Null => "null".to_owned(),
-                    Value::Bool(value) => value.to_string(),
-                    Value::String(value) => format!(
-                        "'{}'",
-                        String::from_utf8_lossy(&value.bytes())
-                            .replace('\\', "\\\\")
-                            .replace('\'', "\\'")
-                    ),
-                    _ => String::from_utf8_lossy(&value.to_bytes()).into_owned(),
-                });
+                parameter.push_str(&signature_default(default));
             }
             parameter
         })
@@ -176,10 +212,63 @@ pub(super) fn method_signature(function: &FunctionDecl) -> String {
     format!(
         "{}{}({parameters}){}",
         if function.returns_reference { "& " } else { "" },
-        String::from_utf8_lossy(&function.name),
+        signature_name(function),
         function
             .return_type
             .as_ref()
-            .map_or(String::new(), |ty| format!(": {ty}"))
+            .or_else(|| include_tentative
+                .then_some(function.tentative_return_type.as_ref())
+                .flatten())
+            .map_or(String::new(), |ty| format!(": {}", type_label(ty)))
     )
+}
+
+fn signature_name(function: &FunctionDecl) -> String {
+    let scope = method_visibility::declaring_name(function);
+    if let Some(end) = scope.iter().position(|b| *b == 0) {
+        format!(
+            "{}{}",
+            String::from_utf8_lossy(&scope[..end]),
+            String::from_utf8_lossy(&function.name[scope.len()..])
+        )
+    } else {
+        String::from_utf8_lossy(&function.name).into_owned()
+    }
+}
+
+fn signature_default(expression: &Expr) -> String {
+    match &expression.kind {
+        ExprKind::Literal(Value::Null) => "null".to_owned(),
+        ExprKind::Literal(Value::Bool(value)) => value.to_string(),
+        ExprKind::Literal(Value::String(value)) => {
+            let bytes = value.bytes();
+            format!(
+                "'{}{}'",
+                String::from_utf8_lossy(&bytes[..bytes.len().min(10)]),
+                if bytes.len() > 10 { "..." } else { "" }
+            )
+        }
+        ExprKind::Literal(Value::Array(value)) => {
+            if value.is_empty() { "[]" } else { "[...]" }.to_owned()
+        }
+        ExprKind::Literal(value) => String::from_utf8_lossy(&value.to_bytes()).into_owned(),
+        ExprKind::Array(items) | ExprKind::LongArray(items) => {
+            if items.is_empty() { "[]" } else { "[...]" }.to_owned()
+        }
+        ExprKind::Constant(name) => String::from_utf8_lossy(name).into_owned(),
+        ExprKind::NamespacedName(name) => String::from_utf8_lossy(&name.constant).into_owned(),
+        ExprKind::ScopedMember(class, member) => {
+            let class = match &class.kind {
+                ExprKind::NamespacedName(name) => String::from_utf8_lossy(&name.class).into_owned(),
+                _ => signature_default(class),
+            };
+            if let ExprKind::Literal(Value::String(name)) = &member.kind {
+                format!("{class}::{}", String::from_utf8_lossy(&name.bytes()))
+            } else {
+                "<expression>".to_owned()
+            }
+        }
+        ExprKind::Group(inner) => signature_default(inner),
+        _ => "<expression>".to_owned(),
+    }
 }

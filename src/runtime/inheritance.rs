@@ -262,23 +262,14 @@ impl Runtime {
 
     fn validate_inheritance(&mut self, class: &Class) -> Result<(), Error> {
         self.validate_trait_requirements(class)?;
-        self.validate_property_contracts(class)?;
-        self.validate_interfaces(class)?;
-        if !class.declaration.is_abstract
-            && let Some(method) = class.methods.iter().find(|method| method.is_abstract)
-        {
-            return Err(Error::new(
-                ErrorKind::Error,
-                format!(
-                    "Class {} must implement abstract method {}()",
-                    String::from_utf8_lossy(&class.name),
-                    String::from_utf8_lossy(&method.name)
-                ),
-                class.declaration.line,
-            ));
+        let missing_hooks = self.validate_property_contracts(class)?;
+        // Hook completeness precedes ordinary property redeclaration checks.
+        if !missing_hooks.is_empty() {
+            self.validate_abstract_members(class, missing_hooks.clone())?;
         }
+        self.validate_interfaces(class)?;
         let Some(parent) = &class.parent else {
-            return Ok(());
+            return self.validate_abstract_members(class, missing_hooks);
         };
         for (properties, inherited, is_static) in [
             (&class.declaration.properties, &parent.properties, false),
@@ -418,41 +409,44 @@ impl Runtime {
             let Some(inherited) = objects::method(parent, name) else {
                 continue;
             };
-            if inherited.visibility == crate::ast::Visibility::Private {
-                if name.eq_ignore_ascii_case(b"__construct") && parent.method_is_final(name) {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        "Cannot override final constructor",
-                        function.line,
-                    ));
-                }
+            if inherited.visibility == crate::ast::Visibility::Private
+                && !name.eq_ignore_ascii_case(b"__construct")
+            {
                 continue;
             }
-            if function.is_abstract && !inherited.is_abstract {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    format!(
-                        "Cannot make non abstract method {}() abstract",
-                        String::from_utf8_lossy(&inherited.name)
-                    ),
-                    function.line,
-                ));
-            }
-            if function.is_static != inherited.is_static {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    "Cannot change staticness of inherited method",
-                    function.line,
-                ));
-            }
+            let fatal = |runtime: &mut Self, message| {
+                runtime.deferred_compile_fatal_at(message, &function.source, function.line)
+            };
             if parent.method_is_final(name) {
-                return Err(Error::new(
-                    ErrorKind::Error,
+                return Err(fatal(
+                    self,
                     format!(
                         "Cannot override final method {}()",
                         String::from_utf8_lossy(&inherited.name)
                     ),
-                    function.line,
+                ));
+            }
+            if function.is_static != inherited.is_static {
+                let status = |is_static| if is_static { "static" } else { "non static" };
+                return Err(fatal(
+                    self,
+                    format!(
+                        "Cannot make {} method {}() {} in class {}",
+                        status(inherited.is_static),
+                        String::from_utf8_lossy(&inherited.name),
+                        status(function.is_static),
+                        class.display_name()
+                    ),
+                ));
+            }
+            if function.is_abstract && !inherited.is_abstract {
+                return Err(fatal(
+                    self,
+                    format!(
+                        "Cannot make non abstract method {}() abstract in class {}",
+                        String::from_utf8_lossy(&inherited.name),
+                        class.display_name()
+                    ),
                 ));
             }
             // Constructors retain their original abstract prototype, including
@@ -466,25 +460,30 @@ impl Runtime {
                 inherited
             };
             if function.visibility > inherited.visibility {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    "Cannot restrict inherited method visibility",
-                    function.line,
+                let public = inherited.visibility == crate::ast::Visibility::Public;
+                return Err(fatal(
+                    self,
+                    format!(
+                        "Access level to {}() must be {} (as in class {}){}",
+                        String::from_utf8_lossy(&function.name),
+                        if public { "public" } else { "protected" },
+                        String::from_utf8_lossy(method_visibility::declaring_name(&inherited)),
+                        if public { "" } else { " or weaker" }
+                    ),
                 ));
             }
             if !self.compatible_method(function, &inherited, class) {
-                return Err(Error::new(
-                    ErrorKind::Error,
+                return Err(fatal(
+                    self,
                     format!(
-                        "Declaration of {}() must be compatible with {}()",
-                        String::from_utf8_lossy(&function.name),
-                        String::from_utf8_lossy(&inherited.name)
+                        "Declaration of {} must be compatible with {}",
+                        self.inheritance_method_signature(function, class),
+                        self.inheritance_method_signature(&inherited, class)
                     ),
-                    function.line,
                 ));
             }
         }
-        Ok(())
+        self.validate_abstract_members(class, missing_hooks)
     }
 
     pub(super) fn compatible_method(

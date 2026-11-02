@@ -783,6 +783,10 @@ new request. The CLI returns the low eight bits of the requested status.
   report incompatible types, readonly changes, and narrowed read/set visibility
   as compile fatals. Diagnostics name the declaring ancestor and canonical type;
   the CLI reports them without invoking PHP catch blocks or exception handlers.
+- [Inherited method declarations](docs/conformance/php-8.5.0-inherited-methods-hillclimb.txt)
+  report final overrides, staticness changes, narrowed visibility, incompatible
+  signatures, and missing abstract members as compile fatals. Signatures retain
+  canonical types, parameter defaults, references, variadics, and return types.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

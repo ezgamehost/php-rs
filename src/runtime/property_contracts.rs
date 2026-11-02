@@ -80,7 +80,10 @@ impl Runtime {
         Ok(())
     }
 
-    pub(super) fn validate_property_contracts(&mut self, class: &Class) -> Result<(), Error> {
+    pub(super) fn validate_property_contracts(
+        &mut self,
+        class: &Class,
+    ) -> Result<Vec<Rc<FunctionDecl>>, Error> {
         self.validate_setter_types(class)?;
         let mut missing: Vec<Rc<FunctionDecl>> = class
             .properties
@@ -174,7 +177,15 @@ impl Runtime {
                 }
             }
         }
-        if !class.declaration.is_abstract && !missing.is_empty() {
+        Ok(missing)
+    }
+
+    pub(super) fn validate_abstract_members(
+        &mut self,
+        class: &Class,
+        missing: Vec<Rc<FunctionDecl>>,
+    ) -> Result<(), Error> {
+        if !class.declaration.is_abstract {
             let mut methods: Vec<_> = class
                 .methods
                 .iter()
@@ -184,6 +195,9 @@ impl Runtime {
             methods.extend(missing);
             let missing = methods;
             let count = missing.len();
+            if count == 0 {
+                return Ok(());
+            }
             let plural = if count == 1 { "" } else { "s" };
             let mut names = missing
                 .iter()
@@ -212,8 +226,8 @@ impl Runtime {
                     class.display_name()
                 )
             };
-            return Err(self.compile_fatal_at(
-                &message,
+            return Err(self.deferred_compile_fatal_at(
+                message,
                 &class.declaration.source,
                 class.declaration.line,
             ));
