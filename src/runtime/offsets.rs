@@ -61,6 +61,9 @@ impl Offset {
             return Ok(key.clone());
         }
         let value = self.value(line)?;
+        if unsetting {
+            reject_array_key(value, "unset", "on array", line)?;
+        }
         let key = if unsetting && *value == Value::Null {
             ArrayKey::String(Vec::new())
         } else {
@@ -70,6 +73,30 @@ impl Offset {
         Ok(key)
     }
 }
+
+fn reject_array_key(
+    value: &Value,
+    operation: &str,
+    context: &str,
+    line: usize,
+) -> Result<(), Error> {
+    let value = value.dereferenced();
+    if matches!(
+        value,
+        Value::Array(_) | Value::Object(_) | Value::Closure(_)
+    ) {
+        return Err(Error::new(
+            ErrorKind::TypeError,
+            format!(
+                "Cannot {operation} offset of type {} {context}",
+                builtins::debug_type(&value)
+            ),
+            line,
+        ));
+    }
+    Ok(())
+}
+
 pub(super) fn read_offset(
     value: Value,
     offset: &mut Offset,
@@ -89,6 +116,9 @@ pub(super) fn read_offset(
             line,
         )),
         Value::Array(array) => {
+            if access != Access::Read {
+                reject_array_key(offset.value(line)?, "access", "in isset or empty", line)?;
+            }
             let key = offset.array_key(line, false, warnings)?;
             if let Some(value) = array.get(&key) {
                 return Ok(value.dereferenced());
@@ -123,10 +153,15 @@ pub(super) fn read_offset(
                 Ok(Value::Null)
             }
         }
-        _ => {
+        value => {
             if access == Access::Read {
+                let kind = match &value {
+                    Value::Bool(true) => "true",
+                    Value::Bool(false) => "false",
+                    _ => builtins::debug_type(&value),
+                };
                 warnings.warn(format!(
-                    "Trying to access array offset on a scalar on line {line}"
+                    "Trying to access array offset on {kind} on line {line}"
                 ))?;
             }
             Ok(Value::Null)
@@ -140,6 +175,10 @@ pub(super) fn string_index(
     warnings: &mut dyn WarningSink,
 ) -> Result<Option<i64>, Error> {
     match key {
+        Value::Reference(value) | Value::Indirect(value) => {
+            let value = value.borrow().clone();
+            return string_index(&value, line, access, warnings);
+        }
         Value::Int(n) => return Ok(Some(*n)),
         Value::Float(_) | Value::Bool(_) | Value::Null => {
             if access == Access::Read {
@@ -174,13 +213,16 @@ pub(super) fn string_index(
         _ => {}
     }
     if matches!(access, Access::Probe | Access::Empty | Access::ProbeValue)
-        || (access == Access::Coalesce && !matches!(key, Value::Array(_)))
+        || (access == Access::Coalesce && matches!(key, Value::String(_)))
     {
         Ok(None)
     } else {
         Err(Error::new(
             ErrorKind::TypeError,
-            "Cannot access offset of this type on string",
+            format!(
+                "Cannot access offset of type {} on string",
+                builtins::debug_type(key)
+            ),
             line,
         ))
     }

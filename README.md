@@ -450,7 +450,10 @@ new request. The CLI returns the low eight bits of the requested status.
   `${name[index]}`, and `${expression}` forms execute with compile-time deprecations.
   Heredoc delimiters and indentation respect nested interpolated PHP expressions.
 - Byte string offset reads and writes, negative indexes, space padding, and
-  string offset checks with `isset`, `empty`, and null coalescing.
+  string offset checks with `isset`, `empty`, and null coalescing. Invalid array
+  and string offsets report their actual type and operation; scalar offset
+  warnings distinguish null, booleans, and numeric values. `array_key_exists`
+  preserves PHP's distinct opcode/native diagnostics and null-key deprecation.
 - `printf`, `sprintf`, `vprintf`, `vsprintf`, `fprintf`, and `vfprintf` share byte-oriented formatting,
   positional arguments, dynamic width/precision, custom padding, integer bases,
   floating-point formats, and PHP's format-validation errors. String-conversion

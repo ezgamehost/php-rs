@@ -77,9 +77,15 @@ impl ArrayKey {
                 }
             }
             Value::Array(_) | Value::Closure(_) | Value::Object(_) => {
+                let kind = match value {
+                    Value::Array(_) => "array",
+                    Value::Closure(_) => "Closure",
+                    Value::Object(object) => object.class_name.split('\0').next().unwrap(),
+                    _ => unreachable!(),
+                };
                 return Err(Error::new(
                     ErrorKind::TypeError,
-                    "Illegal offset type",
+                    format!("Cannot access offset of type {kind} on array"),
                     line,
                 ));
             }

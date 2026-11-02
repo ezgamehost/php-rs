@@ -2101,6 +2101,25 @@ earlier notes listing the last-error APIs as absent. Configurable fatal backtrac
 compile-fatal trace capture, and the other documented gaps remain incomplete;
 the INI-based fatal-trace fixture is still unsupported.
 
+The [offset diagnostic slice](conformance/php-8.5.0-offset-diagnostics-hillclimb.txt)
+adds **30 upstream passes**: 26 Zend and 4 array fixtures, with no regressions
+across the six full suites. Zend reaches **2310 / 2538 / 408** and array reaches
+**736 / 52 / 52**; the other full-suite counts are unchanged. Invalid array/string
+offsets identify the actual type, with distinct unset and isset/empty errors.
+Scalar offset warnings distinguish null, true, false, and numeric/resource types.
+String coalescing rejects object and resource keys. `array_key_exists` uses its
+own null-key deprecation and preserves the different invalid-key diagnostics of
+optimized positional calls and native calls.
+
+All 797 existing Rust tests, 57 project PHPT fixtures, formatting, and Clippy pass.
+A temporary reference probe matches exact output and status for direct, dynamic,
+alias, named, reordered named, and unpacked calls, including second-argument type
+validation before key conversion. No custom tests or generated matrices were
+added. PHP 8.5.0 `Zend/zend.c`, `Zend/zend_execute.c`, `ext/standard/array.c`, and
+upstream fixtures establish the distinctions. Nested lvalue timing, intermediate
+string probes, mutation during compound operations, shortest float formatting in
+precision diagnostics, and other documented limitations remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2108,11 +2127,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2284 | 2564 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2310 | 2538 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 732 | 56 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 736 | 52 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

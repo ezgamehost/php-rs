@@ -1499,7 +1499,29 @@ impl Runtime {
             }
             Builtin::ArrayKeyExists => {
                 let array = require_array(args[1].as_ref().unwrap(), &name, 2, line)?;
-                let key = ArrayKey::from_value(first, line, self)?;
+                let key = match first {
+                    Value::Null => {
+                        self.warn(format!("Deprecated: Using null as the key parameter for array_key_exists() is deprecated, use an empty string instead on line {line}"))?;
+                        ArrayKey::String(Vec::new())
+                    }
+                    Value::Array(_) | Value::Object(_) | Value::Closure(_) => {
+                        // Direct positional array_key_exists calls use a Zend
+                        // opcode; dynamic, named, unpacked and alias calls use
+                        // the native function's argument diagnostic instead.
+                        let message = if direct_positional && name != "key_exists" {
+                            format!(
+                                "Cannot access offset of type {} on array",
+                                debug_type(first)
+                            )
+                        } else {
+                            format!(
+                                "{name}(): Argument #1 ($key) must be a valid array offset type"
+                            )
+                        };
+                        return Err(Error::new(ErrorKind::TypeError, message, line));
+                    }
+                    _ => ArrayKey::from_value(first, line, self)?,
+                };
                 Ok(Value::Bool(array.get(&key).is_some()))
             }
             Builtin::ArraySearch(return_key) => {
