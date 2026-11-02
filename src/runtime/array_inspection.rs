@@ -12,10 +12,11 @@ impl Runtime {
         let array = require_array(args[0].as_ref().unwrap(), name, 1, line)?;
         match kind {
             Builtin::ArrayEdge(last, key) => {
+                let entries = array.entries();
                 let entry = if last {
-                    array.entries().last()
+                    entries.last()
                 } else {
-                    array.entries().first()
+                    entries.first()
                 };
                 Ok(entry.map_or(Value::Null, |(k, v)| {
                     if key { k.to_value() } else { v.dereferenced() }
@@ -33,7 +34,7 @@ impl Runtime {
                 } else {
                     PhpArray::default()
                 };
-                for (key, value) in array.entries() {
+                for (ref key, ref value) in array.iter() {
                     let value = value.dereferenced();
                     if !matches!(value, Value::Int(_) | Value::String(_)) {
                         self.warn(format!("{name}(): Can only {} string and integer values, entry skipped on line {line}", if flip { "flip" } else { "count" }))?;
@@ -44,7 +45,7 @@ impl Runtime {
                         key.to_value()
                     } else {
                         let count = match result.get(&value_key) {
-                            Some(Value::Int(count)) => *count,
+                            Some(Value::Int(count)) => count,
                             None => 0,
                             _ => unreachable!(),
                         };
@@ -64,7 +65,7 @@ impl Runtime {
                     ));
                 }
                 let mut result = PhpArray::with_capacity(array.len(), line)?;
-                for ((_, key), (_, value)) in array.entries().iter().zip(values.entries()) {
+                for ((_, key), (_, value)) in array.iter().zip(values.iter_copied()) {
                     let key = key.dereferenced();
                     let key = match key {
                         Value::Int(n) => ArrayKey::Int(n),

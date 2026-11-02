@@ -16,8 +16,12 @@ impl Runtime {
             }
             Value::Array(array) if array.len() == 2 => {
                 match (
-                    array.get(&ArrayKey::Int(0)).map(Value::dereferenced),
-                    array.get(&ArrayKey::Int(1)).map(Value::dereferenced),
+                    array
+                        .get(&ArrayKey::Int(0))
+                        .map(|value| value.dereferenced()),
+                    array
+                        .get(&ArrayKey::Int(1))
+                        .map(|value| value.dereferenced()),
                 ) {
                     (Some(Value::String(class)), Some(Value::String(method))) => {
                         Some((class.to_vec(), method.to_vec()))

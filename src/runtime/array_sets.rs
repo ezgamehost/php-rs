@@ -43,8 +43,8 @@ impl Runtime {
         if matches!(operation, Operation::Intersection) {
             return self.array_intersection(input, extra, line);
         }
-        let arrays = extra
-            .entries()
+        let extra_entries = extra.entries();
+        let arrays = extra_entries
             .iter()
             .enumerate()
             .map(|(index, (_, value))| builtins::require_array(value, name, index + 2, line))
@@ -58,11 +58,11 @@ impl Runtime {
             Operation::DifferenceAssoc | Operation::IntersectionAssoc
         );
         let mut output = PhpArray::default();
-        for (key, value) in input.entries() {
+        for (ref key, ref value) in input.iter_copied() {
             let mut keep = true;
             for array in &arrays {
                 let equal = if let Some(other) = array.get(key) {
-                    !assoc || self.set_compare(value, other, line, &mut pending) == Ordering::Equal
+                    !assoc || self.set_compare(value, &other, line, &mut pending) == Ordering::Equal
                 } else {
                     false
                 };
@@ -89,7 +89,7 @@ impl Runtime {
         // PHP's singleton path converts the needle before validating the
         // remaining arrays, and stops converting candidates after a match.
         if input.len() == 1 {
-            let search = self.set_string(&input.entries()[0].1, line, &mut pending);
+            let search = self.set_string(&input.entry(0).unwrap().1, line, &mut pending);
             let mut found = false;
             for (index, (_, value)) in extra.entries().iter().enumerate() {
                 let array = match builtins::require_array(value, "array_diff", index + 2, line) {
@@ -100,7 +100,7 @@ impl Runtime {
                     }
                 };
                 if !found {
-                    for (_, value) in array.entries() {
+                    for (_, ref value) in array.iter() {
                         if self.set_string(value, line, &mut pending) == search {
                             found = true;
                             break;
@@ -119,8 +119,8 @@ impl Runtime {
                 Err,
             );
         }
-        let arrays = extra
-            .entries()
+        let extra_entries = extra.entries();
+        let arrays = extra_entries
             .iter()
             .enumerate()
             .map(|(index, (_, value))| {
@@ -135,12 +135,12 @@ impl Runtime {
         }
         let mut exclude = HashSet::new();
         for array in arrays {
-            for (_, value) in array.entries() {
+            for (_, ref value) in array.iter() {
                 exclude.insert(self.set_string(value, line, &mut pending));
             }
         }
         let mut output = PhpArray::default();
-        for (key, value) in input.entries() {
+        for (ref key, ref value) in input.iter() {
             if !exclude.contains(&self.set_string(value, line, &mut pending)) {
                 // Unlike the key-based functions, array_diff copies the
                 // reference container even when it only has one owner.
@@ -156,6 +156,7 @@ impl Runtime {
         extra: &PhpArray,
         line: usize,
     ) -> Result<Value, Error> {
+        let extra_entries = extra.entries();
         let mut arrays = vec![input];
         let mut orders = Vec::new();
         let mut pending = None;
@@ -164,7 +165,7 @@ impl Runtime {
         for index in 0..=extra.len() {
             if index > 0 {
                 match builtins::require_array(
-                    &extra.entries()[index - 1].1,
+                    &extra_entries[index - 1].1,
                     "array_intersect",
                     index + 1,
                     line,
@@ -180,8 +181,8 @@ impl Runtime {
             let mut order: Vec<_> = (0..array.len()).collect();
             sorting::algorithm::sort(&mut order, &mut |&a, &b| {
                 self.set_compare(
-                    &array.entries()[a].1,
-                    &array.entries()[b].1,
+                    &array.entry(a).unwrap().1,
+                    &array.entry(b).unwrap().1,
                     line,
                     &mut pending,
                 )
@@ -203,8 +204,11 @@ impl Runtime {
             for index in 1..arrays.len() {
                 while positions[index] < orders[index].len() {
                     comparison = self.set_compare(
-                        &input.entries()[current].1,
-                        &arrays[index].entries()[orders[index][positions[index]]].1,
+                        &input.entry(current).unwrap().1,
+                        &arrays[index]
+                            .entry(orders[index][positions[index]])
+                            .unwrap()
+                            .1,
                         line,
                         &mut pending,
                     );
@@ -215,7 +219,7 @@ impl Runtime {
                 }
                 if positions[index] == orders[index].len() {
                     for &remaining in &orders[0][positions[0]..] {
-                        output.remove(&input.entries()[remaining].0);
+                        output.remove(&input.entry(remaining).unwrap().0);
                     }
                     break 'scan;
                 }
@@ -227,14 +231,17 @@ impl Runtime {
             }
             if comparison != Ordering::Equal {
                 loop {
-                    output.remove(&input.entries()[orders[0][positions[0]]].0);
+                    output.remove(&input.entry(orders[0][positions[0]]).unwrap().0);
                     positions[0] += 1;
                     if positions[0] == orders[0].len() {
                         break 'scan;
                     }
                     if self.set_compare(
-                        &input.entries()[orders[0][positions[0]]].1,
-                        &arrays[mismatch].entries()[orders[mismatch][positions[mismatch]]].1,
+                        &input.entry(orders[0][positions[0]]).unwrap().1,
+                        &arrays[mismatch]
+                            .entry(orders[mismatch][positions[mismatch]])
+                            .unwrap()
+                            .1,
                         line,
                         &mut pending,
                     ) != Ordering::Less
@@ -249,8 +256,8 @@ impl Runtime {
                         break 'scan;
                     }
                     if self.set_compare(
-                        &input.entries()[orders[0][positions[0] - 1]].1,
-                        &input.entries()[orders[0][positions[0]]].1,
+                        &input.entry(orders[0][positions[0] - 1]).unwrap().1,
+                        &input.entry(orders[0][positions[0]]).unwrap().1,
                         line,
                         &mut pending,
                     ) != Ordering::Equal

@@ -35,7 +35,7 @@ impl Runtime {
         };
         let result = if let Value::Array(subjects) = &subject {
             let mut result = PhpArray::default();
-            for (key, value) in subjects.entries() {
+            for (ref key, ref value) in subjects.iter() {
                 result.insert(key.clone(), replace_subject(self, value)?);
             }
             Value::Array(Rc::new(result))
@@ -61,12 +61,12 @@ impl Runtime {
             return Ok((subject, count));
         }
         if let Value::Array(searches) = search {
-            for (index, (_, needle)) in searches.entries().iter().enumerate() {
+            for (index, (_, ref needle)) in searches.iter().enumerate() {
                 // Convert each element when PHP reaches it: Stringable callbacks may
                 // mutate referenced values used by a later search or replacement.
                 let needle = self.string_bytes(&needle.dereferenced(), line)?;
                 let replacement = if let Value::Array(replacements) = replace {
-                    match replacements.entries().get(index) {
+                    match replacements.entry(index) {
                         Some((_, value)) => self.string_bytes(&value.dereferenced(), line)?,
                         None => Vec::new(),
                     }

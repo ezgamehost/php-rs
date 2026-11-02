@@ -1,6 +1,6 @@
 use super::*;
 
-impl PhpArray {
+impl ArrayData {
     pub(crate) fn pop(&mut self) -> Value {
         let Some((key, value)) = self.entries.pop() else {
             return Value::Null;

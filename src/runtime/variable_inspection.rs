@@ -44,8 +44,9 @@ impl Runtime {
             active: HashSet::new(),
             error: None,
         };
+        let extra_entries = extra.entries();
         let values = std::iter::once(args[0].as_ref().unwrap())
-            .chain(extra.entries().iter().map(|(_, value)| value));
+            .chain(extra_entries.iter().map(|(_, value)| value));
         for (index, value) in values.enumerate() {
             self.compact_names(value, index + 1, line, &mut state)?;
         }
@@ -95,7 +96,7 @@ impl Runtime {
                     state.error = Some(error);
                     return Ok(());
                 }
-                for (_, value) in array.entries() {
+                for (_, ref value) in array.iter() {
                     self.compact_names(value, position, line, state)?;
                 }
                 state.active.remove(&identity);

@@ -54,7 +54,7 @@ impl Runtime {
             if preserve_keys {
                 return Ok(value.clone());
             }
-            for (_, value) in input.entries() {
+            for (_, ref value) in input.iter() {
                 array.append(value.clone(), line)?;
             }
             return Ok(Value::Array(Rc::new(array)));

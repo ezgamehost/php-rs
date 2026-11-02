@@ -2617,13 +2617,35 @@ separation, repeated children, constructor reentry, sort detachment, subclass
 construction, scalar errors/traces, and constructor-failure destruction. No custom
 tests or matrices were added.
 
-A verified limitation remains: if a nested array is copied out after getChildren,
+That slice retained a verified limitation: if a nested array is copied out after getChildren,
 PHP's direct native child writes also mutate those captured array copies, while
 Rust currently separates them through copy-on-write. For example, after
 $p = new RecursiveArrayIterator([[1]]); $c = $p->getChildren(); $copy = $p[0];
 $c[0] = 2;, PHP exposes 2 in $copy[0] and Rust retains 1. This slice does not claim
 complete child alias semantics. RecursiveIteratorIterator and other SPL iterator
 classes, serialization, and prior runtime/harness gaps also remain incomplete.
+
+The [shared native-array storage slice](conformance/php-8.5.0-shared-array-storage-hillclimb.txt)
+resolves the captured-array limitation above. Parent and child share the same
+hash table after child construction. Native child writes, removals, nested writes,
+and writable references reach captured array aliases; ordinary writes still
+separate through copy-on-write. Parent writes, repeated children, constructor
+reentry, and child sorting retain their separation behavior.
+
+PhpArray now uses checked interior mutability for native shared writes. The same
+storage also replaces the unsafe shared-Rc mutation previously used by native
+array_splice. Callback-facing reads release their table borrow before running
+PHP and track live iteration positions through removals. Snapshot and dump reads
+preserve PHP's distinction between shared and unshared reference containers.
+
+All six full-suite counts are unchanged, with **zero regressions** across 8,267
+fixtures. All **797 existing Rust tests**, **57 reference-checked project PHPT**,
+formatting, Clippy, and diff checks pass. The 35 upstream fixtures affected during
+the storage refactor were rerun and recovered. No custom tests or matrices were
+added. Direct CLI comparisons also match the captured-alias reproduction and
+native writes during foreach, array_map, and __debugInfo. This storage slice does
+not claim new full-suite passes. Sorted-set callback mutation, physical bucket
+edges, other SPL classes, serialization, and earlier runtime gaps remain.
 
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.

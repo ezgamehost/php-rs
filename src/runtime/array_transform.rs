@@ -15,7 +15,7 @@ impl Runtime {
             None => false,
         };
         let mut output = PhpArray::default();
-        for (key, value) in input.entries() {
+        for (ref key, ref value) in input.iter_copied() {
             let key = match key {
                 ArrayKey::Int(_) => key.clone(),
                 ArrayKey::String(bytes) => {
@@ -52,7 +52,7 @@ impl Runtime {
         if flags == 2 {
             let mut seen = HashSet::new();
             let mut output = PhpArray::default();
-            for (key, value) in input.entries() {
+            for (ref key, ref value) in input.iter_copied() {
                 if seen.insert(self.set_string(value, line, &mut pending)) {
                     output.insert(key.clone(), value.copy_array_entry());
                 }
@@ -65,8 +65,8 @@ impl Runtime {
         let mut order: Vec<_> = (0..input.len()).collect();
         sorting::algorithm::sort(&mut order, &mut |&a, &b| {
             self.sort_compare(
-                &input.entries()[a].1,
-                &input.entries()[b].1,
+                &input.entry(a).unwrap().1,
+                &input.entry(b).unwrap().1,
                 flags,
                 line,
                 &mut pending,
@@ -78,8 +78,8 @@ impl Runtime {
         let mut kept = order[0];
         for &current in &order[1..] {
             if self.sort_compare(
-                &input.entries()[kept].1,
-                &input.entries()[current].1,
+                &input.entry(kept).unwrap().1,
+                &input.entry(current).unwrap().1,
                 flags,
                 line,
                 &mut pending,
@@ -91,7 +91,7 @@ impl Runtime {
                 // retain whichever appeared first in the original array.
                 let removed = kept.max(current);
                 kept = kept.min(current);
-                output.remove(&input.entries()[removed].0);
+                output.remove(&input.entry(removed).unwrap().0);
             }
         }
         pending.map_or_else(|| Ok(Value::Array(Rc::new(output))), Err)

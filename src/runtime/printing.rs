@@ -137,7 +137,7 @@ impl Runtime {
     ) -> Result<(), Error> {
         state.output.extend(std::iter::repeat_n(b' ', indent));
         state.output.extend_from_slice(b"(\n");
-        for (key, value) in table.entries() {
+        for (ref key, ref value) in table.iter() {
             state.output.extend(std::iter::repeat_n(b' ', indent + 4));
             state.output.push(b'[');
             let raw = key.to_value().to_bytes();

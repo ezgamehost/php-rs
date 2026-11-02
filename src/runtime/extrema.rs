@@ -30,18 +30,21 @@ impl Runtime {
         }
         if extra.is_empty() {
             let array = builtins::require_array(first, name, 1, line)?;
-            let Some(mut best) = array.entries().first().map(|(_, value)| value) else {
+            let Some(mut best) = array.entries().first().map(|(_, value)| value.clone()) else {
                 return Err(Error::new(
                     ErrorKind::ValueError,
                     format!("{name}(): Argument #1 ($value) must contain at least one element"),
                     line,
                 ));
             };
-            for (_, candidate) in array.entries() {
+            for index in 0..array.len() {
+                let Some((_, candidate)) = array.entries().get(index).cloned() else {
+                    break;
+                };
                 // Hash-table extrema compare the incumbent to the candidate,
                 // unlike the variadic path. Uncomparable values map to PHP's 1.
                 let order = self
-                    .compare(best, candidate, line)?
+                    .compare(&best, &candidate, line)?
                     .unwrap_or(Ordering::Greater);
                 if order
                     == if maximum {
@@ -50,7 +53,7 @@ impl Runtime {
                         Ordering::Greater
                     }
                 {
-                    best = candidate;
+                    best = candidate.clone();
                 }
             }
             return Ok(best.dereferenced());
@@ -78,21 +81,22 @@ impl Runtime {
             };
             return Ok(if left { first } else { second }.dereferenced());
         }
-        let mut best = first;
+        let mut best = first.clone();
+        let extra_entries = extra.entries();
         let mut mode = match first {
             Value::Int(_) => NumericMode::Integer,
             Value::Float(_) => NumericMode::Float,
             _ => NumericMode::Generic,
         };
-        for (_, candidate) in extra.entries() {
+        for (_, candidate) in extra_entries.iter() {
             let order = match (mode, candidate) {
                 (NumericMode::Integer, Value::Int(n)) => {
-                    let Value::Int(best) = best else {
+                    let Value::Int(best) = &best else {
                         unreachable!()
                     };
                     Some(n.cmp(best))
                 }
-                (NumericMode::Integer, Value::Float(_)) if exact_float_integer(best) => {
+                (NumericMode::Integer, Value::Float(_)) if exact_float_integer(&best) => {
                     mode = NumericMode::Float;
                     candidate.as_float().partial_cmp(&best.as_float())
                 }
@@ -106,7 +110,7 @@ impl Runtime {
                     // Once PHP falls back to generic comparison it stays there.
                     mode = NumericMode::Generic;
                     Some(
-                        self.compare(candidate, best, line)?
+                        self.compare(candidate, &best, line)?
                             .unwrap_or(Ordering::Greater),
                     )
                 }
@@ -118,7 +122,7 @@ impl Runtime {
                     Ordering::Less
                 })
             {
-                best = candidate;
+                best = candidate.clone();
             }
         }
         Ok(best.dereferenced())

@@ -1,0 +1,75 @@
+PHP 8.5.0 shared native-array storage
+Baseline: 60da102 (RecursiveArrayIterator child construction)
+
+zend
+Before: 5256 cases; 2533 passed, 2315 failed, 408 unsupported
+After: 5256 cases; 2533 passed, 2315 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 287 passed, 168 failed, 37 unsupported
+After: 492 cases; 287 passed, 168 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 159 passed, 525 failed, 94 unsupported
+After: 778 cases; 159 passed, 525 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 399 passed, 179 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+All 8,267 fixture statuses are retained: 4,203 passed, 3,204 failed,
+860 unsupported. This slice resolves the captured-child-array limitation from
+60da102; it does not claim new full-suite passes or complete PHP conformance.
+
+PhpArray now wraps its hash-table data in RefCell. Normal Rc::make_mut writes
+still duplicate array storage. Native RecursiveArrayIterator child writes use
+checked shared mutation, so captured aliases and the parent observe the same
+changes. Parent and child hold the same Rc table instead of linking the parent
+bucket to an indirect child-storage cell. Ordinary writes, repeated children,
+constructor reentry, and sorting retain their separation behavior.
+
+The same checked storage removes the unsafe shared-Rc writes from array_splice.
+Mutation closures execute no PHP; reads crossing callbacks take an owned current
+entry and release the table borrow. Weak read cursors adjust for removed buckets
+without retaining the rest of the values. Copies that inspect PHP reference
+ownership use copy_array_entry before introducing temporary Rust reference owners.
+The Rust PhpArray API now returns an owned Value from get and a Ref guard from
+entries; callers that execute PHP use owned entry reads instead of that guard.
+
+Validation:
+- 797 existing Rust tests pass (cargo test --locked).
+- 57 project PHPT fixtures pass against Rust and the PHP 8.5.0 reference.
+- All 35 upstream fixtures that regressed during development pass again.
+- Six final full suites compare to the pushed baseline with zero regressions.
+- cargo fmt --all -- --check, Clippy with -D warnings, and git diff --check pass.
+- No new custom tests or generated differential matrices were added.
+
+Direct CLI reference comparisons also match captured copies, parent separation,
+repeated children, constructor reentry, sorting, native nested writes and offset
+references, unset, foreach mutation, array_map mutation, and __debugInfo mutation.
+These probes supplement the upstream suites and do not add to the pass counts.
+
+Remaining work includes RecursiveIteratorIterator and other SPL classes,
+serialization, physical bucket/cursor edge cases, and previously recorded runtime
+and harness gaps. Mutation of input arrays during sorted-set callbacks is not
+claimed as complete by this slice.
+
+Final logs: /tmp/php-rs-shared-array-{suite}4.log, tests4.log, project4.log,
+clippy4.log, and recovered4.log. Only final full-suite results establish counts.
+Implementation source: PHP 8.5.0 ext/spl/spl_array.c, ext/standard/array.c,
+and existing Zend hash-table traversal behavior. Unsupported sections are not
+counted as passes.

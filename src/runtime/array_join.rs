@@ -27,7 +27,8 @@ impl Runtime {
         if replace {
             arrays.push(require_array(args[0].as_ref().unwrap(), name, 1, line)?);
         }
-        for (index, (_, value)) in extra.entries().iter().enumerate() {
+        let extra_entries = extra.entries();
+        for (index, (_, value)) in extra_entries.iter().enumerate() {
             arrays.push(require_array(
                 value,
                 name,
@@ -71,7 +72,7 @@ impl Runtime {
             kind,
             Builtin::ArrayMerge(true) | Builtin::ArrayReplace(true)
         );
-        for (key, entry) in src.entries() {
+        for (key, entry) in src.entries().iter() {
             if !replace && matches!(key, ArrayKey::Int(_)) {
                 dest.append(entry.copy_array_entry(), line)?;
                 continue;

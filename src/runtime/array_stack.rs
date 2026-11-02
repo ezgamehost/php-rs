@@ -44,7 +44,7 @@ impl Runtime {
                 Action::Pop => Ok(array.pop()),
                 Action::Shift => Ok(array.shift()),
                 Action::Push => {
-                    for (_, value) in extra.entries() {
+                    for (_, value) in extra.entries().iter() {
                         // Earlier appends survive a later exhausted-key error.
                         array.append(value.clone(), line)?;
                     }

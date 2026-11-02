@@ -46,7 +46,7 @@ impl Runtime {
                 let keys = require_array(first, name, 1, line)?;
                 let value = args[1].as_ref().unwrap();
                 let mut array = PhpArray::with_capacity(keys.len(), line)?;
-                for (_, key) in keys.entries() {
+                for (_, ref key) in keys.iter() {
                     let key = key.dereferenced();
                     let key = match key {
                         Value::Int(key) => ArrayKey::Int(key),
@@ -148,7 +148,7 @@ impl Runtime {
                         array.append(value.clone(), line)?;
                     }
                 }
-                for (key, value) in input.entries() {
+                for (key, value) in input.entries().iter() {
                     copy_entry(&mut array, key, shared_entry(value), false, line)?;
                 }
                 if length > 0 {

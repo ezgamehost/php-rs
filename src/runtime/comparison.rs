@@ -177,11 +177,11 @@ impl Runtime {
         if left.len() != right.len() {
             return Ok(left.len().partial_cmp(&right.len()));
         }
-        for (key, value) in left.entries() {
+        for (ref key, ref value) in left.iter() {
             let Some(other) = right.get(key) else {
                 return Ok(Some(Ordering::Greater));
             };
-            let order = self.compare_inner(value, other, line, seen)?;
+            let order = self.compare_inner(value, &other, line, seen)?;
             if order != Some(Ordering::Equal) {
                 return Ok(order);
             }

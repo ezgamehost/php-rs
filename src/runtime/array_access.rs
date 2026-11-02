@@ -8,7 +8,6 @@ impl Runtime {
                 .properties
                 .borrow()
                 .get(&self.instance_property_key(object, &location.name))
-                .cloned()
         } else if let Some(class) = &location.static_class {
             class.static_owner(&location.name).and_then(|owner| {
                 owner

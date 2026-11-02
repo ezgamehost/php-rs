@@ -48,7 +48,7 @@ impl Runtime {
                     .properties
                     .borrow()
                     .get(&key)
-                    .map_or(Value::Null, Value::dereferenced))
+                    .map_or(Value::Null, |value| value.dereferenced()))
             }
             _ => unreachable!(),
         }

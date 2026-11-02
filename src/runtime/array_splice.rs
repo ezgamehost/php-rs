@@ -136,15 +136,7 @@ struct SpliceGuard {
 
 impl SpliceGuard {
     fn take(&mut self, key: &ArrayKey) -> Option<Value> {
-        // SAFETY: The table was uniquely owned when the guard was created.
-        // Later aliases can only arise during synchronous PHP callbacks, which
-        // have returned before this method runs. No borrowed table/entry views
-        // escape those callbacks. Rc is single-threaded and all aliases retain
-        // exactly PhpArray. `take` only moves a Value and updates table metadata;
-        // it executes no PHP and returns before the moved Value is released.
-        // Thus no other Rc is dereferenced while this mutable borrow exists,
-        // as required by Rc::get_mut_unchecked (nightly; equivalent below).
-        unsafe { (&mut *Rc::as_ptr(&self.array).cast_mut()).take(key) }
+        self.array.mutate_shared(|array| array.take(key))
     }
 
     fn finish(
@@ -153,16 +145,7 @@ impl SpliceGuard {
         replacement: &PhpArray,
         line: usize,
     ) -> Result<(), Error> {
-        // SAFETY: Same exclusive access window as `take`. The replacement table
-        // predates the guard and is distinct because input parsing separated it.
-        // No PHP executes while rebuilding; object drops only enqueue work.
-        unsafe {
-            (&mut *Rc::as_ptr(&self.array).cast_mut()).finish_discard_splice(
-                plan,
-                replacement,
-                line,
-            )
-        }
+        self.array.finish_discard_splice(plan, replacement, line)
     }
 }
 

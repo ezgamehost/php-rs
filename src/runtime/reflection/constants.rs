@@ -124,7 +124,7 @@ impl Runtime {
                     .properties
                     .borrow()
                     .get(&ArrayKey::String(b"name".to_vec()))
-                    .map(Value::dereferenced)
+                    .map(|value| value.dereferenced())
                     .ok_or_else(|| Self::uninitialized_property(&object.class, b"name", line))?;
                 if method == b"getname" {
                     return Ok(reflected_name);

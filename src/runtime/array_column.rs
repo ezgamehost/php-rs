@@ -11,7 +11,7 @@ impl Runtime {
         let index = self.column_selector(args[2].as_ref().unwrap_or(&Value::Null), 3, line)?;
         let mut output = PhpArray::with_capacity(input.len(), line)?;
         let mut pending: Option<Error> = None;
-        for (_, row) in input.entries() {
+        for (_, ref row) in input.iter() {
             let row = row.dereferenced();
             let result = (|| {
                 let value = if let Some(column) = &column {
@@ -100,7 +100,7 @@ impl Runtime {
         match row {
             Value::Array(array) => {
                 let key = ArrayKey::from_value(selector, line, self)?;
-                Ok(array.get(&key).map(Value::dereferenced))
+                Ok(array.get(&key).map(|value| value.dereferenced()))
             }
             Value::Object(object) => {
                 let name = selector.to_bytes();

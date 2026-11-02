@@ -23,7 +23,7 @@ impl Runtime {
             .native_callback(args[1].as_ref().unwrap(), name, 2, false, line)?
             .unwrap();
         let all = matches!(kind, Find::All);
-        for (key, value) in array.entries() {
+        for (ref key, ref value) in array.iter() {
             let arguments = [value.clone(), key.to_value()];
             let matched = self
                 .call_callback(&callback, &arguments, line)?
@@ -65,11 +65,21 @@ impl Runtime {
             self.native_callback(args[0].as_ref().unwrap(), "array_map", 1, true, line)?;
         let first = args[1].as_ref().unwrap();
         let mut arrays = vec![require_array(first, "array_map", 2, line)?];
-        for (index, (_, value)) in extra.entries().iter().enumerate() {
+        let extra_entries = extra.entries();
+        for (index, (_, value)) in extra_entries.iter().enumerate() {
             arrays.push(require_array(value, "array_map", index + 3, line)?);
         }
         if arrays.len() == 1 && (callback.is_none() || arrays[0].is_empty()) {
             return Ok(first.clone());
+        }
+        if arrays.len() == 1 {
+            let callback = callback.as_ref().unwrap();
+            let mut result = PhpArray::default();
+            for (key, value) in arrays[0].iter() {
+                let value = self.call_callback(callback, &[value], line)?;
+                result.insert(key, value);
+            }
+            return Ok(Value::Array(Rc::new(result)));
         }
         let count = arrays.iter().map(|array| array.len()).max().unwrap_or(0);
         let mut result = PhpArray::default();
@@ -92,11 +102,7 @@ impl Runtime {
                 }
                 Value::Array(Rc::new(row))
             };
-            if arrays.len() == 1 {
-                result.insert(arrays[0].entries()[index].0.clone(), value);
-            } else {
-                result.append(value, line)?;
-            }
+            result.append(value, line)?;
         }
         Ok(Value::Array(Rc::new(result)))
     }
@@ -119,7 +125,7 @@ impl Runtime {
             None => 0,
         };
         let mut result = PhpArray::default();
-        for (key, value) in array.entries() {
+        for (ref key, ref value) in array.iter() {
             let keep = if let Some(callback) = &callback {
                 let values = match mode {
                     1 => vec![value.clone(), key.to_value()],
@@ -148,7 +154,7 @@ impl Runtime {
             .native_callback(args[1].as_ref().unwrap(), "array_reduce", 2, false, line)?
             .unwrap();
         let mut carry = args[2].clone().unwrap_or(Value::Null);
-        for (_, value) in array.entries() {
+        for (_, ref value) in array.iter() {
             carry = self.call_callback(&callback, &[carry, value.clone()], line)?;
         }
         Ok(carry)

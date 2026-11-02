@@ -20,7 +20,7 @@ impl Source {
     fn holds(&self, reference: &Cell) -> bool {
         match &self.holder {
             Holder::Instance(object, key) => object.upgrade().is_some_and(|object| {
-                matches!(object.properties.borrow().get(key), Some(Value::Reference(stored)) if Rc::ptr_eq(stored, reference))
+                matches!(object.properties.borrow().get(key), Some(Value::Reference(stored)) if Rc::ptr_eq(&stored, reference))
             }),
             Holder::Static(class) => class.upgrade().is_some_and(|class| {
                 class.static_values.borrow().get(&self.property.name).is_some_and(|stored| Rc::ptr_eq(stored, reference))
@@ -392,7 +392,6 @@ impl Runtime {
                     .properties
                     .borrow()
                     .get(&self.instance_property_key(object, &location.name))
-                    .cloned()
             } else if let Some(class) = &location.static_class {
                 self.static_cell(class, &location.name, line, false)?
                     .map(Value::Reference)
@@ -407,7 +406,7 @@ impl Runtime {
                     return Ok(());
                 };
                 let key = key.array_key(line, false, self)?;
-                value = array.get(&key).cloned();
+                value = array.get(&key);
             }
             let Some(Value::Reference(reference)) = value else {
                 return Ok(());

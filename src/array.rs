@@ -1,7 +1,7 @@
 use crate::{Error, ErrorKind, Value};
 mod stack;
 use std::{
-    cell::RefCell,
+    cell::{Ref, RefCell},
     collections::HashMap,
     rc::{Rc, Weak},
 };
@@ -99,10 +99,182 @@ impl ArrayKey {
     }
 }
 
+/// A PHP hash table. Normal writes still require a unique Rc; selected native
+/// operations may mutate a shared table through a checked borrow.
+#[derive(Debug, Default)]
+pub struct PhpArray {
+    data: RefCell<ArrayData>,
+}
+impl Clone for PhpArray {
+    fn clone(&self) -> Self {
+        Self {
+            data: RefCell::new(self.data.borrow().clone()),
+        }
+    }
+}
+impl PartialEq for PhpArray {
+    fn eq(&self, other: &Self) -> bool {
+        *self.data.borrow() == *other.data.borrow()
+    }
+}
+impl PhpArray {
+    pub fn entries(&self) -> Ref<'_, [(ArrayKey, Value)]> {
+        Ref::map(self.data.borrow(), |data| data.entries.as_slice())
+    }
+    pub(crate) fn entry(&self, index: usize) -> Option<(ArrayKey, Value)> {
+        self.data.borrow().entries.get(index).cloned()
+    }
+    pub fn get(&self, key: &ArrayKey) -> Option<Value> {
+        self.data.borrow().get(key).cloned()
+    }
+    pub(crate) fn with_value<R>(
+        &self,
+        key: &ArrayKey,
+        action: impl FnOnce(Option<&Value>) -> R,
+    ) -> R {
+        action(self.data.borrow().get(key))
+    }
+    /// Read one bucket at a time so callers can execute PHP between entries.
+    /// Removing an earlier bucket updates the cursor without retaining values.
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (ArrayKey, Value)> + '_ {
+        self.iter_with(Value::clone)
+    }
+    pub(crate) fn iter_copied(&self) -> impl Iterator<Item = (ArrayKey, Value)> + '_ {
+        self.iter_with(Value::copy_array_entry)
+    }
+    fn iter_with(&self, copy: fn(&Value) -> Value) -> impl Iterator<Item = (ArrayKey, Value)> + '_ {
+        let position = Rc::new(std::cell::Cell::new(0));
+        {
+            let data = self.data.borrow();
+            let mut readers = data.readers.borrow_mut();
+            readers.retain(|reader| reader.strong_count() != 0);
+            readers.push(Rc::downgrade(&position));
+        }
+        std::iter::from_fn(move || {
+            let data = self.data.borrow();
+            let (key, value) = data.entries.get(position.get())?;
+            let entry = (key.clone(), copy(value));
+            position.set(position.get() + 1);
+            Some(entry)
+        })
+    }
+    pub(crate) fn get_mut(&mut self, key: &ArrayKey) -> Option<&mut Value> {
+        self.data.get_mut().get_mut(key)
+    }
+    pub fn len(&self) -> usize {
+        self.data.borrow().len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.data.borrow().is_empty()
+    }
+    pub fn insert(&mut self, key: ArrayKey, value: Value) {
+        self.data.get_mut().insert(key, value);
+    }
+    pub fn append(&mut self, value: Value, line: usize) -> Result<(), Error> {
+        self.data.get_mut().append(value, line)
+    }
+    pub fn remove(&mut self, key: &ArrayKey) {
+        self.data.get_mut().remove(key);
+    }
+    pub(crate) fn append_key(&self, line: usize) -> Result<ArrayKey, Error> {
+        self.data.borrow().append_key(line)
+    }
+    pub(crate) fn with_capacity(capacity: usize, line: usize) -> Result<Self, Error> {
+        Ok(Self {
+            data: RefCell::new(ArrayData::with_capacity(capacity, line)?),
+        })
+    }
+    pub(crate) fn mutate_shared<R>(&self, action: impl FnOnce(&mut ArrayData) -> R) -> R {
+        action(&mut self.data.borrow_mut())
+    }
+    pub(crate) fn plan_discard_splice(
+        &self,
+        start: usize,
+        end: usize,
+        replacement_len: usize,
+    ) -> DiscardSplice {
+        self.data
+            .borrow()
+            .plan_discard_splice(start, end, replacement_len)
+    }
+    pub(crate) fn finish_discard_splice(
+        &self,
+        plan: DiscardSplice,
+        replacement: &Self,
+        line: usize,
+    ) -> Result<(), Error> {
+        self.data
+            .borrow_mut()
+            .finish_discard_splice(plan, &replacement.data.borrow(), line)
+    }
+    pub(crate) fn splice(
+        &mut self,
+        start: usize,
+        end: usize,
+        replacement: &Self,
+        result_used: bool,
+        line: usize,
+    ) -> Result<Self, Error> {
+        Ok(Self {
+            data: RefCell::new(self.data.get_mut().splice(
+                start,
+                end,
+                &replacement.data.borrow(),
+                result_used,
+                line,
+            )?),
+        })
+    }
+    pub(crate) fn reorder(&mut self, order: &[usize], renumber: bool) {
+        self.data.get_mut().reorder(order, renumber);
+    }
+    pub(crate) fn reorder_multisort(&mut self, order: &[usize]) {
+        self.data.get_mut().reorder_multisort(order);
+    }
+    pub(crate) fn shuffle(
+        &mut self,
+        pick: impl FnMut(usize) -> Result<usize, Error>,
+    ) -> Result<(), Error> {
+        self.data.get_mut().shuffle(pick)
+    }
+    pub(crate) fn cursor_entry(&self) -> Option<(ArrayKey, Value)> {
+        self.data.borrow().cursor_entry().cloned()
+    }
+    pub(crate) fn move_cursor(&mut self, action: Cursor) {
+        self.data.get_mut().move_cursor(action);
+    }
+    pub(crate) fn cursor_position(&self) -> usize {
+        self.data.borrow().cursor_position()
+    }
+    pub(crate) fn start_reference_iteration(&mut self, token: &Rc<()>) {
+        self.data.get_mut().start_reference_iteration(token);
+    }
+    pub(crate) fn start_reference_iteration_at(&mut self, token: &Rc<()>, position: usize) {
+        self.data
+            .get_mut()
+            .start_reference_iteration_at(token, position);
+    }
+    pub(crate) fn has_iterator(&self, token: &Rc<()>) -> bool {
+        self.data.borrow().has_iterator(token)
+    }
+    pub(crate) fn next_reference(&self, token: &Rc<()>) -> Option<(ArrayKey, Rc<RefCell<Value>>)> {
+        self.data.borrow().next_reference(token)
+    }
+    pub(crate) fn pop(&mut self) -> Value {
+        self.data.get_mut().pop()
+    }
+    pub(crate) fn shift(&mut self) -> Value {
+        self.data.get_mut().shift()
+    }
+    pub(crate) fn unshift(&mut self, values: &Self, line: usize) -> Result<(), Error> {
+        self.data.get_mut().unshift(&values.data.borrow(), line)
+    }
+}
+
 /// Insertion-ordered PHP map. The next append index survives removal, and is
 /// deliberately excluded from value equality.
 #[derive(Debug, Default)]
-pub struct PhpArray {
+pub(crate) struct ArrayData {
     entries: Vec<(ArrayKey, Value)>,
     positions: HashMap<ArrayKey, usize>,
     next_index: Option<i64>,
@@ -110,6 +282,7 @@ pub struct PhpArray {
     /// Each copy keeps its own iterator positions. Weak tokens do not keep an
     /// exited loop alive and allow a loop to resume after copy-on-write.
     iterators: RefCell<Vec<(Weak<()>, usize)>>,
+    readers: RefCell<Vec<Weak<std::cell::Cell<usize>>>>,
 }
 pub(crate) struct DiscardSplice {
     start: usize,
@@ -117,7 +290,7 @@ pub(crate) struct DiscardSplice {
     iterators: Vec<(Weak<()>, usize)>,
 }
 
-impl Clone for PhpArray {
+impl Clone for ArrayData {
     fn clone(&self) -> Self {
         let iterators: Vec<_> = self
             .iterators
@@ -150,15 +323,16 @@ impl Clone for PhpArray {
                 0
             },
             iterators: RefCell::new(iterators),
+            readers: RefCell::default(),
         }
     }
 }
-impl PartialEq for PhpArray {
+impl PartialEq for ArrayData {
     fn eq(&self, other: &Self) -> bool {
         self.entries == other.entries
     }
 }
-impl PhpArray {
+impl ArrayData {
     fn splice_iterators(
         &self,
         start: usize,
@@ -507,6 +681,11 @@ impl PhpArray {
                     *position -= 1;
                 }
             }
+            for position in self.readers.get_mut().iter().filter_map(Weak::upgrade) {
+                if position.get() > index {
+                    position.set(position.get() - 1);
+                }
+            }
             for i in index..self.entries.len() {
                 self.positions.insert(self.entries[i].0.clone(), i);
             }
@@ -527,7 +706,7 @@ fn splice_value(value: Value) -> Value {
 }
 
 fn splice_insert(
-    array: &mut PhpArray,
+    array: &mut ArrayData,
     key: ArrayKey,
     value: Value,
     line: usize,

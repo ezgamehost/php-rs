@@ -38,10 +38,7 @@ impl Runtime {
 
     fn replace_child_slot(&self, slot: &mut Value, value: Value) {
         match slot {
-            Value::Reference(reference) => {
-                self.replace_child_slot(&mut reference.borrow_mut(), value)
-            }
-            Value::Indirect(reference) if self.recursive_child_owner(reference).is_none() => {
+            Value::Reference(reference) | Value::Indirect(reference) => {
                 self.replace_child_slot(&mut reference.borrow_mut(), value)
             }
             _ => *slot = value,
@@ -51,11 +48,18 @@ impl Runtime {
     pub(super) fn replace_recursive_parent(&self, link: &ChildLink, value: Value) {
         match link {
             ChildLink::Array(source, key) => {
-                if let Some(source) = source.upgrade()
-                    && let Value::Array(array) = &mut *source.borrow_mut()
-                    && let Some(slot) = Rc::make_mut(array).get_mut(key)
-                {
-                    self.replace_child_slot(slot, value);
+                if let Some(source) = source.upgrade() {
+                    let shared = self.recursive_child_owner(&source).is_some();
+                    if let Value::Array(array) = &mut *source.borrow_mut() {
+                        if !shared {
+                            Rc::make_mut(array);
+                        }
+                        array.mutate_shared(|data| {
+                            if let Some(slot) = data.get_mut(key) {
+                                self.replace_child_slot(slot, value);
+                            }
+                        });
+                    }
                 }
             }
             ChildLink::Object(object, key) => {
@@ -64,47 +68,6 @@ impl Runtime {
                 {
                     self.replace_child_slot(slot, value);
                 }
-            }
-        }
-    }
-
-    // A write through the parent separates its nested array from an existing
-    // child. Direct child writes keep using the shared internal storage slot.
-    pub(super) fn prepare_recursive_parent_write(&self, object: &Rc<PhpObject>, key: &ArrayKey) {
-        let backing = array_iterator::storage(object);
-        let value = match &backing {
-            array_iterator::Storage::Array(source) => match &*source.borrow() {
-                Value::Array(array) => array.get(key).map(raw_slot),
-                _ => None,
-            },
-            array_iterator::Storage::Object(object) => {
-                object.properties.borrow().get(key).map(raw_slot)
-            }
-        };
-        let Some(value) = value else { return };
-        let mut stored = value;
-        loop {
-            match stored {
-                Value::Reference(reference) => {
-                    stored = raw_slot(&reference.borrow());
-                }
-                Value::Indirect(reference) if self.recursive_child_owner(&reference).is_some() => {
-                    let value = reference.borrow().dereferenced();
-                    let link = match backing {
-                        array_iterator::Storage::Array(source) => {
-                            ChildLink::Array(Rc::downgrade(&source), key.clone())
-                        }
-                        array_iterator::Storage::Object(object) => {
-                            ChildLink::Object(Rc::downgrade(&object), key.clone())
-                        }
-                    };
-                    self.replace_recursive_parent(&link, value);
-                    return;
-                }
-                Value::Indirect(reference) => {
-                    stored = raw_slot(&reference.borrow());
-                }
-                _ => return,
             }
         }
     }
@@ -177,12 +140,5 @@ impl Runtime {
                 self.drain_destructors(Err(error), line)
             }
         }
-    }
-}
-
-fn raw_slot(value: &Value) -> Value {
-    match value {
-        Value::Indirect(source) => Value::Indirect(source.clone()),
-        value => value.clone(),
     }
 }

@@ -228,8 +228,12 @@ impl Runtime {
                 }
             }
             Value::Array(array) if array.len() == 2 => {
-                let base = array.get(&ArrayKey::Int(0)).map(Value::dereferenced);
-                let method = array.get(&ArrayKey::Int(1)).map(Value::dereferenced);
+                let base = array
+                    .get(&ArrayKey::Int(0))
+                    .map(|value| value.dereferenced());
+                let method = array
+                    .get(&ArrayKey::Int(1))
+                    .map(|value| value.dereferenced());
                 if let (Some(Value::Object(object)), Some(Value::String(name))) =
                     (base.as_ref(), method.as_ref())
                 {
@@ -502,7 +506,7 @@ impl Runtime {
             index.is_some_and(|index| parameters[index].by_reference)
         });
         if !requires_reference {
-            for (key, value) in array.entries() {
+            for (key, value) in array.entries().iter() {
                 let name = match key {
                     ArrayKey::Int(_) => None,
                     ArrayKey::String(name) => Some(name.clone()),

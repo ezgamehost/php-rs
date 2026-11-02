@@ -25,7 +25,7 @@ impl TraceFrame {
         let Value::Int(line) = self.fields.get(&ArrayKey::String(b"line".to_vec()))? else {
             return None;
         };
-        Some((file.to_bytes(), *line as usize))
+        Some((file.to_bytes(), line as usize))
     }
 
     pub(super) fn call(
@@ -91,7 +91,7 @@ impl TraceFrame {
             );
             frame.fixed.push(parameters[index].name.clone());
         }
-        for (key, value) in extra.entries() {
+        for (key, value) in extra.entries().iter() {
             match key {
                 ArrayKey::Int(_) => {
                     arguments.append(value.clone(), 0).expect("trace size");
@@ -101,7 +101,7 @@ impl TraceFrame {
                 }
             }
         }
-        for (key, _) in arguments.entries() {
+        for (key, _) in arguments.entries().iter() {
             // Zend appends extra named variadics after positional redaction.
             let ArrayKey::Int(index) = key else { continue };
             let parameter = parameters
@@ -165,7 +165,7 @@ impl TraceFrame {
 
     fn capture(&self, runtime: &Runtime, options: i32) -> Value {
         let mut fields = PhpArray::default();
-        for (key, value) in self.fields.entries() {
+        for (key, value) in self.fields.entries().iter() {
             if matches!(key, ArrayKey::String(name) if name == b"type")
                 && options & 1 != 0
                 && let Some(object) = &self.object
@@ -178,7 +178,7 @@ impl TraceFrame {
             && let Some(stored) = &self.arguments
         {
             let mut arguments = PhpArray::default();
-            for (key, value) in stored.entries() {
+            for (key, value) in stored.entries().iter() {
                 arguments.insert(key.clone(), value.dereferenced());
             }
             if let Some(depth) = self.scope_depth {

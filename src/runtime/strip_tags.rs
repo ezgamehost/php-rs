@@ -16,7 +16,7 @@ impl Runtime {
         let mut allowed = match allowed {
             Value::Array(array) => {
                 let mut tags = Vec::new();
-                for (_, value) in array.entries() {
+                for (_, ref value) in array.iter() {
                     let name = self.string_bytes(&value.dereferenced(), line)?;
                     tags.push(b'<');
                     tags.extend_from_slice(&name);

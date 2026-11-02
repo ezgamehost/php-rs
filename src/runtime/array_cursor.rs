@@ -15,7 +15,7 @@ impl Runtime {
         match &value {
             Value::Array(array) => {
                 if !action.moves() {
-                    return Ok(cursor_result(action, array.cursor_entry()));
+                    return Ok(cursor_result(action, array.cursor_entry().as_ref()));
                 }
                 if let Some(reference) = &references[0] {
                     // Discard the argument snapshot before separating: its Rc is
@@ -55,7 +55,7 @@ fn move_array_cursor(value: &mut Value, action: Cursor) -> Value {
         Value::Array(array) => {
             let array = Rc::make_mut(array);
             array.move_cursor(action);
-            cursor_result(action, array.cursor_entry())
+            cursor_result(action, array.cursor_entry().as_ref())
         }
         Value::Reference(reference) | Value::Indirect(reference) => {
             move_array_cursor(&mut reference.borrow_mut(), action)

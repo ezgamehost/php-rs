@@ -114,7 +114,7 @@ impl Runtime {
         } else {
             output.extend(b"array (\n");
         }
-        for (key, value) in table.entries() {
+        for (ref key, ref value) in table.iter() {
             output.extend(std::iter::repeat_n(b' ', level + 1 + usize::from(object)));
             match key {
                 ArrayKey::Int(n) => output.extend(n.to_string().bytes()),

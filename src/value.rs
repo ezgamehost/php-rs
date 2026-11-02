@@ -82,7 +82,7 @@ impl Value {
                 }
                 let mut equal = a.len() == b.len();
                 if equal {
-                    for ((ka, va), (kb, vb)) in a.entries().iter().zip(b.entries()) {
+                    for ((ka, va), (kb, vb)) in a.entries().iter().zip(b.entries().iter()) {
                         if ka != kb || !va.identical_inner(vb, line, seen)? {
                             equal = false;
                             break;

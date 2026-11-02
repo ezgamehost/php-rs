@@ -32,7 +32,7 @@ impl Runtime {
                 });
             }
             let key = self.instance_property_key(object, &location.name);
-            let existing = object.properties.borrow().get(&key).cloned();
+            let existing = object.properties.borrow().get(&key);
             if !location.keys.is_empty()
                 && let Some(value) = &existing
                 && matches!(value.dereferenced(), Value::Object(_) | Value::Closure(_))

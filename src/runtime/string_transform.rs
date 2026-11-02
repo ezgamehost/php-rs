@@ -26,19 +26,19 @@ impl Runtime {
         // The single-entry PHP path converts its replacement once, even if it does
         // not match. The multi-entry path converts each replacement only on a match.
         let cached = if from.len() == 1 {
-            Some(self.string_bytes(&from.entries()[0].1.dereferenced(), line)?)
+            Some(self.string_bytes(&from.entry(0).unwrap().1.dereferenced(), line)?)
         } else {
             None
         };
         let mut patterns = Vec::new();
-        for (key, value) in from.entries() {
+        for (ref key, ref value) in from.iter() {
             let key = key.to_value().to_bytes();
             if key.is_empty() {
                 self.warn(format!(
                     "strtr(): Ignoring replacement of empty string on line {line}"
                 ))?;
             } else if key.len() <= bytes.len() {
-                patterns.push((key, value));
+                patterns.push((key, value.clone()));
             }
         }
         patterns.sort_by_key(|(key, _)| std::cmp::Reverse(key.len()));

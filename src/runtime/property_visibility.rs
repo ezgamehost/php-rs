@@ -191,7 +191,7 @@ impl Runtime {
         } else {
             object.export_properties()
         };
-        for (key, value) in properties.entries() {
+        for (key, value) in properties.entries().iter() {
             if !self.property_key_visible(object, key) {
                 continue;
             }

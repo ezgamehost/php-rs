@@ -890,6 +890,7 @@ impl Runtime {
                 .entries()
                 .iter()
                 .find(|(key, _)| !visited.contains(key) && self.property_key_visible(object, key))
+                .cloned()
             else {
                 break;
             };

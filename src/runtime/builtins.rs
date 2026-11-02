@@ -1500,7 +1500,7 @@ impl Runtime {
                 self.require_stdout()?;
                 let mut pending = None;
                 self.dump_value(first, 0, line, &mut pending)?;
-                for (_, value) in extra.entries() {
+                for (_, value) in extra.entries().iter() {
                     self.dump_value(value, 0, line, &mut pending)?;
                 }
                 self.diagnostics.output_position = self.output.len();
@@ -1513,7 +1513,7 @@ impl Runtime {
             Builtin::ArrayValues => {
                 let array = require_array(first, &name, 1, line)?;
                 let mut result = PhpArray::default();
-                for (_, v) in array.entries() {
+                for (_, v) in array.entries().iter() {
                     result.append(v.clone(), line)?;
                 }
                 Ok(Value::Array(Rc::new(result)))
@@ -1555,7 +1555,7 @@ impl Runtime {
                     Some(v) => self.native_bool(v, &name, 3, line)?,
                 };
                 let mut result = PhpArray::default();
-                for (key, value) in array.entries() {
+                for (ref key, ref value) in array.iter() {
                     let selected = match &args[1] {
                         None => true,
                         Some(filter) if strict => value.identical(filter, line)?,
@@ -1599,7 +1599,7 @@ impl Runtime {
                 let strict = args[2]
                     .as_ref()
                     .map_or(Ok(false), |value| self.native_bool(value, &name, 3, line))?;
-                for (key, value) in array.entries() {
+                for (ref key, ref value) in array.iter() {
                     let matches = if strict {
                         first.identical(value, line)?
                     } else {
@@ -1624,7 +1624,7 @@ impl Runtime {
                     "Addition"
                 };
                 let mut total = Value::Int(i64::from(product));
-                for (_, value) in array.entries() {
+                for (_, ref value) in array.iter() {
                     match binary(op, total.clone(), value.clone(), line, self) {
                         Ok(result) => total = result,
                         Err(error) if error.kind == ErrorKind::TypeError => {

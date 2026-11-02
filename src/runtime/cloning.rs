@@ -63,12 +63,12 @@ impl Runtime {
         }
         let handle = self.allocate_object_handle();
         if let Value::Closure(closure) = original {
-            if let Some((key, _)) = updates.and_then(|a| a.entries().first()) {
+            if let Some((key, _)) = updates.and_then(|a| a.entries().first().cloned()) {
                 return Err(Error::new(
                     ErrorKind::Error,
                     format!(
                         "Cannot create dynamic property Closure::${}",
-                        String::from_utf8_lossy(&property_name(key))
+                        String::from_utf8_lossy(&property_name(&key))
                     ),
                     line,
                 ));
@@ -153,7 +153,7 @@ impl Runtime {
             // PHP 8.5.0 clears each flag on a successful write, but retains
             // flags for untouched slots after clone-with (also after errors).
             unlock_readonly(&object);
-            for (key, value) in updates.entries() {
+            for (ref key, ref value) in updates.iter_copied() {
                 if value.is_shared_reference() {
                     return Err(Error::new(
                         ErrorKind::Error,

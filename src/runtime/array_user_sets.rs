@@ -144,7 +144,7 @@ impl Runtime {
         let mut callbacks = Vec::new();
         for index in array_count - 1..extra.len() {
             let callback = self
-                .native_callback(&extra.entries()[index].1, name, index + 2, false, line)
+                .native_callback(&extra.entry(index).unwrap().1, name, index + 2, false, line)
                 .map_err(|mut error| {
                     if error.kind == ErrorKind::TypeError && error.throwable.is_none() {
                         error.message = error.message.replacen(" ($callback)", "", 1);
@@ -172,8 +172,9 @@ impl Runtime {
             data,
             pending: None,
         };
+        let extra_entries = extra.entries();
         let values: Vec<_> = std::iter::once(first)
-            .chain(extra.entries()[..array_count - 1].iter().map(|(_, v)| v))
+            .chain(extra_entries[..array_count - 1].iter().map(|(_, v)| v))
             .collect();
         let mut arrays = Vec::new();
         let mut orders = Vec::new();
@@ -194,7 +195,7 @@ impl Runtime {
             if !operation.direct() {
                 let mut order: Vec<_> = (0..array.len()).collect();
                 sorting::algorithm::sort(&mut order, &mut |&a, &b| {
-                    compare.compare(self, &array.entries()[a], &array.entries()[b])
+                    compare.compare(self, &array.entry(a).unwrap(), &array.entry(b).unwrap())
                 });
                 if compare
                     .pending
@@ -208,12 +209,12 @@ impl Runtime {
         }
         if operation.direct() {
             let mut output = PhpArray::default();
-            for (key, value) in arrays[0].entries() {
+            for (ref key, ref value) in arrays[0].iter_copied() {
                 let mut keep = true;
                 for array in &arrays[1..] {
-                    let equal = array
-                        .get(key)
-                        .is_some_and(|other| compare.values(self, value, other) == Ordering::Equal);
+                    let equal = array.get(key).is_some_and(|other| {
+                        compare.values(self, value, &other) == Ordering::Equal
+                    });
                     if equal != operation.intersect() {
                         keep = false;
                         break;
@@ -241,7 +242,7 @@ impl Runtime {
         let mut output = arrays[0].clone();
         let mut positions = vec![0; arrays.len()];
         'scan: while positions[0] < orders[0].len() {
-            let current = &arrays[0].entries()[orders[0][positions[0]]];
+            let current = &arrays[0].entry(orders[0][positions[0]]).unwrap();
             let mut comparison = Ordering::Greater;
             for index in 1..arrays.len() {
                 // Key-comparator difference scans the entire other array for
@@ -251,7 +252,7 @@ impl Runtime {
                     comparison = compare.compare(
                         self,
                         current,
-                        &arrays[index].entries()[orders[index][position]],
+                        &arrays[index].entry(orders[index][position]).unwrap(),
                     );
                     if if compare.operation.keys() {
                         comparison == Ordering::Equal
@@ -277,7 +278,7 @@ impl Runtime {
                             if compare.values(
                                 self,
                                 &current.1,
-                                &arrays[index].entries()[orders[index][position]].1,
+                                &arrays[index].entry(orders[index][position]).unwrap().1,
                             ) != Ordering::Equal
                             {
                                 comparison = Ordering::Less;
@@ -292,7 +293,7 @@ impl Runtime {
             }
             loop {
                 if comparison == Ordering::Equal {
-                    output.remove(&arrays[0].entries()[orders[0][positions[0]]].0);
+                    output.remove(&arrays[0].entry(orders[0][positions[0]]).unwrap().0);
                 }
                 positions[0] += 1;
                 if positions[0] == orders[0].len() {
@@ -301,8 +302,8 @@ impl Runtime {
                 if compare.operation.keys()
                     || compare.compare(
                         self,
-                        &arrays[0].entries()[orders[0][positions[0] - 1]],
-                        &arrays[0].entries()[orders[0][positions[0]]],
+                        &arrays[0].entry(orders[0][positions[0] - 1]).unwrap(),
+                        &arrays[0].entry(orders[0][positions[0]]).unwrap(),
                     ) != Ordering::Equal
                 {
                     break;
@@ -322,14 +323,16 @@ impl Runtime {
         let mut positions = vec![0; arrays.len()];
         let mut comparison = Ordering::Equal;
         'scan: while positions[0] < orders[0].len() {
-            let current = &arrays[0].entries()[orders[0][positions[0]]];
+            let current = &arrays[0].entry(orders[0][positions[0]]).unwrap();
             let mut mismatch = 0;
             for index in 1..arrays.len() {
                 while positions[index] < orders[index].len() {
                     comparison = compare.compare(
                         self,
                         current,
-                        &arrays[index].entries()[orders[index][positions[index]]],
+                        &arrays[index]
+                            .entry(orders[index][positions[index]])
+                            .unwrap(),
                     );
                     if comparison != Ordering::Greater {
                         break;
@@ -342,14 +345,17 @@ impl Runtime {
                     && compare.values(
                         self,
                         &current.1,
-                        &arrays[index].entries()[orders[index][positions[index]]].1,
+                        &arrays[index]
+                            .entry(orders[index][positions[index]])
+                            .unwrap()
+                            .1,
                     ) != Ordering::Equal
                 {
                     comparison = Ordering::Greater;
                 }
                 if positions[index] == orders[index].len() {
                     for &remaining in &orders[0][positions[0]..] {
-                        output.remove(&arrays[0].entries()[remaining].0);
+                        output.remove(&arrays[0].entry(remaining).unwrap().0);
                     }
                     break 'scan;
                 }
@@ -361,7 +367,7 @@ impl Runtime {
             }
             if comparison != Ordering::Equal {
                 loop {
-                    output.remove(&arrays[0].entries()[orders[0][positions[0]]].0);
+                    output.remove(&arrays[0].entry(orders[0][positions[0]]).unwrap().0);
                     positions[0] += 1;
                     if positions[0] == orders[0].len() {
                         break 'scan;
@@ -369,8 +375,10 @@ impl Runtime {
                     if compare.operation.keys()
                         || compare.compare(
                             self,
-                            &arrays[0].entries()[orders[0][positions[0]]],
-                            &arrays[mismatch].entries()[orders[mismatch][positions[mismatch]]],
+                            &arrays[0].entry(orders[0][positions[0]]).unwrap(),
+                            &arrays[mismatch]
+                                .entry(orders[mismatch][positions[mismatch]])
+                                .unwrap(),
                         ) != Ordering::Less
                     {
                         break;
@@ -385,8 +393,8 @@ impl Runtime {
                     if compare.operation.keys()
                         || compare.compare(
                             self,
-                            &arrays[0].entries()[orders[0][positions[0] - 1]],
-                            &arrays[0].entries()[orders[0][positions[0]]],
+                            &arrays[0].entry(orders[0][positions[0] - 1]).unwrap(),
+                            &arrays[0].entry(orders[0][positions[0]]).unwrap(),
                         ) != Ordering::Equal
                     {
                         break;

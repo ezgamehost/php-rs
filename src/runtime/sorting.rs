@@ -64,8 +64,8 @@ impl Runtime {
         let mut order: Vec<_> = (0..array.len()).collect();
         let mut error = None;
         algorithm::sort(&mut order, &mut |&a, &b| {
-            let (a_key, a_value) = &array.entries()[a];
-            let (b_key, b_value) = &array.entries()[b];
+            let (a_key, a_value) = &array.entry(a).unwrap();
+            let (b_key, b_value) = &array.entry(b).unwrap();
             let comparison = if kind.keys() {
                 // Numeric key sorting preserves exact integer comparison.
                 if flags & !8 == 1
@@ -282,8 +282,8 @@ impl Runtime {
             let comparison = if error.is_some() {
                 Ordering::Equal
             } else {
-                let (a_key, a_value) = &array.entries()[a];
-                let (b_key, b_value) = &array.entries()[b];
+                let (a_key, a_value) = &array.entry(a).unwrap();
+                let (b_key, b_value) = &array.entry(b).unwrap();
                 let values = if matches!(kind, UserSort::Keys) {
                     [a_key.to_value(), b_key.to_value()]
                 } else {
@@ -489,8 +489,8 @@ impl Runtime {
         algorithm::sort(&mut order, &mut |&a, &b| {
             for (column, array) in columns.iter().zip(&arrays) {
                 let comparison = self.sort_compare(
-                    &array.entries()[a].1,
-                    &array.entries()[b].1,
+                    &array.entry(a).unwrap().1,
+                    &array.entry(b).unwrap().1,
                     column.flags,
                     line,
                     &mut error,

@@ -245,7 +245,7 @@ impl PhpObject {
             .iter()
             .map(|property| crate::ArrayKey::String(property.storage_name()))
             .collect();
-        for (key, _) in properties.entries() {
+        for (key, _) in properties.entries().iter() {
             if !keys.contains(key) {
                 keys.push(key.clone());
             }
@@ -286,12 +286,14 @@ impl PhpObject {
         if !self.properties_reordered.get() {
             for property in &self.class.properties {
                 let key = crate::ArrayKey::String(property.storage_name());
-                if let Some(value) = properties.get(&key) {
-                    result.insert(key, value.copy_array_entry());
+                if let Some(value) =
+                    properties.with_value(&key, |value| value.map(crate::Value::copy_array_entry))
+                {
+                    result.insert(key, value);
                 }
             }
         }
-        for (key, value) in properties.entries() {
+        for (key, value) in properties.entries().iter() {
             if result.get(key).is_none() {
                 result.insert(key.clone(), value.copy_array_entry());
             }

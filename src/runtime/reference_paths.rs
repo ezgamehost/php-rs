@@ -25,6 +25,7 @@ fn step(
     mutation: &Mutation,
     line: usize,
     warnings: &mut dyn WarningSink,
+    shared: bool,
 ) -> Result<Step, Error> {
     if let Value::Indirect(slot) = value {
         return Ok(Step::Follow(slot.clone(), 0));
@@ -64,19 +65,22 @@ fn step(
     if matches!(mutation, Mutation::Unset) {
         return match value {
             Value::Array(array) => {
-                Rc::make_mut(array);
+                if !shared {
+                    Rc::make_mut(array);
+                }
                 let Some(key) = offset.cached_array_key() else {
                     return Ok(Step::Key(array.clone(), 0, true));
                 };
-                let array = Rc::get_mut(array).unwrap();
-                if rest.is_empty() {
-                    array.remove(&key);
-                    Ok(Step::Done(Value::Null))
-                } else if let Some(value) = array.get_mut(&key) {
-                    advance(step(value, rest, mutation, line, warnings)?)
-                } else {
-                    Ok(Step::Done(Value::Null))
-                }
+                array.mutate_shared(|array| {
+                    if rest.is_empty() {
+                        array.remove(&key);
+                        Ok(Step::Done(Value::Null))
+                    } else if let Some(value) = array.get_mut(&key) {
+                        advance(step(value, rest, mutation, line, warnings, false)?)
+                    } else {
+                        Ok(Step::Done(Value::Null))
+                    }
+                })
             }
             Value::Null => Ok(Step::Done(Value::Null)),
             Value::String(_) => Err(Error::new(
@@ -135,7 +139,9 @@ fn step(
             line,
         ));
     };
-    Rc::make_mut(array);
+    if !shared {
+        Rc::make_mut(array);
+    }
     let key = if let Some(key) = offset.cached_array_key() {
         key
     } else if offset.is_append() {
@@ -145,17 +151,19 @@ fn step(
     } else {
         return Ok(Step::Key(array.clone(), 0, false));
     };
-    let array = Rc::get_mut(array).unwrap();
-    if array.get(&key).is_none() {
-        array.insert(key.clone(), Value::Null);
-    }
-    advance(step(
-        array.get_mut(&key).unwrap(),
-        rest,
-        mutation,
-        line,
-        warnings,
-    )?)
+    array.mutate_shared(|array| {
+        if array.get(&key).is_none() {
+            array.insert(key.clone(), Value::Null);
+        }
+        advance(step(
+            array.get_mut(&key).unwrap(),
+            rest,
+            mutation,
+            line,
+            warnings,
+            false,
+        )?)
+    })
 }
 
 fn advance(result: Step) -> Result<Step, Error> {
@@ -196,21 +204,21 @@ impl Root<'_> {
         }
     }
     fn contains_array(&mut self, keys: &[Offset], array: &Rc<PhpArray>) -> bool {
-        self.with_mut(|mut value| {
+        self.with_mut(|value| {
+            let mut current = value.clone();
             for offset in keys {
-                let Value::Array(parent) = value else {
+                let Value::Array(parent) = current else {
                     return false;
                 };
                 let Some(key) = offset.cached_array_key() else {
                     return false;
                 };
-                // Inspection only: no COW and no borrows cross PHP execution.
-                let Some(next) = Rc::get_mut(parent).and_then(|parent| parent.get_mut(&key)) else {
+                let Some(next) = parent.get(&key) else {
                     return false;
                 };
-                value = next;
+                current = next;
             }
-            matches!(value, Value::Array(current) if Rc::ptr_eq(current, array))
+            matches!(current, Value::Array(current) if Rc::ptr_eq(&current, array))
         })
         .unwrap_or(false)
     }
@@ -224,9 +232,22 @@ fn run_step(
     runtime: &mut Runtime,
 ) -> Result<Step, Error> {
     loop {
-        let Some(result) =
-            root.with_mut(|value| step(value, keys, mutation, line, &mut runtime.diagnostics))
-        else {
+        let shared = match &root {
+            Root::Cell { reference, .. } => reference
+                .upgrade()
+                .is_some_and(|source| runtime.recursive_child_owner(&source).is_some()),
+            _ => false,
+        };
+        let Some(result) = root.with_mut(|value| {
+            step(
+                value,
+                keys,
+                mutation,
+                line,
+                &mut runtime.diagnostics,
+                shared,
+            )
+        }) else {
             return Ok(Step::Done(Value::Null));
         };
         let (array, consumed, strict_count) = match result? {
@@ -245,7 +266,7 @@ fn run_step(
             result => return Ok(result),
         };
         if !root.contains_array(&keys[..consumed], &array)
-            || (strict_count && Rc::strong_count(&array) != 2)
+            || (strict_count && !(shared && consumed == 0) && Rc::strong_count(&array) != 2)
         {
             return Ok(Step::Done(Value::Null));
         }
@@ -290,7 +311,6 @@ fn finish(
                         let key =
                             runtime.array_iterator_offset_key(&object, &key, b"offsetget", line)?;
                         keys[0].cache_array_key(key.clone());
-                        runtime.prepare_recursive_parent_write(&object, &key);
                         match array_iterator::storage(&object) {
                             array_iterator::Storage::Array(source) => {
                                 result = Step::Follow(source, 0);

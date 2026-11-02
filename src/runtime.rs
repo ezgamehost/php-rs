@@ -465,8 +465,10 @@ impl Runtime {
                     );
                 }
                 if let Value::Array(array) = value {
-                    for (key, value) in array.entries() {
-                        self.assign_target(value_target, value.dereferenced())?;
+                    for (key, value) in array.iter() {
+                        let detached = value.dereferenced();
+                        drop(value);
+                        self.assign_target(value_target, detached)?;
                         if let Some(target) = key_target {
                             let mut location = self.location(target)?;
                             self.write_location(&mut location, key.to_value(), target.line)?;
@@ -836,12 +838,7 @@ impl Runtime {
             }
             let object = object.clone();
             let key = self.instance_property_key(&object, &location.name);
-            let value = object
-                .properties
-                .borrow()
-                .get(&key)
-                .cloned()
-                .unwrap_or(Value::Null);
+            let value = object.properties.borrow().get(&key).unwrap_or(Value::Null);
             self.check_property_array_init(location, &value, line)?;
             if matches!(value.dereferenced(), Value::Object(_)) {
                 return self.write_overloaded_path(value, &mut location.keys, new_value, line);
@@ -1044,7 +1041,7 @@ impl Runtime {
                                     expr.line,
                                 ));
                             };
-                            for (key, value) in source.entries() {
+                            for (key, value) in source.entries().iter() {
                                 match key {
                                     ArrayKey::Int(_) => {
                                         array.append(value.copy_array_entry(), expr.line)?
@@ -1260,7 +1257,7 @@ fn binary(
         && let (Array(a), Array(b)) = (&left, &right)
     {
         let mut result = a.as_ref().clone();
-        for (key, value) in b.entries() {
+        for (key, value) in b.entries().iter() {
             if result.get(key).is_none() {
                 result.insert(key.clone(), value.clone());
             }

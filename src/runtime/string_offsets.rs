@@ -43,23 +43,28 @@ impl Storage {
         path: &[(usize, ArrayKey)],
         action: impl FnOnce(&Value) -> T,
     ) -> Option<T> {
-        fn follow<'a>(mut value: &'a Value, path: &[(usize, ArrayKey)]) -> Option<&'a Value> {
-            for (identity, key) in path {
-                let Value::Array(array) = value else {
-                    return None;
-                };
-                if Rc::as_ptr(array) as usize != *identity {
-                    return None;
-                }
-                value = array.get(key)?;
+        fn follow<T>(
+            value: &Value,
+            path: &[(usize, ArrayKey)],
+            action: impl FnOnce(&Value) -> T,
+        ) -> Option<T> {
+            let Some(((identity, key), rest)) = path.split_first() else {
+                return Some(action(value));
+            };
+            let Value::Array(array) = value else {
+                return None;
+            };
+            if Rc::as_ptr(array) as usize != *identity {
+                return None;
             }
-            Some(value)
+            array.with_value(key, |value| follow(value?, rest, action))
         }
         match self {
-            Self::Cell(cell) => Some(action(follow(&cell.upgrade()?.borrow(), path)?)),
-            Self::Property(object, key) => {
-                Some(action(follow(object.properties.borrow().get(key)?, path)?))
-            }
+            Self::Cell(cell) => follow(&cell.upgrade()?.borrow(), path, action),
+            Self::Property(object, key) => object
+                .properties
+                .borrow()
+                .with_value(key, |value| follow(value?, path, action)),
         }
     }
 

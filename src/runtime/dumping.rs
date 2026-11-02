@@ -126,7 +126,7 @@ impl Runtime {
                         .map(|p| ArrayKey::String(p.storage_name())),
                 );
             }
-            for (key, _) in properties.entries() {
+            for (key, _) in properties.entries().iter() {
                 if !keys.contains(key) {
                     keys.push(key.clone());
                 }
@@ -134,8 +134,10 @@ impl Runtime {
             for key in &keys {
                 self.dump_key(key, depth, true, line, pending)?;
                 self.dump_indent(depth + 2)?;
-                if let Some(value) = properties.get(key) {
-                    self.dump_inner(value, depth + 2, false, line, pending)?;
+                if let Some(value) =
+                    properties.with_value(key, |value| value.map(Value::copy_array_entry))
+                {
+                    self.dump_inner(&value, depth + 2, false, line, pending)?;
                 } else {
                     let property = object
                         .class
@@ -219,7 +221,7 @@ impl Runtime {
         line: usize,
         pending: &mut Option<Error>,
     ) -> Result<(), Error> {
-        for (key, value) in table.entries() {
+        for (ref key, ref value) in table.iter_copied() {
             self.dump_key(key, depth, false, line, pending)?;
             self.dump_indent(depth + 2)?;
             self.dump_inner(value, depth + 2, false, line, pending)?;

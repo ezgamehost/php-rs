@@ -87,10 +87,10 @@ impl Storage {
     pub(super) fn read(&self, key: &ArrayKey) -> Option<Value> {
         match self {
             Self::Array(cell) => match &*cell.borrow() {
-                Value::Array(array) => array.get(key).cloned(),
+                Value::Array(array) => array.get(key),
                 _ => unreachable!(),
             },
-            Self::Object(object) => object.properties.borrow().get(key).cloned(),
+            Self::Object(object) => object.properties.borrow().get(key),
         }
     }
 }
@@ -253,7 +253,7 @@ impl Runtime {
                     .unwrap()
                     .storage
                     .clone();
-                self.replace_recursive_parent(&child, Value::Indirect(source));
+                self.replace_recursive_parent(&child, source.borrow().clone());
             }
         }
         self.drain_destructors(Ok(()), line)
@@ -718,7 +718,6 @@ impl Runtime {
         key: &ArrayKey,
         line: usize,
     ) -> Result<variables::Cell, Error> {
-        self.prepare_recursive_parent_write(object, key);
         match storage(object) {
             Storage::Array(source) => reference_paths::acquire(
                 source,
@@ -816,20 +815,25 @@ impl Runtime {
                 // Release the storage borrow before PHP destructors run.
                 let result = match backing {
                     Storage::Array(source) => {
+                        let shared = self.recursive_child_owner(&source).is_some();
                         let mut source = source.borrow_mut();
                         let Value::Array(array) = &mut *source else {
                             unreachable!()
                         };
-                        let array = Rc::make_mut(array);
-                        if method == b"offsetunset" {
-                            array.remove(key.as_ref().unwrap());
-                            Ok(())
-                        } else if let Some(key) = key {
-                            array.insert(key, value.unwrap());
-                            Ok(())
-                        } else {
-                            array.append(value.unwrap(), line)
+                        if !shared {
+                            Rc::make_mut(array);
                         }
+                        array.mutate_shared(|array| {
+                            if method == b"offsetunset" {
+                                array.remove(key.as_ref().unwrap());
+                                Ok(())
+                            } else if let Some(key) = key {
+                                array.insert(key, value.unwrap());
+                                Ok(())
+                            } else {
+                                array.append(value.unwrap(), line)
+                            }
+                        })
                     }
                     Storage::Object(backing) => {
                         let key = key.unwrap();

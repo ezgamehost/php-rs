@@ -98,7 +98,7 @@ impl Runtime {
             .len()
             .checked_mul(pieces.len().saturating_sub(1))
             .ok_or_else(|| overflow(line))?;
-        for (_, value) in pieces.entries() {
+        for (_, ref value) in pieces.iter() {
             let bytes = self.string_bytes(&value.dereferenced(), line)?;
             size = size
                 .checked_add(bytes.len())

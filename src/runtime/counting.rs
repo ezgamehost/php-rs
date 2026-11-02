@@ -75,7 +75,7 @@ impl Runtime {
         // but release it even when that handler throws or exits.
         let result = (|| {
             let mut count = array.len() as i64;
-            for (_, value) in array.entries() {
+            for (_, ref value) in array.iter() {
                 if let Value::Array(child) = value.dereferenced() {
                     count += self.count_recursive(&child, name, line)?;
                 }
