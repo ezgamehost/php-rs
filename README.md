@@ -96,6 +96,9 @@ new request. The CLI returns the low eight bits of the requested status.
   subclass child construction with parent storage links. Parent writes and child
   sorting can separate storage. Native child writes also reach captured nested-array
   copies; ordinary PHP writes retain copy-on-write behavior.
+- `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
+  or child-first order, with depth limits, subclass hooks, child-error catching,
+  inner-method forwarding, and native iterator lifetime handling.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

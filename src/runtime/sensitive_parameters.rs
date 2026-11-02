@@ -15,6 +15,7 @@ impl Runtime {
             class_name: "SensitiveParameterValue".into(),
             class,
             properties: RefCell::new(properties),
+            recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),
             property_cursor: RefCell::default(),

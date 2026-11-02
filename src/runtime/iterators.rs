@@ -60,6 +60,9 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
+        if recursive_iterator::native_iteration(object) {
+            return self.recursive_iterator_step(object, name, true, line);
+        }
         if array_iterator::native_iteration(object) {
             return self.array_iterator_step(object, name, true, line);
         }
@@ -101,6 +104,18 @@ impl Runtime {
             return Err(Error::new(
                 ErrorKind::Error,
                 "An iterator cannot be used with foreach by reference",
+                line,
+            ));
+        }
+        if object
+            .recursive_iterator
+            .borrow()
+            .as_ref()
+            .is_some_and(|data| !data.initialized())
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Object is not initialized",
                 line,
             ));
         }
@@ -194,6 +209,8 @@ impl Runtime {
             }
             Ok(Flow::Next)
         })();
+        let cleanup = self.recursive_iterator_release(&iterator, line);
+        let result = result.and_then(|flow| cleanup.map(|()| flow));
         drop(iterator);
         let result = self.drain_destructors(result, line);
         drop(wrapper);

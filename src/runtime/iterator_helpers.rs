@@ -30,6 +30,8 @@ impl Runtime {
             }
             Ok(())
         })();
+        let cleanup = self.recursive_iterator_release(&iterator, line);
+        let result = result.and(cleanup);
         drop(iterator);
         let result = self.drain_destructors(result, line);
         drop(wrapper);

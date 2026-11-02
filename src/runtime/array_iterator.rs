@@ -587,7 +587,12 @@ impl Runtime {
         }
     }
 
-    fn array_iterator_exception(&mut self, class: &[u8], message: String, line: usize) -> Error {
+    pub(super) fn array_iterator_exception(
+        &mut self,
+        class: &[u8],
+        message: String,
+        line: usize,
+    ) -> Error {
         let class = self.find_class(class).unwrap();
         let args = [Argument::Positional(Expr {
             kind: ExprKind::Literal(Value::String(message.into_bytes().into())),

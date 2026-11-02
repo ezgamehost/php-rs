@@ -132,6 +132,23 @@ impl Runtime {
         {
             return Ok(value);
         }
+        if matches!(
+            function.native,
+            Some(crate::ast::NativeMethod::RecursiveIterator)
+        ) && param.name == b"iterator"
+        {
+            if matches!(value, Value::Object(_) | Value::Closure(_)) {
+                return Ok(value);
+            }
+            return Err(Error::new(
+                ErrorKind::TypeError,
+                format!(
+                    "RecursiveIteratorIterator::__construct(): Argument #1 ($iterator) must be of type object, {} given",
+                    builtins::debug_type(&value)
+                ),
+                line,
+            ));
+        }
         let Some(ty) = &param.ty else {
             return Ok(value);
         };

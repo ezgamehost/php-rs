@@ -139,6 +139,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),
             property_cursor: RefCell::default(),
@@ -374,7 +375,8 @@ impl Runtime {
                     )
                     .is_none_or(|method| method.visibility == Visibility::Public)
                     && (name != b"iscloneable"
-                        || (!class.is_a(b"Throwable")
+                        || (!class.is_a(b"RecursiveIteratorIterator")
+                            && !class.is_a(b"Throwable")
                             && !class.is_a(b"ReflectionClass")
                             && !class.is_a(b"ReflectionAttribute")
                             && !class.is_a(b"ReflectionFunctionAbstract")

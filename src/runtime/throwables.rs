@@ -246,6 +246,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::RecursiveIterator) {
+            return self.native_recursive_iterator_method(line);
+        }
         if matches!(method, NativeMethod::ArrayIterator) {
             return self.native_array_iterator_method(supplied, line);
         }
@@ -275,6 +278,7 @@ impl Runtime {
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
             NativeMethod::ThrowableToString
+            | NativeMethod::RecursiveIterator
             | NativeMethod::ArrayIterator
             | NativeMethod::AttributeConstruct
             | NativeMethod::SensitiveValue
@@ -350,6 +354,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::default(),
+            recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),
             property_cursor: RefCell::default(),

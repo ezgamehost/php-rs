@@ -148,6 +148,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
+    RecursiveIterator,
     ArrayIterator,
     Abstract,
     Enum,

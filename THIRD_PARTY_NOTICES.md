@@ -328,6 +328,12 @@ and `src/runtime/reference_paths.rs` follows the same source. Checked shared
 storage and callback-safe reads in `src/array.rs` support those operations and
 PHP's native splice mutation rules without unchecked shared-Rc writes.
 
+RecursiveIteratorIterator traversal, native frames, hooks, and lifecycle behavior
+in `src/runtime/recursive_iterator.rs` adapt PHP 8.5.0's
+`ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c) The
+PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
+and garbage-collection edges follow those native handlers.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 
@@ -371,7 +377,13 @@ are met:
 
   6. Redistributions of any form whatsoever must retain the following
      acknowledgment:
-     "This product includes PHP software, freely available from
+     "RecursiveIteratorIterator traversal, native frames, hooks, and lifecycle behavior
+in `src/runtime/recursive_iterator.rs` adapt PHP 8.5.0's
+`ext/spl/spl_iterators.c` and `ext/spl/spl_iterators.stub.php`, copyright (c) The
+PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
+and garbage-collection edges follow those native handlers.
+
+This product includes PHP software, freely available from
      <http://www.php.net/software/>".
 
 THIS SOFTWARE IS PROVIDED BY THE PHP DEVELOPMENT TEAM ``AS IS'' AND

@@ -36,7 +36,8 @@ impl Runtime {
             }
         };
         if let Value::Object(object) = original
-            && (object.class.declaration.is_enum
+            && (object.class.is_a(b"RecursiveIteratorIterator")
+                || object.class.declaration.is_enum
                 || object.class.is_a(b"ReflectionClass")
                 || object.class.is_a(b"ReflectionAttribute")
                 || object.class.is_a(b"ReflectionFunctionAbstract")
@@ -125,6 +126,7 @@ impl Runtime {
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),
             properties_reordered: std::cell::Cell::new(original.properties_reordered.get()),
+            recursive_iterator: RefCell::default(),
             array_iterator: RefCell::new(
                 original
                     .array_iterator

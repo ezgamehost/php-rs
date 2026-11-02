@@ -1,0 +1,115 @@
+PHP 8.5.0 RecursiveIteratorIterator hillclimb
+Baseline: 5b115870f6f88ffe6a5f04470089ee686c033b65
+
+zend
+Before: 5256 cases; 2533 passed, 2315 failed, 408 unsupported
+After: 5256 cases; 2534 passed, 2314 failed, 408 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/gc/bug60138.phpt
+
+reflection
+Before: 492 cases; 287 passed, 168 failed, 37 unsupported
+After: 492 cases; 287 passed, 168 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 159 passed, 525 failed, 94 unsupported
+After: 778 cases; 202 passed, 482 failed, 94 unsupported
+New passes: 43; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/array_009.phpt
+NEW PASS: ext/spl/tests/ArrayObject/array_009a.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug38618.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug44615.phpt
+NEW PASS: ext/spl/tests/ArrayObject/bug73209.phpt
+NEW PASS: ext/spl/tests/RecursiveIteratorIterator_invalid_aggregate.phpt
+NEW PASS: ext/spl/tests/RecursiveIteratorIterator_not_initialized.phpt
+NEW PASS: ext/spl/tests/bug31926.phpt
+NEW PASS: ext/spl/tests/bug41828.phpt
+NEW PASS: ext/spl/tests/bug42654.phpt
+NEW PASS: ext/spl/tests/bug42654_2.phpt
+NEW PASS: ext/spl/tests/bug54281.phpt
+NEW PASS: ext/spl/tests/bug69970.phpt
+NEW PASS: ext/spl/tests/bug75717.phpt
+NEW PASS: ext/spl/tests/dualiterator_001.phpt
+NEW PASS: ext/spl/tests/iterator_014.phpt
+NEW PASS: ext/spl/tests/iterator_015.phpt
+NEW PASS: ext/spl/tests/iterator_016.phpt
+NEW PASS: ext/spl/tests/iterator_021.phpt
+NEW PASS: ext/spl/tests/iterator_022.phpt
+NEW PASS: ext/spl/tests/iterator_023.phpt
+NEW PASS: ext/spl/tests/iterator_024.phpt
+NEW PASS: ext/spl/tests/iterator_025.phpt
+NEW PASS: ext/spl/tests/iterator_028.phpt
+NEW PASS: ext/spl/tests/iterator_034.phpt
+NEW PASS: ext/spl/tests/iterator_062.phpt
+NEW PASS: ext/spl/tests/iterator_069.phpt
+NEW PASS: ext/spl/tests/iterator_070.phpt
+NEW PASS: ext/spl/tests/iterator_071.phpt
+NEW PASS: ext/spl/tests/recursiveIteratorIterator_beginchildren_error.phpt
+NEW PASS: ext/spl/tests/recursiveIteratorIterator_callHasChildren_error.phpt
+NEW PASS: ext/spl/tests/recursiveIteratorIterator_endchildren_error.phpt
+NEW PASS: ext/spl/tests/recursiveIteratorIterator_nextelement_error.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_beginiteration_basic.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_enditeration_basic.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_getsubiterator_basic.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_getsubiterator_variation.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_getsubiterator_variation_002.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_getsubiterator_variation_003.phpt
+NEW PASS: ext/spl/tests/recursiveiteratoriterator_nextelement_basic.phpt
+NEW PASS: ext/spl/tests/spl_004.phpt
+NEW PASS: ext/spl/tests/spl_iterator_getcallchildren.phpt
+NEW PASS: ext/spl/tests/spl_recursive_iterator_iterator_key_case.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 399 passed, 179 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Native RecursiveIteratorIterator now implements OuterIterator with all three
+traversal modes, CATCH_GET_CHILD, and depth bounds. Its state machine preserves
+child detection, descent, self visitation, ascent, and next-element ordering.
+User overrides of the Iterator methods select user iteration; otherwise native
+iteration drives the traversal directly. Optional recursive hooks retain their
+own PHP callback frames and state transitions. Child error catching excludes
+fatal exit/unwind and follows the native branch-specific behavior.
+
+Construction accepts RecursiveIterator or one IteratorAggregate result, validates
+aggregate output, supports constructor reentry, and allocates native wrapper
+handles. The constructor retains its LEAVES_ONLY constant default in reflection.
+Current values from user inner iterators are cached until movement; native arrays
+read live storage. Inner/subiterator access, method forwarding, clone rejection,
+reflection cloneability, and uninitialized-state diagnostics are integrated.
+Native frame ownership participates in object destruction and cycle collection;
+frames are released deepest-first and cached values precede inner object release.
+
+Validation:
+- 44 new upstream passes (43 SPL, one Zend), zero regressions in 8,267 fixtures.
+- 797 existing Rust tests pass (cargo test --locked).
+- 57 project PHPT fixtures pass against Rust and PHP 8.5.0.
+- Formatting, Clippy with -D warnings, and git diff --check pass.
+- No new custom tests or generated differential matrices were added.
+- A direct CLI comparison matches current-value caching, max-depth behavior,
+  constructor reentry, iterator_to_array, reflected constructor defaults, and
+  clone restrictions. The probe is supplementary, not an extra suite pass.
+
+The existing RecursiveIteratorIterator_dtor_order fixture still fails on the
+runtime's reserved-class eval diagnostic (Parse error instead of PHP's fatal
+class-name diagnostic). Other related failures need CachingIterator,
+RecursiveTreeIterator, or RecursiveDirectoryIterator. Arbitrary callback reentry,
+all inner iterator types, generators, serialization, and previously recorded
+runtime/harness gaps remain outside the coverage established by this slice.
+
+Final logs: /tmp/php-rs-recursive-iterator-{suite}7.log, tests7.log, project7.log,
+and clippy7.log. The supplementary probe is probe6.log. Only final full-suite
+results establish the measured gain; unsupported sections are not passes.
+Implementation source: PHP 8.5.0 ext/spl/spl_iterators.c and spl_iterators.stub.php.

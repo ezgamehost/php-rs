@@ -206,6 +206,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::new(properties),
+            recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),
             property_cursor: RefCell::default(),

@@ -134,6 +134,7 @@ impl Runtime {
             || name == b"roundingmode"
             || self.builtin_throwable_class(&name).is_some()
             || self.builtin_array_iterator_class(&name).is_some()
+            || self.builtin_recursive_iterator_class(&name).is_some()
         {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -331,6 +332,9 @@ impl Runtime {
         if let Some(class) = self.builtin_classes.borrow().get(&name) {
             return Some(class.clone());
         }
+        if let Some(class) = self.builtin_recursive_iterator_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_array_iterator_class(&name) {
             return Some(class);
         }
@@ -483,6 +487,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            recursive_iterator: RefCell::default(),
             array_iterator: RefCell::default(),
             properties_reordered: std::cell::Cell::new(false),
             property_cursor: RefCell::default(),
@@ -623,6 +628,18 @@ impl Runtime {
                 line,
             ));
         };
+        if let Some(data) = object.recursive_iterator.borrow().as_ref()
+            && !data.initialized()
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                format!(
+                    "The {} instance wasn't initialized properly",
+                    object.class_name
+                ),
+                line,
+            ));
+        }
         let function = self.instance_method(&object.class, name);
         if function
             .as_ref()
@@ -636,6 +653,10 @@ impl Runtime {
                 name,
                 line,
             );
+        }
+        if function.is_none() && object.recursive_iterator.borrow().is_some() {
+            let inner = self.recursive_iterator_step_inner(&object, line)?;
+            return self.resolve_method(Value::Object(inner), name, line);
         }
         let function = function.ok_or_else(|| {
             Error::new(

@@ -83,6 +83,7 @@ mod random;
 mod range;
 mod readonly;
 mod recursive_array_iterator;
+pub(crate) mod recursive_iterator;
 mod reference_paths;
 mod reference_types;
 pub(crate) mod reflection;

@@ -10,6 +10,12 @@ impl Runtime {
         {
             *object.array_iterator.get_mut() = Some(array_iterator::ArrayIteratorData::default());
         }
+        if object.class.is_a(b"RecursiveIteratorIterator")
+            && object.recursive_iterator.get_mut().is_none()
+        {
+            *object.recursive_iterator.get_mut() =
+                Some(recursive_iterator::RecursiveIteratorData::default());
+        }
         let object = Rc::new(object);
         self.object_store
             .borrow_mut()

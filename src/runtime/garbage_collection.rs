@@ -59,6 +59,9 @@ impl Runtime {
                         .iter()
                         .map(|(_, value)| value.clone())
                         .collect();
+                    if let Some(data) = object.recursive_iterator.borrow().as_ref() {
+                        values.extend(data.values());
+                    }
                     if let Some(data) = object.array_iterator.borrow().as_ref() {
                         values.push(Value::Indirect(data.storage.clone()));
                     }
@@ -138,6 +141,8 @@ impl Runtime {
             match &node.value {
                 Value::Object(object) => {
                     count += 1;
+                    let native = object.recursive_iterator.borrow_mut().take();
+                    drop(native);
                     let properties = std::mem::take(&mut *object.properties.borrow_mut());
                     drop(properties);
                     let native = object.array_iterator.borrow_mut().take();
