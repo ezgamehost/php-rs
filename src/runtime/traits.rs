@@ -372,29 +372,40 @@ impl Runtime {
         Ok(Rc::new(decl))
     }
 
-    pub(super) fn validate_trait_requirements(&self, class: &Class) -> Result<(), Error> {
+    pub(super) fn validate_trait_requirements(&mut self, class: &Class) -> Result<(), Error> {
         for required in &class.declaration.trait_requirements {
             let Some(actual) = objects::method(class, method_name(required)) else {
                 continue;
             };
-            if actual.is_abstract && actual.visibility == crate::ast::Visibility::Private {
-                return Err(composition_error(
-                    &class.declaration,
-                    "Private abstract trait methods must be implemented by the using class",
-                ));
-            }
-            if actual.is_static != required.is_static
-                || actual.visibility > required.visibility
-                || !self.compatible_method(&actual, required, class)
-            {
-                return Err(composition_error(
-                    &class.declaration,
-                    format!(
-                        "Declaration of {}() must be compatible with {}()",
-                        String::from_utf8_lossy(&actual.name),
-                        String::from_utf8_lossy(&required.name)
-                    ),
-                ));
+            // Abstract trait requirements deliberately do not enforce visibility.
+            // Their contextual types bind to the using class, while diagnostics
+            // retain the original trait's name.
+            let message = if actual.is_static != required.is_static {
+                let status = |is_static| if is_static { "static" } else { "non static" };
+                let required_name = required.trait_origin.as_ref().unwrap_or(&required.name);
+                let scope_end = required_name
+                    .windows(2)
+                    .position(|p| p == b"::")
+                    .expect("trait method");
+                Some(format!(
+                    "Cannot make {} method {}::{}() {} in class {}",
+                    status(required.is_static),
+                    String::from_utf8_lossy(&required_name[..scope_end]),
+                    String::from_utf8_lossy(method_name(&actual)),
+                    status(actual.is_static),
+                    class.display_name()
+                ))
+            } else if !self.compatible_method(&actual, required, class) {
+                Some(format!(
+                    "Declaration of {} must be compatible with {}",
+                    self.inheritance_method_signature(&actual, class),
+                    self.trait_requirement_signature(required, class)
+                ))
+            } else {
+                None
+            };
+            if let Some(message) = message {
+                return Err(self.deferred_compile_fatal_at(message, &actual.source, actual.line));
             }
         }
         Ok(())

@@ -732,6 +732,10 @@ new request. The CLI returns the low eight bits of the requested status.
   visibility/final adaptations, abstract requirements, independent method static
   storage, and property/constant composition before inheritance. `trait_exists`
   distinguishes traits from classes and interfaces.
+  [Abstract trait methods](docs/conformance/php-8.5.0-trait-methods-hillclimb.txt)
+  allow implementations with narrower visibility, resolve contextual types in
+  the using class, and retain trait names in compatibility diagnostics. Private
+  abstract requirements must be implemented even by an abstract using class.
 - `#[Deprecated]` emits user deprecations on function/method calls, constant and
   enum-case reads, and trait use. Messages retain named arguments, `since`, binary
   strings, caller strictness, and declaration scope. Constant warnings guard

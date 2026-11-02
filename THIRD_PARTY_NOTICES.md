@@ -2,7 +2,8 @@
 
 Inherited-property and method diagnostics, signature formatting, abstract-member
 reporting, and validation ordering in `src/runtime/inheritance.rs`,
-`src/runtime/interfaces.rs`, and `src/runtime/property_contracts.rs` follow PHP 8.5.0's `Zend/zend_inheritance.c`,
+`src/runtime/interfaces.rs`, `src/runtime/traits.rs`, and
+`src/runtime/property_contracts.rs` follow PHP 8.5.0's `Zend/zend_inheritance.c`,
 copyright (c) Zend Technologies Ltd. The Zend license below applies to these
 adaptations.
 

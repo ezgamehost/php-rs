@@ -1,0 +1,109 @@
+PHP 8.5.0 abstract trait method hillclimb
+Baseline: c366e78f3fc58c0d178f04bfc143f671e1bb9a35
+
+zend
+Before: 5256 cases; 3175 passed, 1681 failed, 400 unsupported
+After: 5256 cases; 3186 passed, 1670 failed, 400 unsupported
+New passes: 11; regressions: 0
+NEW PASS: Zend/tests/traits/abstract_method_1.phpt
+NEW PASS: Zend/tests/traits/abstract_method_10.phpt
+NEW PASS: Zend/tests/traits/abstract_method_3.phpt
+NEW PASS: Zend/tests/traits/abstract_method_4.phpt
+NEW PASS: Zend/tests/traits/abstract_method_5.phpt
+NEW PASS: Zend/tests/traits/abstract_method_6.phpt
+NEW PASS: Zend/tests/traits/bug60217b.phpt
+NEW PASS: Zend/tests/traits/bug60217c.phpt
+NEW PASS: Zend/tests/traits/bugs/abstract-methods05.phpt
+NEW PASS: Zend/tests/traits/bugs/abstract-methods06.phpt
+NEW PASS: Zend/tests/traits/gh14009_002.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,203 passed, 2,017 failed, 1,456 unsupported.
+Net gain: 11 upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Native PHP 8.5.0 probes cover visibility narrowing, private abstract members
+  in abstract classes, contextual self types, and aliased signature/staticness
+  errors. Comparisons combine stdout/stderr, normalize the leading fatal
+  newline, and disable native fatal backtraces.
+- No new tests, upstream fixture changes, or dependencies.
+
+Implementation:
+- Abstract trait requirements do not impose visibility on implementations.
+- Incompatible signatures and staticness changes terminate as compile failures,
+  with method source locations and full declaration signatures.
+- Trait requirement types bind to the using class; compatibility messages retain
+  the original trait method name. Staticness messages instead use the alias
+  when the implementation comes from an adaptation.
+- Explicitly abstract classes still must implement private abstract methods.
+  Completeness diagnostics count these members without requiring the class's
+  other abstract methods or property hooks to be implemented immediately.
+
+Remaining limits:
+- Delayed/autoloaded variance dependencies and other trait-composition behaviors
+  remain incomplete. The focused traits suite has 144 passes, 69 failures,
+  and three unsupported fixtures. This gate does not establish full conformance.

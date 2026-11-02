@@ -17,6 +17,22 @@ impl Runtime {
         method_signature_with_types(function, |ty| typed_properties::type_label(ty, owner), true)
     }
 
+    pub(super) fn trait_requirement_signature(
+        &self,
+        function: &FunctionDecl,
+        class: &Class,
+    ) -> String {
+        let mut declaration = function.clone();
+        if let Some(origin) = &function.trait_origin {
+            declaration.name = origin.clone();
+        }
+        method_signature_with_types(
+            &declaration,
+            |ty| typed_properties::type_label(ty, class),
+            true,
+        )
+    }
+
     pub(super) fn link_interfaces(&self, declaration: &ClassDecl) -> Result<Vec<Rc<Class>>, Error> {
         let mut interfaces = Vec::<Rc<Class>>::new();
         for name in &declaration.interfaces {

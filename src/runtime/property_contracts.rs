@@ -185,54 +185,57 @@ impl Runtime {
         class: &Class,
         missing: Vec<Rc<FunctionDecl>>,
     ) -> Result<(), Error> {
+        let mut methods: Vec<_> = class
+            .methods
+            .iter()
+            .filter(|f| {
+                f.is_abstract
+                    && (!class.declaration.is_abstract || f.visibility == Visibility::Private)
+            })
+            .cloned()
+            .collect();
         if !class.declaration.is_abstract {
-            let mut methods: Vec<_> = class
-                .methods
-                .iter()
-                .filter(|f| f.is_abstract)
-                .cloned()
-                .collect();
             methods.extend(missing);
-            let missing = methods;
-            let count = missing.len();
-            if count == 0 {
-                return Ok(());
-            }
-            let plural = if count == 1 { "" } else { "s" };
-            let mut names = missing
-                .iter()
-                .take(3)
-                .map(|f| String::from_utf8_lossy(&f.name).into_owned())
-                .collect::<Vec<_>>()
-                .join(", ");
-            if count > 3 {
-                names.push_str(", ...");
-            }
-            let message = if class.declaration.is_enum
-                || class.name.windows(10).any(|p| p == b"@anonymous")
-            {
-                let kind = if class.declaration.is_enum {
-                    "Enum"
-                } else {
-                    "Class"
-                };
-                format!(
-                    "{kind} {} must implement {count} abstract method{plural} ({names})",
-                    class.display_name()
-                )
-            } else {
-                format!(
-                    "Class {} contains {count} abstract method{plural} and must therefore be declared abstract or implement the remaining method{plural} ({names})",
-                    class.display_name()
-                )
-            };
-            return Err(self.deferred_compile_fatal_at(
-                message,
-                &class.declaration.source,
-                class.declaration.line,
-            ));
         }
-        Ok(())
+        let missing = methods;
+        let count = missing.len();
+        if count == 0 {
+            return Ok(());
+        }
+        let plural = if count == 1 { "" } else { "s" };
+        let mut names = missing
+            .iter()
+            .take(3)
+            .map(|f| String::from_utf8_lossy(&f.name).into_owned())
+            .collect::<Vec<_>>()
+            .join(", ");
+        if count > 3 {
+            names.push_str(", ...");
+        }
+        let message = if class.declaration.is_abstract
+            || class.declaration.is_enum
+            || class.name.windows(10).any(|p| p == b"@anonymous")
+        {
+            let kind = if class.declaration.is_enum {
+                "Enum"
+            } else {
+                "Class"
+            };
+            format!(
+                "{kind} {} must implement {count} abstract method{plural} ({names})",
+                class.display_name()
+            )
+        } else {
+            format!(
+                "Class {} contains {count} abstract method{plural} and must therefore be declared abstract or implement the remaining method{plural} ({names})",
+                class.display_name()
+            )
+        };
+        Err(self.deferred_compile_fatal_at(
+            message,
+            &class.declaration.source,
+            class.declaration.line,
+        ))
     }
 
     fn hook_signature_error(&mut self, actual: &FunctionDecl, required: &FunctionDecl) -> Error {
