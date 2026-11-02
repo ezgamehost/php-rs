@@ -65,7 +65,7 @@ impl Runtime {
 }
 
 #[cfg(target_os = "macos")]
-fn fill(bytes: &mut [u8]) -> Result<(), &'static str> {
+pub(super) fn fill(bytes: &mut [u8]) -> Result<(), &'static str> {
     unsafe extern "C" {
         fn CCRandomGenerateBytes(bytes: *mut std::ffi::c_void, count: usize) -> i32;
     }
@@ -79,7 +79,7 @@ fn fill(bytes: &mut [u8]) -> Result<(), &'static str> {
 }
 
 #[cfg(target_os = "linux")]
-fn fill(mut bytes: &mut [u8]) -> Result<(), &'static str> {
+pub(super) fn fill(mut bytes: &mut [u8]) -> Result<(), &'static str> {
     unsafe extern "C" {
         fn getrandom(bytes: *mut std::ffi::c_void, count: usize, flags: u32) -> isize;
     }
@@ -104,6 +104,6 @@ fn fill(mut bytes: &mut [u8]) -> Result<(), &'static str> {
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-fn fill(_: &mut [u8]) -> Result<(), &'static str> {
+pub(super) fn fill(_: &mut [u8]) -> Result<(), &'static str> {
     Err("No supported operating system random source")
 }

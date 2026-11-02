@@ -675,6 +675,28 @@ impl Runtime {
                 .iter()
                 .filter(|p| !p.variadic && p.default.is_none())
                 .count();
+            if matches!(builtin, Some(Builtin::MtRand(_))) && supplied != 0 {
+                if bound.fixed[0].is_none() {
+                    return Err(Error::new(
+                        ErrorKind::ArgumentCountError,
+                        format!(
+                            "{}(): Argument #1 ($min) must be passed explicitly, because the default value is not known",
+                            String::from_utf8_lossy(&name)
+                        ),
+                        line,
+                    ));
+                }
+                if supplied != 2 {
+                    return Err(Error::new(
+                        ErrorKind::ArgumentCountError,
+                        format!(
+                            "{}() expects exactly 2 arguments, {supplied} given",
+                            String::from_utf8_lossy(&name)
+                        ),
+                        line,
+                    ));
+                }
+            }
             let maximum = parameters.iter().filter(|p| !p.variadic).count();
             let count_error = |count: usize, direction: &str| {
                 Error::new(

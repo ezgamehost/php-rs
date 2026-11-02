@@ -11,6 +11,11 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
         b"throwable" => ("Throwable", None),
         b"reflectionexception" => ("ReflectionException", Some("Exception")),
         b"random\\randomexception" => ("Random\\RandomException", Some("Exception")),
+        b"random\\randomerror" => ("Random\\RandomError", Some("Error")),
+        b"random\\brokenrandomengineerror" => (
+            "Random\\BrokenRandomEngineError",
+            Some("Random\\RandomError"),
+        ),
         b"exception" => ("Exception", None),
         b"errorexception" => ("ErrorException", Some("Exception")),
         b"logicexception" => ("LogicException", Some("Exception")),
@@ -280,10 +285,10 @@ impl Runtime {
         if error.kind == ErrorKind::UnwindExit || error.throwable.is_some() {
             return error;
         }
-        let name = if error.kind == ErrorKind::RandomException {
-            "Random\\RandomException".to_owned()
-        } else {
-            format!("{:?}", error.kind)
+        let name = match error.kind {
+            ErrorKind::RandomException => "Random\\RandomException".to_owned(),
+            ErrorKind::BrokenRandomEngineError => "Random\\BrokenRandomEngineError".to_owned(),
+            _ => format!("{:?}", error.kind),
         };
         let class = self.find_class(name.as_bytes()).expect("error class");
         let handle = self.allocate_object_handle();

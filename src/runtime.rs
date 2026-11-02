@@ -63,6 +63,7 @@ mod loading;
 mod magic_properties;
 mod matching;
 mod math;
+mod mersenne_twister;
 mod method_visibility;
 mod nullsafe;
 mod number_format;
@@ -120,6 +121,8 @@ pub struct Runtime {
     dump_guards: HashSet<(bool, usize)>,
     deprecated_constants: HashSet<(usize, Vec<u8>)>,
     assertion_options: assertions::Options,
+    mt_state: mersenne_twister::State,
+    lcg_state: Option<[i32; 2]>,
     attribute_evaluation_line: Option<(usize, usize)>,
     attribute_constant_location: Option<(Rc<crate::source::Source>, usize)>,
     fatal_backtraces: Option<bool>,

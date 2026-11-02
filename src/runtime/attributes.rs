@@ -62,6 +62,14 @@ impl Runtime {
                     internal,
                 )?;
             }
+            if matches!(target.builtin, Some(builtins::Builtin::LcgValue)) {
+                self.attribute_diagnostic(
+                    b"Function lcg_value() is deprecated since 8.4, use \\Random\\Randomizer::getFloat() instead",
+                    8192,
+                    line,
+                    internal,
+                )?;
+            }
             return Ok(());
         };
         // Zend reports Deprecated first, and stops if its handler throws.

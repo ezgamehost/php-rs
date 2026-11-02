@@ -47,7 +47,9 @@ impl Runtime {
         } else {
             name.to_vec()
         };
-        let extension = if name.starts_with(b"ASSERT_")
+        let extension = if matches!(name, b"MT_RAND_PHP" | b"MT_RAND_MT19937") {
+            "random"
+        } else if name.starts_with(b"ASSERT_")
             || matches!(
                 name,
                 b"COUNT_NORMAL"
@@ -78,34 +80,37 @@ impl Runtime {
         } else {
             "Core"
         };
-        let attributes = if name == b"E_STRICT" || assertion_constant(name).is_some() {
-            let argument = |name: &[u8], value: &[u8]| {
-                crate::ast::Argument::Named(
-                    name.to_vec(),
-                    Expr {
-                        kind: ExprKind::Literal(Value::String(value.to_vec().into())),
-                        line: 0,
-                    },
-                )
-            };
-            vec![Attribute {
-                name: b"Deprecated".to_vec(),
-                arguments: vec![
-                    argument(b"since", if name == b"E_STRICT" { b"8.4" } else { b"8.3" }),
-                    argument(
-                        b"message",
-                        if name == b"E_STRICT" {
-                            b"the error level was removed"
-                        } else {
-                            b"as assert_options() is deprecated"
+        let attributes =
+            if matches!(name, b"E_STRICT" | b"MT_RAND_PHP") || assertion_constant(name).is_some() {
+                let argument = |name: &[u8], value: &[u8]| {
+                    crate::ast::Argument::Named(
+                        name.to_vec(),
+                        Expr {
+                            kind: ExprKind::Literal(Value::String(value.to_vec().into())),
+                            line: 0,
                         },
-                    ),
-                ],
-                line: 0,
-            }]
-        } else {
-            Vec::new()
-        };
+                    )
+                };
+                vec![Attribute {
+                    name: b"Deprecated".to_vec(),
+                    arguments: vec![
+                        argument(b"since", if name == b"E_STRICT" { b"8.4" } else { b"8.3" }),
+                        argument(
+                            b"message",
+                            if name == b"E_STRICT" {
+                                b"the error level was removed"
+                            } else if name == b"MT_RAND_PHP" {
+                                b"as it uses a biased non-standard variant of Mt19937"
+                            } else {
+                                b"as assert_options() is deprecated"
+                            },
+                        ),
+                    ],
+                    line: 0,
+                }]
+            } else {
+                Vec::new()
+            };
         Some(Rc::new(GlobalConstant {
             name: canonical,
             value,
@@ -133,6 +138,8 @@ impl Runtime {
             self.warn(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"))?;
         } else if assertion_constant(name).is_some() {
             self.warn(format!("Deprecated: Constant {} is deprecated since 8.3, as assert_options() is deprecated on line {line}", String::from_utf8_lossy(name)))?;
+        } else if name == b"MT_RAND_PHP" {
+            self.warn(format!("Deprecated: Constant MT_RAND_PHP is deprecated since 8.3, as it uses a biased non-standard variant of Mt19937 on line {line}"))?;
         } else if let Some(constant) = self.constants.get(&key(name)).cloned() {
             self.deprecated_constant(&constant.attributes, &constant.name, None, false, line)?;
         }
@@ -235,6 +242,9 @@ fn assertion_constant(name: &[u8]) -> Option<i64> {
 }
 
 fn predefined(name: &[u8]) -> Option<Value> {
+    if matches!(name, b"MT_RAND_PHP" | b"MT_RAND_MT19937") {
+        return Some(Value::Int(i64::from(name == b"MT_RAND_PHP")));
+    }
     if let Some(value) = assertion_constant(name) {
         return Some(Value::Int(value));
     }

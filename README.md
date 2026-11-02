@@ -87,6 +87,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Linux. Integer ranges include both endpoints, cover the full signed 64-bit
   range, and avoid modulo bias. Entropy-source failures throw
   `Random\RandomException`; other operating systems remain unsupported.
+- `mt_rand`/`rand` share seeded MT19937 state with `mt_srand`/`srand`, including
+  PHP's deprecated legacy mode, 32/64-bit ranges, and maximum-value functions.
+  `array_rand` selects unique keys in input order using the same generator;
+  exact seeded single-key sequences for arrays with deleted bucket history
+  remain unfinished. `lcg_value` implements the deprecated combined LCG.
 - Trigonometric/inverse and hyperbolic/inverse functions, `atan2`, `hypot`,
   `exp`/`expm1`, `log`/`log10`/`log1p`, degree/radian conversion, `pi`, and
   PHP's standard mathematical constants.

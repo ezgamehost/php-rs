@@ -2284,6 +2284,41 @@ failures were not injected. PHP 8.5.0 `ext/random/random.c`, `ext/random/csprng.
 the implementation. Mersenne Twister, rand/mt_rand, Random engines, Randomizer,
 and general internal reflection metadata remain unfinished.
 
+The [legacy random-function slice](conformance/php-8.5.0-mt-hillclimb.txt)
+adds **15 passes** across the six full suites (8,267 fixtures), with zero
+regressions: Zend **2442 / 2406 / 408**, array **748 / 40 / 52**, reflection
+**283 / 172 / 37**, and math **52 / 2 / 117**. The complete upstream random
+function suite improves from **5 / 12 / 0** to **17 / 0 / 0**. Including seven
+focused array_rand fixtures, the focused run records **24 / 0 / 0**.
+
+`mt_rand` and `rand` share request-local MT19937 state with `mt_srand` and `srand`.
+Explicit seeds truncate to 32 bits; default/null seeds use OS entropy with a
+noncryptographic fallback. PHP's legacy MT_RAND_PHP sequence and range scaling
+are preserved, with both constant and seeding deprecations. The standard engine
+uses 32-bit or 64-bit rejection sampling as appropriate, preserves draw order
+for full and singleton ranges, and enforces PHP's retry limit. `rand` accepts
+inverted bounds; `mt_rand` rejects them. Maximum-value aliases return 2147483647.
+Native zero-or-two arity and missing named arguments retain PHP diagnostics.
+`array_rand` shares the generator while using unbiased range selection even in
+legacy mode, returns unique keys in source order, and uses complement selection
+for large requests. `lcg_value` implements the separately seeded combined LCG
+and its PHP 8.5 deprecation. Random\RandomError and
+Random\BrokenRandomEngineError provide the random-error hierarchy.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or generated matrices were added. The upstream
+fixtures check exact sequences across MT reloads and range bias; one direct CLI
+probe also matches PHP output and exit status for shared alias state, singleton
+ranges, 32/64-bit boundaries, full signed ranges, and named-argument errors.
+PHP 8.5.0 `ext/random/engine_mt19937.c`, `ext/random/random.c`,
+`ext/random/random.stub.php`, and `ext/standard/array.c` establish the behavior;
+the underlying Mersenne Twister license is retained in THIRD_PARTY_NOTICES.md.
+The array representation lacks Zend's physical bucket history: single-key
+sampling is uniform but exact seeded sequences may differ for sparse/deleted
+arrays. The entropy-failure seed mixer differs from PHP's fallback, and failure
+injection was not exercised. Random engine objects, Randomizer, shuffling,
+and full internal reflection metadata remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2291,12 +2326,12 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2439 | 2409 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2442 | 2406 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 283 | 172 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 738 | 50 | 52 |
-| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 748 | 40 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |

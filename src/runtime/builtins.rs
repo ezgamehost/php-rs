@@ -8,6 +8,11 @@ pub(super) enum Builtin {
     AssertOptions,
     RandomBytes,
     RandomInt,
+    MtSeed,
+    MtRand(bool),
+    RandMax,
+    LcgValue,
+    ArrayRand,
     Clone,
     Strlen,
     StrRepeat,
@@ -173,6 +178,12 @@ impl Builtin {
             b"assert_options" => Self::AssertOptions,
             b"random_bytes" => Self::RandomBytes,
             b"random_int" => Self::RandomInt,
+            b"mt_srand" | b"srand" => Self::MtSeed,
+            b"mt_rand" => Self::MtRand(false),
+            b"rand" => Self::MtRand(true),
+            b"mt_getrandmax" | b"getrandmax" => Self::RandMax,
+            b"lcg_value" => Self::LcgValue,
+            b"array_rand" => Self::ArrayRand,
             b"clone" => Self::Clone,
             b"strlen" => Self::Strlen,
             b"str_repeat" => Self::StrRepeat,
@@ -476,6 +487,10 @@ impl Builtin {
             Self::Assert => &[("assertion", false, false), ("description", true, false)],
             Self::RandomBytes => &[("length", false, false)],
             Self::RandomInt => &[("min", false, false), ("max", false, false)],
+            Self::MtSeed => &[("seed", true, false), ("mode", true, false)],
+            Self::MtRand(_) => &[("min", true, false), ("max", true, false)],
+            Self::RandMax | Self::LcgValue => &[],
+            Self::ArrayRand => &[("array", false, false), ("num", true, false)],
             Self::ResourceInfo(_) => &[("resource", false, false)],
             Self::FileExists => &[("filename", false, false)],
             Self::FileGetContents => &[
@@ -931,6 +946,8 @@ impl Builtin {
                                 "preserve_keys",
                             ) => Value::Bool(false),
                             (Self::CountChars, "mode") => Value::Int(0),
+                            (Self::MtSeed, "mode") => Value::Int(0),
+                            (Self::ArrayRand, "num") => Value::Int(1),
                             (Self::StrPad, "pad_string") => Value::String(b" ".to_vec().into()),
                             (Self::StrPad, "pad_type") => Value::Int(1),
                             (Self::Explode, "limit") => Value::Int(i64::MAX),
@@ -1067,6 +1084,13 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        match builtin {
+            Builtin::MtSeed => return self.mt_seed(&args, &name, line),
+            Builtin::MtRand(inverted) => return self.mt_rand(&args, &name, inverted, line),
+            Builtin::RandMax => return Ok(Value::Int(i32::MAX as i64)),
+            Builtin::LcgValue => return Ok(self.lcg_value()),
+            _ => {}
+        }
         if let Builtin::Math(kind) = builtin {
             return self.math(kind, &name, &args, line);
         }
@@ -1194,6 +1218,10 @@ impl Runtime {
             Builtin::Assert => self.assert_value(&args, line),
             Builtin::RandomBytes => self.random_bytes(&args, line),
             Builtin::RandomInt => self.random_int(&args, line),
+            Builtin::ArrayRand => self.array_rand(&args, line),
+            Builtin::MtSeed | Builtin::MtRand(_) | Builtin::RandMax | Builtin::LcgValue => {
+                unreachable!()
+            }
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::StrRepeat
             | Builtin::StrRev
