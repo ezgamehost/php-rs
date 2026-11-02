@@ -15,6 +15,42 @@ enum Wrapper {
 }
 
 impl Runtime {
+    pub(super) fn stream_is_local(
+        &mut self,
+        value: &Value,
+        name: &str,
+        line: usize,
+    ) -> Result<Value, Error> {
+        if let Value::Resource(resource) = value {
+            if !matches!(*resource.kind.borrow(), crate::resource::Kind::Stream(_)) {
+                return Err(Error::new(
+                    ErrorKind::TypeError,
+                    format!("{name}(): supplied resource is not a valid stream resource"),
+                    line,
+                ));
+            }
+            // All currently constructible streams use local file, PHP or glob
+            // wrappers. Network and user wrappers are not yet implemented.
+            return Ok(Value::Bool(true));
+        }
+        // This accepts any string-convertible value, even under strict_types.
+        // Wrapper lookup uses a C string, unlike filesystem path validation.
+        let path = self.string_bytes(value, line)?;
+        let path = path.split(|&byte| byte == 0).next().unwrap();
+        let previous = self.native_warning_suppressed;
+        let mut pending = None;
+        let result = self.transfer_wrapper(path, name, &mut pending, line);
+        self.native_warning_suppressed = previous;
+        let wrapper = result?;
+        if let Some(error) = pending {
+            return Err(error);
+        }
+        Ok(Value::Bool(matches!(
+            wrapper,
+            Some(Wrapper::File | Wrapper::Php | Wrapper::Glob)
+        )))
+    }
+
     pub(super) fn file_operation(
         &mut self,
         rename: bool,

@@ -39,6 +39,7 @@ pub(super) enum Builtin {
     StreamGetContents,
     StreamGetLine,
     StreamCopy,
+    StreamIsLocal,
     FileLines,
     Basename,
     Dirname,
@@ -248,6 +249,8 @@ impl Builtin {
             b"tempnam" => Self::TemporaryName,
             b"sys_get_temp_dir" => Self::TemporaryDirectory,
             b"stream_get_meta_data" => Self::Stream(streams::Operation::Metadata),
+            b"stream_is_local" => Self::StreamIsLocal,
+            b"stream_supports_lock" => Self::Stream(streams::Operation::SupportsLock),
             b"fpassthru" => Self::Fpassthru,
             b"copy" => Self::FileOperation(false),
             b"rename" => Self::FileOperation(true),
@@ -746,6 +749,7 @@ impl Builtin {
                 ("whence", true, false),
             ],
             Self::Stream(_) | Self::Fpassthru => &[("stream", false, false)],
+            Self::StreamIsLocal => &[("stream", false, false)],
             Self::FileOperation(_) => &[
                 ("from", false, false),
                 ("to", false, false),
@@ -1443,6 +1447,7 @@ impl Runtime {
             }
             Builtin::StreamGetLine => self.stream_get_line(&name, &args, line),
             Builtin::StreamCopy => self.stream_copy(&name, &args, line),
+            Builtin::StreamIsLocal => self.stream_is_local(first, &name, line),
             Builtin::FileLines => self.file_lines(&args, line),
             Builtin::FileExists => self.file_path_operation(false, &args, line),
             Builtin::ClearStatCache => unreachable!("handled before required arguments"),

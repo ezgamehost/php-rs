@@ -19,6 +19,7 @@ pub(super) enum Operation {
     Flush,
     Metadata,
     Stat,
+    SupportsLock,
 }
 
 impl Runtime {
@@ -635,6 +636,13 @@ impl Runtime {
         if matches!(operation, Operation::Stat) {
             return self.stream_stat(first, name, line);
         }
+        if matches!(operation, Operation::SupportsLock) {
+            let kind = resource.kind.borrow();
+            let Kind::Stream(stream) = &*kind else {
+                unreachable!("validated stream resource")
+            };
+            return Ok(Value::Bool(stream.supports_lock()));
+        }
         if matches!(operation, Operation::GetChar) {
             return self
                 .stream_read_line(first, name, Some(1), line)
@@ -772,7 +780,10 @@ impl Runtime {
             return Ok(Value::String(bytes.into()));
         }
         Ok(match operation {
-            Operation::Metadata | Operation::Stat | Operation::GetChar => unreachable!(),
+            Operation::Metadata
+            | Operation::Stat
+            | Operation::GetChar
+            | Operation::SupportsLock => unreachable!(),
             Operation::Truncate => match stream.truncate(length as u64) {
                 Some(result) => Value::Bool(result.is_ok()),
                 None => {

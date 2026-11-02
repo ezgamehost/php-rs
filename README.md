@@ -262,6 +262,10 @@ new request. The CLI returns the low eight bits of the requested status.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
   spill-to-disk and general wrapper registration remain unfinished.
   Supported `php://` names are case-insensitive and retain their original URI spelling.
+- `stream_is_local` classifies existing streams and supported wrapper names with
+  native string-conversion and unknown-wrapper diagnostics. `stream_supports_lock`
+  queries the backend capability without acquiring a lock; memory and directory
+  streams report false. General wrapper registration and `flock` remain unfinished.
 - `ftruncate` shrinks or extends file, memory, and temporary streams with native
   read-only behavior. It preserves logical position, EOF, and stat caches; memory
   streams clamp their internal cursor on shrink and zero-fill newly added bytes.

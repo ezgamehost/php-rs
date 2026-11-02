@@ -691,3 +691,8 @@ native file hashing diagnostics, EOF handling and stream lifetime.
 `src/runtime/clocks.rs` adapts PHP 8.5.0's `ext/standard/{microtime,hrtime}.c`
 and `ext/date/php_date.c`, copyright (c) The PHP Group, using Rust's system
 and monotonic clocks.
+
+Stream locality and lock-capability queries in `src/runtime/file_operations.rs`,
+`src/runtime/streams.rs`, and `src/resource.rs` adapt PHP 8.5.0's
+`ext/standard/streamsfuncs.c` and `main/streams/{streams,plain_wrapper,memory}.c`,
+copyright (c) The PHP Group.

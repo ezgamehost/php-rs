@@ -80,6 +80,16 @@ impl ReadBuffer {
 }
 
 impl Stream {
+    pub(crate) fn supports_lock(&self) -> bool {
+        match &self.backend {
+            Backend::File(_) | Backend::StandardInput(_) | Backend::StandardOutput(_) => true,
+            Backend::Memory(_) | Backend::Directory(_) => false,
+            Backend::Temporary(resource) => {
+                matches!(&*resource.kind.borrow(), Kind::Stream(inner) if inner.supports_lock())
+            }
+        }
+    }
+
     pub(crate) fn at_eof(&self) -> bool {
         self.eof && self.read_buffer.len() == 0
     }

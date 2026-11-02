@@ -1,0 +1,87 @@
+PHP 8.5.0 stream capability queries hillclimb
+Baseline: 5248ab2739498fbd42b88685e176899de8187385
+
+zend
+Before: 5256 cases; 2591 passed, 2265 failed, 400 unsupported
+After: 5256 cases; 2591 passed, 2265 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 431 passed, 147 failed, 152 unsupported
+After: 730 cases; 431 passed, 147 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 312 passed, 76 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/standard/tests/file/bug43216.phpt
+NEW PASS: ext/standard/tests/file/bug49047.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 30 passed, 76 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/streams/stream_is_local.phpt
+
+Total: 9,556 fixtures; 5,187 passed, 2,928 failed, 1,441 unsupported.
+Three newly observed passes; zero regressions across all ten suites.
+Two passes are attributable to stream_is_local. The third, file/bug49047.phpt,
+comes from the preceding time() implementation: its baseline run encountered a
+leftover bug47177.tmpdir directory from an older failure before time existed.
+That baseline run removed the directory; this full run and a separate targeted
+repeat pass. This is not attributed to the stream-query implementation.
+
+stream_is_local accepts streams or any string-convertible value, even with
+strict_types, preserves native invalid-resource diagnostics and caller values,
+and reuses wrapper lookup with unknown-wrapper warnings, pending exceptions,
+case handling, remote file-host rejection, and C-string NUL termination.
+All currently constructible stream resources use local wrappers.
+stream_supports_lock checks backend support without changing lock, position,
+EOF or buffer state. File and standard streams report true; memory/directory
+streams report false; temporary streams delegate to their current backend.
+
+Direct PHP reference comparisons match file, standard, temporary, memory,
+directory, context and closed-resource behavior; strict string conversion;
+Stringable callbacks; binary paths; recognized and unknown schemes; long wrapper
+names; arity; reference preservation; throwing warning handlers and restored
+warning delivery. The upstream stream_supports_lock fixture remains unsupported
+because of its INI section and also needs the unfinished data wrapper. No fixture
+was rewritten or counted as passing through a modified version.
+Custom/network/data wrappers, temporary spill-to-disk, and flock remain unfinished.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-streamqueries-*1.log.
+Rust validation logs: /tmp/php-rs-streamqueries-{tests,clippy}1.log.
