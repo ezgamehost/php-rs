@@ -110,7 +110,7 @@ impl Runtime {
                 out.extend(&context.scope.name);
             } else if reflection.is_method
                 && let Some(parent) = &context.scope.parent
-                && let Some(overwritten) = objects::method(parent, reflection.name())
+                && let Some(overwritten) = reflected_member(parent, reflection.name())
                 && overwritten.visibility != Visibility::Private
             {
                 out.extend(b", overwrites ");
@@ -228,7 +228,7 @@ impl Runtime {
 
 pub(super) fn method_prototype(class: &Rc<Class>, name: &[u8]) -> Option<Rc<FunctionDecl>> {
     if let Some(parent) = &class.parent
-        && let Some(method) = objects::method(parent, name)
+        && let Some(method) = reflected_member(parent, name)
         && method.visibility != Visibility::Private
     {
         // A concrete constructor can retain an abstract/interface prototype
@@ -242,11 +242,34 @@ pub(super) fn method_prototype(class: &Rc<Class>, name: &[u8]) -> Option<Rc<Func
         }
     }
     for interface in &class.interfaces {
-        if let Some(method) = objects::method(interface, name) {
+        if let Some(method) = reflected_member(interface, name) {
             return method_prototype(interface, name).or(Some(method));
         }
     }
     None
+}
+
+fn reflected_member(class: &Rc<Class>, name: &[u8]) -> Option<Rc<FunctionDecl>> {
+    if let Some(name) = name.strip_prefix(b"$") {
+        let (property, get) = if let Some(property) = name.strip_suffix(b"::get") {
+            (property, true)
+        } else {
+            (name.strip_suffix(b"::set")?, false)
+        };
+        let hooks = class
+            .properties
+            .iter()
+            .rev()
+            .find(|p| p.name == property)?
+            .hooks
+            .as_ref()?;
+        return if get {
+            hooks.get.clone()
+        } else {
+            hooks.set.clone()
+        };
+    }
+    objects::method(class, name)
 }
 
 fn static_names(statements: &[Stmt], names: &mut Vec<Vec<u8>>) {

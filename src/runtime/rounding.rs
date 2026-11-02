@@ -23,37 +23,7 @@ impl Runtime {
             case HalfAwayFromZero; case HalfTowardsZero; case HalfEven; case HalfOdd;
             case TowardsZero; case AwayFromZero; case NegativeInfinity; case PositiveInfinity;
         }";
-        let (mut statements, _, _) =
-            parser::parse(lexer::lex(source).expect("RoundingMode source"))
-                .expect("RoundingMode declaration");
-        let Stmt::Class(mut declaration) = statements.remove(0) else {
-            unreachable!()
-        };
-        Rc::make_mut(&mut declaration).line = 0;
-        Rc::make_mut(&mut declaration).end_line = 0;
-        let declaration = self.prepare_enum(declaration).expect("native enum");
-        let class = Rc::new(Class {
-            aliases: RefCell::default(),
-            name: declaration.name.clone(),
-            methods: declaration.methods.clone(),
-            properties: declaration.properties.clone(),
-            declaration,
-            parent: None,
-            interfaces: vec![self.find_class(b"UnitEnum").expect("UnitEnum")],
-            static_properties: Vec::new(),
-            allow_dynamic: false,
-            forbid_dynamic: true,
-            defaults: RefCell::default(),
-            static_values: RefCell::default(),
-            constant_values: RefCell::default(),
-            evaluating_constants: RefCell::default(),
-            initialized: std::cell::Cell::new(false),
-            initializing: std::cell::Cell::new(false),
-        });
-        self.builtin_classes
-            .borrow_mut()
-            .insert(b"roundingmode".to_vec(), class.clone());
-        class
+        self.native_enum_class(source)
     }
 
     pub(super) fn round(&mut self, args: &[Option<Value>], line: usize) -> Result<Value, Error> {

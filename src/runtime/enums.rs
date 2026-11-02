@@ -6,6 +6,44 @@ use crate::{
 };
 
 impl Runtime {
+    pub(super) fn native_enum_class(&self, source: &[u8]) -> Rc<Class> {
+        let (mut statements, _, _) = parser::parse(lexer::lex(source).expect("native enum source"))
+            .expect("native enum declaration");
+        let Stmt::Class(mut declaration) = statements.remove(0) else {
+            unreachable!()
+        };
+        Rc::make_mut(&mut declaration).line = 0;
+        Rc::make_mut(&mut declaration).end_line = 0;
+        let declaration = self.prepare_enum(declaration).expect("native enum");
+        let interfaces = declaration
+            .interfaces
+            .iter()
+            .map(|name| self.find_class(name).expect("native enum interface"))
+            .collect();
+        let class = Rc::new(Class {
+            aliases: RefCell::default(),
+            name: declaration.name.clone(),
+            methods: declaration.methods.clone(),
+            properties: declaration.properties.clone(),
+            declaration,
+            parent: None,
+            interfaces,
+            static_properties: Vec::new(),
+            allow_dynamic: false,
+            forbid_dynamic: true,
+            defaults: RefCell::default(),
+            static_values: RefCell::default(),
+            constant_values: RefCell::default(),
+            evaluating_constants: RefCell::default(),
+            initialized: std::cell::Cell::new(false),
+            initializing: std::cell::Cell::new(false),
+        });
+        self.builtin_classes
+            .borrow_mut()
+            .insert(class.name.to_ascii_lowercase(), class.clone());
+        class
+    }
+
     pub(super) fn prepare_enum(
         &self,
         mut declaration: Rc<ClassDecl>,

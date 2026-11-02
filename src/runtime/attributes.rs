@@ -108,7 +108,7 @@ impl Runtime {
         // Zend reports Deprecated first, and stops if its handler throws.
         for (attribute_name, discarded) in [(b"Deprecated".as_slice(), false), (b"NoDiscard", true)]
         {
-            if discarded && target.result_used {
+            if discarded && (target.result_used || function.property_hook().is_some()) {
                 continue;
             }
             let Some(attribute) = function

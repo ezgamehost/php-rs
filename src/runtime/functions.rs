@@ -396,7 +396,18 @@ impl Runtime {
                 if internal { None } else { Some(line) },
             ));
         }
+        let hook = target.function.as_ref().and_then(|function| {
+            let (name, _) = function.property_hook()?;
+            Some((target.this.clone()?, name.to_vec(), function.name.clone()))
+        });
+        let is_hook = hook.is_some();
+        if let Some(hook) = hook {
+            self.active_property_hooks.push(hook);
+        }
         let result = self.invoke_bound(target, parameters, bound, line, dynamic);
+        if is_hook {
+            self.active_property_hooks.pop();
+        }
         let result = result.map_err(|error| self.materialize_error(error));
         if !optimized {
             self.trace_frames.pop();

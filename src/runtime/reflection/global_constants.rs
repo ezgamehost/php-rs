@@ -56,6 +56,7 @@ impl Runtime {
             }),
             b"getattributes" => {
                 let context = AttributeContext {
+                    property_hook: false,
                     class: None,
                     source: constant.source.clone().unwrap_or_default(),
                     strict_types: constant.strict_types,

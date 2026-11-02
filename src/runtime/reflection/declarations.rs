@@ -254,6 +254,8 @@ impl Runtime {
                 public function getDeclaringClass(): ReflectionClass {}
                 public function getValue(?object $object=null): mixed {}
                 public function setValue(mixed $objectOrValue, mixed $value=null): void {}
+                public function getRawValue(object $object): mixed {}
+                public function setRawValue(object $object, mixed $value): void {}
                 public function isInitialized(?object $object=null): bool {}
                 public function setRawValueWithoutLazyInitialization(object $object, mixed $value): void {}
                 public function skipLazyInitialization(object $object): void {}
@@ -267,6 +269,8 @@ impl Runtime {
                 public function getAttributes(?string $name=null, int $flags=0): array {}
                 public function hasHooks(): bool {}
                 public function getHooks(): array {}
+                public function hasHook(PropertyHookType $type): bool {}
+                public function getHook(PropertyHookType $type): ?ReflectionMethod {}
                 public function __toString(): string {}
             "),
             b"reflectionparameter" => ("ReflectionParameter", None, "

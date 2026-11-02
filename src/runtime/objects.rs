@@ -145,6 +145,7 @@ impl Runtime {
             || name == b"stdclass"
             || name == b"closure"
             || name == b"roundingmode"
+            || name == b"propertyhooktype"
             || self.builtin_throwable_class(&name).is_some()
             || self.builtin_array_iterator_class(&name).is_some()
             || self.builtin_recursive_iterator_class(&name).is_some()
@@ -396,6 +397,11 @@ impl Runtime {
         }
         if name == b"roundingmode" {
             return Some(self.rounding_mode_class());
+        }
+        if name == b"propertyhooktype" {
+            return Some(self.native_enum_class(
+                b"<?php enum PropertyHookType: string { case Get = 'get'; case Set = 'set'; }",
+            ));
         }
         if name == b"stdclass" {
             let class = Rc::new(Class {

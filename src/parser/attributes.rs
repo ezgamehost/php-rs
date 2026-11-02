@@ -323,11 +323,33 @@ impl Parser {
                 .find_map(|t| t.doc_comment.clone());
         }
         function.attributes = result?;
+        self.validate_function_attributes(function, method)
+    }
+
+    pub(super) fn validate_function_attributes(
+        &self,
+        function: &FunctionDecl,
+        method: bool,
+    ) -> Result<(), Error> {
         if function
             .attributes
             .iter()
             .any(|a| a.name.eq_ignore_ascii_case(b"NoDiscard"))
         {
+            if function.property_hook().is_some() {
+                if function
+                    .attributes
+                    .iter()
+                    .any(|a| a.name.eq_ignore_ascii_case(b"DelayedTargetValidation"))
+                {
+                    return Self::validate_attributes(&function.attributes, Target::Method);
+                }
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "#[\\NoDiscard] is not supported for property hooks",
+                    function.line,
+                ));
+            }
             if let Some(ty) = &function.return_type
                 && (ty.contains("void") || ty.contains("never"))
             {

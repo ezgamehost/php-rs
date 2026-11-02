@@ -64,8 +64,9 @@ impl Parser {
             String::from_utf8_lossy(&property.name)
         );
         while !self.eat("}") {
-            let line = self.token().line;
             let doc_comment = self.token().doc_comment.clone();
+            let attribute_range = self.take_attributes()?;
+            let line = self.token().line;
             let final_hook = self.eat("final");
             if final_hook && property.visibility == Visibility::Private {
                 return Err(Error::new(
@@ -124,6 +125,14 @@ impl Parser {
                     line,
                 ));
             }
+            let name = format!(
+                "${}::{}",
+                String::from_utf8_lossy(&property.name),
+                String::from_utf8_lossy(&kind)
+            )
+            .into_bytes();
+            let outer_name = std::mem::replace(&mut self.function_name, name.clone());
+            let outer_class = std::mem::replace(&mut self.function_class, self.class_name.clone());
             let parameters = if self.is("(") {
                 if get {
                     return Err(Error::new(
@@ -185,14 +194,6 @@ impl Parser {
                     variadic: false,
                 }]
             };
-            let name = format!(
-                "${}::{}",
-                String::from_utf8_lossy(&property.name),
-                String::from_utf8_lossy(&kind)
-            )
-            .into_bytes();
-            let outer_name = std::mem::replace(&mut self.function_name, name.clone());
-            let outer_class = std::mem::replace(&mut self.function_class, self.class_name.clone());
             let return_type = if get {
                 property.ty.clone()
             } else {
@@ -204,6 +205,8 @@ impl Parser {
             let outer_static = std::mem::take(&mut self.static_names);
             let outer_depth = std::mem::replace(&mut self.control_depth, 0);
             let outer_finally = std::mem::take(&mut self.finally_depths);
+            let attributes =
+                self.parse_attributes_at(attribute_range, attributes::Target::Method)?;
             let mut body = Vec::new();
             let is_abstract = property.is_abstract && self.is(";");
             if is_interface && !is_abstract {
@@ -287,7 +290,7 @@ impl Parser {
                 doc_comment,
                 tentative_return_type: None,
                 end_line: self.tokens[self.pos - 1].line,
-                attributes: Vec::new(),
+                attributes,
                 returns_reference,
                 trait_origin: None,
                 native: None,
@@ -306,6 +309,7 @@ impl Parser {
                 strict_types: self.strict_types,
                 source: self.source.clone(),
             });
+            self.validate_function_attributes(&function, true)?;
             if get {
                 hooks.get = Some(function);
                 hooks.get_final = final_hook;

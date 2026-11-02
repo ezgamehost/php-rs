@@ -20,6 +20,7 @@ impl PropertyReflection {
             | (i64::from(property.is_final) * 32)
             | (i64::from(property.is_abstract) * 64)
             | (i64::from(property.is_readonly) * 128)
+            | (i64::from(property.hooks.as_ref().is_some_and(|h| h.is_virtual)) * 512)
             | if property.set_visibility != property.visibility {
                 match property.set_visibility {
                     Visibility::Protected => 2048,
@@ -247,6 +248,9 @@ impl Runtime {
         let flags = property.modifiers();
         Ok(match name {
             b"getname" => string(&property.name),
+            b"getrawvalue" | b"setrawvalue" => {
+                return self.reflected_raw_property_value(&property, name == b"setrawvalue", line);
+            }
             b"getdoccomment" => decl
                 .and_then(|p| p.doc_comment.as_ref())
                 .map_or(Value::Bool(false), string),
@@ -268,7 +272,48 @@ impl Runtime {
                     .is_some_and(|h| h.is_virtual),
             ),
             b"hashooks" => Value::Bool(decl.is_some_and(|p| p.hooks.is_some())),
-            b"gethooks" => Value::Array(Rc::new(PhpArray::default())),
+            b"gethooks" => {
+                let mut result = PhpArray::default();
+                if let Some(hooks) = decl.and_then(|p| p.hooks.as_ref()) {
+                    for (name, hook) in [(b"get", &hooks.get), (b"set", &hooks.set)] {
+                        if let Some(hook) = hook {
+                            let function =
+                                self.declared_method_reflection(&property.scope, hook.clone());
+                            result.insert(
+                                ArrayKey::String(name.to_vec()),
+                                self.reflection_object(
+                                    b"ReflectionMethod",
+                                    ReflectionData::Function(function),
+                                ),
+                            );
+                        }
+                    }
+                }
+                Value::Array(Rc::new(result))
+            }
+            b"hashook" | b"gethook" => {
+                let Value::Object(kind) = self.lookup(b"type").unwrap() else {
+                    unreachable!()
+                };
+                let get = kind
+                    .properties
+                    .borrow()
+                    .get(&ArrayKey::String(b"name".to_vec()))
+                    .unwrap()
+                    .to_bytes()
+                    == b"Get";
+                let hook = decl
+                    .and_then(|p| p.hooks.as_ref())
+                    .and_then(|h| if get { h.get.as_ref() } else { h.set.as_ref() });
+                if name == b"hashook" {
+                    Value::Bool(hook.is_some())
+                } else if let Some(hook) = hook {
+                    let function = self.declared_method_reflection(&property.scope, hook.clone());
+                    self.reflection_object(b"ReflectionMethod", ReflectionData::Function(function))
+                } else {
+                    Value::Null
+                }
+            }
             b"isdefault" => Value::Bool(decl.is_some()),
             b"isdynamic" => Value::Bool(decl.is_none()),
             b"ispromoted" => Value::Bool(decl.is_some_and(|p| p.is_promoted)),
@@ -278,9 +323,25 @@ impl Runtime {
                 ReflectionData::Class(property.owner.clone()),
             ),
             b"hastype" => Value::Bool(decl.is_some_and(|p| p.ty.is_some())),
-            b"gettype" | b"getsettabletype" => decl
+            b"gettype" => decl
                 .and_then(|p| p.ty.clone())
                 .map_or(Value::Null, |ty| self.reflection_type(ty)),
+            b"getsettabletype" => {
+                let ty = decl.and_then(|p| {
+                    if let Some(hooks) = &p.hooks {
+                        if let Some(set) = &hooks.set {
+                            return set.parameters[0].ty.clone();
+                        }
+                        if hooks.is_virtual {
+                            return Some(crate::ast::TypeDecl {
+                                members: vec!["never".to_owned()],
+                            });
+                        }
+                    }
+                    p.ty.clone()
+                });
+                ty.map_or(Value::Null, |ty| self.reflection_type(ty))
+            }
             b"hasdefaultvalue" => Value::Bool(decl.is_some_and(|p| {
                 !p.hooks.as_ref().is_some_and(|h| h.is_virtual)
                     && (p.default.is_some() || p.ty.is_none())
@@ -330,11 +391,17 @@ impl Runtime {
         while let Some(instance) = object.lazy_instance() {
             object = instance;
         }
+        let effective = (method == b"setrawvaluewithoutlazyinitialization")
+            .then(|| self.effective_reflected_property(property, &object));
+        let property = effective.as_ref().unwrap_or(property);
         let declaration = property.declaration.as_ref();
-        if method == b"islazy" && (declaration.is_none() || property.is_static) {
+        let virtual_ = declaration
+            .and_then(|p| p.hooks.as_ref())
+            .is_some_and(|h| h.is_virtual);
+        if method == b"islazy" && (declaration.is_none() || property.is_static || virtual_) {
             return Ok(Value::Bool(false));
         }
-        if declaration.is_none() || property.is_static {
+        if declaration.is_none() || property.is_static || virtual_ {
             let label = if method == b"skiplazyinitialization" {
                 "skipLazyInitialization"
             } else {
@@ -345,6 +412,8 @@ impl Runtime {
                     "Can not use {label} on {} property {}::${}",
                     if property.is_static {
                         "static"
+                    } else if virtual_ {
+                        "virtual"
                     } else {
                         "dynamic"
                     },
@@ -394,11 +463,14 @@ impl Runtime {
                 global: false,
                 keys: Vec::new(),
             };
-            self.check_readonly_write(&location, false, line)?;
-            self.write_property_value(
+            if !declaration.hooks.as_ref().is_some_and(|h| h.set.is_some()) {
+                self.check_readonly_write(&location, false, line)?;
+            }
+            self.reflected_raw_property_access(
                 &object,
                 &property.name,
-                self.lookup(b"value").unwrap(),
+                Some(self.lookup(b"value").unwrap()),
+                true,
                 line,
             )
         })();
@@ -511,11 +583,13 @@ impl Runtime {
                 }
                 if method == b"isinitialized" {
                     Ok(Value::Bool(
-                        object
-                            .properties
-                            .borrow()
-                            .get(&self.instance_property_key(&object, &property.name))
-                            .is_some(),
+                        self.property_hooks(&object, &property.name)
+                            .is_some_and(|h| h.is_virtual)
+                            || object
+                                .properties
+                                .borrow()
+                                .get(&self.instance_property_key(&object, &property.name))
+                                .is_some(),
                     ))
                 } else {
                     self.read_property_value(&object, &property.name, line, Access::Read)
@@ -545,6 +619,9 @@ impl Runtime {
         out.extend(indent);
         out.extend(b"Property [ ");
         if let Some(decl) = &property.declaration {
+            if decl.is_abstract {
+                out.extend(b"abstract ");
+            }
             if decl.is_final {
                 out.extend(b"final ");
             }
@@ -560,6 +637,9 @@ impl Runtime {
             if decl.is_readonly {
                 out.extend(b"readonly ");
             }
+            if decl.hooks.as_ref().is_some_and(|h| h.is_virtual) {
+                out.extend(b"virtual ");
+            }
             if let Some(ty) = &decl.ty {
                 out.extend(functions::normalize_type(ty.clone()).to_string().bytes());
                 out.push(b' ');
@@ -574,6 +654,22 @@ impl Runtime {
         {
             out.extend(b" = ");
             format_value(&value, &mut out);
+        }
+        if let Some(hooks) = property.declaration.as_ref().and_then(|p| p.hooks.as_ref()) {
+            out.extend(b" { ");
+            for (hook, final_, name) in [
+                (&hooks.get, hooks.get_final, b"get".as_slice()),
+                (&hooks.set, hooks.set_final, b"set".as_slice()),
+            ] {
+                if hook.is_some() {
+                    if final_ {
+                        out.extend(b"final ");
+                    }
+                    out.extend(name);
+                    out.extend(b"; ");
+                }
+            }
+            out.push(b'}');
         }
         out.extend(b" ]\n");
         Ok(string(out))

@@ -38,6 +38,48 @@ fn collect_interfaces(class: &Class, interfaces: &mut Vec<Rc<Class>>) {
 }
 
 impl Runtime {
+    pub(super) fn validate_hook_overrides(&mut self, class: &Class) -> Result<(), Error> {
+        let mut interfaces = Vec::new();
+        collect_interfaces(class, &mut interfaces);
+        for property in &class.declaration.properties {
+            for get in [true, false] {
+                let Some(function) = hook(property, get) else {
+                    continue;
+                };
+                if !method_visibility::declaring_name(function).eq_ignore_ascii_case(&class.name)
+                    || !function
+                        .attributes
+                        .iter()
+                        .any(|a| a.name.eq_ignore_ascii_case(b"Override"))
+                {
+                    continue;
+                }
+                let matches = |p: &PropertyDecl| {
+                    p.name == property.name
+                        && p.visibility != Visibility::Private
+                        && (hook(p, get).is_some() || implicit_operation(p, get))
+                };
+                if class
+                    .parent
+                    .as_ref()
+                    .is_some_and(|p| p.properties.iter().any(matches))
+                    || interfaces.iter().any(|i| i.properties.iter().any(matches))
+                {
+                    continue;
+                }
+                return Err(self.compile_fatal_at(
+                    &format!(
+                        "{}() has #[\\Override] attribute, but no matching parent method exists",
+                        String::from_utf8_lossy(&function.name)
+                    ),
+                    &function.source,
+                    function.line,
+                ));
+            }
+        }
+        Ok(())
+    }
+
     pub(super) fn validate_property_contracts(&mut self, class: &Class) -> Result<(), Error> {
         self.validate_setter_types(class)?;
         let mut missing: Vec<Rc<FunctionDecl>> = class

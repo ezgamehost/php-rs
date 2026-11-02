@@ -31,7 +31,6 @@ impl Runtime {
     fn invoke_property_hook(
         &mut self,
         object: &Rc<PhpObject>,
-        name: &[u8],
         function: Rc<FunctionDecl>,
         value: Option<Value>,
         line: usize,
@@ -45,7 +44,7 @@ impl Runtime {
                 })
             })
             .collect();
-        self.invoke_property_hook_arguments(object, name, function, &arguments, line, true)
+        self.invoke_property_hook_arguments(object, function, &arguments, line, true)
     }
 
     pub(super) fn read_property_hook(
@@ -75,9 +74,7 @@ impl Runtime {
                 }
                 return Ok(None);
             }
-            return self
-                .invoke_property_hook(object, name, get, None, line)
-                .map(Some);
+            return self.invoke_property_hook(object, get, None, line).map(Some);
         }
         if hooks.is_virtual {
             return Err(Error::new(
@@ -118,7 +115,7 @@ impl Runtime {
                 }
                 return Ok(false);
             }
-            self.invoke_property_hook(object, name, set, Some(value.dereferenced()), line)?;
+            self.invoke_property_hook(object, set, Some(value.dereferenced()), line)?;
             return Ok(true);
         }
         if hooks.is_virtual {

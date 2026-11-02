@@ -1,0 +1,147 @@
+PHP 8.5.0 property hook reflection and attributes hillclimb
+Baseline: 49da9ecc30c245b8435ad6a29d2b2ac02ae3551b
+
+zend
+Before: 5256 cases; 3020 passed, 1836 failed, 400 unsupported
+After: 5256 cases; 3040 passed, 1816 failed, 400 unsupported
+New passes: 20; regressions: 0
+NEW PASS: Zend/tests/attributes/delayed_target_validation/has_runtime_errors.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/no_compile_errors.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/validator_NoDiscard.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_AllowDynamicProperties.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_Attribute.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_NoDiscard.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_Override_error_get.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_Override_error_set.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_Override_okay.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_ReturnTypeWillChange.phpt
+NEW PASS: Zend/tests/attributes/delayed_target_validation/with_SensitiveParameter.phpt
+NEW PASS: Zend/tests/attributes/nodiscard/unsupported_property_hook_get.phpt
+NEW PASS: Zend/tests/attributes/nodiscard/unsupported_property_hook_set.phpt
+NEW PASS: Zend/tests/lazy_objects/setRawValueWithoutLazyInitialization_skips_hook.phpt
+NEW PASS: Zend/tests/lazy_objects/skipLazyInitialization.phpt
+NEW PASS: Zend/tests/property_hooks/attributes.phpt
+NEW PASS: Zend/tests/property_hooks/override_attribute_backed.phpt
+NEW PASS: Zend/tests/property_hooks/override_attribute_fail.phpt
+NEW PASS: Zend/tests/property_hooks/override_attribute_plain.phpt
+NEW PASS: Zend/tests/property_hooks/override_attribute_virtual.phpt
+
+reflection
+Before: 492 cases; 343 passed, 112 failed, 37 unsupported
+After: 492 cases; 358 passed, 97 failed, 37 unsupported
+New passes: 15; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionClass_getProperties_003.phpt
+NEW PASS: ext/reflection/tests/ReflectionClass_toString_008.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getModifiers_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_getSettableType.phpt
+NEW PASS: ext/reflection/tests/ReflectionProperty_toString_001.phpt
+NEW PASS: ext/reflection/tests/abstract_property_indicated.phpt
+NEW PASS: ext/reflection/tests/property_hooks/ReflectionProperty_getHook_inheritance.phpt
+NEW PASS: ext/reflection/tests/property_hooks/ReflectionProperty_getHooks.phpt
+NEW PASS: ext/reflection/tests/property_hooks/ReflectionProperty_getSetRawValue.phpt
+NEW PASS: ext/reflection/tests/property_hooks/ReflectionProperty_isInitialized.phpt
+NEW PASS: ext/reflection/tests/property_hooks/basics.phpt
+NEW PASS: ext/reflection/tests/property_hooks/bug_001.phpt
+NEW PASS: ext/reflection/tests/property_hooks/gh15718.phpt
+NEW PASS: ext/reflection/tests/property_hooks/gh17713.phpt
+NEW PASS: ext/reflection/tests/property_hooks/hook_guard.phpt
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+
+Upstream total: 9,676 fixtures; 6,044 passed, 2,176 failed, 1,456 unsupported.
+Net gain: 35 upstream passes; zero regressions across all twelve suites.
+Zend property_hooks: 200 passed, six failed, four unsupported out of 210.
+Reflection property_hooks: all 11 fixtures pass. These focused counts are already
+included in the upstream total.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons cover reflective hook closures, inherited hook
+  prototypes, raw writes through parent reflection objects, lazy initialization,
+  final-hook metadata, setter types, and hook parameter magic constants.
+- NoDiscard compile and delayed-instantiation diagnostics match native PHP;
+  fatal CLI comparisons ignore the existing leading blank-line difference and
+  disable native fatal backtraces.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Hook attributes retain declaration context and custom setter parameter context.
+  Override checks inherited hooks and implicit backing operations. NoDiscard is
+  rejected on hooks, or deferred to ReflectionAttribute::newInstance when requested.
+- PropertyHookType is a native backed enum. ReflectionProperty exposes hook methods,
+  raw access, setter input types, virtual initialization state, modifier flags,
+  and declaration strings including final accessors.
+- Hook ReflectionMethod objects retain complete names, declaration scopes,
+  attributes, final flags, and inherited prototypes. Reflective invocation and
+  closures enter the same backing-storage guard as ordinary hook dispatch.
+- Raw property operations select the effective declaration for the supplied object
+  and substitute internal accessors when the requested hook exists. Missing hooks
+  preserve ordinary access semantics, including virtual-property diagnostics.
+- Raw setters initialize lazy objects unless explicitly bypassed. Parent implicit
+  setters share this initialization behavior; bypassed writes realize only their
+  target slot. Getter/setter bodies are not called by raw access.
+- Class strings mark hooked-property iteration support while isIterable retains
+  its separate Traversable contract.
+
+Remaining limits:
+- Generator hooks, complex interface merges, initializer expressions, and complete
+  AST rendering remain unfinished. This focused gate does not establish full PHP
+  conformance; 2,176 failures and 1,456 unsupported fixtures remain in these suites.

@@ -313,8 +313,8 @@ impl Runtime {
         if matches!(method, NativeMethod::Reflection) {
             return self.native_reflection_method(supplied, line);
         }
-        if let NativeMethod::ParentPropertyHook(get) = method {
-            return self.native_parent_property_hook(get, line);
+        if let NativeMethod::PropertyHookTrampoline { get, skip_lazy } = method {
+            return self.native_property_hook_trampoline(get, skip_lazy, line);
         }
         if matches!(method, NativeMethod::SensitiveValue) {
             return self.native_sensitive_value(line);

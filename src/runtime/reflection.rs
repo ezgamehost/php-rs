@@ -19,6 +19,7 @@ mod native;
 mod native_signatures;
 mod parameters;
 mod properties;
+mod property_hooks;
 use properties::PropertyReflection;
 
 #[derive(Clone)]
@@ -57,6 +58,7 @@ pub(crate) struct AttributeContext {
     source: Rc<crate::source::Source>,
     strict_types: bool,
     target: i64,
+    property_hook: bool,
 }
 impl AttributeContext {
     fn class(class: &Rc<Class>) -> Self {
@@ -65,6 +67,7 @@ impl AttributeContext {
             source: class.declaration.source.clone(),
             strict_types: class.declaration.strict_types,
             target: 1,
+            property_hook: false,
         }
     }
 }

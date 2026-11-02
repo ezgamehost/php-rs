@@ -13,7 +13,11 @@ impl FunctionReflection {
             .as_ref()
             .map_or(self.target.name.as_slice(), |f| &f.name);
         if !name.starts_with(b"{closure:") && self.target.context.is_some() {
-            name.rsplit(|b| *b == b':').next().unwrap()
+            let start = name
+                .windows(2)
+                .position(|p| p == b"::")
+                .map_or(0, |i| i + 2);
+            &name[start..]
         } else {
             name
         }
@@ -66,14 +70,30 @@ impl FunctionReflection {
     pub(super) fn modifiers(&self) -> i64 {
         let function = self.target.function.as_ref().unwrap();
         let class = &self.target.context.as_ref().unwrap().scope;
+        let is_final = if let Some((name, get)) = function.property_hook() {
+            class
+                .declaration
+                .properties
+                .iter()
+                .find(|p| p.name == name)
+                .and_then(|p| p.hooks.as_ref())
+                .is_some_and(|h| if get { h.get_final } else { h.set_final })
+        } else {
+            class.method_is_final(self.name())
+        };
         visibility_flags(function.visibility)
             | (i64::from(function.is_static) * 16)
             | (i64::from(function.is_abstract) * 64)
-            | (i64::from(class.method_is_final(self.name())) * 32)
+            | (i64::from(is_final) * 32)
     }
 
     pub(super) fn attribute_context(&self, runtime: &Runtime) -> AttributeContext {
         AttributeContext {
+            property_hook: self
+                .target
+                .function
+                .as_ref()
+                .is_some_and(|f| f.property_hook().is_some()),
             class: self.target.context.as_ref().map(|c| c.scope.clone()),
             source: self
                 .target
@@ -207,10 +227,18 @@ impl Runtime {
                 line,
             )
         })?;
+        Ok(self.declared_method_reflection(class, function))
+    }
+
+    pub(super) fn declared_method_reflection(
+        &self,
+        class: &Rc<Class>,
+        function: Rc<FunctionDecl>,
+    ) -> FunctionReflection {
         let scope = self
             .find_class(method_visibility::declaring_name(&function))
             .expect("method declaring class");
-        Ok(FunctionReflection {
+        FunctionReflection {
             target: CallTarget {
                 result_used: true,
                 reference_values: false,
@@ -226,7 +254,7 @@ impl Runtime {
                 }),
             },
             is_method: true,
-        })
+        }
     }
 
     pub(super) fn reflect_function_method(
@@ -275,7 +303,7 @@ impl Runtime {
                 let class = self
                     .find_class(method_visibility::declaring_name(&prototype))
                     .unwrap();
-                let reflected = self.reflected_method(&class, reflection.name(), line)?;
+                let reflected = self.declared_method_reflection(&class, prototype);
                 self.reflection_object(b"ReflectionMethod", ReflectionData::Function(reflected))
             }
             b"getname" => string(reflection.name()),

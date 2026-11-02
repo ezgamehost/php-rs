@@ -148,7 +148,7 @@ pub(crate) struct CatchClause {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum NativeMethod {
-    ParentPropertyHook(bool),
+    PropertyHookTrampoline { get: bool, skip_lazy: bool },
     RecursiveIterator,
     FixedArray,
     LinkedList,
@@ -452,6 +452,19 @@ pub(crate) struct FunctionDecl {
     pub return_type: Option<TypeDecl>,
     pub strict_types: bool,
     pub source: Rc<crate::source::Source>,
+}
+
+impl FunctionDecl {
+    pub(crate) fn property_hook(&self) -> Option<(&[u8], bool)> {
+        let start = self.name.windows(2).position(|p| p == b"::")? + 2;
+        let name = self.name[start..].strip_prefix(b"$")?;
+        if let Some(property) = name.strip_suffix(b"::get") {
+            Some((property, true))
+        } else {
+            name.strip_suffix(b"::set")
+                .map(|property| (property, false))
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

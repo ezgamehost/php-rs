@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     PhpObject,
-    ast::{Argument, NativeMethod, Parameter, Visibility},
+    ast::{Argument, NativeMethod, Parameter, PropertyDecl, Visibility},
 };
 
 impl Runtime {
@@ -63,76 +63,78 @@ impl Runtime {
             .hooks
             .as_ref()
             .and_then(|h| if get { h.get.clone() } else { h.set.clone() });
-        let function = match function {
-            Some(function) => function,
-            None => {
-                let mut function_name = property.declaring_class.clone();
-                function_name.extend(b"::$");
-                function_name.extend(name);
-                function_name.extend(if get { b"::get" } else { b"::set" });
-                Rc::new(FunctionDecl {
-                    doc_comment: None,
-                    tentative_return_type: None,
-                    end_line: line,
+        let function =
+            function.unwrap_or_else(|| self.property_hook_trampoline(property, get, false, line));
+        self.invoke_property_hook_arguments(&object, function, args, line, result_used)
+    }
+
+    pub(super) fn property_hook_trampoline(
+        &self,
+        property: &PropertyDecl,
+        get: bool,
+        skip_lazy: bool,
+        line: usize,
+    ) -> Rc<FunctionDecl> {
+        let mut function_name = property.declaring_class.clone();
+        function_name.extend(b"::$");
+        function_name.extend(&property.name);
+        function_name.extend(if get { b"::get" } else { b"::set" });
+        Rc::new(FunctionDecl {
+            doc_comment: None,
+            tentative_return_type: None,
+            end_line: line,
+            attributes: Vec::new(),
+            returns_reference: false,
+            trait_origin: None,
+            native: Some(NativeMethod::PropertyHookTrampoline { get, skip_lazy }),
+            visibility: Visibility::Public,
+            is_abstract: false,
+            is_static: false,
+            name: function_name,
+            parameters: if get {
+                Vec::new()
+            } else {
+                vec![Parameter {
                     attributes: Vec::new(),
-                    returns_reference: false,
-                    trait_origin: None,
-                    native: Some(NativeMethod::ParentPropertyHook(get)),
-                    visibility: Visibility::Public,
-                    is_abstract: false,
-                    is_static: false,
-                    name: function_name,
-                    parameters: if get {
-                        Vec::new()
-                    } else {
-                        vec![Parameter {
-                            attributes: Vec::new(),
-                            by_reference: false,
-                            promotion: None,
-                            name: b"value".to_vec(),
-                            ty: None,
-                            implicit_nullable: false,
-                            default: None,
-                            variadic: false,
-                        }]
-                    },
-                    body: Vec::new(),
-                    line,
-                    return_type: None,
-                    strict_types: false,
-                    source: self.source.clone(),
-                })
-            }
-        };
-        self.invoke_property_hook_arguments(&object, name, function, args, line, result_used)
+                    by_reference: false,
+                    promotion: None,
+                    name: b"value".to_vec(),
+                    ty: None,
+                    implicit_nullable: false,
+                    default: None,
+                    variadic: false,
+                }]
+            },
+            body: Vec::new(),
+            line,
+            return_type: None,
+            strict_types: false,
+            source: self.source.clone(),
+        })
     }
 
     pub(super) fn invoke_property_hook_arguments(
         &mut self,
         object: &Rc<PhpObject>,
-        name: &[u8],
         function: Rc<FunctionDecl>,
         args: &[Argument],
         line: usize,
         result_used: bool,
     ) -> Result<Value, Error> {
         let mut target = self.unchecked_method_target(
-            function.clone(),
+            function,
             object.class.clone(),
             Some(object.clone()),
             line,
         )?;
         target.result_used = result_used;
-        self.active_property_hooks
-            .push((object.clone(), name.to_vec(), function.name.clone()));
-        let result = self.invoke(target, args, line, false);
-        self.active_property_hooks.pop();
-        result
+        self.invoke(target, args, line, false)
     }
 
-    pub(super) fn native_parent_property_hook(
+    pub(super) fn native_property_hook_trampoline(
         &mut self,
         get: bool,
+        skip_lazy: bool,
         line: usize,
     ) -> Result<Value, Error> {
         let (object, name, _) = self
@@ -144,7 +146,23 @@ impl Runtime {
             self.read_property_value(&object, &name, line, Access::Read)
         } else {
             let value = self.lookup(b"value").unwrap();
-            self.write_property_value(&object, &name, value, line)
+            if skip_lazy {
+                self.write_property_value(&object, &name, value, line)
+            } else {
+                self.write_location(
+                    &mut Location {
+                        object: Some(object),
+                        name,
+                        static_class: None,
+                        global: false,
+                        keys: Vec::new(),
+                        overloaded: None,
+                        offset_reference: None,
+                    },
+                    value,
+                    line,
+                )
+            }
         }
     }
 }

@@ -48,7 +48,9 @@ impl Runtime {
             out.extend(extension.bytes());
         }
         out.extend(b"> ");
-        if !decl.is_interface && !decl.is_trait && class.is_a(b"Traversable") {
+        if (!decl.is_interface && !decl.is_trait && class.is_a(b"Traversable"))
+            || class.properties.iter().any(|p| p.hooks.is_some())
+        {
             out.extend(b"<iterateable> ");
         }
         if decl.is_interface {

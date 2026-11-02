@@ -180,6 +180,7 @@ impl Runtime {
     // Check only declarations introduced by this class: inherited declarations
     // were already checked in their original class, before any child interfaces.
     fn validate_override_attributes(&mut self, class: &Class) -> Result<(), Error> {
+        self.validate_hook_overrides(class)?;
         let has_override = |attributes: &[crate::ast::Attribute]| {
             attributes
                 .iter()

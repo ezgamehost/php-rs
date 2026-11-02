@@ -1,5 +1,12 @@
 # Third-party notices
 
+Property-hook reflection and raw accessor integration in
+`src/runtime/reflection/property_hooks.rs` and the reflection modules follow PHP
+8.5.0's `ext/reflection/php_reflection.c` and `php_reflection.stub.php`, copyright
+(c) The PHP Group. Hook attribute validation follows `Zend/zend_attributes.c`,
+copyright (c) Zend Technologies Ltd. The PHP and Zend licenses below apply to
+the respective adaptations.
+
 Hook-aware property enumeration in `src/runtime/property_export.rs` and its
 iteration, inspection, JSON, export, and restoration integration follows PHP
 8.5.0's `Zend/zend_property_hooks.c` (by Ilija Tovilo),

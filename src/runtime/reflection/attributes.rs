@@ -234,6 +234,13 @@ impl Runtime {
                         line,
                     ));
                 }
+                if owner.property_hook && owner.target == 4 && class.name == b"NoDiscard" {
+                    return Err(Error::new(
+                        ErrorKind::Error,
+                        "#[\\NoDiscard] is not supported for property hooks",
+                        line,
+                    ));
+                }
                 let arguments = self.attribute_arguments(owner, attribute)?;
                 let source = self.replace_source(owner.source.clone());
                 let strict = std::mem::replace(&mut self.strict_types, owner.strict_types);

@@ -524,8 +524,9 @@ new request. The CLI returns the low eight bits of the requested status.
   their raw values without initialization. Array casts, mangled property queries,
   and ordinary debug output preserve deferred initialization. Uninitialized objects
   suppress destructors, and reset options support skipping destruction or serialization
-  initialization. Property-hook integration and some initialization lifetime and
-  compound-assignment edge cases remain unfinished.
+  initialization. Raw reflection writes can bypass property hooks with or without
+  lazy initialization. Some initialization lifetime and compound-assignment edge
+  cases remain unfinished.
 - [Function/method/parameter reflection](docs/conformance/php-8.5.0-function-rendering-hillclimb.txt)
   exposes names, source lines, visibility,
   signature metadata, defaults, attributes, named/union types, and closure captures.
@@ -542,9 +543,11 @@ new request. The CLI returns the low eight bits of the requested status.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining
-  typed-reference and readonly constraints. Declaration strings cover ordinary defaults;
-  unevaluated expression rendering, complete raw/hooked access,
-  and complete internal property metadata remain unfinished.
+  typed-reference and readonly constraints. [Hook reflection](docs/conformance/php-8.5.0-hook-reflection-hillclimb.txt)
+  exposes get/set methods, final/virtual flags, settable types, attributes, prototypes,
+  invocation, and closures. Raw access bypasses available hooks; declaration strings
+  show hooks and ordinary defaults. Unevaluated expression rendering and complete
+  internal property metadata remain unfinished.
 - Class-constant reflection supports individual/filtered discovery, deferred values,
   declared types, visibility/final/deprecated flags, declaring classes, attributes,
   and declaration strings. Ordinary property and constant documentation comments
@@ -759,8 +762,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.
-  Invalid declarations produce fatal diagnostics; hook-level Override validation
-  remains unfinished.
+  Hook-level `#[Override]` checks inherited accessors and backing operations.
+  Invalid declarations produce fatal diagnostics. Hook attributes retain lexical
+  magic constants; `#[NoDiscard]` hook errors support delayed validation.
 - Default-enabled `assert` validates descriptions, throws supplied Throwable
   objects unchanged, and creates AssertionError with code 1 on failure. Direct
   calls receive generated descriptions for supported expressions and declarations.
