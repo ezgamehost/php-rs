@@ -1056,6 +1056,13 @@ impl Runtime {
                 let mut location = self.static_location(class, name, line)?;
                 self.read_location(&mut location, line, false, None)
             }
+            // Construct initializer objects at evaluation time, even for native
+            // classes whose constructors would otherwise be available to folding.
+            ExprKind::New(_, _) if self.folding_constants => Err(Error::new(
+                ErrorKind::Error,
+                "New expression requires runtime evaluation",
+                line,
+            )),
             ExprKind::New(class, args) => self.new_object(class, args, line),
             ExprKind::AnonymousClass(class) => {
                 if self.find_class(&class.name).is_none() {

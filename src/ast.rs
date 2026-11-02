@@ -559,8 +559,12 @@ impl Expr {
         self.constant_expression(false, false)
     }
 
-    pub fn is_attribute_expression(&self) -> bool {
+    pub fn is_initializer_expression(&self) -> bool {
         self.constant_expression(true, true)
+    }
+
+    pub fn is_attribute_expression(&self) -> bool {
+        self.is_initializer_expression()
     }
 
     fn constant_expression(&self, allow_object_cast: bool, allow_new: bool) -> bool {

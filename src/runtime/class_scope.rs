@@ -15,7 +15,7 @@ impl Runtime {
             Error::new(
                 ErrorKind::Error,
                 format!(
-                    "Cannot access {} when no class scope is active",
+                    "Cannot access \"{}\" when no class scope is active",
                     String::from_utf8_lossy(name)
                 ),
                 line,
@@ -27,7 +27,7 @@ impl Runtime {
             _ => context.scope.parent.as_ref().ok_or_else(|| {
                 Error::new(
                     ErrorKind::Error,
-                    "Cannot access parent when current class scope has no parent",
+                    "Cannot access \"parent\" when current class scope has no parent",
                     line,
                 )
             })?,

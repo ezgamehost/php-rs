@@ -689,6 +689,12 @@ new request. The CLI returns the low eight bits of the requested status.
   with automatic value captures, nested closures, recursion, and per-instance
   static variables. Static anonymous functions can initialize PHP 8.5 constants
   and parameter defaults. Inline closures work in pipe chains.
+- [Object initializers](docs/conformance/php-8.5.0-object-initializers-hillclimb.txt)
+  allow `new` in parameter defaults and global constants, including nested objects,
+  named constructor arguments, and promoted defaults. Omitted arguments and
+  reflection default queries construct fresh objects; global constants retain their
+  initialized object. Constructors run at evaluation time, with declaring scope
+  preserved for `self` and `parent`.
 - Live `global` bindings and function-local `static` storage, including dynamic
   initializers, recursive calls, and local `unset` behavior. Variable variables
   (`$$name` and `${expression}`) work with reads, writes, offsets, and probes.
