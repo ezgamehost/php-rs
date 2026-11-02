@@ -193,20 +193,102 @@ impl Runtime {
         name: &str,
         line: usize,
     ) -> Result<Value, Error> {
-        // A native plain-file mapping advances the position without probing EOF.
-        // Native mmap requires a page-aligned offset; an unaligned offset falls
-        // back to reads and probes EOF. Preserve that observable distinction.
-        let remaining = mapped_remaining(source);
+        self.copy_stream_limited(source, destination, None, name, line)
+    }
+
+    pub(super) fn stream_copy(
+        &mut self,
+        name: &str,
+        args: &[Option<Value>],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let source = args[0].as_ref().unwrap();
+        let destination = args[1].as_ref().unwrap();
+        self.validate_stream_argument(source, name, 1, "from", line)?;
+        self.validate_stream_argument(destination, name, 2, "to", line)?;
+        let length = args[2]
+            .as_ref()
+            .filter(|value| !matches!(value, Value::Null))
+            .map(|value| self.native_int_type(value, name, 3, line, "?int"))
+            .transpose()?
+            .filter(|&length| length != -1)
+            .map(|length| length as u64);
+        let offset = args[3]
+            .as_ref()
+            .map(|value| self.native_int(value, name, 4, line))
+            .transpose()?
+            .unwrap_or(0);
+        if offset > 0
+            && !matches!(
+                self.stream_operation(
+                    streams::Operation::Seek,
+                    name,
+                    &[Some(source.clone()), Some(Value::Int(offset)), None],
+                    line,
+                )?,
+                Value::Int(0)
+            )
+        {
+            self.warn(format!(
+                "{name}(): Failed to seek to position {offset} in the stream on line {line}"
+            ))?;
+            return Ok(Value::Bool(false));
+        }
+        let Value::Resource(source) = source else {
+            unreachable!()
+        };
+        self.copy_stream_limited(source, destination, length, name, line)
+    }
+
+    fn copy_stream_limited(
+        &mut self,
+        source: &Rc<PhpResource>,
+        destination: &Value,
+        limit: Option<u64>,
+        name: &str,
+        line: usize,
+    ) -> Result<Value, Error> {
+        if limit == Some(0) {
+            return Ok(Value::Int(0));
+        }
         let mut count = 0_u64;
+        // PHP advances over a whole mapping before attempting one destination
+        // write. This is observable on failed writes and in warning callbacks.
+        // An unaligned source falls back to the ordinary chunked read loop.
+        while let Some(available) = mapped_remaining(source) {
+            const MAPPING_MAX: u64 = 512 * 1024 * 1024;
+            let wanted = limit.map_or(MAPPING_MAX, |limit| (limit - count).min(MAPPING_MAX));
+            let mapped = available.min(wanted) as usize;
+            let mut bytes = Vec::new();
+            bytes.try_reserve_exact(mapped).map_err(|_| {
+                Error::new(ErrorKind::Error, "Unable to allocate string storage", line)
+            })?;
+            bytes.resize(mapped, 0);
+            let mut read = 0;
+            while read < mapped {
+                match self.read_transfer_chunk(source, &mut bytes[read..], true, name, line)? {
+                    Some(0) | None => return Ok(Value::Bool(false)),
+                    Some(n) => read += n,
+                }
+            }
+            let written = self.write_transfer_bytes(destination, bytes, name, line)?;
+            if written != Some(mapped as i64) {
+                return Ok(Value::Bool(false));
+            }
+            count += mapped as u64;
+            if (mapped as u64) < wanted || limit == Some(count) {
+                return Ok(Value::Int(count as i64));
+            }
+        }
         let mut bytes = [0; 8192];
         loop {
-            if remaining == Some(count) {
+            if limit == Some(count) {
                 break;
             }
-            let length = remaining.map_or(bytes.len(), |size| {
+            let length = limit.map_or(bytes.len(), |size| {
                 (size - count).min(bytes.len() as u64) as usize
             });
-            let read = self.read_transfer_chunk(source, &mut bytes[..length], name, line)?;
+            let read = self.read_transfer_chunk(source, &mut bytes[..length], false, name, line)?;
             let Some(read) = read else {
                 return Ok(Value::Bool(false));
             };
@@ -275,7 +357,13 @@ impl Runtime {
             let length = remaining.map_or(bytes.len(), |size| {
                 (size - count).min(bytes.len() as u64) as usize
             });
-            match self.read_transfer_chunk(resource, &mut bytes[..length], name, line)? {
+            match self.read_transfer_chunk(
+                resource,
+                &mut bytes[..length],
+                remaining.is_some(),
+                name,
+                line,
+            )? {
                 Some(0) => break,
                 Some(read) => {
                     self.emit_output(&bytes[..read])?;
@@ -308,6 +396,7 @@ impl Runtime {
         &mut self,
         resource: &Rc<PhpResource>,
         bytes: &mut [u8],
+        mapped: bool,
         name: &str,
         line: usize,
     ) -> Result<Option<usize>, Error> {
@@ -319,20 +408,37 @@ impl Runtime {
         if matches!(stream.backend, Backend::Directory(_)) {
             return Ok(None);
         }
+        let stdio = !mapped
+            && matches!(
+                stream.backend,
+                Backend::File(_) | Backend::StandardInput(_) | Backend::StandardOutput(_)
+            );
         let result = stream.backend.read(bytes);
         match result {
             Ok(count) => {
                 stream.position = stream.position.wrapping_add(count as u64);
                 stream.eof = count == 0;
+                if stdio {
+                    self.file_stat_cache = [None, None];
+                }
                 Ok(Some(count))
             }
             Err(error) => {
                 drop(kind);
-                self.warn(format!(
+                let warning = self.warn(format!(
                     "Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}",
                     error.raw_os_error().unwrap_or(0),
                     streams::io_message(&error)
-                ))?;
+                ));
+                if stdio {
+                    if error.raw_os_error() != Some(9)
+                        && let Kind::Stream(stream) = &mut *resource.kind.borrow_mut()
+                    {
+                        stream.eof = true;
+                    }
+                    self.file_stat_cache = [None, None];
+                }
+                warning?;
                 Ok(None)
             }
         }

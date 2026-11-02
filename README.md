@@ -256,6 +256,12 @@ new request. The CLI returns the low eight bits of the requested status.
 - `ftruncate` shrinks or extends file, memory, and temporary streams with native
   read-only behavior. It preserves logical position, EOF, and stat caches; memory
   streams clamp their internal cursor on shrink and zero-fill newly added bytes.
+- `stream_copy_to_stream` copies from the current position or a positive absolute
+  offset, with optional byte limits and native resource/seek diagnostics. Shared
+  transfers preserve mapped-file source advancement on write failure and the
+  differing EOF/stat-cache effects of mapped and ordinary reads. Mapped ranges
+  currently use owned buffers of up to 512 MiB; native memory mapping and Linux
+  `copy_file_range` optimizations remain unfinished.
 - `stream_context_*` APIs create contexts, merge options, manage notification
   callbacks, and share a request's default context. Returned option arrays retain
   snapshots across later updates. Plain files and memory/directory streams lazily

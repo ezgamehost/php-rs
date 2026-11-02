@@ -271,13 +271,28 @@ impl Runtime {
         name: &str,
         line: usize,
     ) -> Result<(), Error> {
+        self.validate_stream_argument(value, name, 1, "stream", line)
+    }
+
+    pub(super) fn validate_stream_argument(
+        &self,
+        value: &Value,
+        name: &str,
+        position: usize,
+        parameter: &str,
+        line: usize,
+    ) -> Result<(), Error> {
         let Value::Resource(resource) = value else {
-            return Err(builtins::type_error(value, name, 1, "resource", line));
+            return Err(builtins::type_error(
+                value, name, position, "resource", line,
+            ));
         };
         if !matches!(*resource.kind.borrow(), Kind::Stream(_)) {
             return Err(Error::new(
                 ErrorKind::TypeError,
-                format!("{name}(): Argument #1 ($stream) must be an open stream resource"),
+                format!(
+                    "{name}(): Argument #{position} (${parameter}) must be an open stream resource"
+                ),
                 line,
             ));
         }

@@ -666,3 +666,8 @@ scoped pending-exception warning suppression preserve those native operations.
 Character reads and stream truncation in `src/runtime/streams.rs` and
 `src/resource.rs` adapt PHP 8.5.0's `ext/standard/file.c` and
 `main/streams/{streams,memory,plain_wrapper}.c`, copyright (c) The PHP Group.
+
+`stream_copy_to_stream` and bounded transfers in `src/runtime/file_writing.rs`
+adapt PHP 8.5.0's `ext/standard/streamsfuncs.c` and `main/streams/streams.c`,
+copyright (c) The PHP Group. Mapped transfer ordering and ordinary-read stat-cache
+and error EOF handling follow `main/streams/{streams,plain_wrapper}.c`.

@@ -1,0 +1,75 @@
+PHP 8.5.0 stream copying hillclimb
+Baseline: 03c1334fe182cd7de497886a144f25203a93403b
+
+zend
+Before: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+After: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 291 passed, 97 failed, 508 unsupported
+After: 896 cases; 295 passed, 93 failed, 508 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/file/bug69100.phpt
+NEW PASS: ext/standard/tests/file/gh9779.phpt
+NEW PASS: ext/standard/tests/file/stream_copy_to_stream_empty.phpt
+NEW PASS: ext/standard/tests/file/stream_copy_to_stream_interleaved.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 27 passed, 79 failed, 51 unsupported
+After: 157 cases; 28 passed, 78 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/streams/bug48309.phpt
+
+Total: 9,556 fixtures; 5,147 passed, 2,968 failed, 1,441 unsupported.
+5 new passes (4 file, 1 streams); zero regressions across all ten suites.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+stream_copy_to_stream validates both resources, nullable length and offset,
+seeks only for positive offsets and implements bounded/unbounded copying.
+Shared copy machinery advances across mapped ranges before destination writes,
+including write failures. Ordinary reads clear stat caches; mapped reads retain
+them. Read error EOF updates follow native stdio behavior.
+Direct PHP comparisons match zero/positive/negative limits, offsets, resource
+diagnostics, failed seeks, mapped write failure positions, EOF and stat caches.
+Mapped ranges currently use owned buffers of up to 512 MiB. Native memory mapping,
+Linux copy_file_range, custom wrappers and networking remain unfinished.
+Final upstream logs: /tmp/php-rs-streamcopy-*2.log.
+Rust validation logs: /tmp/php-rs-streamcopy-{tests,clippy}1.log.
