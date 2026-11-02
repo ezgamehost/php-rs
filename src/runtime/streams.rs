@@ -398,6 +398,27 @@ impl Runtime {
         include: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        self.open_stream_with_create_mode(name, filename, mode, include, None, line)
+    }
+
+    pub(super) fn open_stream_with_create_mode(
+        &mut self,
+        name: &str,
+        filename: &[u8],
+        mode: &[u8],
+        include: bool,
+        creation_mode: Option<u32>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        #[cfg(not(unix))]
+        let _ = creation_mode;
+        if filename.is_empty() {
+            return Err(Error::new(
+                ErrorKind::ValueError,
+                "Path must not be empty",
+                line,
+            ));
+        }
         let resolved_include = if include {
             self.resolve_include(filename, name, line)?
         } else {
@@ -462,13 +483,13 @@ impl Runtime {
         let backend = if memory {
             Backend::Memory(Cursor::new(Vec::new()))
         } else {
-            let bytes = if filename
-                .get(..7)
-                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(b"file://"))
-            {
-                &filename[7..]
-            } else {
-                filename
+            let Some(bytes) = file_operations::plain_path(filename) else {
+                self.warn(format!(
+                    "{name}(): Remote host file access not supported, {} on line {line}",
+                    String::from_utf8_lossy(filename)
+                ))?;
+                self.open_warning(name, filename, "no suitable wrapper could be found", line)?;
+                return Ok(Value::Bool(false));
             };
             let path = crate::source::path_from_bytes(bytes);
             let resolved = self.working_directory().join(&path);
@@ -480,7 +501,12 @@ impl Runtime {
                 .create(matches!(first, b'w' | b'a' | b'c'))
                 .create_new(first == b'x')
                 .truncate(first == b'w');
-            match options.open(resolved) {
+            #[cfg(unix)]
+            if let Some(mode) = creation_mode {
+                use std::os::unix::fs::OpenOptionsExt;
+                options.mode(mode);
+            }
+            match open_local_file(&options, &resolved, creation_mode) {
                 Ok(file) => {
                     self.file_stat_cache = [None, None];
                     Backend::File(file)
@@ -843,4 +869,55 @@ pub(super) fn io_message(error: &std::io::Error) -> String {
         .next()
         .unwrap_or(&message)
         .to_owned()
+}
+
+// An exclusive first attempt lets cross-device rename create a private file
+// without changing process umask or modifying an existing destination's mode.
+fn open_local_file(
+    options: &OpenOptions,
+    path: &std::path::Path,
+    creation_mode: Option<u32>,
+) -> std::io::Result<std::fs::File> {
+    #[cfg(unix)]
+    if let Some(mode) = creation_mode {
+        use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+        loop {
+            match options.clone().create_new(true).mode(mode).open(path) {
+                Ok(file) => {
+                    file.set_permissions(std::fs::Permissions::from_mode(mode))?;
+                    return Ok(file);
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                    match options.clone().create(false).open(path) {
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                            // A dangling final symlink exists, but its target does
+                            // not. Create that target exclusively instead of
+                            // repeatedly retrying the symlink's occupied name.
+                            match std::fs::read_link(path) {
+                                Ok(target) => {
+                                    let target = if target.is_absolute() {
+                                        target
+                                    } else {
+                                        path.parent()
+                                            .unwrap_or(std::path::Path::new("."))
+                                            .join(target)
+                                    };
+                                    return open_local_file(options, &target, creation_mode);
+                                }
+                                Err(missing) if missing.kind() == std::io::ErrorKind::NotFound => {
+                                    continue;
+                                }
+                                Err(_) => return Err(error),
+                            }
+                        }
+                        result => return result,
+                    }
+                }
+                Err(error) => return Err(error),
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    let _ = creation_mode;
+    options.open(path)
 }

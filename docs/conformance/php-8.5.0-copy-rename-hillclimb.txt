@@ -1,0 +1,90 @@
+PHP 8.5.0 copy and rename hillclimb
+Baseline: a088d3f4d2b45b68ff6687fbd529bad2ed6f47d6
+
+zend
+Before: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+After: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 259 passed, 129 failed, 508 unsupported
+After: 896 cases; 278 passed, 110 failed, 508 unsupported
+New passes: 19; regressions: 0
+NEW PASS: ext/standard/tests/file/bug32160.phpt
+NEW PASS: ext/standard/tests/file/bug44805.phpt
+NEW PASS: ext/standard/tests/file/bug65701.phpt
+NEW PASS: ext/standard/tests/file/bug66509.phpt
+NEW PASS: ext/standard/tests/file/bug74719.phpt
+NEW PASS: ext/standard/tests/file/bug75679.phpt
+NEW PASS: ext/standard/tests/file/copy_basic.phpt
+NEW PASS: ext/standard/tests/file/copy_error.phpt
+NEW PASS: ext/standard/tests/file/copy_variation1.phpt
+NEW PASS: ext/standard/tests/file/copy_variation10.phpt
+NEW PASS: ext/standard/tests/file/copy_variation11.phpt
+NEW PASS: ext/standard/tests/file/copy_variation13.phpt
+NEW PASS: ext/standard/tests/file/copy_variation14.phpt
+NEW PASS: ext/standard/tests/file/copy_variation17.phpt
+NEW PASS: ext/standard/tests/file/copy_variation18.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_variation1.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_variation2.phpt
+NEW PASS: ext/standard/tests/file/rename_basic.phpt
+NEW PASS: ext/standard/tests/file/rename_variation9.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 27 passed, 79 failed, 51 unsupported
+After: 157 cases; 27 passed, 79 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,129 passed, 2,986 failed, 1,441 unsupported.
+19 new passes in file; zero regressions across all ten suites.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+copy implements directory/same-file preflight, stream transfer, wrapper diagnostics,
+and pending context/warning exceptions that preserve native filesystem side effects.
+rename implements local file/directory moves and cross-device fallback with private
+destination creation, ownership and permissions. Shared stream opening handles file
+URLs and dangling symlink creation without changing the process-wide umask.
+Direct PHP comparisons cover normal transfers, invalid context side effects,
+unknown/remote/glob/php wrapper diagnostics and cross-device moves onto a temporary
+HFS+ volume. Cross-device dangling-symlink contents and permissions, and completion
+under pending context exceptions, match PHP. The volume and image were removed.
+Data/custom/network wrappers and Windows-specific rename behavior remain unfinished.
+Final upstream logs: /tmp/php-rs-copy-*3.log.
+Rust validation logs: /tmp/php-rs-copy-{tests,clippy}2.log.

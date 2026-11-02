@@ -258,6 +258,12 @@ new request. The CLI returns the low eight bits of the requested status.
   snapshots across later updates. Plain files and memory/directory streams lazily
   allocate independent contexts when queried. Network/custom wrapper behavior,
   notification delivery, and complete resource-cycle collection remain unfinished.
+- `copy` transfers supported file/stream contents with directory checks and
+  same-inode protection. `rename` moves local files and directories, clears stat
+  caches, and falls back to a private copy plus ownership/permission restoration
+  across filesystems. Both preserve native filesystem effects when context or
+  wrapper exceptions are pending. File URLs and unknown-wrapper diagnostics are
+  supported; data/custom/network wrappers and Windows rename behavior remain unfinished.
 - `file_put_contents` writes scalars, Stringable objects, arrays, and stream data,
   with append mode, exclusive locking before truncation, and PHP's continued
   scalar-array writes after a string conversion throws. `readfile` sends file bytes to

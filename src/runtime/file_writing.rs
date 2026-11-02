@@ -99,7 +99,7 @@ impl Runtime {
             let _ = file.set_len(0);
         }
         match data {
-            Value::Resource(source) => self.copy_file_input(source, &opened, line),
+            Value::Resource(source) => self.copy_stream_input(source, &opened, NAME, line),
             Value::Array(array) => {
                 let mut index = 0;
                 let mut count = 0_i64;
@@ -160,9 +160,19 @@ impl Runtime {
         bytes: Vec<u8>,
         line: usize,
     ) -> Result<Option<i64>, Error> {
+        self.write_transfer_bytes(stream, bytes, "file_put_contents", line)
+    }
+
+    fn write_transfer_bytes(
+        &mut self,
+        stream: &Value,
+        bytes: Vec<u8>,
+        name: &str,
+        line: usize,
+    ) -> Result<Option<i64>, Error> {
         let written = self.stream_operation(
             streams::Operation::Write,
-            "file_put_contents",
+            name,
             &[
                 Some(stream.clone()),
                 Some(Value::String(bytes.into())),
@@ -176,10 +186,11 @@ impl Runtime {
         })
     }
 
-    fn copy_file_input(
+    pub(super) fn copy_stream_input(
         &mut self,
         source: &Rc<PhpResource>,
         destination: &Value,
+        name: &str,
         line: usize,
     ) -> Result<Value, Error> {
         // A native plain-file mapping advances the position without probing EOF.
@@ -195,8 +206,7 @@ impl Runtime {
             let length = remaining.map_or(bytes.len(), |size| {
                 (size - count).min(bytes.len() as u64) as usize
             });
-            let read =
-                self.read_transfer_chunk(source, &mut bytes[..length], "file_put_contents", line)?;
+            let read = self.read_transfer_chunk(source, &mut bytes[..length], name, line)?;
             let Some(read) = read else {
                 return Ok(Value::Bool(false));
             };
@@ -205,8 +215,12 @@ impl Runtime {
             }
             let mut offset = 0;
             while offset < read {
-                let written =
-                    self.write_file_bytes(destination, bytes[offset..read].to_vec(), line)?;
+                let written = self.write_transfer_bytes(
+                    destination,
+                    bytes[offset..read].to_vec(),
+                    name,
+                    line,
+                )?;
                 let Some(written) = written.filter(|&n| n > 0) else {
                     return Ok(Value::Bool(false));
                 };

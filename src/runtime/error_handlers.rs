@@ -197,6 +197,11 @@ impl Runtime {
 
 impl WarningSink for Runtime {
     fn warn(&mut self, message: String) -> Result<(), Error> {
+        // Native filesystem operations can finish while a previously raised
+        // exception is pending. PHP suppresses further warning callbacks then.
+        if self.native_warning_suppressed {
+            return Ok(());
+        }
         self.diagnostics.last_fatal_trace = None;
         let level = self.diagnostics.level(&message);
         let text = message

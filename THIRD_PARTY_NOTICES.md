@@ -656,3 +656,9 @@ adapt PHP 8.5.0's `main/fopen_wrappers.c`, `main/streams/streams.c`, and
 `ext/standard/basic_functions.c` and `streamsfuncs.c`, copyright (c) The PHP Group.
 Stream passthrough in `src/runtime/file_writing.rs` follows `ext/standard/file.c`
 and `main/streams/streams.c`, reusing the existing file-transfer adaptation.
+
+`src/runtime/file_operations.rs` adapts copy and rename from PHP 8.5.0's
+`ext/standard/file.c` and `main/streams/{streams,plain_wrapper}.c`, copyright (c)
+The PHP Group. Its stream-copy integration in `src/runtime/file_writing.rs`,
+file-URL normalization and private file creation in `src/runtime/streams.rs`, and
+scoped pending-exception warning suppression preserve those native operations.

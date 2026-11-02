@@ -58,6 +58,7 @@ mod extract;
 mod extrema;
 mod file_contents;
 pub(crate) mod file_info;
+mod file_operations;
 mod file_stat;
 mod file_writing;
 mod filesystem;
@@ -197,6 +198,7 @@ pub struct Runtime {
     default_directory: Option<Rc<crate::PhpResource>>,
     error_handler: Option<Value>,
     error_handler_reporting: i64,
+    native_warning_suppressed: bool,
     error_handlers: Vec<(Option<Value>, i64)>,
     exception_handler: Option<Value>,
     exception_handlers: Vec<Option<Value>>,
