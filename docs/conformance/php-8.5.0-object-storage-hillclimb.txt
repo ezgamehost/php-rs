@@ -1,0 +1,92 @@
+PHP 8.5.0 SplObjectStorage hillclimb
+Baseline: b948bc39ecab194364b8936ad6dc733ba760f6f6
+
+zend
+Before: 5256 cases; 2575 passed, 2273 failed, 408 unsupported
+After: 5256 cases; 2579 passed, 2269 failed, 408 unsupported
+New passes: 4; regressions: 0
+NEW PASS: Zend/tests/enum/spl-object-storage.phpt
+NEW PASS: Zend/tests/list/list_keyed_ArrayAccess.phpt
+NEW PASS: Zend/tests/namespaces/ns_054.phpt
+NEW PASS: Zend/tests/namespaces/ns_056.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 329 passed, 355 failed, 94 unsupported
+After: 778 cases; 368 passed, 316 failed, 94 unsupported
+New passes: 39; regressions: 0
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_coalesce.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_current_empty_storage.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_getHash.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_getInfo_empty_storage.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_offsetGet.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_offsetGet_missing_object.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_removeAllExcept_basic.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_seek.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_setInfo_empty_storage.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_unserialize_bad.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_unserialize_invalid_parameter2.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_unserialize_invalid_parameter3.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_unserialize_nested.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_unserialize_reference.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_unset.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/SplObjectStorage_var_dump.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/bug49263.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/bug53144.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/bug61453.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/bug67582.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/bug70168.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/bug70365.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_001.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_002.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_003.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_004.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_005.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_006.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_007.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_008.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_009.phpt
+NEW PASS: ext/spl/tests/SplObjectStorage/observer_010.phpt
+NEW PASS: ext/spl/tests/bug71838.phpt
+NEW PASS: ext/spl/tests/gh16479.phpt
+NEW PASS: ext/spl/tests/gh16588.phpt
+NEW PASS: ext/spl/tests/gh18322.phpt
+NEW PASS: ext/spl/tests/serialize_property_tables.phpt
+NEW PASS: ext/spl/tests/unserialize.phpt
+NEW PASS: ext/spl/tests/unserialize_errors.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 119 passed, 16 failed, 28 unsupported
+After: 163 cases; 122 passed, 13 failed, 28 unsupported
+New passes: 3; regressions: 0
+NEW PASS: ext/standard/tests/serialize/SplObjectStorage_object_reference.phpt
+NEW PASS: ext/standard/tests/serialize/bug71313.phpt
+NEW PASS: ext/standard/tests/serialize/unserialize_leak.phpt
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match custom-hash clone initialization order and collection
+of a three-object cycle through native storage (gc_collect_cycles returns 3).
+GC controls, remaining native SPL classes, INI configuration, and complete mutation/
+destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-object-storage-*3.log.

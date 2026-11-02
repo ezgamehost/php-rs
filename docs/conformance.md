@@ -2825,6 +2825,28 @@ added. This supersedes earlier limitations on legacy serialization for these
 classes. SplObjectStorage, other missing SPL classes, INI configuration, and
 complete mutation/destructor timing remain unfinished.
 
+The [SplObjectStorage slice](conformance/php-8.5.0-object-storage-hillclimb.txt)
+adds native object-keyed storage, custom getHash callbacks, offset operations,
+set operations, seekable iteration, debug output, comparison, cloning, and magic
+and legacy serialization. SplObserver and SplSubject interfaces and PHP 8.5
+attach/detach/contains deprecations are declared. Native dimension access retains
+PHP's null-entry probes and differs from explicit offsetUnset in cursor handling.
+Storage keys and information values participate in cycle collection. Cloning
+rebuilds hashes while the new object still has default properties, then copies
+ordinary properties before invoking the clone hook.
+
+This slice adds **46 upstream passes**, with **zero regressions** across all seven
+full suites (**8,430 fixtures**): four Zend, thirty-nine SPL, and three
+serialization. Totals are **2579 / 2269 / 408** for Zend,
+**368 / 316 / 94** for SPL, and **122 / 13 / 28** for serialization; other suites
+are unchanged. All **797 existing Rust tests**, **57 reference-checked project
+PHPT**, formatting, Clippy, and diff checks pass. No custom tests or matrices were
+added. Direct CLI comparisons match custom-hash clone initialization order and
+collection of a three-object cycle through native storage. The remaining
+executable fixture in the SplObjectStorage directory requires gc_enable(); GC
+control functions, other missing SPL classes, INI configuration, and complete
+mutation/destructor timing remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2832,14 +2854,14 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2575 | 2273 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2579 | 2269 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 329 | 355 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 368 | 316 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
-| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 119 | 16 | 28 |
+| PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 122 | 13 | 28 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

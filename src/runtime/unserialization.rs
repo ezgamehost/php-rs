@@ -304,6 +304,9 @@ impl Runtime {
             });
         }
         for object in &state.borrow().objects {
+            if let Some(data) = object.object_storage.borrow_mut().as_mut() {
+                data.finish_unserialization();
+            }
             if let Some(data) = object.linked_list.borrow_mut().as_mut() {
                 data.finish_unserialization();
             }

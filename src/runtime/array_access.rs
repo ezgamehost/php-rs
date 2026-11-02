@@ -83,6 +83,47 @@ impl Runtime {
         line: usize,
     ) -> Result<Value, Error> {
         self.check_array_access(object, line)?;
+        if values
+            .first()
+            .is_some_and(|v| matches!(v, Value::Object(_) | Value::Closure(_)))
+            && object_storage::native_dimensions(
+                object,
+                if method == b"offsetGet" {
+                    &[b"offsetGet", b"offsetExists"]
+                } else {
+                    std::slice::from_ref(&method)
+                },
+            )
+        {
+            match method {
+                b"offsetGet" => {
+                    return self
+                        .object_storage_native_read(object, &values[0])
+                        .map(|v| v.dereferenced())
+                        .ok_or_else(|| {
+                            self.array_iterator_exception(
+                                b"UnexpectedValueException",
+                                "Object not found".into(),
+                                line,
+                            )
+                        });
+                }
+                b"offsetSet" => {
+                    self.object_storage_attach(
+                        object,
+                        values[0].clone(),
+                        values.get(1).cloned().unwrap_or(Value::Null),
+                        line,
+                    )?;
+                    return Ok(Value::Null);
+                }
+                b"offsetUnset" => {
+                    self.object_storage_native_unset(object, &values[0], line)?;
+                    return Ok(Value::Null);
+                }
+                _ => (),
+            }
+        }
         let function = objects::method(&object.class, method).expect("ArrayAccess method");
         let target = self.unchecked_method_target(
             function,
@@ -136,6 +177,28 @@ impl Runtime {
         }
         self.check_array_access(&object, line)?;
         let key = offset.argument();
+        if matches!(key, Value::Object(_) | Value::Closure(_))
+            && object_storage::native_dimensions(&object, &[b"offsetGet", b"offsetExists"])
+        {
+            let value = self.object_storage_native_read(&object, &key);
+            return match access {
+                Access::Probe => Ok(if value.is_some() {
+                    Value::Bool(true)
+                } else {
+                    Value::Null
+                }),
+                Access::Empty | Access::Coalesce | Access::ProbeValue => {
+                    Ok(value.map_or(Value::Null, |v| v.dereferenced()))
+                }
+                Access::Read => value.map(|v| v.dereferenced()).ok_or_else(|| {
+                    self.array_iterator_exception(
+                        b"UnexpectedValueException",
+                        "Object not found".into(),
+                        line,
+                    )
+                }),
+            };
+        }
         if access != Access::Read && object.fixed_array.borrow().is_some() {
             if fixed_array::native_method(&object, b"offsetExists") {
                 let index = self.fixed_array_index(&key, line)?;

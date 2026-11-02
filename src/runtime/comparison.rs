@@ -51,6 +51,26 @@ impl Runtime {
                     ));
                 }
                 let result = (|| {
+                    if a.object_storage.borrow().is_some() || b.object_storage.borrow().is_some() {
+                        if a.class.name != b"SplObjectStorage"
+                            || b.class.name != b"SplObjectStorage"
+                        {
+                            return Ok(None);
+                        }
+                        let left = a
+                            .object_storage
+                            .borrow()
+                            .as_ref()
+                            .unwrap()
+                            .comparison_table();
+                        let right = b
+                            .object_storage
+                            .borrow()
+                            .as_ref()
+                            .unwrap()
+                            .comparison_table();
+                        return self.compare_arrays(&left, &right, line, seen);
+                    }
                     if native_arrays {
                         use array_iterator::Storage;
                         let left = array_iterator::storage(a);

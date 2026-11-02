@@ -106,6 +106,11 @@ new request. The CLI returns the low eight bits of the requested status.
   Foreach cursors retain their starting mode and support FIFO/LIFO and delete/keep
   traversal. Both magic serialization hooks and legacy `Serializable` methods
   are available. Legacy restoration replaces list contents and preserves references.
+- `SplObjectStorage` stores values by object identity or overridden `getHash`,
+  with offsets, set operations, seekable iteration, debug output, comparisons,
+  cloning, and both magic and legacy serialization. Native dimension access
+  preserves PHP's null-entry probes and iterator behavior. Storage participates
+  in cycle collection; `SplObserver` and `SplSubject` interfaces are available.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,
@@ -293,7 +298,8 @@ new request. The CLI returns the low eight bits of the requested status.
   Unknown/disallowed classes become `__PHP_Incomplete_Class`, with restricted
   property/method access and preservation of their original serialized class name.
   Native legacy formats are supported for ArrayObject/ArrayIterator and linked
-  lists. Other SPL classes, INI configuration, and complete lifecycle compatibility
+  lists, as well as SplObjectStorage. Other SPL classes, INI configuration, and
+  complete lifecycle compatibility
   remain unfinished.
 - `class_alias` preserves class identity, inherited types, and shared static state,
   with optional source autoloading. `is_a` and `is_subclass_of` support object and

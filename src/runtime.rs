@@ -76,6 +76,7 @@ mod method_visibility;
 pub(crate) mod native_iterator;
 mod nullsafe;
 mod number_format;
+pub(crate) mod object_storage;
 mod objects;
 mod offsets;
 mod path_parts;

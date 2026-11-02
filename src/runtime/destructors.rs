@@ -22,6 +22,9 @@ impl Runtime {
         if object.class.is_a(b"SplDoublyLinkedList") && object.linked_list.get_mut().is_none() {
             *object.linked_list.get_mut() = Some(linked_list::LinkedListData::new(&object.class));
         }
+        if object.class.is_a(b"SplObjectStorage") && object.object_storage.get_mut().is_none() {
+            *object.object_storage.get_mut() = Some(object_storage::ObjectStorageData::default());
+        }
         let object = Rc::new(object);
         self.object_store
             .borrow_mut()

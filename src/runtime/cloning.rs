@@ -114,12 +114,23 @@ impl Runtime {
         let Value::Object(original) = original else {
             unreachable!()
         };
+        let native_storage = original.object_storage.borrow().is_some();
+        // SPL rebuilds its hash table before zend_objects_clone_members copies
+        // ordinary properties. Custom getHash callbacks see the new defaults.
+        let properties = if native_storage {
+            self.property_defaults(&original.class)?
+        } else {
+            original.properties.borrow().clone()
+        };
         let object = self.create_object(PhpObject {
             reflection: RefCell::default(),
             class: original.class.clone(),
             class_name: original.class_name.clone(),
-            properties: RefCell::new(original.properties.borrow().clone()),
-            properties_reordered: std::cell::Cell::new(original.properties_reordered.get()),
+            properties: RefCell::new(properties),
+            properties_reordered: std::cell::Cell::new(
+                !native_storage && original.properties_reordered.get(),
+            ),
+            object_storage: RefCell::default(),
             linked_list: RefCell::new(
                 original
                     .linked_list
@@ -139,11 +150,32 @@ impl Runtime {
             ),
             property_cursor: RefCell::new(original.property_cursor.borrow().clone()),
             property_iterators: RefCell::default(),
-            unset_properties: RefCell::new(original.unset_properties.borrow().clone()),
-            reinitializable: RefCell::new(original.reinitializable.borrow().clone()),
+            unset_properties: RefCell::new(if native_storage {
+                HashSet::new()
+            } else {
+                original.unset_properties.borrow().clone()
+            }),
+            reinitializable: RefCell::new(if native_storage {
+                HashSet::new()
+            } else {
+                original.reinitializable.borrow().clone()
+            }),
             object_id: handle.id,
             _handle: handle,
         });
+        if native_storage {
+            let result = self.clone_object_storage(original, &object, line);
+            let old = object
+                .properties
+                .replace(original.properties.borrow().clone());
+            object
+                .properties_reordered
+                .set(original.properties_reordered.get());
+            *object.unset_properties.borrow_mut() = original.unset_properties.borrow().clone();
+            *object.reinitializable.borrow_mut() = original.reinitializable.borrow().clone();
+            drop(old);
+            self.drain_destructors(result, line)?;
+        }
         self.inherit_reference_sources(&object);
         if let Some(method) = objects::method(&object.class, b"__clone") {
             unlock_readonly(&object);

@@ -59,6 +59,7 @@ pub struct PhpObject {
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     // Native backing storage is released after ordinary object properties.
     pub(crate) array_iterator: RefCell<Option<crate::runtime::array_iterator::ArrayIteratorData>>,
+    pub(crate) object_storage: RefCell<Option<crate::runtime::object_storage::ObjectStorageData>>,
     pub(crate) linked_list: RefCell<Option<crate::runtime::linked_list::LinkedListData>>,
     pub(crate) object_id: usize,
     // Release the handle after fields that may own other PHP objects.
@@ -183,6 +184,7 @@ impl Drop for PhpObject {
             recursive_iterator: std::mem::take(&mut self.recursive_iterator),
             array_iterator: std::mem::take(&mut self.array_iterator),
             linked_list: std::mem::take(&mut self.linked_list),
+            object_storage: std::mem::take(&mut self.object_storage),
             property_cursor: std::mem::take(&mut self.property_cursor),
             property_iterators: std::mem::take(&mut self.property_iterators),
             reflection: std::mem::take(&mut self.reflection),

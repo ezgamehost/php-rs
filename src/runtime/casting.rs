@@ -132,6 +132,7 @@ impl Runtime {
             class_name: "stdClass".to_owned(),
             properties: RefCell::new(properties),
             linked_list: RefCell::default(),
+            object_storage: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),
