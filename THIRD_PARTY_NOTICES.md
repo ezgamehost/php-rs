@@ -9,7 +9,7 @@ and `ext/standard/var_unserializer.re`, copyright (c) The PHP Group. The Zend
 and PHP licenses below apply to the respective adaptations.
 
 Property hook parsing, backing-storage detection, and runtime dispatch in
-`src/parser/property_hooks.rs`, `src/runtime/property_hooks.rs`,
+`src/parser/property_hooks.rs`, `src/parser/promotion.rs`, `src/runtime/property_hooks.rs`,
 `src/runtime/property_contracts.rs`, `src/runtime/parent_property_hooks.rs`, and
 their integration sites follow PHP 8.5.0's `Zend/zend_compile.c`,
 `Zend/zend_object_handlers.c`, `Zend/zend_vm_def.h`, and `Zend/zend_inheritance.c`, copyright (c) Zend

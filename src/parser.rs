@@ -679,17 +679,6 @@ impl Parser {
             let parameter_start = self.pos;
             let attribute_range = self.take_attributes()?;
             let mut promotion = self.parameter_promotion(allow_promotion)?;
-            let attributes = self.parse_attributes_at(
-                attribute_range,
-                if promotion.is_some() {
-                    attributes::Target::PromotedParameter
-                } else {
-                    attributes::Target::Parameter
-                },
-            )?;
-            if let Some(promotion) = &mut promotion {
-                promotion.attributes = attributes.clone();
-            }
             let ty = if self.is("?") || matches!(self.token().kind, Kind::Word(_)) {
                 Some(self.type_declaration(false)?)
             } else {
@@ -704,12 +693,10 @@ impl Parser {
                 ));
             };
             self.pos += 1;
-            if let Some(promotion) = &mut promotion {
-                promotion.doc_comment = self.tokens[parameter_start..self.pos]
-                    .iter()
-                    .rev()
-                    .find_map(|t| t.doc_comment.clone());
-            }
+            let doc_comment = self.tokens[parameter_start..self.pos]
+                .iter()
+                .rev()
+                .find_map(|t| t.doc_comment.clone());
             if parameters.iter().any(|p: &Parameter| p.name == name) {
                 return Err(Error::parse("Redefinition of parameter", line));
             }
@@ -732,6 +719,19 @@ impl Parser {
                     "Constant expression contains invalid operations",
                     line,
                 ));
+            }
+            self.parameter_hooks(&mut promotion, &name, &ty, allow_promotion)?;
+            let attributes = self.parse_attributes_at(
+                attribute_range,
+                if promotion.is_some() {
+                    attributes::Target::PromotedParameter
+                } else {
+                    attributes::Target::Parameter
+                },
+            )?;
+            if let Some(promotion) = &mut promotion {
+                promotion.attributes = attributes.clone();
+                promotion.doc_comment = doc_comment;
             }
             if let Some(promotion) = &promotion
                 && (variadic

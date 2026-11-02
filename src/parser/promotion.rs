@@ -67,6 +67,7 @@ impl Parser {
         Ok(
             (visibility.is_some() || set_visibility.is_some() || readonly || is_final).then_some(
                 Promotion {
+                    hooks: None,
                     doc_comment: None,
                     attributes: Vec::new(),
                     is_final,
@@ -76,6 +77,84 @@ impl Parser {
                 },
             ),
         )
+    }
+
+    pub(super) fn parameter_hooks(
+        &mut self,
+        promotion: &mut Option<Promotion>,
+        name: &[u8],
+        ty: &Option<TypeDecl>,
+        allowed: bool,
+    ) -> Result<(), Error> {
+        if !self.is("{") {
+            return Ok(());
+        }
+        if !allowed {
+            return Err(Error::new(
+                crate::ErrorKind::CompileError,
+                "Cannot declare promoted property outside a constructor",
+                self.token().line,
+            ));
+        }
+        let promotion = promotion.get_or_insert_with(|| Promotion {
+            hooks: None,
+            doc_comment: None,
+            attributes: Vec::new(),
+            is_final: false,
+            visibility: Visibility::Public,
+            set_visibility: None,
+            is_readonly: false,
+        });
+        if promotion.is_readonly {
+            return Err(Error::new(
+                crate::ErrorKind::CompileError,
+                "Hooked properties cannot be readonly",
+                self.token().line,
+            ));
+        }
+        let property = Self::promoted_property(promotion, name, ty, 0, false);
+        promotion.hooks = Some(self.property_hooks(&property, false)?);
+        Ok(())
+    }
+
+    fn promoted_property(
+        promotion: &Promotion,
+        name: &[u8],
+        ty: &Option<TypeDecl>,
+        order: usize,
+        readonly_class: bool,
+    ) -> PropertyDecl {
+        let is_readonly = readonly_class || promotion.is_readonly;
+        let set_visibility = promotion.set_visibility.unwrap_or(
+            if is_readonly && promotion.visibility == Visibility::Public {
+                Visibility::Protected
+            } else {
+                promotion.visibility
+            },
+        );
+        PropertyDecl {
+            is_abstract: false,
+            hooks: promotion.hooks.clone(),
+            doc_comment: promotion.doc_comment.clone(),
+            order,
+            is_promoted: true,
+            attributes: promotion
+                .attributes
+                .iter()
+                .filter(|a| !a.name.eq_ignore_ascii_case(b"SensitiveParameter"))
+                .cloned()
+                .collect(),
+            declaring_class: Vec::new(),
+            visibility: promotion.visibility,
+            set_visibility,
+            is_final: promotion.is_final
+                || (set_visibility == Visibility::Private
+                    && promotion.visibility != Visibility::Private),
+            name: name.to_vec(),
+            ty: ty.clone(),
+            is_readonly,
+            default: None,
+        }
     }
 
     pub(super) fn promote_properties(
@@ -101,21 +180,27 @@ impl Parser {
                     function.line,
                 ));
             }
-            let is_readonly = readonly_class || promotion.is_readonly;
-            if is_readonly && param.ty.is_none() {
+            let property = Self::promoted_property(
+                promotion,
+                &param.name,
+                &param.ty,
+                properties.len() + static_properties.len(),
+                readonly_class,
+            );
+            if property.is_readonly && property.hooks.is_some() {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Hooked properties cannot be readonly",
+                    function.line,
+                ));
+            }
+            if property.is_readonly && param.ty.is_none() {
                 return Err(Error::parse(
                     "Readonly promoted property must have a type",
                     function.line,
                 ));
             }
-            let set_visibility = promotion.set_visibility.unwrap_or(
-                if is_readonly && promotion.visibility == Visibility::Public {
-                    Visibility::Protected
-                } else {
-                    promotion.visibility
-                },
-            );
-            if set_visibility < promotion.visibility
+            if property.set_visibility < promotion.visibility
                 || (promotion.set_visibility.is_some() && param.ty.is_none())
             {
                 return Err(Error::parse(
@@ -123,29 +208,7 @@ impl Parser {
                     function.line,
                 ));
             }
-            properties.push(PropertyDecl {
-                is_abstract: false,
-                hooks: None,
-                doc_comment: promotion.doc_comment.clone(),
-                order: properties.len() + static_properties.len(),
-                is_promoted: true,
-                attributes: promotion
-                    .attributes
-                    .iter()
-                    .filter(|attribute| !attribute.name.eq_ignore_ascii_case(b"SensitiveParameter"))
-                    .cloned()
-                    .collect(),
-                declaring_class: Vec::new(),
-                visibility: promotion.visibility,
-                set_visibility,
-                is_final: promotion.is_final
-                    || (set_visibility == Visibility::Private
-                        && promotion.visibility != Visibility::Private),
-                name: param.name.clone(),
-                ty: param.ty.clone(),
-                is_readonly,
-                default: None,
-            });
+            properties.push(property);
             param
                 .attributes
                 .retain(|attribute| !attribute.name.eq_ignore_ascii_case(b"Override"));

@@ -1,0 +1,108 @@
+PHP 8.5.0 promoted property hooks hillclimb
+Baseline: 89b982a827c0744a53c587e2923ebd33860c0d99
+
+zend
+Before: 5256 cases; 3004 passed, 1852 failed, 400 unsupported
+After: 5256 cases; 3009 passed, 1847 failed, 400 unsupported
+New passes: 5; regressions: 0
+NEW PASS: Zend/tests/property_hooks/cpp.phpt
+NEW PASS: Zend/tests/property_hooks/gh15419_2.phpt
+NEW PASS: Zend/tests/property_hooks/gh15438_1.phpt
+NEW PASS: Zend/tests/property_hooks/gh15438_2.phpt
+NEW PASS: Zend/tests/property_hooks/property_promotion.phpt
+
+reflection
+Before: 492 cases; 343 passed, 112 failed, 37 unsupported
+After: 492 cases; 343 passed, 112 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 5,998 passed, 2,222 failed, 1,456 unsupported.
+Net gain: five upstream passes; zero regressions across all twelve suites.
+The property_hooks directory improves from 180 to 185 passes out of 210 fixtures;
+21 fail and four remain unsupported. These fixtures are already counted in Zend.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match implicit-promotion attributes and defaults,
+  parent accessor dispatch, and trait promotion. Rejection of hooks outside
+  constructors and on readonly properties matches the fatal diagnostics, apart
+  from the CLI's existing leading blank-line difference.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Constructor parameters retain parsed property hooks in promotion metadata.
+  Hook-only parameters imply public promotion. Hook parsing shares normal
+  property type, visibility, lexical scope, and backing-storage detection.
+- Promoted property construction uses one declaration path for hook parsing
+  and final class properties. Existing constructor-entry assignments invoke
+  setters before the constructor body.
+- Parameter defaults remain separate from property defaults. Untyped backed
+  properties receive implicit null storage; virtual properties have no slot.
+- Attribute validation waits until promotion is known, retaining property and
+  parameter targets even when visibility is omitted. Readonly hooked properties
+  and hooks outside constructors are rejected.
+
+Remaining limits:
+- Hook attributes and full hook reflection remain unfinished.
+- Complex interface merges, generator hooks, final-property diagnostics, and
+  some indirect-access cases remain incomplete. This is a focused gate, not
+  full PHP conformance.

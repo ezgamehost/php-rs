@@ -412,6 +412,7 @@ pub(crate) struct ClassConstant {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Promotion {
+    pub hooks: Option<PropertyHooks>,
     pub doc_comment: Option<Vec<u8>>,
     // Original source attributes, before internal target filtering.
     pub attributes: Vec<Attribute>,
