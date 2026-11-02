@@ -22,6 +22,7 @@ pub(super) enum Builtin {
     StrRev,
     StrLower,
     StrUpper,
+    StrStep(bool),
     Bin2Hex,
     Crc32,
     Uuencode(bool),
@@ -231,6 +232,8 @@ impl Builtin {
             b"strrev" => Self::StrRev,
             b"strtolower" => Self::StrLower,
             b"strtoupper" => Self::StrUpper,
+            b"str_increment" => Self::StrStep(true),
+            b"str_decrement" => Self::StrStep(false),
             b"bin2hex" => Self::Bin2Hex,
             b"crc32" => Self::Crc32,
             b"convert_uuencode" => Self::Uuencode(true),
@@ -830,6 +833,7 @@ impl Builtin {
             | Self::StrRev
             | Self::StrLower
             | Self::StrUpper
+            | Self::StrStep(_)
             | Self::Bin2Hex
             | Self::Crc32
             | Self::Uuencode(_) => &[("string", false, false)],
@@ -1546,6 +1550,7 @@ impl Runtime {
             Builtin::Levenshtein => self.levenshtein(&args, line),
             Builtin::SimilarText => self.similar_text(&args, &references, line),
             Builtin::Phonetic(metaphone) => self.phonetic(metaphone, &name, &args, line),
+            Builtin::StrStep(increment) => self.string_step(increment, &name, &args, line),
             Builtin::Pack => self.pack(&args, extra, line),
             Builtin::Unpack => self.unpack(&args, line),
             Builtin::StrSpan(included) => self.string_span(included, &args, line),

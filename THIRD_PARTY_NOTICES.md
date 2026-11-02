@@ -711,6 +711,9 @@ preserves native variadic-argument replacement during string conversion.
 Bjørn Borud and Thies C. Arntzen; the Metaphone implementation derives from
 Michael G Schwern's CPAN Text-Metaphone-1.96 code.
 
+`src/runtime/string_step.rs` adapts the `str_increment` and `str_decrement`
+functions in PHP 8.5.0's `ext/standard/string.c`, copyright (c) The PHP Group.
+
 CRC32 in `src/digest.rs` adapts PHP 8.5.0's `ext/standard/crc32.c` and
 `crc32.h`, copyright (c) The PHP Group. Its lookup table is generated at compile
 time from the reflected AUTODIN II polynomial.

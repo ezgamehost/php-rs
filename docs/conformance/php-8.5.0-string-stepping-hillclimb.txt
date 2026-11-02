@@ -1,0 +1,84 @@
+PHP 8.5.0 alphanumeric string stepping hillclimb
+Baseline: cf2ca747b5d1e37319774520648d0f1ccd7057c2
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 775 passed, 14 failed, 51 unsupported
+After: 840 cases; 775 passed, 14 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 464 passed, 114 failed, 152 unsupported
+After: 730 cases; 470 passed, 108 failed, 152 unsupported
+New passes: 6; regressions: 0
+NEW PASS: ext/standard/tests/strings/str_decrement_basic.phpt
+NEW PASS: ext/standard/tests/strings/str_decrement_errors.phpt
+NEW PASS: ext/standard/tests/strings/str_decrement_underflow.phpt
+NEW PASS: ext/standard/tests/strings/str_increment_basic.phpt
+NEW PASS: ext/standard/tests/strings/str_increment_errors.phpt
+NEW PASS: ext/standard/tests/strings/str_increment_polyfill.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,229 passed, 2,886 failed, 1,441 unsupported.
+Six new string passes; zero regressions across all ten suites.
+
+str_increment and str_decrement implement PHP's ASCII alphanumeric string
+stepping with native argument conversion and named parameters. Each character
+retains its letter case or digit class during carry and borrow. Carry past the
+first character adds the appropriate prefix; decrement removes the first
+character on borrow or a resulting leading zero. Empty and non-alphanumeric
+strings raise ValueError. Decrement rejects all strings starting with zero and
+single-letter a/A underflow, preserving the original value in its diagnostic.
+Numeric-looking strings, including scientific notation, remain strings.
+
+Direct PHP reference comparisons match mixed letter/digit boundaries, zero
+prefixes, leading-character removal, scientific notation, empty strings, NUL,
+non-ASCII characters, punctuation, weak/strict arguments, named parameters,
+Stringable conversion, numeric input, INF/NAN and error diagnostics.
+All six existing upstream str_increment/str_decrement fixtures pass, including
+the increment-polyfill comparison. PHP source attribution is retained in
+THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-stringstep-*2.log.
+Rust validation logs: /tmp/php-rs-stringstep-{tests,clippy}1.log.

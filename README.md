@@ -267,6 +267,9 @@ new request. The CLI returns the low eight bits of the requested status.
 - `soundex` and `metaphone` implement PHP's phonetic rules, including duplicate
   handling, initial-letter exceptions and Metaphone output limits. Their letter
   classification follows the C locale; general locale changes remain unfinished.
+- `str_increment` and `str_decrement` step through ASCII alphanumeric strings,
+  preserving letter case and applying PHP's carry, borrow and underflow rules.
+  Numeric-looking inputs retain string semantics, including scientific notation.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and
