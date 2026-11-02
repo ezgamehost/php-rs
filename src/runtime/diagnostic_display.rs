@@ -20,6 +20,23 @@ impl Runtime {
         Error::new(ErrorKind::UnwindExit, "", line)
     }
 
+    // Preserve the embedding API's error/output boundary while carrying an
+    // uncatchable compile diagnostic to the CLI's report_uncaught call.
+    pub(super) fn deferred_compile_fatal_at(
+        &mut self,
+        message: String,
+        source: &crate::source::Source,
+        line: usize,
+    ) -> Error {
+        let mut error = self.materialize_error_from(
+            Error::new(ErrorKind::CompileError, message, line),
+            &source.name,
+        );
+        error.kind = ErrorKind::UnwindExit;
+        self.exit_status = Some(255);
+        error
+    }
+
     /// Configure native fatal backtraces. PHP's PHPT runner disables these by
     /// default; ordinary requests use PHP 8.5's enabled default.
     pub fn set_fatal_error_backtraces(&mut self, enabled: bool) {
@@ -121,7 +138,7 @@ impl Runtime {
 
     pub(super) fn report_uncaught_inner(&mut self, mut error: Error) {
         loop {
-            if error.kind == ErrorKind::UnwindExit {
+            if error.kind == ErrorKind::UnwindExit && error.throwable.is_none() {
                 return;
             }
             self.diagnostics.last_fatal_trace = None;

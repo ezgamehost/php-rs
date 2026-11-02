@@ -779,6 +779,10 @@ new request. The CLI returns the low eight bits of the requested status.
   composition. Class-linking compile errors terminate the request. Reference
   assignment invokes available getters before rejecting an overloaded target;
   missing getters retain write-only and indirect-modification errors.
+- [Inherited property declarations](docs/conformance/php-8.5.0-inherited-properties-hillclimb.txt)
+  report incompatible types, readonly changes, and narrowed read/set visibility
+  as compile fatals. Diagnostics name the declaring ancestor and canonical type;
+  the CLI reports them without invoking PHP catch blocks or exception handlers.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

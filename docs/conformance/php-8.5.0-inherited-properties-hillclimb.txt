@@ -1,0 +1,121 @@
+PHP 8.5.0 inherited property diagnostic hillclimb
+Baseline: 9686841d452d118fc157ade1dc8805791df1b390
+
+zend
+Before: 5256 cases; 3070 passed, 1786 failed, 400 unsupported
+After: 5256 cases; 3090 passed, 1766 failed, 400 unsupported
+New passes: 20; regressions: 0
+NEW PASS: Zend/tests/asymmetric_visibility/override_protected_private.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/override_public_private.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/override_public_protected.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_023.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_to_readwrite.phpt
+NEW PASS: Zend/tests/readonly_props/readwrite_to_readonly.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error1.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error2.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error3.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error4.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error5.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error6.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error7.phpt
+NEW PASS: Zend/tests/type_declarations/mixed/inheritance/mixed_property_inheritance_error8.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_006.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_007.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_008.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_035.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_protected_inheritance_mismatch.phpt
+NEW PASS: Zend/tests/type_declarations/union_types/variance/invalid_004.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,107 passed, 2,113 failed, 1,456 unsupported.
+Net gain: twenty upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match ordinary/setter visibility, readonly and
+  untyped-parent diagnostics, fatal catch bypass, exception-handler bypass, and
+  shutdown execution. Fatal CLI comparisons ignore the existing extra newline
+  before native fatal messages and disable native fatal backtraces.
+- Existing unresolved-property tests confirm the Rust API retains prior output
+  and returns an error before the CLI explicitly reports the diagnostic.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Inherited property diagnostics name the declaring ancestor and render canonical
+  types, including resolved contextual names and nullable/union forms.
+- Validation checks readonly compatibility, explicit setter visibility, ordinary
+  visibility, and type compatibility in native order. Implicit setter visibility
+  is not reported as an explicit asymmetric modifier.
+- These declaration failures unwind without PHP catch/finally or exception-handler
+  execution. A retained CompileError object carries source and message to the CLI
+  reporting boundary, preserving the embedding API's prior-output behavior.
+- Already emitted native fatals and ordinary exit signals remain unreported at
+  that boundary, avoiding duplicate diagnostics.
+
+Remaining limits:
+- Other inheritance and abstract-member diagnostics, complex type relationships,
+  and broader runtime behavior remain unfinished. This focused gate does not
+  establish full PHP conformance.

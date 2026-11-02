@@ -5,6 +5,7 @@ pub enum ErrorKind {
     Exception,
     /// Internal control signal. Empty signals are consumed at the request
     /// boundary; fatal diagnostics with messages remain errors for embedders.
+    /// An attached throwable carries a fatal diagnostic not yet reported.
     #[doc(hidden)]
     UnwindExit,
     ParseError,

@@ -256,6 +256,10 @@ impl Runtime {
         Ok(())
     }
 
+    fn inherited_property_error(&mut self, class: &Class, message: String) -> Error {
+        self.deferred_compile_fatal_at(message, &class.declaration.source, class.declaration.line)
+    }
+
     fn validate_inheritance(&mut self, class: &Class) -> Result<(), Error> {
         self.validate_trait_requirements(class)?;
         self.validate_property_contracts(class)?;
@@ -290,39 +294,60 @@ impl Runtime {
                 }) else {
                     continue;
                 };
-                if parent_property.visibility == crate::ast::Visibility::Private {
-                    continue;
-                }
-                if property.visibility > parent_property.visibility {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        "Cannot narrow inherited property visibility",
-                        class.declaration.line,
-                    ));
-                }
-                let parent_get_only = parent_property
-                    .hooks
-                    .as_ref()
-                    .is_some_and(|h| h.is_virtual && h.set.is_none());
-                if property.set_visibility > parent_property.set_visibility && !parent_get_only {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        "Cannot narrow inherited property set visibility",
-                        class.declaration.line,
-                    ));
-                }
                 let owner = if is_static {
                     parent.static_owner(&property.name)
                 } else {
                     parent.property_owner(&property.name)
                 }
                 .expect("property owner");
+                let parent_get_only = parent_property
+                    .hooks
+                    .as_ref()
+                    .is_some_and(|h| h.is_virtual && h.set.is_none());
+                let property_name = String::from_utf8_lossy(&property.name);
+                let child_label = format!("{}::${property_name}", class.display_name());
                 if property.is_readonly != parent_property.is_readonly && !parent_get_only {
-                    return Err(Error::new(
-                        ErrorKind::Error,
-                        "Cannot change readonly status of an inherited property",
-                        class.declaration.line,
+                    let status = |readonly| if readonly { "readonly" } else { "non-readonly" };
+                    return Err(self.inherited_property_error(
+                        class,
+                        format!(
+                            "Cannot redeclare {} property {}::${property_name} as {} {child_label}",
+                            status(parent_property.is_readonly),
+                            owner.display_name(),
+                            status(property.is_readonly),
+                        ),
                     ));
+                }
+                if property.set_visibility != property.visibility
+                    && property.set_visibility > parent_property.set_visibility
+                    && !parent_get_only
+                {
+                    let (visibility, suffix) =
+                        if parent_property.set_visibility != parent_property.visibility {
+                            (
+                                match parent_property.set_visibility {
+                                    crate::ast::Visibility::Protected => "protected(set)",
+                                    crate::ast::Visibility::Private => "private(set)",
+                                    crate::ast::Visibility::Public => unreachable!(),
+                                },
+                                " or weaker",
+                            )
+                        } else {
+                            ("omitted", "")
+                        };
+                    return Err(self.inherited_property_error(class, format!(
+                        "Set access level of {child_label} must be {visibility} (as in class {}){suffix}", owner.display_name(),
+                    )));
+                }
+                if property.visibility > parent_property.visibility {
+                    let (visibility, suffix) = match parent_property.visibility {
+                        crate::ast::Visibility::Public => ("public", ""),
+                        crate::ast::Visibility::Protected => ("protected", " or weaker"),
+                        crate::ast::Visibility::Private => unreachable!(),
+                    };
+                    return Err(self.inherited_property_error(class, format!(
+                        "Access level to {child_label} must be {visibility} (as in class {}){suffix}", owner.display_name(),
+                    )));
                 }
                 if property.hooks.is_some() || parent_property.hooks.is_some() {
                     self.validate_hook_property_type(property, class, parent_property, &owner)?;
@@ -334,15 +359,19 @@ impl Runtime {
                     || !self.type_subset(child_type.as_ref(), parent_type.as_ref(), class)
                     || !self.type_subset(parent_type.as_ref(), child_type.as_ref(), class)
                 {
-                    return Err(Error::new(
-                        ErrorKind::Error,
+                    let message = if let Some(ty) = &parent_property.ty {
                         format!(
-                            "Type of {}::${} must match its inherited property type",
-                            String::from_utf8_lossy(&class.name),
-                            String::from_utf8_lossy(&property.name)
-                        ),
-                        class.declaration.line,
-                    ));
+                            "Type of {child_label} must be {} (as in class {})",
+                            typed_properties::type_label(ty, &owner),
+                            owner.display_name()
+                        )
+                    } else {
+                        format!(
+                            "Type of {child_label} must be omitted to match the parent definition in class {}",
+                            owner.display_name()
+                        )
+                    };
+                    return Err(self.inherited_property_error(class, message));
                 }
             }
         }

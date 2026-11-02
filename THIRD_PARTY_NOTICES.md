@@ -1,5 +1,10 @@
 # Third-party notices
 
+Inherited-property diagnostics and validation ordering in
+`src/runtime/inheritance.rs` follow PHP 8.5.0's `Zend/zend_inheritance.c`,
+copyright (c) Zend Technologies Ltd. The Zend license below applies to these
+adaptations.
+
 Weak-reference creation, lifetime, debug output, and restrictions in
 `src/runtime/weak_references.rs` and its integration sites follow PHP 8.5.0's
 `Zend/zend_weakrefs.c`, `zend_weakrefs.stub.php`, and `zend_objects.c`, copyright

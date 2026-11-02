@@ -34,6 +34,7 @@ impl Runtime {
 
     pub(super) fn dispatch_uncaught(&mut self, error: Error) -> Result<(), Error> {
         if error.kind == ErrorKind::UnwindExit {
+            self.report_uncaught_inner(error.clone());
             return Err(error);
         }
         let Some(handler) = self.exception_handler.take() else {
