@@ -2703,6 +2703,31 @@ collection behavior. Remaining related fixtures need general serialization,
 JSON encoding, debug_zval_dump, generators, or other SPL classes. General PHP
 compatibility and earlier runtime/harness gaps remain incomplete.
 
+The [linked-list slice](conformance/php-8.5.0-linked-list-hillclimb.txt) adds
+SplDoublyLinkedList, SplQueue, and SplStack native storage, insertion/removal,
+peek operations, offsets, count/isEmpty, debug output, cloning, and explicit
+serialization hooks. Stable node identities preserve cursor behavior when values
+are removed. Normal destruction releases ordinary properties before list values,
+with list values released from the tail; cycle collection includes stored values.
+
+Each native foreach owns an independent cursor and captures its starting mode.
+FIFO/LIFO traversal, delete/keep behavior, nested loops, manual next/prev/rewind,
+and frozen queue/stack directions follow the native handlers. Clone allocation
+resets the cursor to the head and reapplies subclass direction flags even when
+__unserialize changed the original flags. Offset methods retain untyped reflection
+metadata while applying PHP's native integer argument coercion. The array-based
+__unserialize hook appends storage and restores flags and ordinary members.
+
+Native iterator wrappers are shared with SplFixedArray in a dedicated module.
+The native member loader is shared through the object implementation. This slice
+adds **46 upstream passes** with **zero regressions** across all six full suites.
+SPL reaches **302 / 382 / 94**; the other totals are unchanged. All **797 existing
+Rust tests**, **57 reference-checked project PHPT**, formatting, Clippy, and diff
+checks pass. Direct CLI comparisons also match cursor behavior, cloning after
+flag restoration, offset metadata/coercion, hooks, and cycle collection. No custom
+tests or matrices were added. Legacy Serializable methods/interface, general
+serialization, other SPL classes, and earlier runtime/harness gaps remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2712,7 +2737,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2536 | 2312 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 287 | 168 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 256 | 428 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 302 | 382 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

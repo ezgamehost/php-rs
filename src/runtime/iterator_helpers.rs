@@ -12,7 +12,7 @@ impl Runtime {
     ) -> Result<(), Error> {
         let iterator = self.resolve_iterator(object, false, line)?;
         let wrapper =
-            (!fixed_array::hidden_iterator(&iterator)).then(|| self.allocate_object_handle());
+            (!native_iterator::hidden_iterator(&iterator)).then(|| self.allocate_object_handle());
         let result = (|| {
             drop(self.iterator_method(&iterator, b"rewind", line)?);
             self.drain_destructors(Ok(()), line)?;
@@ -66,6 +66,9 @@ impl Runtime {
             unreachable!()
         };
         self.visit_iterator(object, line, |runtime, iterator| {
+            if !runtime.native_iterator_has_current(iterator) {
+                return Ok(false);
+            }
             // PHP keeps current cached until advancing. Preserve the raw zval:
             // a reference-returning current() also yields references in the array.
             let current = runtime.iterator_method(iterator, b"current", line)?;

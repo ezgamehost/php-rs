@@ -19,6 +19,9 @@ impl Runtime {
         if object.class.is_a(b"SplFixedArray") && object.fixed_array.get_mut().is_none() {
             *object.fixed_array.get_mut() = Some(fixed_array::FixedArrayData::default());
         }
+        if object.class.is_a(b"SplDoublyLinkedList") && object.linked_list.get_mut().is_none() {
+            *object.linked_list.get_mut() = Some(linked_list::LinkedListData::new(&object.class));
+        }
         let object = Rc::new(object);
         self.object_store
             .borrow_mut()

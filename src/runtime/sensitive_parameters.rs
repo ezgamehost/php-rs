@@ -15,6 +15,7 @@ impl Runtime {
             class_name: "SensitiveParameterValue".into(),
             class,
             properties: RefCell::new(properties),
+            linked_list: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),

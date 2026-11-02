@@ -149,7 +149,22 @@ impl Runtime {
                 line,
             ));
         }
-        let Some(ty) = &param.ty else {
+        let offset_type;
+        let ty = if matches!(function.native, Some(crate::ast::NativeMethod::LinkedList))
+            && param.name == b"index"
+            && param.ty.is_none()
+        {
+            offset_type = TypeDecl {
+                members: if function.name.ends_with(b"offsetSet") {
+                    vec!["int".into(), "null".into()]
+                } else {
+                    vec!["int".into()]
+                },
+            };
+            &offset_type
+        } else if let Some(ty) = &param.ty {
+            ty
+        } else {
             return Ok(value);
         };
         let enum_type;

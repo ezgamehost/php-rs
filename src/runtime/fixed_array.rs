@@ -1,11 +1,7 @@
 // Altered Rust adaptation of PHP 8.5.0 ext/spl/spl_fixedarray.c and
 // Zend/zend_interfaces.c. Copyright (c) The PHP Group; see THIRD_PARTY_NOTICES.md.
 use super::*;
-use crate::{
-    PhpObject,
-    ast::NativeMethod,
-    object::{Class, ObjectHandle},
-};
+use crate::{PhpObject, ast::NativeMethod, object::Class};
 
 #[derive(Default)]
 pub(crate) struct FixedArrayData {
@@ -26,25 +22,10 @@ impl Drop for FixedArrayData {
     }
 }
 
-pub(crate) struct InternalIteratorData {
-    pub source: Rc<PhpObject>,
-    position: usize,
-    rewound: bool,
-    hidden: bool,
-    _wrapper: Option<ObjectHandle>,
-}
-
 pub(super) fn native_method(object: &PhpObject, name: &[u8]) -> bool {
     object.fixed_array.borrow().is_some()
         && objects::method(&object.class, name)
             .is_some_and(|method| matches!(method.native, Some(NativeMethod::FixedArray)))
-}
-pub(super) fn hidden_iterator(object: &PhpObject) -> bool {
-    object
-        .internal_iterator
-        .borrow()
-        .as_ref()
-        .is_some_and(|data| data.hidden)
 }
 pub(crate) fn export_storage(object: &PhpObject) -> PhpArray {
     let mut result = to_array(object);
@@ -282,146 +263,13 @@ impl Runtime {
         hidden: bool,
         line: usize,
     ) -> Result<Rc<PhpObject>, Error> {
-        let wrapper = (!hidden).then(|| self.allocate_object_handle());
-        let class = self.find_class(b"InternalIterator").unwrap();
-        let object = self.allocate_class_object(class, line)?;
-        *object.internal_iterator.borrow_mut() = Some(InternalIteratorData {
+        self.native_iterator(
             source,
-            position: 0,
-            rewound: false,
+            native_iterator::IteratorState::FixedArray(0),
             hidden,
-            _wrapper: wrapper,
-        });
-        Ok(object)
+            line,
+        )
     }
-    pub(super) fn fixed_array_iterator_step(
-        &mut self,
-        object: &PhpObject,
-        name: &[u8],
-        raw: bool,
-        line: usize,
-    ) -> Result<Value, Error> {
-        let (source, position) = {
-            let mut data = object.internal_iterator.borrow_mut();
-            let data = data.as_mut().ok_or_else(|| {
-                Error::new(
-                    ErrorKind::Error,
-                    "The InternalIterator object has not been properly initialized",
-                    line,
-                )
-            })?;
-            if !data.rewound || name == b"rewind" {
-                data.position = 0;
-                data.rewound = true;
-            }
-            if name == b"next" {
-                data.position = data.position.saturating_add(1);
-            }
-            (data.source.clone(), data.position)
-        };
-        match name {
-            b"rewind" | b"next" => Ok(Value::Null),
-            b"key" => Ok(Value::Int(position as i64)),
-            b"valid" => Ok(Value::Bool(
-                position < source.fixed_array.borrow().as_ref().unwrap().elements.len(),
-            )),
-            b"current" => self
-                .fixed_array_read(&source, position as i64, line)
-                .map(|value| if raw { value } else { value.dereferenced() }),
-            _ => unreachable!(),
-        }
-    }
-    // object_properties_load bypasses normal write hooks and type coercion.
-    // It still resolves mangled visibility and protects initialized readonly slots.
-    fn fixed_array_load_member(
-        &mut self,
-        object: &PhpObject,
-        key: ArrayKey,
-        value: Value,
-        line: usize,
-    ) -> Result<(), Error> {
-        let ArrayKey::String(raw) = &key else {
-            unreachable!()
-        };
-        let decoded = crate::object::property_name(raw);
-        let previous = self.class_context.clone();
-        if let Ok(decoded) = &decoded
-            && let Some(scope) = decoded.scope.filter(|scope| *scope != b"*")
-        {
-            self.class_context = self
-                .find_class(scope)
-                .map(|scope| crate::object::ClassContext {
-                    scope: scope.clone(),
-                    called: scope,
-                });
-        }
-        let owner = decoded.as_ref().ok().and_then(|decoded| {
-            self.instance_property_owner(&object.class, decoded.name)
-                .filter(|owner| {
-                    let property = owner
-                        .declaration
-                        .properties
-                        .iter()
-                        .find(|p| p.name == decoded.name)
-                        .unwrap();
-                    self.can_access_instance_visibility(owner, decoded.name, property.visibility)
-                })
-        });
-        self.class_context = previous;
-        let stored_key = if let Some(owner) = owner {
-            let decoded = decoded.as_ref().unwrap();
-            let property = owner
-                .declaration
-                .properties
-                .iter()
-                .find(|p| p.name == decoded.name)
-                .unwrap();
-            let storage = property.storage_name_for(&owner.name);
-            let key = ArrayKey::String(storage.clone());
-            if property.is_readonly
-                && object.properties.borrow().get(&key).is_some()
-                && !object.reinitializable.borrow_mut().remove(&storage)
-            {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    format!(
-                        "Cannot modify readonly property {}::${}",
-                        owner.display_name(),
-                        String::from_utf8_lossy(&property.name)
-                    ),
-                    line,
-                ));
-            }
-            object.unset_properties.borrow_mut().remove(&storage);
-            key
-        } else {
-            let name = decoded
-                .as_ref()
-                .map_or(b"".as_slice(), |decoded| decoded.name);
-            if object.class.forbid_dynamic {
-                return Err(Error::new(
-                    ErrorKind::Error,
-                    format!(
-                        "Cannot create dynamic property {}::${}",
-                        object.class_name,
-                        String::from_utf8_lossy(name)
-                    ),
-                    line,
-                ));
-            }
-            if !object.class.allow_dynamic {
-                self.warn(format!(
-                    "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
-                    object.class_name,
-                    String::from_utf8_lossy(name)
-                ))?;
-            }
-            key
-        };
-        object.properties.borrow_mut().insert(stored_key, value);
-        self.drain_destructors(Ok(()), line)
-    }
-
     pub(super) fn native_fixed_array_method(&mut self, line: usize) -> Result<Value, Error> {
         let name = self
             .current_function
@@ -493,7 +341,7 @@ impl Runtime {
                     line,
                 ));
             }
-            return self.fixed_array_iterator_step(&object, &name, false, line);
+            return self.internal_iterator_step(&object, &name, false, line);
         }
         match name.as_slice() {
             b"__construct" | b"setsize" => {
@@ -573,7 +421,7 @@ impl Runtime {
                     }
                 }
                 for (key, value) in members {
-                    self.fixed_array_load_member(&object, key, value, line)?;
+                    self.load_native_object_member(&object, key, value, line)?;
                 }
                 Ok(Value::Null)
             }

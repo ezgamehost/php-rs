@@ -99,6 +99,11 @@ new request. The CLI returns the low eight bits of the requested status.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.
+- `SplDoublyLinkedList`, `SplQueue`, and `SplStack` provide native list storage,
+  offsets, insertion/removal, count, debug output, and independent storage clones.
+  Foreach cursors retain their starting mode and support FIFO/LIFO and delete/keep
+  traversal. `__serialize`/`__unserialize` hooks are available; legacy Serializable
+  methods and general serialization remain incomplete.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,

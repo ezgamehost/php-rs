@@ -251,6 +251,9 @@ impl Runtime {
         supplied: usize,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, NativeMethod::LinkedList) {
+            return self.native_linked_list_method(line);
+        }
         if matches!(method, NativeMethod::FixedArray) {
             return self.native_fixed_array_method(line);
         }
@@ -286,6 +289,7 @@ impl Runtime {
         let data = data.as_mut().expect("native throwable receiver");
         Ok(match method {
             NativeMethod::ThrowableToString
+            | NativeMethod::LinkedList
             | NativeMethod::FixedArray
             | NativeMethod::RecursiveIterator
             | NativeMethod::ArrayIterator
@@ -363,6 +367,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             properties: RefCell::default(),
+            linked_list: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),

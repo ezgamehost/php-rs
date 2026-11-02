@@ -1,0 +1,86 @@
+PHP 8.5.0 linked-list hillclimb
+Baseline: 93a48f03be7b8399abed9420f1861a58dfc9b3e4
+
+zend
+Before: 5256 cases; 2536 passed, 2312 failed, 408 unsupported
+After: 5256 cases; 2536 passed, 2312 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 287 passed, 168 failed, 37 unsupported
+After: 492 cases; 287 passed, 168 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 256 passed, 428 failed, 94 unsupported
+After: 778 cases; 302 passed, 382 failed, 94 unsupported
+New passes: 46; regressions: 0
+NEW PASS: ext/spl/tests/ArrayObject/ArrayObject_overloaded_SplFixedArray.phpt
+NEW PASS: ext/spl/tests/SPLDoublyLinkedList_iterate_by_reference.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_add_invalid_offset.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_add_null_offset.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_bottom_empty.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_consistent_iterator_mode.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_current.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_current_empty.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_debug-info.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_getIteratorMode.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_isEmpty_empty.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_isEmpty_not-empty.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_key.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_lifoMode.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_offsetExists_success.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_offsetGet_param_array.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_offsetGet_param_string.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_offsetUnset_greater_than_elements.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_offsetUnset_negative-parameter.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_offsetUnset_parameter-larger-num-elements.phpt
+NEW PASS: ext/spl/tests/SplDoublyLinkedList_top_empty.phpt
+NEW PASS: ext/spl/tests/SplDoublylinkedlist_offsetunset_first.phpt
+NEW PASS: ext/spl/tests/SplDoublylinkedlist_offsetunset_first002.phpt
+NEW PASS: ext/spl/tests/SplDoublylinkedlist_offsetunset_last.phpt
+NEW PASS: ext/spl/tests/SplQueue_setIteratorMode.phpt
+NEW PASS: ext/spl/tests/SplQueue_setIteratorMode_param_lifo.phpt
+NEW PASS: ext/spl/tests/SplStack_setIteratorMode.phpt
+NEW PASS: ext/spl/tests/bug46160.phpt
+NEW PASS: ext/spl/tests/bug67538.phpt
+NEW PASS: ext/spl/tests/bug73629.phpt
+NEW PASS: ext/spl/tests/bug79151.phpt
+NEW PASS: ext/spl/tests/bug80111.phpt
+NEW PASS: ext/spl/tests/dllist_001.phpt
+NEW PASS: ext/spl/tests/dllist_002.phpt
+NEW PASS: ext/spl/tests/dllist_003.phpt
+NEW PASS: ext/spl/tests/dllist_004.phpt
+NEW PASS: ext/spl/tests/dllist_005.phpt
+NEW PASS: ext/spl/tests/dllist_006.phpt
+NEW PASS: ext/spl/tests/dllist_007.phpt
+NEW PASS: ext/spl/tests/dllist_008.phpt
+NEW PASS: ext/spl/tests/dllist_010.phpt
+NEW PASS: ext/spl/tests/dllist_011.phpt
+NEW PASS: ext/spl/tests/dllist_012.phpt
+NEW PASS: ext/spl/tests/dllist_013.phpt
+NEW PASS: ext/spl/tests/dllist_memleak.phpt
+NEW PASS: ext/spl/tests/gh16464.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 399 passed, 179 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match cursor behavior, clone cursor state, frozen mode restoration,
+serialization hooks, offset metadata/coercion, and cycle collection.
+Legacy Serializable methods/interface and general serialization remain incomplete.
+Full log prefix: /tmp/php-rs-linked-list-*4.log.

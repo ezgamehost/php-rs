@@ -127,6 +127,13 @@ impl Runtime {
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),
             properties_reordered: std::cell::Cell::new(original.properties_reordered.get()),
+            linked_list: RefCell::new(
+                original
+                    .linked_list
+                    .borrow()
+                    .as_ref()
+                    .map(|data| data.cloned_for(&original.class)),
+            ),
             fixed_array: RefCell::new(original.fixed_array.borrow().clone()),
             internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),

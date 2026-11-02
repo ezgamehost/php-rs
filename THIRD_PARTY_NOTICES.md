@@ -342,6 +342,13 @@ JsonSerializable declaration follows `ext/json/json.stub.php`; native member
 loading follows `Zend/zend_API.c`. Property inspection and
 `get_mangled_object_vars` follow `Zend/zend_builtin_functions.c`.
 
+SplDoublyLinkedList, SplQueue, and SplStack storage, cursor behavior, cloning,
+offsets, debug output, and serialization hooks in `src/runtime/linked_list.rs`
+adapt PHP 8.5.0's `ext/spl/spl_dllist.c`, `.h`, and `.stub.php`, copyright (c)
+The PHP Group. Shared iterator wrappers in `src/runtime/native_iterator.rs`
+follow `Zend/zend_interfaces.c` and the SPL native handlers. The shared member
+loader in `src/runtime/objects.rs` follows `Zend/zend_API.c`.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

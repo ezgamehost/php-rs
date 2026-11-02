@@ -45,7 +45,7 @@ pub(crate) fn property_name(raw: &[u8]) -> Result<PropertyName<'_>, &'static str
 pub struct PhpObject {
     pub(crate) fixed_array: RefCell<Option<crate::runtime::fixed_array::FixedArrayData>>,
     pub(crate) internal_iterator:
-        RefCell<Option<crate::runtime::fixed_array::InternalIteratorData>>,
+        RefCell<Option<crate::runtime::native_iterator::InternalIteratorData>>,
     pub(crate) recursive_iterator:
         RefCell<Option<crate::runtime::recursive_iterator::RecursiveIteratorData>>,
     pub(crate) property_cursor: RefCell<PropertyCursor>,
@@ -60,6 +60,7 @@ pub struct PhpObject {
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     // Native backing storage is released after ordinary object properties.
     pub(crate) array_iterator: RefCell<Option<crate::runtime::array_iterator::ArrayIteratorData>>,
+    pub(crate) linked_list: RefCell<Option<crate::runtime::linked_list::LinkedListData>>,
     pub(crate) object_id: usize,
     // Release the handle after fields that may own other PHP objects.
     pub(crate) _handle: ObjectHandle,
@@ -182,6 +183,7 @@ impl Drop for PhpObject {
             internal_iterator: std::mem::take(&mut self.internal_iterator),
             recursive_iterator: std::mem::take(&mut self.recursive_iterator),
             array_iterator: std::mem::take(&mut self.array_iterator),
+            linked_list: std::mem::take(&mut self.linked_list),
             property_cursor: std::mem::take(&mut self.property_cursor),
             property_iterators: std::mem::take(&mut self.property_iterators),
             reflection: std::mem::take(&mut self.reflection),

@@ -136,6 +136,7 @@ impl Runtime {
             || self.builtin_array_iterator_class(&name).is_some()
             || self.builtin_recursive_iterator_class(&name).is_some()
             || self.builtin_fixed_array_class(&name).is_some()
+            || self.builtin_linked_list_class(&name).is_some()
         {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -333,6 +334,9 @@ impl Runtime {
         if let Some(class) = self.builtin_classes.borrow().get(&name) {
             return Some(class.clone());
         }
+        if let Some(class) = self.builtin_linked_list_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_fixed_array_class(&name) {
             return Some(class);
         }
@@ -491,6 +495,7 @@ impl Runtime {
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
+            linked_list: RefCell::default(),
             fixed_array: RefCell::default(),
             internal_iterator: RefCell::default(),
             recursive_iterator: RefCell::default(),
@@ -973,4 +978,105 @@ fn validate_property_name(name: &[u8], line: usize) -> Result<(), Error> {
 
 fn method_name(function: &FunctionDecl) -> &[u8] {
     function.name.rsplit(|b| *b == b':').next().unwrap()
+}
+
+impl Runtime {
+    // object_properties_load bypasses normal write hooks and type coercion.
+    // It still resolves mangled visibility and protects initialized readonly slots.
+    pub(super) fn load_native_object_member(
+        &mut self,
+        object: &PhpObject,
+        key: ArrayKey,
+        value: Value,
+        line: usize,
+    ) -> Result<(), Error> {
+        let ArrayKey::String(raw) = &key else {
+            if !object.class.allow_dynamic {
+                self.warn(format!(
+                    "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
+                    object.class_name,
+                    String::from_utf8_lossy(&key.to_value().to_bytes())
+                ))?;
+            }
+            object.properties.borrow_mut().insert(key, value);
+            return self.drain_destructors(Ok(()), line);
+        };
+        let decoded = crate::object::property_name(raw);
+        let previous = self.class_context.clone();
+        if let Ok(decoded) = &decoded
+            && let Some(scope) = decoded.scope.filter(|scope| *scope != b"*")
+        {
+            self.class_context = self
+                .find_class(scope)
+                .map(|scope| crate::object::ClassContext {
+                    scope: scope.clone(),
+                    called: scope,
+                });
+        }
+        let owner = decoded.as_ref().ok().and_then(|decoded| {
+            self.instance_property_owner(&object.class, decoded.name)
+                .filter(|owner| {
+                    let property = owner
+                        .declaration
+                        .properties
+                        .iter()
+                        .find(|p| p.name == decoded.name)
+                        .unwrap();
+                    self.can_access_instance_visibility(owner, decoded.name, property.visibility)
+                })
+        });
+        self.class_context = previous;
+        let stored_key = if let Some(owner) = owner {
+            let decoded = decoded.as_ref().unwrap();
+            let property = owner
+                .declaration
+                .properties
+                .iter()
+                .find(|p| p.name == decoded.name)
+                .unwrap();
+            let storage = property.storage_name_for(&owner.name);
+            let key = ArrayKey::String(storage.clone());
+            if property.is_readonly
+                && object.properties.borrow().get(&key).is_some()
+                && !object.reinitializable.borrow_mut().remove(&storage)
+            {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    format!(
+                        "Cannot modify readonly property {}::${}",
+                        owner.display_name(),
+                        String::from_utf8_lossy(&property.name)
+                    ),
+                    line,
+                ));
+            }
+            object.unset_properties.borrow_mut().remove(&storage);
+            key
+        } else {
+            let name = decoded
+                .as_ref()
+                .map_or(b"".as_slice(), |decoded| decoded.name);
+            if object.class.forbid_dynamic {
+                return Err(Error::new(
+                    ErrorKind::Error,
+                    format!(
+                        "Cannot create dynamic property {}::${}",
+                        object.class_name,
+                        String::from_utf8_lossy(name)
+                    ),
+                    line,
+                ));
+            }
+            if !object.class.allow_dynamic {
+                self.warn(format!(
+                    "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
+                    object.class_name,
+                    String::from_utf8_lossy(name)
+                ))?;
+            }
+            key
+        };
+        object.properties.borrow_mut().insert(stored_key, value);
+        self.drain_destructors(Ok(()), line)
+    }
 }

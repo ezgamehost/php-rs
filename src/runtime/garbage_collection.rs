@@ -59,6 +59,9 @@ impl Runtime {
                         .iter()
                         .map(|(_, value)| value.clone())
                         .collect();
+                    if let Some(data) = object.linked_list.borrow().as_ref() {
+                        values.extend(data.values());
+                    }
                     if let Some(data) = object.fixed_array.borrow().as_ref() {
                         values.extend(data.elements.iter().cloned());
                     }
@@ -154,6 +157,8 @@ impl Runtime {
                     drop(native);
                     let properties = std::mem::take(&mut *object.properties.borrow_mut());
                     drop(properties);
+                    let native = object.linked_list.borrow_mut().take();
+                    drop(native);
                     let native = object.array_iterator.borrow_mut().take();
                     drop(native);
                 }
