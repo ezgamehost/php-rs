@@ -124,6 +124,7 @@ impl Parser {
                 ));
             }
             properties.push(PropertyDecl {
+                is_abstract: false,
                 hooks: None,
                 doc_comment: promotion.doc_comment.clone(),
                 order: properties.len() + static_properties.len(),

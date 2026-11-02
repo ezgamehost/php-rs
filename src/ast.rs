@@ -336,6 +336,7 @@ pub(crate) struct PropertyHooks {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PropertyDecl {
+    pub is_abstract: bool,
     pub hooks: Option<PropertyHooks>,
     pub doc_comment: Option<Vec<u8>>,
     pub order: usize,

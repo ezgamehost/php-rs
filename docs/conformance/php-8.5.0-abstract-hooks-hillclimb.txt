@@ -1,0 +1,178 @@
+PHP 8.5.0 abstract and interface property hooks hillclimb
+Baseline: f680c52494ebb766034aed61ff316cbc7f8eb8ec
+
+zend
+Before: 5256 cases; 2900 passed, 1956 failed, 400 unsupported
+After: 5256 cases; 2968 passed, 1888 failed, 400 unsupported
+New passes: 68; regressions: 0
+NEW PASS: Zend/tests/asymmetric_visibility/gh19044.phpt
+NEW PASS: Zend/tests/attributes/override/properties_01.phpt
+NEW PASS: Zend/tests/attributes/override/properties_03.phpt
+NEW PASS: Zend/tests/attributes/override/properties_04.phpt
+NEW PASS: Zend/tests/attributes/override/properties_05.phpt
+NEW PASS: Zend/tests/attributes/override/properties_08.phpt
+NEW PASS: Zend/tests/attributes/override/properties_14.phpt
+NEW PASS: Zend/tests/attributes/override/properties_15.phpt
+NEW PASS: Zend/tests/attributes/override/properties_16.phpt
+NEW PASS: Zend/tests/attributes/override/properties_19.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_037.phpt
+NEW PASS: Zend/tests/gh19053.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_get_set_readonly.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_hook.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_hook_in_non_abstract_class.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_hook_not_implemented.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_prop_final.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_prop_hooks.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_prop_not_implemented.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_prop_plain.phpt
+NEW PASS: Zend/tests/property_hooks/abstract_prop_without_hooks.phpt
+NEW PASS: Zend/tests/property_hooks/backed_invariant.phpt
+NEW PASS: Zend/tests/property_hooks/bug001.phpt
+NEW PASS: Zend/tests/property_hooks/bug006.phpt
+NEW PASS: Zend/tests/property_hooks/get_by_ref_implemented_by_plain.phpt
+NEW PASS: Zend/tests/property_hooks/get_by_ref_implemented_by_val.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-1.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-2.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-3.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-4.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-5.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-6.phpt
+NEW PASS: Zend/tests/property_hooks/gh19044-8.phpt
+NEW PASS: Zend/tests/property_hooks/gh19548.phpt
+NEW PASS: Zend/tests/property_hooks/gh19548_002.phpt
+NEW PASS: Zend/tests/property_hooks/interface.phpt
+NEW PASS: Zend/tests/property_hooks/interface_explicit_abstract.phpt
+NEW PASS: Zend/tests/property_hooks/interface_final_hook.phpt
+NEW PASS: Zend/tests/property_hooks/interface_final_prop.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_by_ref_backed.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_by_ref_plain.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_by_ref_virtual.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_only.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_only_readonly.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_set_readonly.phpt
+NEW PASS: Zend/tests/property_hooks/interface_get_value_as_ref.phpt
+NEW PASS: Zend/tests/property_hooks/interface_invalid_explicitly_abstract.phpt
+NEW PASS: Zend/tests/property_hooks/interface_not_implemented.phpt
+NEW PASS: Zend/tests/property_hooks/interface_not_public.phpt
+NEW PASS: Zend/tests/property_hooks/interface_set_only.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_abstract.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_abstract_body.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_abstract_final.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_abstract_indirect.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_abstract_indirect_2.phpt
+NEW PASS: Zend/tests/property_hooks/invalid_abstract_private.phpt
+NEW PASS: Zend/tests/property_hooks/override_add_get_contravariant.phpt
+NEW PASS: Zend/tests/property_hooks/override_add_set_covariant.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_001.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_002.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_003.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_004.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_005.phpt
+NEW PASS: Zend/tests/property_hooks/set_value_parameter_type_variance_007.phpt
+NEW PASS: Zend/tests/property_hooks/traits_abstract.phpt
+NEW PASS: Zend/tests/property_hooks/type_compatibility.phpt
+NEW PASS: Zend/tests/property_hooks/type_compatibility_invalid.phpt
+NEW PASS: Zend/tests/property_hooks/type_compatibility_invalid_2.phpt
+
+reflection
+Before: 492 cases; 342 passed, 113 failed, 37 unsupported
+After: 492 cases; 342 passed, 113 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 5,956 passed, 2,264 failed, 1,456 unsupported.
+Net gain: 68 upstream passes; zero regressions across all twelve suites.
+The property_hooks directory improves from 91 to 147 passes out of 210 fixtures;
+59 fail and four remain unsupported. These fixtures are already counted in Zend.
+All seven set_value_parameter_type_variance fixtures pass.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- PHP 8.5.0 comparisons confirm duplicate-interface abstract requirements count
+  once and overlapping setter/property type unions autoload each name once.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- Abstract properties and interface hook declarations retain separate property
+  and accessor flags. Invalid modifiers, bodies, and missing abstract hooks are
+  diagnosed without treating accessors as ordinary methods.
+- Concrete backing storage satisfies abstract getters and writable setters.
+  Missing accessors retain their original declaration and abstract requirement.
+  Readonly properties satisfy getter-only requirements.
+- Class/interface validation checks accessor signatures, reference getters,
+  property visibility and set visibility. Shared interface requirements count
+  once, and missing-method diagnostics list ordinary methods before accessors.
+- Virtual getter-only properties are covariant and setter-only properties are
+  contravariant; backed and bidirectional properties remain invariant.
+- Explicit setters must accept the property type. Unresolved class types defer
+  early linking and invoke autoloaders before compatibility is checked again.
+- Abstract setters implemented by plain properties constrain the writable type.
+- Reflection exposes abstract property flags. Existing property Override checks
+  can now inspect interface property declarations.
+
+Remaining limits:
+- Complex merges of conflicting interface property declarations, complete
+  inherited-interface reflection, intersection/DNF types, and some diagnostic
+  and class-linking edge cases remain unfinished.
+- Promoted hooks, parent-hook calls, hook attributes/full reflection, and
+  hook-aware enumeration/export remain unfinished.
+- Generators, unsupported PHPT sections, and the broader PHP runtime remain
+  incomplete. This report covers the listed regression gate only.

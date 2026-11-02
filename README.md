@@ -723,9 +723,15 @@ new request. The CLI returns the low eight bits of the requested status.
   virtual and backed properties, inherited hooks, trait scope, and final hooks.
   Reads, writes, compound assignments, reference getters, indirect-mutation
   errors, and lazy-object backing access use the hook call frame. `__PROPERTY__`
-  and reflection's `hasHooks`/`isVirtual` queries are available. Abstract and
-  interface hooks, promoted hooks, parent-hook calls, full type variance,
-  hook attributes/reflection, and enumeration/export integration remain unfinished.
+  and reflection's `hasHooks`/`isVirtual` queries are available. Promoted hooks,
+  parent-hook calls, hook attributes/reflection, and enumeration/export
+  integration remain unfinished.
+- [Abstract and interface hooks](docs/conformance/php-8.5.0-abstract-hooks-hillclimb.txt)
+  enforce required getters/setters and allow plain properties to implement them.
+  Readonly properties satisfy getter requirements; missing setters remain abstract.
+  Getter references, hook signatures, virtual-property variance, setter parameter
+  compatibility, autoloaded types, and abstract reflection flags are supported.
+  Complex interface merges and intersection/DNF type handling remain unfinished.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

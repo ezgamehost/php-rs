@@ -270,29 +270,36 @@ impl Parser {
                     self.token().line,
                 ));
             }
-            if visibility != Visibility::Public && is_interface {
+            if visibility != Visibility::Public
+                && is_interface
+                && (self.is("function") || self.is("const"))
+            {
                 return Err(Error::parse(
                     "Invalid non-public member declaration",
                     self.token().line,
                 ));
             }
-            if abstract_method && visibility == Visibility::Private && !is_trait {
+            if abstract_method
+                && visibility == Visibility::Private
+                && !is_trait
+                && self.is("function")
+            {
                 return Err(Error::parse(
                     "Abstract methods cannot be private",
                     self.token().line,
                 ));
             }
             if is_interface
-                && (abstract_method
-                    || (final_method && self.is("function"))
-                    || (!self.is("function") && !self.is("const")))
+                && ((abstract_method && (self.is("function") || self.is("const")))
+                    || (final_method && self.is("function")))
             {
                 return Err(Error::parse(
                     "Invalid interface member declaration",
                     self.token().line,
                 ));
             }
-            if abstract_method && (final_method || var || !self.is("function")) {
+            if abstract_method && ((self.is("function") && final_method) || var || self.is("const"))
+            {
                 return Err(Error::parse(
                     "Invalid abstract method declaration",
                     self.token().line,
@@ -592,6 +599,8 @@ impl Parser {
                 }
                 self.expect(";")?;
             } else if public
+                || abstract_method
+                || is_interface
                 || static_method
                 || readonly_property
                 || final_method
@@ -602,6 +611,26 @@ impl Parser {
                 if final_method && visibility == Visibility::Private {
                     return Err(Error::parse(
                         "Property cannot be both final and private",
+                        self.token().line,
+                    ));
+                }
+                let property_error = if is_interface && final_method {
+                    Some("Property in interface cannot be final")
+                } else if is_interface && visibility != Visibility::Public {
+                    Some("Property in interface cannot be protected or private")
+                } else if is_interface && abstract_method {
+                    Some(
+                        "Property in interface cannot be explicitly abstract. All interface members are implicitly abstract",
+                    )
+                } else if abstract_method && final_method {
+                    Some("Cannot use the final modifier on an abstract property")
+                } else {
+                    None
+                };
+                if let Some(message) = property_error {
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
+                        message,
                         self.token().line,
                     ));
                 }
@@ -681,6 +710,7 @@ impl Parser {
                     let attributes =
                         self.parse_attributes_at(attribute_range, attributes::Target::Property)?;
                     let mut property = PropertyDecl {
+                        is_abstract: abstract_method || is_interface,
                         hooks: None,
                         doc_comment,
                         order: properties.len() + static_properties.len(),
@@ -715,7 +745,18 @@ impl Parser {
                                 self.token().line,
                             ));
                         }
-                        property.hooks = Some(self.property_hooks(&property)?);
+                        property.hooks = Some(self.property_hooks(&property, is_interface)?);
+                    }
+                    if property.hooks.is_none() && property.is_abstract {
+                        return Err(Error::new(
+                            crate::ErrorKind::CompileError,
+                            if is_interface {
+                                "Interfaces may only include hooked properties"
+                            } else {
+                                "Only hooked properties may be declared abstract"
+                            },
+                            self.token().line,
+                        ));
                     }
                     Self::validate_attributes(&property.attributes, attributes::Target::Property)?;
                     let has_hooks = property.hooks.is_some();

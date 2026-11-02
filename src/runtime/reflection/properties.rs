@@ -18,6 +18,7 @@ impl PropertyReflection {
         visibility_flags(property.visibility)
             | (i64::from(self.is_static) * 16)
             | (i64::from(property.is_final) * 32)
+            | (i64::from(property.is_abstract) * 64)
             | (i64::from(property.is_readonly) * 128)
             | if property.set_visibility != property.visibility {
                 match property.set_visibility {
@@ -261,7 +262,7 @@ impl Runtime {
             b"isfinal" => Value::Bool(flags & 32 != 0),
             b"isprotectedset" => Value::Bool(flags & 2048 != 0),
             b"isprivateset" => Value::Bool(flags & 4096 != 0),
-            b"isabstract" => Value::Bool(false),
+            b"isabstract" => Value::Bool(decl.is_some_and(|p| p.is_abstract)),
             b"isvirtual" => Value::Bool(
                 decl.and_then(|p| p.hooks.as_ref())
                     .is_some_and(|h| h.is_virtual),

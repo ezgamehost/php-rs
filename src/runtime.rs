@@ -102,6 +102,7 @@ mod packing;
 mod path_parts;
 mod phonetics;
 mod printing;
+mod property_contracts;
 mod property_hooks;
 mod property_references;
 mod property_visibility;

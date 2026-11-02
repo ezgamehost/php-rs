@@ -6,6 +6,9 @@ impl Runtime {
     // The candidate's own type is known in its declarations, but not yet in
     // unresolved declarations inherited from its parent.
     pub(super) fn property_variance_unresolved(&self, class: &Class) -> bool {
+        if self.hook_variance_unresolved(class) {
+            return true;
+        }
         let Some(parent) = &class.parent else {
             return false;
         };
@@ -216,6 +219,7 @@ impl Runtime {
 
     fn validate_inheritance(&mut self, class: &Class) -> Result<(), Error> {
         self.validate_trait_requirements(class)?;
+        self.validate_property_contracts(class)?;
         self.validate_interfaces(class)?;
         if !class.declaration.is_abstract
             && let Some(method) = class.methods.iter().find(|method| method.is_abstract)
@@ -264,7 +268,11 @@ impl Runtime {
                         class.declaration.line,
                     ));
                 }
-                if property.set_visibility > parent_property.set_visibility {
+                let parent_get_only = parent_property
+                    .hooks
+                    .as_ref()
+                    .is_some_and(|h| h.is_virtual && h.set.is_none());
+                if property.set_visibility > parent_property.set_visibility && !parent_get_only {
                     return Err(Error::new(
                         ErrorKind::Error,
                         "Cannot narrow inherited property set visibility",
@@ -277,12 +285,16 @@ impl Runtime {
                     parent.property_owner(&property.name)
                 }
                 .expect("property owner");
-                if property.is_readonly != parent_property.is_readonly {
+                if property.is_readonly != parent_property.is_readonly && !parent_get_only {
                     return Err(Error::new(
                         ErrorKind::Error,
                         "Cannot change readonly status of an inherited property",
                         class.declaration.line,
                     ));
+                }
+                if property.hooks.is_some() || parent_property.hooks.is_some() {
+                    self.validate_hook_property_type(property, class, parent_property, &owner)?;
+                    continue;
                 }
                 let child_type = property.ty.as_ref().map(|ty| class_type(ty, class));
                 let parent_type = parent_property.ty.as_ref().map(|ty| class_type(ty, &owner));

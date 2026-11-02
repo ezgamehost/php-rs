@@ -191,6 +191,7 @@ impl Runtime {
             if let Some(inherited) = inherited {
                 if let Some(parent_hooks) = &inherited.hooks {
                     if let Some(hooks) = &mut property.hooks {
+                        hooks.is_virtual &= parent_hooks.is_virtual;
                         for (hook, is_final, previous) in [
                             (&hooks.get, parent_hooks.get_final, &parent_hooks.get),
                             (&hooks.set, parent_hooks.set_final, &parent_hooks.set),
@@ -206,25 +207,60 @@ impl Runtime {
                                 ));
                             }
                         }
-                        if hooks.get.is_none() {
+                        if hooks.get.is_none()
+                            && (hooks.is_virtual
+                                || parent_hooks.get.as_ref().is_some_and(|f| !f.is_abstract))
+                        {
                             hooks.get = parent_hooks.get.clone();
                             hooks.get_final = parent_hooks.get_final;
                         }
-                        if hooks.set.is_none() {
+                        if hooks.set.is_none()
+                            && (hooks.is_virtual
+                                || property.is_readonly
+                                || parent_hooks.set.as_ref().is_some_and(|f| !f.is_abstract))
+                        {
                             hooks.set = parent_hooks.set.clone();
                             hooks.set_final = parent_hooks.set_final;
                         }
-                        hooks.is_virtual &= parent_hooks.is_virtual;
                     } else {
                         let mut hooks = parent_hooks.clone();
                         hooks.is_virtual = false;
-                        property.hooks = Some(hooks);
+                        if hooks.get.as_ref().is_some_and(|f| f.is_abstract) {
+                            hooks.get = None;
+                            hooks.get_final = false;
+                        }
+                        if !property.is_readonly
+                            && hooks.set.as_ref().is_some_and(|f| f.is_abstract)
+                        {
+                            hooks.set = None;
+                            hooks.set_final = false;
+                        }
+                        if hooks.get.is_some() || hooks.set.is_some() {
+                            property.hooks = Some(hooks);
+                        }
                     }
                 } else if let Some(hooks) = &mut property.hooks {
                     hooks.is_virtual = false;
                 }
             }
             if let Some(hooks) = &property.hooks {
+                if property.is_abstract
+                    && !hooks
+                        .get
+                        .iter()
+                        .chain(hooks.set.iter())
+                        .any(|h| h.is_abstract)
+                {
+                    return Err(Error::new(
+                        ErrorKind::CompileError,
+                        format!(
+                            "Abstract property {}::${} must specify at least one abstract hook",
+                            String::from_utf8_lossy(&decl.name),
+                            String::from_utf8_lossy(&property.name)
+                        ),
+                        decl.line,
+                    ));
+                }
                 if hooks.is_virtual && property.default.is_some() {
                     return Err(Error::new(
                         ErrorKind::CompileError,

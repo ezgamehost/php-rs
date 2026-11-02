@@ -5,6 +5,7 @@ impl Parser {
     pub(super) fn property_hooks(
         &mut self,
         property: &PropertyDecl,
+        is_interface: bool,
     ) -> Result<PropertyHooks, Error> {
         self.expect("{")?;
         let mut hooks = PropertyHooks {
@@ -116,6 +117,16 @@ impl Parser {
                         line,
                     ));
                 }
+                if parameter.ty.is_some() != property.ty.is_some() {
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
+                        format!(
+                            "Type of parameter ${} of hook {label}::set must be compatible with property type",
+                            String::from_utf8_lossy(&parameter.name)
+                        ),
+                        line,
+                    ));
+                }
                 parameters
             } else if get {
                 Vec::new()
@@ -151,6 +162,28 @@ impl Parser {
             let outer_depth = std::mem::replace(&mut self.control_depth, 0);
             let outer_finally = std::mem::take(&mut self.finally_depths);
             let mut body = Vec::new();
+            let is_abstract = property.is_abstract && self.is(";");
+            if is_interface && !is_abstract {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Abstract property hook cannot have body",
+                    line,
+                ));
+            }
+            if is_abstract && property.visibility == Visibility::Private {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Property hook cannot be both abstract and private",
+                    line,
+                ));
+            }
+            if is_abstract && final_hook {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Property hook cannot be both abstract and final",
+                    line,
+                ));
+            }
             if self.eat("=>") {
                 let value = self.expr(0)?;
                 body.push(if get {
@@ -181,11 +214,13 @@ impl Parser {
                 });
                 self.expect(";")?;
             } else if self.eat(";") {
-                return Err(Error::new(
-                    crate::ErrorKind::CompileError,
-                    "Non-abstract property hook must have a body",
-                    line,
-                ));
+                if !is_abstract {
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
+                        "Non-abstract property hook must have a body",
+                        line,
+                    ));
+                }
             } else {
                 self.expect("{")?;
                 while !self.eat("}") {
@@ -218,7 +253,7 @@ impl Parser {
                 } else {
                     Visibility::Public
                 },
-                is_abstract: false,
+                is_abstract,
                 is_static: false,
                 name: qualified,
                 parameters,

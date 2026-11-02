@@ -139,7 +139,7 @@ impl Runtime {
     }
 }
 
-fn method_signature(function: &FunctionDecl) -> String {
+pub(super) fn method_signature(function: &FunctionDecl) -> String {
     let parameters = function
         .parameters
         .iter()
