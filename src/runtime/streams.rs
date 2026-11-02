@@ -15,9 +15,66 @@ pub(super) enum Operation {
     Seek,
     Rewind,
     Flush,
+    Metadata,
 }
 
 impl Runtime {
+    fn stream_metadata(&mut self, value: &Value, name: &str, line: usize) -> Result<Value, Error> {
+        self.validate_stream(value, name, line)?;
+        let Value::Resource(resource) = value else {
+            unreachable!()
+        };
+        let mut kind = resource.kind.borrow_mut();
+        let Kind::Stream(stream) = &mut *kind else {
+            unreachable!()
+        };
+        let (wrapper, stream_type, seekable, unread) = match &mut stream.backend {
+            Backend::File(file) => ("plainfile", "STDIO", file.stream_position().is_ok(), 0),
+            Backend::StandardInput(reader) => (
+                "PHP",
+                "STDIO",
+                stream.position != u64::MAX,
+                reader.buffer().len(),
+            ),
+            Backend::StandardOutput(_) => ("PHP", "STDIO", stream.position != u64::MAX, 0),
+            Backend::Memory(_) => ("PHP", "MEMORY", true, 0),
+            Backend::Temporary(_) => ("PHP", "TEMP", true, 0),
+            Backend::Directory(directory) => {
+                let glob = directory.glob().is_some();
+                (
+                    if glob { "glob" } else { "plainfile" },
+                    if glob { "glob" } else { "dir" },
+                    true,
+                    0,
+                )
+            }
+        };
+        let mut metadata = PhpArray::default();
+        let mut add = |key: &[u8], value| {
+            metadata.insert(ArrayKey::String(key.to_vec()), value);
+        };
+        if !matches!(stream.backend, Backend::Temporary(_)) {
+            add(b"timed_out", Value::Bool(false));
+            add(b"blocked", Value::Bool(true));
+            add(b"eof", Value::Bool(stream.eof));
+        }
+        add(
+            b"wrapper_type",
+            Value::String(wrapper.as_bytes().to_vec().into()),
+        );
+        add(
+            b"stream_type",
+            Value::String(stream_type.as_bytes().to_vec().into()),
+        );
+        add(b"mode", Value::String(stream.mode.clone().into()));
+        add(b"unread_bytes", Value::Int(unread as i64));
+        add(b"seekable", Value::Bool(seekable));
+        if let Some(uri) = &stream.uri {
+            add(b"uri", Value::String(uri.clone().into()));
+        }
+        Ok(Value::Array(Rc::new(metadata)))
+    }
+
     pub(super) fn stream_get_contents(
         &mut self,
         name: &str,
@@ -358,9 +415,12 @@ impl Runtime {
                 crate::resource::standard_stream(index).ok()
             };
             return match stream {
-                Some(stream) => Ok(Value::Resource(
-                    self.resources.allocate(Kind::Stream(stream)),
-                )),
+                Some(mut stream) => {
+                    stream.mode = mode[..mode.len().min(15)].to_vec();
+                    Ok(Value::Resource(
+                        self.resources.allocate(Kind::Stream(stream)),
+                    ))
+                }
                 None => {
                     self.open_warning(name, filename, "operation failed", line)?;
                     Ok(Value::Bool(false))
@@ -385,7 +445,11 @@ impl Runtime {
         }
         let plus = mode.contains(&b'+');
         let readable = memory || first == b'r' || plus;
-        let writable = first != b'r' || plus;
+        let writable = if memory {
+            mode.iter().any(|b| matches!(b, b'a' | b'w' | b'+'))
+        } else {
+            first != b'r' || plus
+        };
         let backend = if memory {
             Backend::Memory(Cursor::new(Vec::new()))
         } else {
@@ -422,7 +486,21 @@ impl Runtime {
                 }
             }
         };
+        let recorded_mode = if memory {
+            if mode.contains(&b'a') {
+                b"a+b".to_vec()
+            } else if mode.contains(&b'w') || plus {
+                b"w+b".to_vec()
+            } else {
+                b"rb".to_vec()
+            }
+        } else {
+            mode[..mode.len().min(15)].to_vec()
+        };
         let resource = self.resources.allocate(Kind::Stream(Stream {
+            mode: recorded_mode.clone(),
+            uri: Some(filename.to_vec()),
+            remove_on_close: None,
             backend,
             writable,
             eof: false,
@@ -439,6 +517,9 @@ impl Runtime {
                 Backend::Memory(Cursor::new(Vec::new())),
             );
             let inner = self.resources.allocate(Kind::Stream(Stream {
+                mode: recorded_mode,
+                uri: None,
+                remove_on_close: None,
                 backend,
                 writable,
                 eof: false,
@@ -487,6 +568,9 @@ impl Runtime {
         let mut length = 0;
         let mut offset = 0;
         let mut whence = 0;
+        if matches!(operation, Operation::Metadata) {
+            return self.stream_metadata(first, name, line);
+        }
         match operation {
             Operation::Read => {
                 length = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
@@ -604,6 +688,7 @@ impl Runtime {
             return Ok(Value::String(bytes.into()));
         }
         Ok(match operation {
+            Operation::Metadata => unreachable!(),
             Operation::Close => {
                 if resource.id == 3
                     && self
@@ -684,7 +769,7 @@ impl Runtime {
                 {
                     Value::Bool(false)
                 } else {
-                    match stream.backend.write(&data) {
+                    match stream.write_bytes(&data) {
                         Ok(count) => {
                             // PHP tracks the logical position separately from
                             // O_APPEND's underlying file offset.

@@ -30,6 +30,9 @@ pub(super) enum Builtin {
     StrGetCsv,
     StreamCsv(bool),
     Fgets,
+    TemporaryFile,
+    TemporaryName,
+    TemporaryDirectory,
     StreamGetContents,
     FileLines,
     Basename,
@@ -218,6 +221,10 @@ impl Builtin {
             b"fgetcsv" => Self::StreamCsv(false),
             b"fputcsv" => Self::StreamCsv(true),
             b"fgets" => Self::Fgets,
+            b"tmpfile" => Self::TemporaryFile,
+            b"tempnam" => Self::TemporaryName,
+            b"sys_get_temp_dir" => Self::TemporaryDirectory,
+            b"stream_get_meta_data" => Self::Stream(streams::Operation::Metadata),
             b"stream_get_contents" => Self::StreamGetContents,
             b"file" => Self::FileLines,
             b"basename" => Self::Basename,
@@ -580,6 +587,8 @@ impl Builtin {
             ],
             Self::Unlink => &[("filename", false, false), ("context", true, false)],
             Self::Fgets => &[("stream", false, false), ("length", true, false)],
+            Self::TemporaryFile | Self::TemporaryDirectory => &[],
+            Self::TemporaryName => &[("directory", false, false), ("prefix", false, false)],
             Self::StreamGetContents => &[
                 ("stream", false, false),
                 ("length", true, false),
@@ -1249,6 +1258,12 @@ impl Runtime {
         if matches!(builtin, Builtin::Settype) {
             return self.settype(args, references, line);
         }
+        if matches!(
+            builtin,
+            Builtin::TemporaryFile | Builtin::TemporaryName | Builtin::TemporaryDirectory
+        ) {
+            return self.temporary_file_operation(builtin, &name, &args, line);
+        }
         if let Builtin::Filesystem(operation) = builtin {
             return self.filesystem_operation(operation, &name, &args, line);
         }
@@ -1676,6 +1691,9 @@ impl Runtime {
             | Builtin::Settype
             | Builtin::Directory(_)
             | Builtin::Filesystem(_)
+            | Builtin::TemporaryFile
+            | Builtin::TemporaryName
+            | Builtin::TemporaryDirectory
             | Builtin::ArraySort(_)
             | Builtin::ArrayUserSort(_)
             | Builtin::ArrayMultisort

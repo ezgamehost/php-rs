@@ -117,6 +117,7 @@ mod string_transform;
 mod stringable;
 mod strip_tags;
 mod substrings;
+mod temporary_files;
 mod termination;
 mod throwable_properties;
 mod throwables;
@@ -181,6 +182,7 @@ pub struct Runtime {
     included_files: Vec<std::path::PathBuf>,
     included_set: HashSet<std::path::PathBuf>,
     working_directory: Option<std::path::PathBuf>,
+    temporary_directory: Option<Vec<u8>>,
     file_stat_cache: [Option<(Vec<u8>, std::fs::Metadata)>; 2],
     exit_status: Option<i32>,
     object_store: Rc<RefCell<crate::object::ObjectStore>>,

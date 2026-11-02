@@ -3049,6 +3049,25 @@ SKIPIF sections. Configurable character locales, automatic legacy line-ending
 detection, custom wrappers/filters, and complete buffering/lifecycle semantics
 remain unfinished.
 
+The [temporary files and stream metadata slice](conformance/php-8.5.0-temporary-stream-hillclimb.txt)
+adds tmpfile(), tempnam(), sys_get_temp_dir(), and stream_get_meta_data(). Temporary
+files use atomic exclusive creation, private permissions, native prefix handling,
+and fallback notices. Temporary streams own their cleanup path through resource
+aliases and remove it on close or final release. Metadata preserves native key
+order, wrapper-specific fields, modes, URI, EOF state, and seekability. Memory and
+temporary streams now honor append mode and native read-only mode selection.
+
+This slice adds **14 upstream passes**, with **zero regressions** across **ten
+full suites (9,556 fixtures)**: **four file cases** and **ten streams cases**. The
+streams suite was baselined using an isolated build of the preceding commit. File
+reaches **102 / 122 / 672**, and streams reaches **14 / 84 / 59**. Other suite totals
+are unchanged. All **797 existing Rust tests**, **57 reference-checked project PHPT**,
+formatting, Clippy, and diff checks pass. No custom tests or matrices were added.
+Direct PHP comparisons cover aliases and cleanup, permissions, prefixes, fallback
+notices, metadata, and append-mode positions. Configurable sys_temp_dir/open_basedir,
+custom wrappers/filters, complete read buffering, temporary memory spill-to-disk,
+and non-Unix behavior remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3064,8 +3083,9 @@ measurements reported by their individual slices.
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
-| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 98 | 126 | 672 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 102 | 122 | 672 |
 | PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 6 | 1 | 66 |
+| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 14 | 84 | 59 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

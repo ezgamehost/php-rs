@@ -254,6 +254,13 @@ new request. The CLI returns the low eight bits of the requested status.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
   spill-to-disk, context configuration, and general
   wrapper registration remain unfinished.
+- `tmpfile`, `tempnam`, and `sys_get_temp_dir` provide temporary streams and named
+  files, with atomic exclusive creation, private permissions, PHP prefix handling,
+  cached TMPDIR selection, and fallback notices. Temporary stream files survive
+  resource aliases and are removed on close or final release. `stream_get_meta_data`
+  exposes supported wrapper types, modes, URI, EOF, seekability, and buffered input
+  counts; memory and temporary streams honor append mode. Configurable
+  sys_temp_dir/open_basedir and complete stream metadata/buffering remain unfinished.
 - `mkdir`, `rmdir`, and `touch` create directories, remove empty directories, and
   update file timestamps without truncating existing contents. Recursive mkdir
   resolves dot components and applies native permission/umask behavior. `chdir`

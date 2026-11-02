@@ -1,0 +1,82 @@
+PHP 8.5.0 temporary files and stream metadata hillclimb
+Baseline: ac06dff7051ea50707cc48d00e69050ed8ce390d
+
+The streams suite was baselined using an isolated archive/build of the baseline commit.
+
+zend
+Before: 5256 cases; 2583 passed, 2265 failed, 408 unsupported
+After: 5256 cases; 2583 passed, 2265 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 538 passed, 146 failed, 94 unsupported
+After: 778 cases; 538 passed, 146 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 98 passed, 126 failed, 672 unsupported
+After: 896 cases; 102 passed, 122 failed, 672 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/file/002.phpt
+NEW PASS: ext/standard/tests/file/bug20424.phpt
+NEW PASS: ext/standard/tests/file/bug37864.phpt
+NEW PASS: ext/standard/tests/file/bug40374.phpt
+
+dir
+Before: 73 cases; 6 passed, 1 failed, 66 unsupported
+After: 73 cases; 6 passed, 1 failed, 66 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 4 passed, 94 failed, 59 unsupported
+After: 157 cases; 14 passed, 84 failed, 59 unsupported
+New passes: 10; regressions: 0
+NEW PASS: ext/standard/tests/streams/bug46426.phpt
+NEW PASS: ext/standard/tests/streams/bug54946.phpt
+NEW PASS: ext/standard/tests/streams/bug75031.phpt
+NEW PASS: ext/standard/tests/streams/bug78326_1.phpt
+NEW PASS: ext/standard/tests/streams/stream_get_contents_001.phpt
+NEW PASS: ext/standard/tests/streams/stream_get_contents_negative_length.phpt
+NEW PASS: ext/standard/tests/streams/stream_get_meta_data_file_basic.phpt
+NEW PASS: ext/standard/tests/streams/stream_get_meta_data_file_error.phpt
+NEW PASS: ext/standard/tests/streams/stream_get_meta_data_file_variation1.phpt
+NEW PASS: ext/standard/tests/streams/stream_get_meta_data_file_variation5.phpt
+
+Total: 9,556 fixtures; 4,888 passed, 2,983 failed, 1,685 unsupported.
+14 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct PHP comparisons match temporary file alias lifetime, close/release cleanup,
+permissions, prefix truncation/basename handling, fallback notices, stream metadata,
+and memory/temporary append behavior and logical positions.
+Stream metadata preserves native key ordering and wrapper-specific fields.
+Configurable sys_temp_dir/open_basedir, custom wrappers/filters, complete buffering,
+temporary memory spill-to-disk, and non-Unix platform behavior remain unfinished.
+Full log prefix: /tmp/php-rs-temp-stream-*2.log.

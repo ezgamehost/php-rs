@@ -168,6 +168,9 @@ impl Runtime {
             writable: false,
             eof: false,
             position: 0,
+            mode: b"r".to_vec(),
+            uri: None,
+            remove_on_close: None,
         }));
         if !scan {
             self.default_directory = Some(resource.clone());

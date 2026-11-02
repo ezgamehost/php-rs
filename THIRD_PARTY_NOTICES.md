@@ -275,6 +275,13 @@ Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 `ext/standard/type.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf as author.
 
+Temporary-file creation and directory selection in `src/runtime/temporary_files.rs`,
+with lifecycle integration in `src/resource.rs`, adapt PHP 8.5.0's
+`main/php_open_temporary_file.c`, `main/streams/plain_wrapper.c`, and
+`ext/standard/file.c`, copyright (c) The PHP Group. Metadata and memory/temporary
+stream modes in `src/runtime/streams.rs` follow `ext/standard/streamsfuncs.c`,
+`main/streams/memory.c`, and `ext/standard/php_fopen_wrapper.c`.
+
 CSV stream reading/writing in `src/runtime/csv.rs` extends the existing CSV
 adaptation from PHP 8.5.0's `ext/standard/file.c`. Line and remainder readers in
 `src/runtime/streams.rs`, and file() line-array loading in

@@ -24,6 +24,28 @@ pub(crate) struct Stream {
     pub(crate) writable: bool,
     pub(crate) eof: bool,
     pub(crate) position: u64,
+    pub(crate) mode: Vec<u8>,
+    pub(crate) uri: Option<Vec<u8>>,
+    pub(crate) remove_on_close: Option<std::path::PathBuf>,
+}
+
+impl Stream {
+    pub(crate) fn write_bytes(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if self.mode.starts_with(b"a")
+            && let Backend::Memory(buffer) = &mut self.backend
+        {
+            buffer.set_position(buffer.get_ref().len() as u64);
+        }
+        self.backend.write(bytes)
+    }
+}
+
+impl Drop for Stream {
+    fn drop(&mut self) {
+        if let Some(path) = &self.remove_on_close {
+            let _ = std::fs::remove_file(path);
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -94,7 +116,7 @@ impl Write for Backend {
                 buffer.write(bytes)
             }
             Self::Temporary(resource) => resource.with_stream(|stream| {
-                let count = stream.backend.write(bytes)?;
+                let count = stream.write_bytes(bytes)?;
                 stream.position += count as u64;
                 Ok(count)
             }),
@@ -243,5 +265,16 @@ pub(crate) fn standard_stream(index: usize) -> io::Result<Stream> {
         writable: index != 0,
         eof: false,
         position,
+        mode: if index == 0 {
+            b"rb".to_vec()
+        } else {
+            b"wb".to_vec()
+        },
+        uri: Some(match index {
+            0 => b"php://stdin".to_vec(),
+            1 => b"php://stdout".to_vec(),
+            _ => b"php://stderr".to_vec(),
+        }),
+        remove_on_close: None,
     })
 }
