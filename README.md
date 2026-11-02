@@ -153,7 +153,11 @@ new request. The CLI returns the low eight bits of the requested status.
   recursive children, subpaths, and independent cloned handles. Native filesystem
   iteration caches current values; explicit current() calls create fresh file-info
   objects. Recursive wrappers expose the source iterator for child methods and
-  forwarding. GlobIterator and complete mutation/destructor timing remain unfinished.
+  forwarding. `GlobIterator` and `glob://` directory streams expand byte-oriented
+  patterns with wildcards, bracket ranges, POSIX character classes, and escapes.
+  Match counts, per-entry paths, empty streams, and rewind snapshots follow PHP.
+  GlobIterator cloning is forbidden. Custom stream wrappers, open_basedir filtering,
+  and complete mutation/destructor timing remain unfinished.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,

@@ -98,10 +98,32 @@ pub(crate) struct Directory {
         target_os = "macos",
         all(target_os = "linux", target_pointer_width = "64")
     ))]
-    handle: posix::Handle,
+    handle: Option<posix::Handle>,
+    glob: Option<crate::native_glob::Glob>,
 }
 
 impl Directory {
+    pub(crate) fn open_stream(path: &[u8], cwd: &Path) -> io::Result<Self> {
+        if let Some(pattern) = path.strip_prefix(b"glob://") {
+            Ok(Self {
+                #[cfg(any(
+                    target_os = "macos",
+                    all(target_os = "linux", target_pointer_width = "64")
+                ))]
+                handle: None,
+                glob: Some(crate::native_glob::Glob::open(pattern, cwd)?),
+            })
+        } else {
+            Self::open(&cwd.join(crate::source::path_from_bytes(
+                path.strip_prefix(b"file://").unwrap_or(path),
+            )))
+        }
+    }
+
+    pub(crate) fn glob(&self) -> Option<&crate::native_glob::Glob> {
+        self.glob.as_ref()
+    }
+
     pub(crate) fn open(path: &Path) -> io::Result<Self> {
         #[cfg(any(
             target_os = "macos",
@@ -109,7 +131,8 @@ impl Directory {
         ))]
         {
             Ok(Self {
-                handle: posix::Handle::open(path)?,
+                handle: Some(posix::Handle::open(path)?),
+                glob: None,
             })
         }
         #[cfg(not(any(
@@ -128,7 +151,11 @@ impl Directory {
             all(target_os = "linux", target_pointer_width = "64")
         ))]
         {
-            self.handle.read()
+            if let Some(glob) = &mut self.glob {
+                glob.read()
+            } else {
+                self.handle.as_mut().unwrap().read()
+            }
         }
         #[cfg(not(any(
             target_os = "macos",
@@ -144,7 +171,13 @@ impl Directory {
             target_os = "macos",
             all(target_os = "linux", target_pointer_width = "64")
         ))]
-        self.handle.rewind();
+        {
+            if let Some(glob) = &mut self.glob {
+                glob.rewind();
+            } else {
+                self.handle.as_mut().unwrap().rewind();
+            }
+        }
     }
 }
 

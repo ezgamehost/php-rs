@@ -29,6 +29,17 @@ pub(super) fn state(object: &PhpObject) -> Rc<RefCell<DirectoryData>> {
         .get_or_insert_with(|| Rc::new(RefCell::new(DirectoryData::default())))
         .clone()
 }
+pub(super) fn glob_path(data: &DirectoryData) -> Option<Vec<u8>> {
+    let handle = data.handle.as_ref()?;
+    let kind = handle.kind.borrow();
+    let Kind::Stream(stream) = &*kind else {
+        return None;
+    };
+    let Backend::Directory(directory) = &stream.backend else {
+        return None;
+    };
+    directory.glob().map(|glob| glob.path().to_vec())
+}
 pub(super) fn native_iteration(object: &PhpObject) -> bool {
     object.class.is_a(b"DirectoryIterator")
         && [b"rewind".as_slice(), b"valid", b"current", b"key", b"next"]
@@ -137,6 +148,15 @@ impl Runtime {
                 public function getSubPath(): string {}
                 public function getSubPathname(): string {}
             "#,
+            ),
+            b"globiterator" => (
+                "GlobIterator",
+                "FilesystemIterator",
+                Some("Countable"),
+                r#"
+                public function __construct(string $pattern, int $flags = 0) {}
+                public function count(): int {}
+                "#,
             ),
             _ => return None,
         };
@@ -274,22 +294,18 @@ impl Runtime {
             data.entry.clear();
         }
         self.resources.default_context();
-        let resolved = self
-            .working_directory()
-            .join(crate::source::path_from_bytes(
-                path.strip_prefix(b"file://").unwrap_or(&path),
-            ));
-        let directory = Directory::open(&resolved).map_err(|error| {
-            self.array_iterator_exception(
-                b"UnexpectedValueException",
-                format!(
-                    "{method}({}): Failed to open directory: {}",
-                    String::from_utf8_lossy(&path),
-                    streams::io_message(&error)
-                ),
-                line,
-            )
-        })?;
+        let directory =
+            Directory::open_stream(&path, &self.working_directory()).map_err(|error| {
+                self.array_iterator_exception(
+                    b"UnexpectedValueException",
+                    format!(
+                        "{method}({}): Failed to open directory: {}",
+                        String::from_utf8_lossy(&path),
+                        streams::io_message(&error)
+                    ),
+                    line,
+                )
+            })?;
         state.borrow_mut().handle = Some(self.resources.allocate(Kind::Stream(Stream {
             backend: Backend::Directory(directory),
             writable: false,
@@ -425,11 +441,19 @@ impl Runtime {
         let tree = function.starts_with(b"filesystemiterator::");
         let state = state(&object);
         if name == b"__construct" {
-            let Value::String(path) = self.lookup(b"directory").unwrap() else {
+            let glob = function.starts_with(b"globiterator::");
+            let parameter = if glob {
+                b"pattern".as_slice()
+            } else {
+                b"directory"
+            };
+            let Value::String(path) = self.lookup(parameter).unwrap() else {
                 unreachable!()
             };
-            let path = path.to_vec();
-            let canonical = if tree {
+            let mut path = path.to_vec();
+            let canonical = if glob {
+                "GlobIterator::__construct"
+            } else if tree {
                 "FilesystemIterator::__construct"
             } else if function.starts_with(b"recursivedirectoryiterator::") {
                 "RecursiveDirectoryIterator::__construct"
@@ -440,7 +464,8 @@ impl Runtime {
                 return Err(Error::new(
                     ErrorKind::ValueError,
                     format!(
-                        "{canonical}(): Argument #1 ($directory) must {}",
+                        "{canonical}(): Argument #1 (${}) must {}",
+                        String::from_utf8_lossy(parameter),
                         if path.is_empty() {
                             "not be empty"
                         } else {
@@ -469,10 +494,31 @@ impl Runtime {
                 Some(Value::Int(flags)) => flags,
                 _ => 0x10,
             };
+            if glob && !path.starts_with(b"glob://") {
+                let mut prefixed = b"glob://".to_vec();
+                prefixed.extend_from_slice(&path);
+                path = prefixed;
+            }
             self.directory_open(&object, path, flags, canonical, line)?;
             return Ok(Value::Null);
         }
         match name {
+            b"count" => {
+                let data = state.borrow();
+                let count = data.handle.as_ref().and_then(|handle| {
+                    let kind = handle.kind.borrow();
+                    if let Kind::Stream(stream) = &*kind
+                        && let Backend::Directory(directory) = &stream.backend
+                    {
+                        directory.glob().map(|glob| glob.count())
+                    } else {
+                        None
+                    }
+                });
+                count.map(|count| Value::Int(count as i64)).ok_or_else(|| {
+                    Error::new(ErrorKind::Error, "GlobIterator is not initialized", line)
+                })
+            }
             b"getflags" => Ok(Value::Int(state.borrow().flags & 0x7ff0)),
             b"setflags" => {
                 let Value::Int(flags) = self.lookup(b"flags").unwrap() else {

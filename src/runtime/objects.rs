@@ -688,6 +688,15 @@ impl Runtime {
                 line,
             ));
         }
+        if object.class.is_a(b"GlobIterator")
+            && directory_iterator::state(&object).borrow().handle.is_none()
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "The parent constructor was not called: the object is in an invalid state",
+                line,
+            ));
+        }
         let function = self.instance_method(&object.class, name);
         if function
             .as_ref()

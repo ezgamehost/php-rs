@@ -146,11 +146,7 @@ impl Runtime {
         if path.is_empty() {
             return Ok(Value::Bool(false));
         }
-        let filename = path.strip_prefix(b"file://").unwrap_or(&path);
-        let resolved = self
-            .working_directory()
-            .join(crate::source::path_from_bytes(filename));
-        let directory = match Directory::open(&resolved) {
+        let directory = match Directory::open_stream(&path, &self.working_directory()) {
             Ok(directory) => directory,
             Err(error) => {
                 let message = streams::io_message(&error);

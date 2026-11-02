@@ -1,0 +1,51 @@
+PHP 8.5.0 glob iterator hillclimb
+Baseline: 988fdbcd06020c4751ed8a478f650d5b708db50b
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 534 passed, 150 failed, 94 unsupported
+After: 778 cases; 536 passed, 148 failed, 94 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/spl/tests/GlobIterator_constructor_count.phpt
+NEW PASS: ext/spl/tests/GlobIterator_internal_null_pointer.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match wildcard and POSIX class expansion, relative paths,
+empty streams, counts, rewind snapshots, stream operations, and lifecycle errors.
+Separately executing the upstream dit_002 FILE section matches PHP output/status;
+its SKIPIF section remains unsupported and is not included in the new passes.
+bug51068 and gh17067 remain blocked by missing touch() and mkdir() functions.
+Custom stream wrappers, open_basedir, SplFileObject, collector accounting, and
+complete mutation/destructor timing remain unfinished.
+Full log prefix: /tmp/php-rs-glob-*2.log.

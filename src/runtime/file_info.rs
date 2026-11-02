@@ -30,8 +30,10 @@ impl FileInfoData {
             && let Some(directory) = &self.directory
             && directory.borrow().active
         {
-            let mut filename = self.path.clone();
-            filename.push(b'/');
+            let mut filename = self.effective_path();
+            if !filename.is_empty() {
+                filename.push(b'/');
+            }
             filename.extend_from_slice(&directory.borrow().entry);
             self.filename = Some(filename);
         }
@@ -48,10 +50,17 @@ impl FileInfoData {
         }
         self.filename.clone()
     }
+    fn effective_path(&self) -> Vec<u8> {
+        self.directory
+            .as_ref()
+            .and_then(|directory| directory_iterator::glob_path(&directory.borrow()))
+            .unwrap_or_else(|| self.path.clone())
+    }
     fn basename(&self) -> Option<&[u8]> {
         self.filename.as_deref().map(|name| {
-            if !self.path.is_empty() && self.path.len() < name.len() {
-                &name[self.path.len() + 1..]
+            let path = self.effective_path();
+            if !path.is_empty() && path.len() < name.len() {
+                &name[path.len() + 1..]
             } else {
                 name
             }
@@ -208,7 +217,7 @@ impl Runtime {
         };
         let data = object.file_info.borrow().as_ref().unwrap().clone();
         match name {
-            b"getpath" => Ok(Value::String(data.path.into())),
+            b"getpath" => Ok(Value::String(data.effective_path().into())),
             b"getpathname" | b"__tostring" => {
                 Ok(Value::String(pathname.unwrap_or_default().into()))
             }
@@ -229,7 +238,11 @@ impl Runtime {
                 {
                     props.insert(
                         ArrayKey::String(b"\0DirectoryIterator\0glob".to_vec()),
-                        Value::Bool(false),
+                        if directory_iterator::glob_path(&directory.borrow()).is_some() {
+                            Value::String(data.path.clone().into())
+                        } else {
+                            Value::Bool(false)
+                        },
                     );
                     props.insert(
                         ArrayKey::String(b"\0RecursiveDirectoryIterator\0subPathName".to_vec()),
