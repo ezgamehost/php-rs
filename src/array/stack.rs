@@ -16,7 +16,7 @@ impl PhpArray {
             *position = (*position).min(len);
         }
         self.cursor = 0;
-        value.dereferenced()
+        value
     }
 
     pub(crate) fn shift(&mut self) -> Value {
@@ -51,7 +51,7 @@ impl PhpArray {
         }
         self.next_index = Some(numeric);
         self.cursor = 0;
-        value.dereferenced()
+        value
     }
 
     pub(crate) fn unshift(&mut self, values: &Self, line: usize) -> Result<(), Error> {

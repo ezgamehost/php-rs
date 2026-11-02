@@ -26,7 +26,7 @@ impl Runtime {
         } else {
             cell(first)
         };
-        mutate(&mut source.borrow_mut(), |array| {
+        let result = mutate(&mut source.borrow_mut(), |array| {
             // Native parsing validates and separates the first argument before
             // rejecting unknown named variadic arguments.
             if extra
@@ -55,7 +55,11 @@ impl Runtime {
                     Ok(Value::Int(array.len() as i64))
                 }
             }
-        })
+        });
+        // The removed value may refer to the array variable itself. Finish
+        // updating that variable and release its mutable borrow before reading
+        // the reference's current value.
+        result.map(|value| value.dereferenced())
     }
 }
 

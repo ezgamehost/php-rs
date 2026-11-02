@@ -136,10 +136,13 @@ new request. The CLI returns the low eight bits of the requested status.
   references and omitting undefined locals and the implicit `$this` context value.
 - `array_splice` edits arrays by reference, preserves string keys and reference cells,
   renumbers numeric keys, converts replacements, and resets the internal cursor.
-  Sparse-table iterator history and some reentrant mutation timing remain incomplete.
+  Discarded removals run destructors before rebuilding the table, preserve retained
+  aliases and exception traces, and detect destructor-driven array replacement.
+  Sparse-table iterator history and some coercion/reentrant timing remain incomplete.
 - `array_push`, `array_pop`, `array_shift`, and `array_unshift` support reference
   targets, copy-on-write, numeric append-key restoration, and cursor/iterator updates.
   Pop/shift return values without retaining the removed element’s reference binding.
+  Self-referencing removals read the updated array after releasing its write borrow.
 - `array_column` extracts array entries or visible/magic object properties, supports
   optional index columns, preserves null values, and returns dereferenced values.
 - `array_diff` and `array_intersect`, including their `_key` and `_assoc` variants,

@@ -96,8 +96,10 @@ impl Runtime {
         }
         let target =
             self.method_target(method, object.class.clone(), Some(object.clone()), line)?;
-        self.invoke_at(target, &[], line, false, shutdown || self.collecting_cycles)
-            .map(drop)
+        let internal = shutdown
+            || self.collecting_cycles
+            || self.trace_frames.last().is_some_and(|frame| frame.internal);
+        self.invoke_at(target, &[], line, false, internal).map(drop)
     }
 
     pub(super) fn shutdown_destructors(&mut self) -> Result<(), Error> {

@@ -285,6 +285,10 @@ Array and binary-string shuffling in `src/array.rs` and
 `src/runtime/mersenne_twister.rs` adapts PHP 8.5.0
 `ext/standard/array.c` and `ext/standard/string.c`, copyright (c) The PHP Group.
 
+Splice deletion, destructor timing, and mutation checks in `src/array.rs` and
+`src/runtime/array_splice.rs` adapt PHP 8.5.0's `php_splice` in
+`ext/standard/array.c`, copyright (c) The PHP Group.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

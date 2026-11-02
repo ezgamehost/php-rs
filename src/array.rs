@@ -111,6 +111,12 @@ pub struct PhpArray {
     /// exited loop alive and allow a loop to resume after copy-on-write.
     iterators: RefCell<Vec<(Weak<()>, usize)>>,
 }
+pub(crate) struct DiscardSplice {
+    start: usize,
+    pub keys: Vec<ArrayKey>,
+    iterators: Vec<(Weak<()>, usize)>,
+}
+
 impl Clone for PhpArray {
     fn clone(&self) -> Self {
         let iterators: Vec<_> = self
@@ -153,18 +159,15 @@ impl PartialEq for PhpArray {
     }
 }
 impl PhpArray {
-    pub(crate) fn splice(
-        &mut self,
+    fn splice_iterators(
+        &self,
         start: usize,
         end: usize,
-        replacement: &Self,
+        replacement_len: usize,
         result_used: bool,
-        line: usize,
-    ) -> Result<Self, Error> {
-        let mut output = Self::with_capacity(self.len() - (end - start) + replacement.len(), line)?;
-        let mut removed = Self::with_capacity(if result_used { end - start } else { 0 }, line)?;
-        output.iterators = std::mem::take(&mut self.iterators);
-        let iterators = output.iterators.get_mut();
+    ) -> Vec<(Weak<()>, usize)> {
+        let mut positions = self.iterators.borrow().clone();
+        let iterators = &mut positions;
         iterators.retain(|(token, _)| token.strong_count() != 0);
         // Dense numeric arrays take PHP's packed-table path. The runtime does
         // not yet retain the physical bucket history of sparse/mixed tables.
@@ -184,7 +187,7 @@ impl PhpArray {
         // PHP remaps tail buckets in order. A position shifted forward can be
         // encountered again. USED_RET also affects the native running position:
         // copying removed entries advances it, while discarding them does not.
-        let tail_start = if result_used { end } else { start } + replacement.len();
+        let tail_start = if result_used { end } else { start } + replacement_len;
         let mut next_iterator = iterators
             .iter()
             .map(|(_, position)| *position)
@@ -205,6 +208,48 @@ impl PhpArray {
                 .filter(|position| *position > index)
                 .min();
         }
+        positions
+    }
+
+    pub(crate) fn plan_discard_splice(
+        &self,
+        start: usize,
+        end: usize,
+        replacement_len: usize,
+    ) -> DiscardSplice {
+        DiscardSplice {
+            start,
+            keys: self.entries[start..end]
+                .iter()
+                .map(|(key, _)| key.clone())
+                .collect(),
+            iterators: self.splice_iterators(start, end, replacement_len, false),
+        }
+    }
+
+    pub(crate) fn finish_discard_splice(
+        &mut self,
+        plan: DiscardSplice,
+        replacement: &Self,
+        line: usize,
+    ) -> Result<(), Error> {
+        self.splice(plan.start, plan.start, replacement, false, line)?;
+        self.iterators = RefCell::new(plan.iterators);
+        Ok(())
+    }
+
+    pub(crate) fn splice(
+        &mut self,
+        start: usize,
+        end: usize,
+        replacement: &Self,
+        result_used: bool,
+        line: usize,
+    ) -> Result<Self, Error> {
+        let mut output = Self::with_capacity(self.len() - (end - start) + replacement.len(), line)?;
+        let mut removed = Self::with_capacity(if result_used { end - start } else { 0 }, line)?;
+        output.iterators =
+            RefCell::new(self.splice_iterators(start, end, replacement.len(), result_used));
         let mut entries = std::mem::take(&mut self.entries).into_iter();
         for (key, value) in entries.by_ref().take(start) {
             splice_insert(&mut output, key, splice_value(value), line)?;
@@ -448,8 +493,12 @@ impl PhpArray {
         Ok(())
     }
     pub fn remove(&mut self, key: &ArrayKey) {
+        drop(self.take(key));
+    }
+
+    pub(crate) fn take(&mut self, key: &ArrayKey) -> Option<Value> {
         if let Some(index) = self.positions.remove(key) {
-            self.entries.remove(index);
+            let (_, value) = self.entries.remove(index);
             if self.cursor > index {
                 self.cursor -= 1;
             }
@@ -461,6 +510,9 @@ impl PhpArray {
             for i in index..self.entries.len() {
                 self.positions.insert(self.entries[i].0.clone(), i);
             }
+            Some(value)
+        } else {
+            None
         }
     }
 }

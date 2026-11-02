@@ -2377,6 +2377,40 @@ reentrant collection, basic collected counts, output, and exit status.
 PHP 8.5.0's Zend object lifecycle, executor shutdown, and VM sources establish
 the destruction behavior; other previously documented runtime gaps still apply.
 
+The [splice destructor slice](conformance/php-8.5.0-splice-destructors-hillclimb.txt)
+adds **nine upstream array passes**, with **zero regressions** across all six
+suites. Array reaches **768 / 20 / 52**; the other five suites retain their
+previous counts. The focused set improves from **9 / 11 / 1** to **18 / 2 / 1**.
+Seven gains cover destructor-driven splice mutations, and two remove Rust borrow
+panics when `array_pop` or `array_shift` removes a self-reference.
+
+Discarded splice removals now delete entries and invoke destructors one at a
+time before rebuilding the table. The native operation retains the original
+array while user writes separate it. An unretained original produces PHP's
+modification error; retained aliases and exception trace arguments observe the
+completed table. Later deletions continue after a destructor throws, preserving
+exception chains and internal callback trace sites. Scalar-only removals retain
+the linear bulk path. Iterator mapping, key renumbering, and pointer reset remain
+shared with ordinary splicing. Pop/shift dereference their removed values only
+after releasing the source variable's mutable borrow.
+
+The private splice guard uses a narrowly scoped unsafe write to implement PHP's
+native exception to copy-on-write. Its input is separated first, and its two
+mutation methods execute no PHP or retain borrowed table views. The aliasing
+requirements follow Rust's [Rc mutable access contract](https://doc.rust-lang.org/std/rc/struct.Rc.html#method.get_mut_unchecked).
+Eleven affected upstream FILE extracts also execute under Miri and match reference
+output/status. Miri requires an isolated copy that skips its unsupported stdin
+seek probe; splice code is unchanged, and leak checking is disabled because the
+runtime still has incomplete cycle collection. This is additional validation,
+not additional PHPT passes or a general memory-safety proof.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or matrices were added. Direct reference probes
+also match partial-array visibility during destruction, retained aliases,
+multiple throwing destructors, exception-chain getters, and trace arguments.
+Sparse physical bucket history, complete iterator behavior under reentrancy,
+coercion callback timing, and previously documented runtime gaps remain.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2388,7 +2422,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 283 | 172 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 759 | 29 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 768 | 20 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 399 | 179 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
