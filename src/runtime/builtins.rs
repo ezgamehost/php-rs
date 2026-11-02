@@ -6,6 +6,8 @@ pub(super) enum Builtin {
     Exit,
     Assert,
     AssertOptions,
+    RandomBytes,
+    RandomInt,
     Clone,
     Strlen,
     StrRepeat,
@@ -169,6 +171,8 @@ impl Builtin {
             b"exit" | b"die" => Self::Exit,
             b"assert" => Self::Assert,
             b"assert_options" => Self::AssertOptions,
+            b"random_bytes" => Self::RandomBytes,
+            b"random_int" => Self::RandomInt,
             b"clone" => Self::Clone,
             b"strlen" => Self::Strlen,
             b"str_repeat" => Self::StrRepeat,
@@ -470,6 +474,8 @@ impl Builtin {
         let definitions: &[(&str, bool, bool)] = match self {
             Self::AssertOptions => &[("option", false, false), ("value", true, false)],
             Self::Assert => &[("assertion", false, false), ("description", true, false)],
+            Self::RandomBytes => &[("length", false, false)],
+            Self::RandomInt => &[("min", false, false), ("max", false, false)],
             Self::ResourceInfo(_) => &[("resource", false, false)],
             Self::FileExists => &[("filename", false, false)],
             Self::FileGetContents => &[
@@ -1186,6 +1192,8 @@ impl Runtime {
             | Builtin::AutoloadExtensions => unreachable!(),
             Builtin::AssertOptions => self.assert_options(&args, line),
             Builtin::Assert => self.assert_value(&args, line),
+            Builtin::RandomBytes => self.random_bytes(&args, line),
+            Builtin::RandomInt => self.random_int(&args, line),
             Builtin::Clone => self.clone_value(first, args[1].as_ref(), line),
             Builtin::StrRepeat
             | Builtin::StrRev

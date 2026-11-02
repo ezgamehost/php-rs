@@ -83,6 +83,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - `round` supports all eight `RoundingMode` enum cases, legacy integer modes,
   signed zero, and decimal precision correction. `number_format` supports exact
   integer rounding, negative decimal places, and binary string separators.
+- `random_bytes` and `random_int` use operating-system randomness on macOS and
+  Linux. Integer ranges include both endpoints, cover the full signed 64-bit
+  range, and avoid modulo bias. Entropy-source failures throw
+  `Random\RandomException`; other operating systems remain unsupported.
 - Trigonometric/inverse and hyperbolic/inverse functions, `atan2`, `hypot`,
   `exp`/`expm1`, `log`/`log10`/`log1p`, degree/radian conversion, `pi`, and
   PHP's standard mathematical constants.

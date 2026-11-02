@@ -263,6 +263,10 @@ Thies C. Arntzen, and Sascha Schumann.
 bailout behavior from PHP 8.5.0's `ext/standard/assert.c`, copyright (c) The PHP
 Group, by Thies C. Arntzen.
 
+`src/runtime/random.rs` adapts random-function validation and unbiased integer
+range sampling from PHP 8.5.0's `ext/random/random.c` and `ext/random/csprng.c`,
+copyright (c) The PHP Group, by Tim Düsterhus and Go Kudo.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

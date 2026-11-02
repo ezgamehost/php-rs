@@ -15,6 +15,7 @@ pub enum ErrorKind {
     ValueError,
     UnhandledMatchError,
     AssertionError,
+    RandomException,
     Error,
 }
 

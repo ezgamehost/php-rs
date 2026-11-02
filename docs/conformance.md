@@ -2259,6 +2259,31 @@ Clippy pass. No custom tests or generated matrices were added. PHP 8.5.0
 behavior. Property-hook override checks and other documented inheritance gaps
 remain unfinished.
 
+The [secure random function slice](conformance/php-8.5.0-csprng-hillclimb.txt)
+adds **11 Zend passes** and **one array pass**, reaching **2439 / 2409 / 408**
+and **738 / 50 / 52**, respectively. There are zero regressions across all six
+suites (8,267 fixtures). Four upstream random-function fixtures improve from
+**0 / 4 / 0** to **4 / 0 / 0**; all 15 focused random-function/dependent cases pass.
+Three gains unblock existing Deprecated attribute tests.
+
+`random_bytes` and `random_int` validate native integer parameters and use
+operating-system entropy: CCRandomGenerateBytes on macOS and blocking getrandom
+on Linux. Integer sampling uses rejection to avoid modulo bias, includes both
+endpoints, covers the full signed 64-bit range, and returns equal endpoints
+without requesting entropy. Failed entropy requests throw Random\RandomException,
+which inherits Exception. Linux handles short reads and interruptions; other
+operating systems and kernels lacking getrandom remain unsupported.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or generated matrices were added. One direct CLI
+probe matches reference construction, inheritance, message/code, catch behavior,
+and exit status for Random\RandomException. Local runtime validation uses macOS;
+Linux compilation is covered by CI. Entropy-source failures and allocation
+failures were not injected. PHP 8.5.0 `ext/random/random.c`, `ext/random/csprng.c`,
+`ext/random/random.stub.php`, and the installed CommonCrypto header establish
+the implementation. Mersenne Twister, rand/mt_rand, Random engines, Randomizer,
+and general internal reflection metadata remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2266,11 +2291,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2428 | 2420 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2439 | 2409 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 737 | 51 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 738 | 50 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

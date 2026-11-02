@@ -10,6 +10,7 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
         b"stringable" => ("Stringable", None),
         b"throwable" => ("Throwable", None),
         b"reflectionexception" => ("ReflectionException", Some("Exception")),
+        b"random\\randomexception" => ("Random\\RandomException", Some("Exception")),
         b"exception" => ("Exception", None),
         b"errorexception" => ("ErrorException", Some("Exception")),
         b"logicexception" => ("LogicException", Some("Exception")),
@@ -72,7 +73,11 @@ impl Runtime {
             }"
             .to_owned()
         } else if let Some(parent) = parent_name {
-            format!("<?php class {canonical} extends {parent} {{}}")
+            if let Some((namespace, name)) = canonical.rsplit_once('\\') {
+                format!("<?php namespace {namespace}; class {name} extends \\{parent} {{}}")
+            } else {
+                format!("<?php class {canonical} extends {parent} {{}}")
+            }
         } else {
             format!("<?php class {canonical} implements Throwable {{
             public function __construct(string $message='', int $code=0, ?Throwable $previous=null) {{}}
@@ -275,7 +280,11 @@ impl Runtime {
         if error.kind == ErrorKind::UnwindExit || error.throwable.is_some() {
             return error;
         }
-        let name = format!("{:?}", error.kind);
+        let name = if error.kind == ErrorKind::RandomException {
+            "Random\\RandomException".to_owned()
+        } else {
+            format!("{:?}", error.kind)
+        };
         let class = self.find_class(name.as_bytes()).expect("error class");
         let handle = self.allocate_object_handle();
         error.throwable = Some(Rc::new(crate::PhpObject {
