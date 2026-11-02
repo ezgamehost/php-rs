@@ -99,6 +99,7 @@ mod reference_types;
 pub(crate) mod reflection;
 mod rounding;
 mod scalar_values;
+mod scanf;
 mod scope_slots;
 mod sensitive_parameters;
 mod serialization;

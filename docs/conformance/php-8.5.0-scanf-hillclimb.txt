@@ -1,0 +1,139 @@
+PHP 8.5.0 sscanf/fscanf hillclimb
+Baseline: f3bfdf2886328c7df24b61596146d67e59f92875
+
+zend
+Before: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+After: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 14; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug21730.phpt
+NEW PASS: ext/standard/tests/strings/bug27295.phpt
+NEW PASS: ext/standard/tests/strings/bug38322.phpt
+NEW PASS: ext/standard/tests/strings/bug42107.phpt
+NEW PASS: ext/standard/tests/strings/bug47322.phpt
+NEW PASS: ext/standard/tests/strings/gh15552.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic1.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic2.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic3.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic4.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic5.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic7.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_basic8.phpt
+NEW PASS: ext/standard/tests/strings/sscanf_error.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 180 passed, 208 failed, 508 unsupported
+After: 896 cases; 230 passed, 158 failed, 508 unsupported
+New passes: 50; regressions: 0
+NEW PASS: ext/standard/tests/file/fscanf.phpt
+NEW PASS: ext/standard/tests/file/fscanf_error.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation1.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation10.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation11.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation12.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation13.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation14.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation15.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation16.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation17.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation18.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation19.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation2.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation20.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation21.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation22.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation23.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation24.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation25.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation26.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation27.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation28.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation29.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation30.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation31.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation32.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation35.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation36.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation37.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation38.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation4.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation41.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation42.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation43.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation44.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation45.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation46.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation47.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation48.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation49.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation5.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation50.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation51.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation52.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation53.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation54.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation6.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation7.phpt
+NEW PASS: ext/standard/tests/file/fscanf_variation8.phpt
+
+dir
+Before: 73 cases; 18 passed, 11 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 8; regressions: 0
+NEW PASS: ext/standard/tests/dir/readdir_basic.phpt
+NEW PASS: ext/standard/tests/dir/readdir_variation3.phpt
+NEW PASS: ext/standard/tests/dir/readdir_variation6.phpt
+NEW PASS: ext/standard/tests/dir/rewinddir_basic.phpt
+NEW PASS: ext/standard/tests/dir/scandir_basic.phpt
+NEW PASS: ext/standard/tests/dir/scandir_variation10.phpt
+NEW PASS: ext/standard/tests/dir/scandir_variation4.phpt
+NEW PASS: ext/standard/tests/dir/scandir_variation9.phpt
+
+streams
+Before: 157 cases; 26 passed, 80 failed, 51 unsupported
+After: 157 cases; 26 passed, 80 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,079 passed, 3,036 failed, 1,441 unsupported.
+72 new passes (14 strings, 50 file, 8 dir); zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+Direct PHP comparisons match typed-reference failures with continued assignment,
+aliased output variables, null-byte truncation, unsigned overflow, incomplete
+exponents, character whitespace behavior, and destructor timing and exceptions.
+The scanner supports positional and suppressed fields, widths, integer bases,
+decimal floats, strings, scansets and byte counts, with native format diagnostics.
+fscanf reads one physical line before format validation and returns false at EOF.
+Configurable character locales and custom stream wrappers remain unfinished.
+Full logs: /tmp/php-rs-scanf-*2.log.

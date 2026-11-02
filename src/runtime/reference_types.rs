@@ -184,6 +184,10 @@ impl Runtime {
         Ok(())
     }
 
+    pub(super) fn reference_is_typed(&mut self, reference: &Cell) -> bool {
+        !self.reference_sources(reference).is_empty()
+    }
+
     fn reference_sources(&mut self, reference: &Cell) -> Vec<Source> {
         let identity = Rc::as_ptr(reference) as usize;
         let Some(constraints) = self.reference_constraints.get_mut(&identity) else {

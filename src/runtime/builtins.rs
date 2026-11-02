@@ -29,6 +29,7 @@ pub(super) enum Builtin {
     Strtok,
     StrGetCsv,
     StreamCsv(bool),
+    Scan(bool),
     Fgets,
     TemporaryFile,
     TemporaryName,
@@ -224,6 +225,8 @@ impl Builtin {
             b"fgetcsv" => Self::StreamCsv(false),
             b"fputcsv" => Self::StreamCsv(true),
             b"fgets" => Self::Fgets,
+            b"sscanf" => Self::Scan(false),
+            b"fscanf" => Self::Scan(true),
             b"tmpfile" => Self::TemporaryFile,
             b"tempnam" => Self::TemporaryName,
             b"sys_get_temp_dir" => Self::TemporaryDirectory,
@@ -630,6 +633,11 @@ impl Builtin {
             ],
             Self::Unlink => &[("filename", false, false), ("context", true, false)],
             Self::Fgets => &[("stream", false, false), ("length", true, false)],
+            Self::Scan(stream) => &[
+                (if stream { "stream" } else { "string" }, false, false),
+                ("format", false, false),
+                ("vars", false, true),
+            ],
             Self::TemporaryFile | Self::TemporaryDirectory => &[],
             Self::TemporaryName => &[("directory", false, false), ("prefix", false, false)],
             Self::StreamGetContents => &[
@@ -1024,6 +1032,7 @@ impl Builtin {
             .map(|(name, optional, variadic)| Parameter {
                 attributes: Vec::new(),
                 by_reference: matches!(self, Self::ArrayMultisort)
+                    || (matches!(self, Self::Scan(_)) && *name == "vars")
                     || (matches!(self, Self::Settype) && *name == "var")
                     || (matches!(self, Self::IsCallable) && *name == "callable_name")
                     || (matches!(self, Self::StrReplace(_)) && *name == "count")
@@ -1350,6 +1359,7 @@ impl Runtime {
             Builtin::Fopen => self.fopen(&args, line),
             Builtin::StreamCsv(write) => self.stream_csv(write, &name, &args, line),
             Builtin::Fgets => self.fgets(&name, &args, line),
+            Builtin::Scan(stream) => self.scanf(stream, &name, &args, extra, line),
             Builtin::StreamGetContents => self.stream_get_contents(&name, &args, line),
             Builtin::FileLines => self.file_lines(&args, line),
             Builtin::FileExists => self.file_path_operation(false, &args, line),

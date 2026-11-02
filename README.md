@@ -665,6 +665,11 @@ new request. The CLI returns the low eight bits of the requested status.
   existing separators, and PHP's zero/negative-width behavior.
 - `strtok` keeps request-local tokenization state, supports changing byte delimiters,
   and preserves PHP's continuation, exhaustion, and restart behavior.
+- `sscanf` and `fscanf` share numeric, string, scanset, positional, suppressed,
+  and byte-count conversions, with field widths, reference outputs, overflow and
+  partial-match behavior. `fscanf` consumes one physical line per call. Typed
+  references and destructors follow native assignment ordering; configurable
+  character locales remain unfinished.
 - `str_getcsv` parses quoted and unquoted fields, doubled quotes, configurable
   single-byte separators/enclosures/escapes, and PHP's unterminated-field behavior.
   It follows UTF-8 character scanning; configurable character locales are unfinished.
