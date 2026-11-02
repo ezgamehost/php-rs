@@ -290,6 +290,7 @@ fn finish(
                         let key =
                             runtime.array_iterator_offset_key(&object, &key, b"offsetget", line)?;
                         keys[0].cache_array_key(key.clone());
+                        runtime.prepare_recursive_parent_write(&object, &key);
                         match array_iterator::storage(&object) {
                             array_iterator::Storage::Array(source) => {
                                 result = Step::Follow(source, 0);

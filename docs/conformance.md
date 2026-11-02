@@ -2591,6 +2591,40 @@ Serializable/serialization, RecursiveArrayIterator and other SPL iterator classe
 exact overloaded-object handling beyond Closure/enum checks, cursor mutation edges,
 and previously listed runtime/harness limitations remain incomplete.
 
+The [RecursiveArrayIterator slice](conformance/php-8.5.0-recursive-array-iterator-hillclimb.txt)
+adds **six upstream SPL passes**, with **zero regressions** across the six full
+suites. SPL reaches **159 / 525 / 94**; other full-suite counts are unchanged.
+
+RecursiveArrayIterator extends ArrayIterator and implements RecursiveIterator,
+with tentative child-method return types and CHILD_ARRAYS_ONLY. hasChildren reads
+the native current entry; getChildren returns null at the end, reuses compatible
+object children, filters objects under CHILD_ARRAYS_ONLY, and otherwise invokes
+the same subclass constructor with the current value and flags. Scalar child
+requests reach the inherited constructor's native type error. Constructor calls
+use the internal callback frame, and failed child construction runs the child's
+destructor, following this factory's behavior rather than ordinary new.
+
+Array child construction installs an internal parent storage link. Direct child
+writes update that parent entry; writes through the parent detach it, repeated
+getChildren calls replace the current link, and child sorting separates its result
+from the parent. Constructor reentry reconnects array storage. Weak links avoid
+keeping parents alive, and child-slot lookup is refreshed when destructor payloads
+move to queued objects. Ordinary PHP references remain distinct from these links.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, Clippy,
+and diff checks pass. Direct PHP CLI comparisons match child writes, parent
+separation, repeated children, constructor reentry, sort detachment, subclass
+construction, scalar errors/traces, and constructor-failure destruction. No custom
+tests or matrices were added.
+
+A verified limitation remains: if a nested array is copied out after getChildren,
+PHP's direct native child writes also mutate those captured array copies, while
+Rust currently separates them through copy-on-write. For example, after
+$p = new RecursiveArrayIterator([[1]]); $c = $p->getChildren(); $copy = $p[0];
+$c[0] = 2;, PHP exposes 2 in $copy[0] and Rust retains 1. This slice does not claim
+complete child alias semantics. RecursiveIteratorIterator and other SPL iterator
+classes, serialization, and prior runtime/harness gaps also remain incomplete.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2600,7 +2634,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2533 | 2315 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 287 | 168 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 153 | 531 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 159 | 525 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

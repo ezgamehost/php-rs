@@ -9,6 +9,7 @@ use crate::{
 
 pub(crate) struct ArrayIteratorData {
     pub storage: variables::Cell,
+    pub(super) child: Option<recursive_array_iterator::ChildLink>,
     pub flags: i64,
     iterator_class: Option<Rc<Class>>,
     sorting: usize,
@@ -19,6 +20,7 @@ impl Default for ArrayIteratorData {
     fn default() -> Self {
         Self {
             storage: cell(Value::Array(Rc::new(PhpArray::default()))),
+            child: None,
             flags: 0,
             iterator_class: None,
             sorting: 0,
@@ -40,6 +42,7 @@ impl ArrayIteratorData {
                 Value::Object(object.clone())
             }),
             flags: data.flags,
+            child: None,
             iterator_class: data.iterator_class.clone(),
             sorting: 0,
             cursor: PropertyCursor::default(),
@@ -216,6 +219,14 @@ impl Runtime {
             }
             _ => unreachable!("native array|object parameter"),
         };
+        let child = object
+            .array_iterator
+            .borrow()
+            .as_ref()
+            .unwrap()
+            .child
+            .clone();
+        let is_array = matches!(value, Value::Array(_));
         let old = {
             let mut state = object.array_iterator.borrow_mut();
             let data = state.as_mut().unwrap();
@@ -223,9 +234,28 @@ impl Runtime {
             // the operation that replaces them. Keep active sort slots stable.
             data.flags |= flags;
             data.cursor = PropertyCursor::default();
-            data.storage.replace(value)
+            if child.is_some() {
+                std::mem::replace(&mut data.storage, cell(value))
+                    .borrow()
+                    .clone()
+            } else {
+                data.storage.replace(value)
+            }
         };
         drop(old);
+        if let Some(child) = child {
+            self.register_recursive_child(object);
+            if is_array {
+                let source = object
+                    .array_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .storage
+                    .clone();
+                self.replace_recursive_parent(&child, Value::Indirect(source));
+            }
+        }
         self.drain_destructors(Ok(()), line)
     }
 
@@ -299,6 +329,7 @@ impl Runtime {
         let (canonical, interface) = match name {
             b"arrayiterator" => ("ArrayIterator", "SeekableIterator"),
             b"arrayobject" => ("ArrayObject", "IteratorAggregate"),
+            b"recursivearrayiterator" => ("RecursiveArrayIterator", "RecursiveIterator"),
             _ => return None,
         };
         if let Some(class) = self.builtin_classes.borrow().get(name) {
@@ -337,9 +368,19 @@ impl Runtime {
             public function natsort(): true {}
             public function natcasesort(): true {}";
         let (constructor, extra) = extra.split_once('\n').unwrap();
-        let code = format!(
-            "<?php class {canonical} implements {interface}, ArrayAccess, Countable {{ {constructor} {common} {extra} public function __debugInfo(): array {{}} }}"
-        );
+        let recursive = name == b"recursivearrayiterator";
+        let code = if recursive {
+            "<?php class RecursiveArrayIterator extends ArrayIterator implements RecursiveIterator {
+                public const int CHILD_ARRAYS_ONLY = 4;
+                public function hasChildren(): bool {}
+                public function getChildren(): ?RecursiveArrayIterator {}
+            }"
+            .to_owned()
+        } else {
+            format!(
+                "<?php class {canonical} implements {interface}, ArrayAccess, Countable {{ {constructor} {common} {extra} public function __debugInfo(): array {{}} }}"
+            )
+        };
         let (mut statements, _, _) =
             parser::parse(lexer::lex(code.as_bytes()).expect("native SPL array source"))
                 .expect("native ArrayIterator declaration");
@@ -351,16 +392,25 @@ impl Runtime {
             method.native = Some(NativeMethod::ArrayIterator);
             method.tentative_return_type = method.return_type.take();
         }
+        let parent = recursive.then(|| self.find_class(b"ArrayIterator").unwrap());
+        let mut methods = declaration.methods.clone();
+        if let Some(parent) = &parent {
+            methods.extend(parent.methods.iter().cloned());
+        }
         let class = Rc::new(Class {
             aliases: RefCell::default(),
             name: declaration.name.clone(),
-            methods: declaration.methods.clone(),
+            methods,
             declaration,
-            parent: None,
-            interfaces: [interface.as_bytes(), b"ArrayAccess", b"Countable"]
-                .iter()
-                .map(|name| self.find_class(name).unwrap())
-                .collect(),
+            parent,
+            interfaces: if recursive {
+                vec![interface.as_bytes()]
+            } else {
+                vec![interface.as_bytes(), b"ArrayAccess", b"Countable"]
+            }
+            .iter()
+            .map(|name| self.find_class(name).unwrap())
+            .collect(),
             properties: Vec::new(),
             static_properties: Vec::new(),
             allow_dynamic: false,
@@ -395,6 +445,9 @@ impl Runtime {
             .unwrap()
             .to_vec();
         match name.as_slice() {
+            b"haschildren" | b"getchildren" => {
+                self.recursive_array_iterator_child(&object, name == b"getchildren", line)
+            }
             b"__construct" => {
                 if supplied == 0 {
                     return Ok(Value::Null);
@@ -575,7 +628,14 @@ impl Runtime {
         // the original backing slot if a callback reinitializes the iterator.
         let sorted = source.replace(Value::Null);
         match backing {
-            Storage::Array(backing) => drop(backing.replace(sorted)),
+            Storage::Array(backing) => {
+                if let Some(child) = self.recursive_child_owner(&backing) {
+                    child.array_iterator.borrow_mut().as_mut().unwrap().storage = cell(sorted);
+                    self.register_recursive_child(&child);
+                } else {
+                    drop(backing.replace(sorted));
+                }
+            }
             Storage::Object(backing) => {
                 let Value::Array(sorted) = sorted else {
                     unreachable!()
@@ -658,6 +718,7 @@ impl Runtime {
         key: &ArrayKey,
         line: usize,
     ) -> Result<variables::Cell, Error> {
+        self.prepare_recursive_parent_write(object, key);
         match storage(object) {
             Storage::Array(source) => reference_paths::acquire(
                 source,

@@ -321,6 +321,10 @@ Native array-object comparison in `src/runtime/comparison.rs` also adapts
 and `src/runtime/iterator_helpers.rs` follows `Zend/zend_iterators.c`, copyright
 (c) The PHP Group.
 
+RecursiveArrayIterator child construction and storage links in
+`src/runtime/recursive_array_iterator.rs` adapt `ext/spl/spl_array.c`, copyright
+(c) The PHP Group.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

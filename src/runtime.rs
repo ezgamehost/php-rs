@@ -82,6 +82,7 @@ mod property_visibility;
 mod random;
 mod range;
 mod readonly;
+mod recursive_array_iterator;
 mod reference_paths;
 mod reference_types;
 pub(crate) mod reflection;
@@ -121,6 +122,7 @@ use variables::{Scope, cell};
 /// One request's variable scope, output, and diagnostics. Output survives errors.
 #[derive(Default)]
 pub struct Runtime {
+    recursive_child_slots: HashMap<usize, std::rc::Weak<crate::PhpObject>>,
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,

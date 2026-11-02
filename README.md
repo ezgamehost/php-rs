@@ -92,6 +92,10 @@ new request. The CLI returns the low eight bits of the requested status.
 - `ArrayObject` shares native storage, offsets, flags, sorting, and property routing,
   with storage exchange, independent storage clones, and configurable iterator
   factories. Its iterators share live storage and skip user constructors.
+- `RecursiveArrayIterator` provides child detection, `CHILD_ARRAYS_ONLY`, and
+  subclass child construction with parent storage links. Parent writes and child
+  sorting can separate storage. Propagation to separately captured nested-array
+  copies remains incomplete.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

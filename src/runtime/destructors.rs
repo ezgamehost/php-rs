@@ -38,6 +38,14 @@ impl Runtime {
             match event {
                 Destruction::Free(id) => self.object_store.borrow_mut().free.push(id),
                 Destruction::Object(object) => {
+                    if object
+                        .array_iterator
+                        .borrow()
+                        .as_ref()
+                        .is_some_and(|data| data.child.is_some())
+                    {
+                        self.register_recursive_child(&object);
+                    }
                     // The queue owns a replacement allocation. Refresh weak
                     // holders before aliases are used from the destructor.
                     self.inherit_reference_sources(&object);
