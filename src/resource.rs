@@ -23,6 +23,7 @@ pub(crate) struct Stream {
     pub(crate) backend: Backend,
     pub(crate) writable: bool,
     pub(crate) eof: bool,
+    pub(crate) read_buffer: ReadBuffer,
     pub(crate) position: u64,
     pub(crate) mode: Vec<u8>,
     pub(crate) context: Option<Rc<PhpResource>>,
@@ -30,7 +31,116 @@ pub(crate) struct Stream {
     pub(crate) remove_on_close: Option<std::path::PathBuf>,
 }
 
+#[derive(Debug, Default)]
+pub(crate) struct ReadBuffer {
+    bytes: Vec<u8>,
+    position: usize,
+    allocated: usize,
+}
+
+impl ReadBuffer {
+    pub(crate) fn bytes(&self) -> &[u8] {
+        &self.bytes[self.position..]
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.bytes.len() - self.position
+    }
+
+    pub(crate) fn consume(&mut self, count: usize) {
+        self.position += count;
+    }
+
+    pub(crate) fn clear(&mut self) {
+        self.bytes.clear();
+        self.position = 0;
+    }
+
+    pub(crate) fn fill_space(&mut self) -> io::Result<usize> {
+        if self.allocated - self.bytes.len() < 8192 && self.position != 0 {
+            self.bytes.drain(..self.position);
+            self.position = 0;
+        }
+        if self.allocated - self.bytes.len() < 8192 {
+            self.allocated = self
+                .allocated
+                .checked_add(8192)
+                .ok_or_else(|| io::Error::from(io::ErrorKind::OutOfMemory))?;
+        }
+        Ok(self.allocated - self.bytes.len())
+    }
+
+    pub(crate) fn append(&mut self, bytes: &[u8]) -> io::Result<()> {
+        self.bytes
+            .try_reserve(bytes.len())
+            .map_err(|_| io::Error::from(io::ErrorKind::OutOfMemory))?;
+        self.bytes.extend_from_slice(bytes);
+        Ok(())
+    }
+}
+
 impl Stream {
+    pub(crate) fn at_eof(&self) -> bool {
+        self.eof && self.read_buffer.len() == 0
+    }
+
+    pub(crate) fn read_uses_stdio(&self) -> bool {
+        self.read_buffer.len() == 0
+            && match &self.backend {
+                Backend::File(_) | Backend::StandardOutput(_) => true,
+                Backend::StandardInput(reader) => reader.buffer().is_empty(),
+                _ => false,
+            }
+    }
+
+    pub(crate) fn read_bytes(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+        // Plain files retain buffered read behavior once a record read has
+        // allocated their buffer. Memory and temporary streams use raw reads
+        // after draining it, as PHP's NO_BUFFER flag requires.
+        if self.read_buffer.len() == 0
+            && self.read_buffer.allocated != 0
+            && matches!(self.backend, Backend::File(_))
+            && !bytes.is_empty()
+        {
+            let capacity = self.read_buffer.fill_space()?;
+            let mut chunk = Vec::new();
+            chunk
+                .try_reserve_exact(capacity)
+                .map_err(|_| io::Error::from(io::ErrorKind::OutOfMemory))?;
+            chunk.resize(capacity, 0);
+            let count = self.backend.read(&mut chunk)?;
+            if count == 0 {
+                self.eof = true;
+                return Ok(0);
+            }
+            self.read_buffer.append(&chunk[..count])?;
+        }
+        let buffered = self.read_buffer.len().min(bytes.len());
+        if buffered != 0 {
+            bytes[..buffered].copy_from_slice(&self.read_buffer.bytes()[..buffered]);
+            self.read_buffer.consume(buffered);
+            return Ok(buffered);
+        }
+        self.backend.read(bytes)
+    }
+
+    pub(crate) fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
+        if let SeekFrom::Start(position) = position
+            && matches!(self.backend, Backend::File(_) | Backend::StandardInput(_))
+            && position > self.position
+            && position - self.position <= self.read_buffer.len() as u64
+        {
+            self.read_buffer
+                .consume((position - self.position) as usize);
+            return Ok(position);
+        }
+        let result = self.backend.seek(position);
+        if result.is_ok() || matches!(self.backend, Backend::File(_) | Backend::Memory(_)) {
+            self.read_buffer.clear();
+        }
+        result
+    }
+
     // PHP's truncate callbacks leave the logical position, EOF and stat cache
     // unchanged. Memory streams clamp only their internal cursor on shrink.
     pub(crate) fn truncate(&mut self, size: u64) -> Option<io::Result<()>> {
@@ -69,6 +179,10 @@ impl Stream {
     }
 
     pub(crate) fn write_bytes(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if self.read_buffer.len() != 0 && self.backend.seek(SeekFrom::Start(self.position)).is_ok()
+        {
+            self.read_buffer.clear();
+        }
         if self.mode.starts_with(b"a")
             && let Backend::Memory(buffer) = &mut self.backend
         {
@@ -122,9 +236,11 @@ impl Read for Backend {
             Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(9)),
             Self::Memory(buffer) => buffer.read(bytes),
             Self::Temporary(resource) => resource.with_stream(|stream| {
-                let count = stream.backend.read(bytes)?;
+                let count = stream.read_bytes(bytes)?;
                 stream.position += count as u64;
-                stream.eof = count == 0;
+                if count == 0 {
+                    stream.eof = true;
+                }
                 Ok(count)
             }),
         }
@@ -183,7 +299,7 @@ impl Seek for Backend {
             Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(29)),
             Self::Memory(buffer) => buffer.seek(position),
             Self::Temporary(resource) => resource.with_stream(|stream| {
-                let position = stream.backend.seek(position)?;
+                let position = stream.seek(position)?;
                 stream.position = position;
                 stream.eof = false;
                 Ok(position)
@@ -302,6 +418,7 @@ pub(crate) fn standard_stream(index: usize) -> io::Result<Stream> {
         },
         writable: index != 0,
         eof: false,
+        read_buffer: Default::default(),
         position,
         mode: if index == 0 {
             b"rb".to_vec()

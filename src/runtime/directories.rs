@@ -167,6 +167,7 @@ impl Runtime {
             backend: Backend::Directory(directory),
             writable: false,
             eof: false,
+            read_buffer: Default::default(),
             position: 0,
             mode: b"r".to_vec(),
             uri: None,

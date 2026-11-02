@@ -110,6 +110,7 @@ mod shutdown;
 mod sorting;
 mod static_members;
 pub(crate) mod stream_contexts;
+mod stream_records;
 mod streams;
 mod string_builtins;
 mod string_bytes;

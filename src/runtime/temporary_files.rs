@@ -102,6 +102,7 @@ impl Runtime {
                 backend: Backend::File(file),
                 writable: true,
                 eof: false,
+                read_buffer: Default::default(),
                 position: 0,
                 mode: b"r+b".to_vec(),
                 uri: Some(bytes),

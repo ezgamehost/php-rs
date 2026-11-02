@@ -59,7 +59,7 @@ impl Runtime {
         if !matches!(stream.backend, Backend::Temporary(_)) {
             add(b"timed_out", Value::Bool(false));
             add(b"blocked", Value::Bool(true));
-            add(b"eof", Value::Bool(stream.eof));
+            add(b"eof", Value::Bool(stream.at_eof()));
         }
         add(
             b"wrapper_type",
@@ -70,7 +70,10 @@ impl Runtime {
             Value::String(stream_type.as_bytes().to_vec().into()),
         );
         add(b"mode", Value::String(stream.mode.clone().into()));
-        add(b"unread_bytes", Value::Int(unread as i64));
+        add(
+            b"unread_bytes",
+            Value::Int((unread + stream.read_buffer.len()) as i64),
+        );
         add(b"seekable", Value::Bool(seekable));
         if let Some(uri) = &stream.uri {
             add(b"uri", Value::String(uri.clone().into()));
@@ -161,9 +164,6 @@ impl Runtime {
         if limit == Some(0) || matches!(stream.backend, Backend::Directory(_)) {
             return Ok(Vec::new());
         }
-        if matches!(stream.backend, Backend::File(_) | Backend::StandardInput(_)) {
-            self.file_stat_cache = [None, None];
-        }
         let mut bytes = Vec::new();
         let mut buffer = [0; 8192];
         loop {
@@ -173,7 +173,10 @@ impl Runtime {
             if wanted == 0 {
                 break;
             }
-            match stream.backend.read(&mut buffer[..wanted]) {
+            if stream.read_uses_stdio() {
+                self.file_stat_cache = [None, None];
+            }
+            match stream.read_bytes(&mut buffer[..wanted]) {
                 Ok(0) => {
                     stream.eof = true;
                     break;
@@ -237,13 +240,13 @@ impl Runtime {
         if matches!(stream.backend, Backend::Directory(_)) {
             return Ok(None);
         }
-        if matches!(stream.backend, Backend::File(_) | Backend::StandardInput(_)) {
-            self.file_stat_cache = [None, None];
-        }
         let mut text = Vec::new();
         while limit.is_none_or(|limit| text.len() < limit) {
             let mut byte = [0];
-            match stream.backend.read(&mut byte) {
+            if stream.read_uses_stdio() {
+                self.file_stat_cache = [None, None];
+            }
+            match stream.read_bytes(&mut byte) {
                 Ok(0) => {
                     stream.eof = true;
                     break;
@@ -553,6 +556,7 @@ impl Runtime {
             backend,
             writable,
             eof: false,
+            read_buffer: Default::default(),
             position: 0,
         }));
         if filename == b"php://temp" {
@@ -573,6 +577,7 @@ impl Runtime {
                 backend,
                 writable,
                 eof: false,
+                read_buffer: Default::default(),
                 position: 0,
             }));
             stream.backend = Backend::Temporary(inner);
@@ -718,8 +723,7 @@ impl Runtime {
         }
         // Plain streams invalidate PHP's request stat cache when their I/O may
         // change access, modification, or inode-change times.
-        if (matches!(operation, Operation::Read)
-            || (matches!(operation, Operation::Write) && !data.is_empty()))
+        if (matches!(operation, Operation::Write) && !data.is_empty())
             && matches!(
                 stream.backend,
                 Backend::File(_) | Backend::StandardInput(_) | Backend::StandardOutput(_)
@@ -734,10 +738,16 @@ impl Runtime {
             // additional chunk. It must not wait for the entire requested
             // length on an open pipe.
             let mut bytes = Vec::new();
-            let take = reader.buffer().len().min(length as usize);
+            let take = stream.read_buffer.len().min(length as usize);
+            bytes.extend_from_slice(&stream.read_buffer.bytes()[..take]);
+            stream.read_buffer.consume(take);
+            let take = reader.buffer().len().min(length as usize - bytes.len());
             bytes.extend_from_slice(&reader.buffer()[..take]);
             reader.consume(take);
             if bytes.len() < length as usize {
+                if reader.buffer().is_empty() {
+                    self.file_stat_cache = [None, None];
+                }
                 match reader.fill_buf() {
                     Ok(buffer) => {
                         stream.eof = buffer.is_empty();
@@ -779,7 +789,7 @@ impl Runtime {
                 *kind = Kind::Closed;
                 Value::Bool(true)
             }
-            Operation::Eof => Value::Bool(stream.eof),
+            Operation::Eof => Value::Bool(stream.at_eof()),
             Operation::Flush => Value::Bool(stream.backend.flush().is_ok()),
             Operation::Tell => {
                 if stream.position == u64::MAX {
@@ -799,7 +809,7 @@ impl Runtime {
                     _ => None,
                 };
                 let position = if let Some(seek) = seek {
-                    match stream.backend.seek(seek) {
+                    match stream.seek(seek) {
                         Ok(position) => Some(position),
                         Err(error) => {
                             if error.raw_os_error() == Some(29) {
@@ -867,7 +877,10 @@ impl Runtime {
                 let mut buffer = [0; 8192];
                 while bytes.len() < length as usize {
                     let wanted = buffer.len().min(length as usize - bytes.len());
-                    match stream.backend.read(&mut buffer[..wanted]) {
+                    if stream.read_uses_stdio() {
+                        self.file_stat_cache = [None, None];
+                    }
+                    match stream.read_bytes(&mut buffer[..wanted]) {
                         Ok(0) => {
                             stream.eof = true;
                             break;

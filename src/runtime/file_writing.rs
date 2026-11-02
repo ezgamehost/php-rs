@@ -3,7 +3,7 @@
 // See THIRD_PARTY_NOTICES.md for its license.
 use super::*;
 use crate::resource::{Backend, Kind, PhpResource};
-use std::io::Read;
+use std::io::{Read, Seek, SeekFrom};
 
 impl Runtime {
     pub(super) fn file_put_contents(
@@ -408,46 +408,71 @@ impl Runtime {
         if matches!(stream.backend, Backend::Directory(_)) {
             return Ok(None);
         }
-        let stdio = !mapped
-            && matches!(
-                stream.backend,
-                Backend::File(_) | Backend::StandardInput(_) | Backend::StandardOutput(_)
-            );
-        let result = stream.backend.read(bytes);
-        match result {
-            Ok(count) => {
+        let mut count = 0;
+        let mut stdio = false;
+        let mut failed = None;
+        while count < bytes.len() {
+            let buffered = stream.read_buffer.len() != 0
+                || matches!(&stream.backend, Backend::StandardInput(reader) if !reader.buffer().is_empty());
+            stdio |= !mapped && stream.read_uses_stdio();
+            let result = if mapped {
+                stream.backend.read(&mut bytes[count..])
+            } else {
+                stream.read_bytes(&mut bytes[count..])
+            };
+            match result {
+                Ok(0) => {
+                    stream.eof = true;
+                    break;
+                }
+                Ok(read) => count += read,
+                Err(error) => {
+                    failed = Some(error);
+                    break;
+                }
+            }
+            // Drain buffered bytes, then perform at most one additional raw
+            // read on standard input, so an open pipe cannot force a full read.
+            if !buffered
+                && matches!(
+                    stream.backend,
+                    Backend::StandardInput(_) | Backend::StandardOutput(_)
+                )
+            {
+                break;
+            }
+        }
+        if let Some(error) = failed {
+            drop(kind);
+            let warning = self.warn(format!(
+                "Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}",
+                error.raw_os_error().unwrap_or(0),
+                streams::io_message(&error)
+            ));
+            if let Kind::Stream(stream) = &mut *resource.kind.borrow_mut() {
                 stream.position = stream.position.wrapping_add(count as u64);
-                stream.eof = count == 0;
-                if stdio {
-                    self.file_stat_cache = [None, None];
+                if stdio && error.raw_os_error() != Some(9) {
+                    stream.eof = true;
                 }
-                Ok(Some(count))
             }
-            Err(error) => {
-                drop(kind);
-                let warning = self.warn(format!(
-                    "Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}",
-                    error.raw_os_error().unwrap_or(0),
-                    streams::io_message(&error)
-                ));
-                if stdio {
-                    if error.raw_os_error() != Some(9)
-                        && let Kind::Stream(stream) = &mut *resource.kind.borrow_mut()
-                    {
-                        stream.eof = true;
-                    }
-                    self.file_stat_cache = [None, None];
-                }
-                warning?;
-                Ok(None)
+            if stdio {
+                self.file_stat_cache = [None, None];
             }
+            warning?;
+            Ok((count != 0).then_some(count))
+        } else {
+            stream.position = stream.position.wrapping_add(count as u64);
+            if stdio {
+                self.file_stat_cache = [None, None];
+            }
+            Ok(Some(count))
         }
     }
 }
 
 fn mapped_remaining(resource: &Rc<PhpResource>) -> Option<u64> {
-    let kind = resource.kind.borrow();
-    let Kind::Stream(stream) = &*kind else {
+    let mut kind = resource.kind.borrow_mut();
+    let Kind::Stream(stream) = &mut *kind else {
         return None;
     };
     let metadata = match &stream.backend {
@@ -461,10 +486,16 @@ fn mapped_remaining(resource: &Rc<PhpResource>) -> Option<u64> {
     if !mapping_aligned(stream.position) || !metadata.is_file() {
         return None;
     }
-    metadata
+    let remaining = metadata
         .len()
         .checked_sub(stream.position)
-        .filter(|&size| size > 0)
+        .filter(|&size| size > 0)?;
+    if stream.read_buffer.len() != 0 {
+        stream.backend.seek(SeekFrom::Start(stream.position)).ok()?;
+        stream.read_buffer.clear();
+        stream.eof = false;
+    }
+    Some(remaining)
 }
 
 fn mapping_aligned(position: u64) -> bool {

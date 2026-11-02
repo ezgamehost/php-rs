@@ -671,3 +671,8 @@ Character reads and stream truncation in `src/runtime/streams.rs` and
 adapt PHP 8.5.0's `ext/standard/streamsfuncs.c` and `main/streams/streams.c`,
 copyright (c) The PHP Group. Mapped transfer ordering and ordinary-read stat-cache
 and error EOF handling follow `main/streams/{streams,plain_wrapper}.c`.
+
+`src/runtime/stream_records.rs`, read-buffer storage in `src/resource.rs`, and
+buffer integration in stream reads, writes, seeks, metadata and transfers adapt
+PHP 8.5.0's `ext/standard/streamsfuncs.c` and `main/streams/streams.c`, copyright
+(c) The PHP Group.

@@ -1,0 +1,79 @@
+PHP 8.5.0 buffered record reads hillclimb
+Baseline: d509eccb50f7f7bf6d814c571b0ef25cae847adf
+
+zend
+Before: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+After: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 295 passed, 93 failed, 508 unsupported
+After: 896 cases; 299 passed, 89 failed, 508 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/file/bug30362.phpt
+NEW PASS: ext/standard/tests/file/bug43522.phpt
+NEW PASS: ext/standard/tests/file/bug44607.phpt
+NEW PASS: ext/standard/tests/file/stream_get_line.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 28 passed, 78 failed, 51 unsupported
+After: 157 cases; 30 passed, 76 failed, 51 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/standard/tests/streams/bug63240.phpt
+NEW PASS: ext/standard/tests/streams/bug72221.phpt
+
+Total: 9,556 fixtures; 5,153 passed, 2,962 failed, 1,441 unsupported.
+6 new passes (4 file, 2 streams); zero regressions across all ten suites.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+stream_get_line implements bounded binary record reads, delimiter searches across
+buffer boundaries, zero-length 8 KiB default and reusable read-buffer storage.
+Unread bytes are shared with subsequent character/line/bulk reads, copies, writes,
+seeks and metadata. Truncation retains buffered bytes; buffer-only reads retain
+stat caches. Plain-file refills preserve read-ahead after a record read.
+Direct PHP comparisons match file/memory/temp and standard-input buffer handoff,
+binary delimiters, unread-byte counts, EOF, writes and forward seeks after records,
+truncation with stale buffered bytes, and copying buffered/fresh bytes together
+before a failed destination write. Existing large-record and chunk-boundary
+upstream fixtures now pass.
+Custom/nonblocking wrappers and complete buffering outside record reads remain
+unfinished; this is not a claim of full PHP stream conformance.
+Final upstream logs: /tmp/php-rs-records-*3.log.
+Rust validation logs: /tmp/php-rs-records-{tests,clippy}2.log.

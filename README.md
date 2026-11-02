@@ -262,6 +262,12 @@ new request. The CLI returns the low eight bits of the requested status.
   differing EOF/stat-cache effects of mapped and ordinary reads. Mapped ranges
   currently use owned buffers of up to 512 MiB; native memory mapping and Linux
   `copy_file_range` optimizations remain unfinished.
+- `stream_get_line` reads bounded records with binary delimiters, including
+  delimiters crossing buffer boundaries. A zero length uses PHP's 8 KiB default.
+  Buffered data is shared with later reads, writes, seeks, copies, and metadata;
+  unread bytes remain available after truncation, and buffer-only reads retain
+  stat caches. Custom/nonblocking wrappers and complete native buffering outside
+  record reads remain unfinished.
 - `stream_context_*` APIs create contexts, merge options, manage notification
   callbacks, and share a request's default context. Returned option arrays retain
   snapshots across later updates. Plain files and memory/directory streams lazily
