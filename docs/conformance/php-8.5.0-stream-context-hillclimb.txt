@@ -1,0 +1,83 @@
+PHP 8.5.0 stream context APIs hillclimb
+Baseline: 63242177eea55c6c623b360d44533e60dd00296c
+
+zend
+Before: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+After: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 147 passed, 241 failed, 508 unsupported
+After: 896 cases; 151 passed, 237 failed, 508 unsupported
+New passes: 4; regressions: 0
+NEW PASS: ext/standard/tests/file/file_put_contents.phpt
+NEW PASS: ext/standard/tests/file/readfile_error.phpt
+NEW PASS: ext/standard/tests/file/readfile_variation1.phpt
+NEW PASS: ext/standard/tests/file/unlink_basic.phpt
+
+dir
+Before: 73 cases; 18 passed, 11 failed, 44 unsupported
+After: 73 cases; 18 passed, 11 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 16 passed, 90 failed, 51 unsupported
+After: 157 cases; 26 passed, 80 failed, 51 unsupported
+New passes: 10; regressions: 0
+NEW PASS: ext/standard/tests/streams/bug44712.phpt
+NEW PASS: ext/standard/tests/streams/bug71245.phpt
+NEW PASS: ext/standard/tests/streams/bug71884.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_create_error.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_get_params_001.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_set_option_basic.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_set_option_error.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_set_options_basic.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_set_params_notification_error.phpt
+NEW PASS: ext/standard/tests/streams/stream_context_set_params_notification_valid_then_invalid.phpt
+
+Total: 9,556 fixtures; 4,978 passed, 3,137 failed, 1,441 unsupported.
+14 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+Direct PHP comparisons match option snapshots, partial updates, reference
+detachment, callback identity/canonicalization, invalid replacement clearing,
+default contexts, lazy per-stream contexts, option-key handling, and errors.
+A closure dump comparison still differs because existing closure inspection
+metadata is incomplete; callback identity itself matches PHP.
+Supported native wrappers do not retain the supplied context; querying a stream
+without one creates a separate context, as in PHP.
+Network/custom wrapper behavior, notification delivery and complete resource-cycle
+collection remain unfinished.
+Full logs: /tmp/php-rs-context-*2.log; Rust/clippy logs: *1.log.

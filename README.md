@@ -252,8 +252,12 @@ new request. The CLI returns the low eight bits of the requested status.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fwrite`/`fputs`, `feof`,
   `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
   `php://memory` and the in-memory part of `php://temp` are supported; temporary
-  spill-to-disk, context configuration, and general
-  wrapper registration remain unfinished.
+  spill-to-disk and general wrapper registration remain unfinished.
+- `stream_context_*` APIs create contexts, merge options, manage notification
+  callbacks, and share a request's default context. Returned option arrays retain
+  snapshots across later updates. Plain files and memory/directory streams lazily
+  allocate independent contexts when queried. Network/custom wrapper behavior,
+  notification delivery, and complete resource-cycle collection remain unfinished.
 - `file_put_contents` writes scalars, Stringable objects, arrays, and stream data,
   with append mode, exclusive locking before truncation, and PHP's continued
   scalar-array writes after a string conversion throws. `readfile` sends file bytes to

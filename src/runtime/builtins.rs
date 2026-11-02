@@ -89,6 +89,7 @@ pub(super) enum Builtin {
     FileExists,
     Filesystem(filesystem::Operation),
     ClearStatCache,
+    StreamContext(stream_contexts::Operation),
     FileGetContents,
     FilePutContents,
     ReadFile,
@@ -366,6 +367,28 @@ impl Builtin {
             b"filetype" => Self::Filesystem(filesystem::Operation::Stat(b"gettype")),
 
             b"clearstatcache" => Self::ClearStatCache,
+            b"stream_context_create" => Self::StreamContext(stream_contexts::Operation::Create),
+            b"stream_context_get_default" => {
+                Self::StreamContext(stream_contexts::Operation::GetDefault)
+            }
+            b"stream_context_set_default" => {
+                Self::StreamContext(stream_contexts::Operation::SetDefault)
+            }
+            b"stream_context_get_options" => {
+                Self::StreamContext(stream_contexts::Operation::GetOptions)
+            }
+            b"stream_context_get_params" => {
+                Self::StreamContext(stream_contexts::Operation::GetParams)
+            }
+            b"stream_context_set_options" => {
+                Self::StreamContext(stream_contexts::Operation::SetOptions)
+            }
+            b"stream_context_set_params" => {
+                Self::StreamContext(stream_contexts::Operation::SetParams)
+            }
+            b"stream_context_set_option" => {
+                Self::StreamContext(stream_contexts::Operation::SetOption)
+            }
             b"file_get_contents" => Self::FileGetContents,
             b"file_put_contents" => Self::FilePutContents,
             b"readfile" => Self::ReadFile,
@@ -593,6 +616,7 @@ impl Builtin {
                 ("use_include_path", true, false),
                 ("context", true, false),
             ],
+            Self::StreamContext(operation) => stream_contexts::parameters(operation),
             Self::FileGetContents => &[
                 ("filename", false, false),
                 ("use_include_path", true, false),
@@ -1314,6 +1338,9 @@ impl Runtime {
             self.file_stat_cache = [None, None];
             return Ok(Value::Null);
         }
+        if let Builtin::StreamContext(operation) = builtin {
+            return self.stream_context_builtin(operation, &name, &args, line);
+        }
         let first = args[0].as_ref().unwrap(); // Required arguments checked by common binder.
         match builtin {
             Builtin::Fopen => self.fopen(&args, line),
@@ -1704,7 +1731,7 @@ impl Runtime {
             | Builtin::ArrayUserSet(_) => {
                 unreachable!()
             }
-            Builtin::ArrayCursor(_) => unreachable!(),
+            Builtin::ArrayCursor(_) | Builtin::StreamContext(_) => unreachable!(),
             Builtin::ArrayWalk(_)
             | Builtin::Settype
             | Builtin::Directory(_)

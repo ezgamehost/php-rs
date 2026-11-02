@@ -319,7 +319,7 @@ impl Runtime {
                 self.resources.default_context();
             }
             Some(Value::Resource(resource)) => {
-                if !matches!(*resource.kind.borrow(), Kind::Context) {
+                if !matches!(*resource.kind.borrow(), Kind::Context(_)) {
                     return Err(Error::new(
                         ErrorKind::TypeError,
                         format!(
@@ -506,6 +506,7 @@ impl Runtime {
         };
         let resource = self.resources.allocate(Kind::Stream(Stream {
             mode: recorded_mode.clone(),
+            context: None,
             uri: Some(filename.to_vec()),
             remove_on_close: None,
             backend,
@@ -525,6 +526,7 @@ impl Runtime {
             );
             let inner = self.resources.allocate(Kind::Stream(Stream {
                 mode: recorded_mode,
+                context: None,
                 uri: None,
                 remove_on_close: None,
                 backend,

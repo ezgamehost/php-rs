@@ -14,7 +14,7 @@ pub struct PhpResource {
 #[derive(Debug)]
 pub(crate) enum Kind {
     Stream(Stream),
-    Context,
+    Context(Box<crate::runtime::stream_contexts::Context>),
     Closed,
 }
 
@@ -25,6 +25,7 @@ pub(crate) struct Stream {
     pub(crate) eof: bool,
     pub(crate) position: u64,
     pub(crate) mode: Vec<u8>,
+    pub(crate) context: Option<Rc<PhpResource>>,
     pub(crate) uri: Option<Vec<u8>>,
     pub(crate) remove_on_close: Option<std::path::PathBuf>,
 }
@@ -168,14 +169,14 @@ impl PhpResource {
     pub(crate) fn type_name(&self) -> &'static str {
         match &*self.kind.borrow() {
             Kind::Stream(_) => "stream",
-            Kind::Context => "stream-context",
+            Kind::Context(_) => "stream-context",
             Kind::Closed => "Unknown",
         }
     }
     pub(crate) fn debug_type(&self) -> &'static str {
         match &*self.kind.borrow() {
             Kind::Stream(_) => "resource (stream)",
-            Kind::Context => "resource (stream-context)",
+            Kind::Context(_) => "resource (stream-context)",
             Kind::Closed => "resource (closed)",
         }
     }
@@ -228,7 +229,7 @@ impl Store {
     }
     pub(crate) fn default_context(&mut self) -> Rc<PhpResource> {
         if self.default_context.is_none() {
-            self.default_context = Some(self.allocate(Kind::Context));
+            self.default_context = Some(self.allocate(Kind::Context(Box::default())));
         }
         self.default_context.as_ref().unwrap().clone()
     }
@@ -276,5 +277,6 @@ pub(crate) fn standard_stream(index: usize) -> io::Result<Stream> {
             _ => b"php://stderr".to_vec(),
         }),
         remove_on_close: None,
+        context: None,
     })
 }

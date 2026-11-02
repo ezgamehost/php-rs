@@ -3105,6 +3105,25 @@ two-process lock check confirms waiting without truncating and writing after
 release. Configurable include paths, custom wrappers/filters, complete buffering,
 platform-specific copy optimizations, and non-Unix behavior remain unfinished.
 
+The [stream context slice](conformance/php-8.5.0-stream-context-hillclimb.txt)
+adds creation, default contexts, option getters/setters, and parameter getters/setters.
+Options merge in order, detach incoming references, retain returned snapshots,
+and preserve earlier changes when a later wrapper entry is invalid. Notification
+callbacks are resolved and retained with canonical callable representations;
+invalid replacements clear the previous callback. Plain files and memory/directory
+streams create independent contexts when queried, matching their native wrappers.
+
+This slice adds **14 upstream passes**, with **zero regressions** across **ten
+full suites (9,556 fixtures)**: **ten streams** and **four file** cases. Results reach
+**4,978 passed / 3,137 failed / 1,441 unsupported**. All **797 existing Rust tests**,
+**57 reference-checked project PHPT**, formatting, Clippy, and diff checks pass.
+No custom tests or matrices were added. Direct PHP comparisons cover snapshots,
+partial updates, references, callback identity/canonicalization and replacement,
+defaults, per-stream contexts, option keys, and diagnostics. Existing closure dump
+metadata remains incomplete even though callback identity matches. Network/custom
+wrapper behavior, notification delivery, and complete resource-cycle collection
+remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3120,9 +3139,9 @@ measurements reported by their individual slices.
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
-| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 147 | 241 | 508 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 151 | 237 | 508 |
 | PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 18 | 11 | 44 |
-| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 16 | 90 | 51 |
+| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 26 | 80 | 51 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

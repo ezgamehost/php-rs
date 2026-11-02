@@ -313,6 +313,7 @@ impl Runtime {
             position: 0,
             mode: b"r".to_vec(),
             uri: None,
+            context: None,
             remove_on_close: None,
         })));
         read(object, flags & 0x1000 != 0);

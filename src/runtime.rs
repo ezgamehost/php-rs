@@ -105,6 +105,7 @@ mod serialization;
 mod shutdown;
 mod sorting;
 mod static_members;
+pub(crate) mod stream_contexts;
 mod streams;
 mod string_builtins;
 mod string_bytes;

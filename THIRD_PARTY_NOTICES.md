@@ -276,6 +276,11 @@ Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 `ext/standard/type.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf as author.
 
+`src/runtime/stream_contexts.rs` and context storage in `src/resource.rs` adapt
+PHP 8.5.0's `ext/standard/streamsfuncs.c`, `main/streams/streams.c`, and
+`Zend/zend_API.c`, copyright (c) The PHP Group. This includes context options,
+parameter parsing, and notification callback representation.
+
 Temporary-file creation and directory selection in `src/runtime/temporary_files.rs`,
 with lifecycle integration in `src/resource.rs`, adapt PHP 8.5.0's
 `main/php_open_temporary_file.c`, `main/streams/plain_wrapper.c`, and

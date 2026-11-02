@@ -105,6 +105,7 @@ impl Runtime {
                 position: 0,
                 mode: b"r+b".to_vec(),
                 uri: Some(bytes),
+                context: None,
                 remove_on_close: Some(path),
             },
         ))))
