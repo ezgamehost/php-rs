@@ -1,0 +1,128 @@
+PHP 8.5.0 declaration diagnostic hillclimb
+Baseline: 695d258803ba2ffc4674d956384c297095267e17
+
+zend
+Before: 5256 cases; 3207 passed, 1649 failed, 400 unsupported
+After: 5256 cases; 3233 passed, 1623 failed, 400 unsupported
+New passes: 26; regressions: 0
+NEW PASS: Zend/tests/abstract_implicit.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_001.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_002.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_003.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_004.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_005.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_006.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_007.phpt
+NEW PASS: Zend/tests/access_modifiers/access_modifiers_013.phpt
+NEW PASS: Zend/tests/anon/gh16067.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/duplicate_modifier.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/duplicate_modifier_2.phpt
+NEW PASS: Zend/tests/bug71871.phpt
+NEW PASS: Zend/tests/bug71871_2.phpt
+NEW PASS: Zend/tests/ctor_promotion/ctor_promotion_abstract.phpt
+NEW PASS: Zend/tests/ctor_promotion/ctor_promotion_interface.phpt
+NEW PASS: Zend/tests/enum/no-abstract.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_001.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_002.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_009.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_010.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_018.phpt
+NEW PASS: Zend/tests/readonly_classes/readonly_class_duplicated_modifier.phpt
+NEW PASS: Zend/tests/readonly_props/multiple_modifiers.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_const.phpt
+NEW PASS: Zend/tests/readonly_props/readonly_method.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,250 passed, 1,970 failed, 1,456 unsupported.
+Net gain: 26 upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 eval probes match duplicate modifiers, final/abstract class
+  and method combinations, readonly methods, concrete classes with abstract
+  methods, private abstract methods, and missing/unexpected method bodies.
+  Probes verify both catch/finally behavior and diagnostics; fatal comparisons
+  combine stdout/stderr, normalize the leading newline, and disable native
+  fatal backtraces. Readonly modifier errors precede private-abstract validation.
+- No new tests, upstream fixture changes, or dependencies.
+
+Implementation:
+- Duplicate access, static, abstract, final, and readonly modifiers produce
+  native CompileError diagnostics, including class and trait adaptation paths.
+  Invalid abstract/final and readonly method/constant combinations preserve
+  catchability inside eval.
+- Invalid abstract and interface method declarations, missing concrete bodies,
+  unexpected abstract bodies, and abstract constructor promotion produce fatal
+  compile diagnostics. Class, enum, and anonymous-class wording is retained.
+- Parser-detected fatal declarations carry an unwind signal to the source-loading
+  boundary, which materializes a deferred CompileError diagnostic. This preserves
+  the Rust API's output boundary while bypassing PHP catches and finally blocks.
+  Ordinary syntax errors and catchable compile errors retain their existing flow.
+
+Remaining limits:
+- Other parser diagnostics, complex modifier combinations, and broader runtime
+  behavior remain incomplete. This focused gate does not establish full PHP
+  conformance.

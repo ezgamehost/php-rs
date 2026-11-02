@@ -1,5 +1,11 @@
 # Third-party notices
 
+Declaration modifier validation and fatal/catchable compile errors in
+`src/parser.rs`, `src/parser/objects.rs`, `src/parser/traits.rs`, and their
+error/loading integration follow PHP 8.5.0's `Zend/zend_compile.c` and
+`Zend/zend_language_parser.y`, copyright (c) Zend Technologies Ltd. The Zend
+license below applies to these adaptations.
+
 Inherited-property and method diagnostics, signature formatting, abstract-member
 reporting, variance dependency resolution, and validation ordering in
 `src/runtime/inheritance.rs`, `src/runtime/objects.rs`,

@@ -38,8 +38,9 @@ impl Parser {
         let is_enum = kind == ClassKind::Enum;
         let line = anonymous_line.unwrap_or(self.token().line);
         if is_abstract && is_final {
-            return Err(Error::parse(
-                "A class cannot be both abstract and final",
+            return Err(Error::new(
+                crate::ErrorKind::CompileError,
+                "Cannot use the final modifier on an abstract class",
                 line,
             ));
         }
@@ -224,14 +225,16 @@ impl Parser {
                         self.expect("set")?;
                         self.expect(")")?;
                         if set_visibility.replace(access).is_some() {
-                            return Err(Error::parse(
-                                "Multiple set visibility modifiers are not allowed",
+                            return Err(Error::new(
+                                crate::ErrorKind::CompileError,
+                                "Multiple access type modifiers are not allowed",
                                 self.token().line,
                             ));
                         }
                     } else {
                         if public {
-                            return Err(Error::parse(
+                            return Err(Error::new(
+                                crate::ErrorKind::CompileError,
                                 "Multiple access type modifiers are not allowed",
                                 self.token().line,
                             ));
@@ -241,6 +244,7 @@ impl Parser {
                     }
                     continue;
                 }
+                let modifier = self.token().kind.clone();
                 let flag = if self.eat("final") {
                     &mut final_method
                 } else if self.eat("abstract") {
@@ -256,8 +260,17 @@ impl Parser {
                     break;
                 };
                 if *flag {
-                    return Err(Error::parse(
-                        "Multiple access type modifiers are not allowed",
+                    let Kind::Word(modifier) = modifier else {
+                        unreachable!()
+                    };
+                    let modifier = if modifier.eq_ignore_ascii_case(b"var") {
+                        "access type".to_owned()
+                    } else {
+                        String::from_utf8_lossy(&modifier).to_ascii_lowercase()
+                    };
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
+                        format!("Multiple {modifier} modifiers are not allowed"),
                         self.token().line,
                     ));
                 }
@@ -270,40 +283,92 @@ impl Parser {
                     self.token().line,
                 ));
             }
-            if visibility != Visibility::Public
-                && is_interface
-                && (self.is("function") || self.is("const"))
-            {
+            if abstract_method && self.is("function") && final_method {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Cannot use the final modifier on an abstract method",
+                    self.token().line,
+                ));
+            }
+            if abstract_method && self.is("const") {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    "Cannot use the abstract modifier on a class constant",
+                    self.token().line,
+                ));
+            }
+            if abstract_method && var {
+                return Err(Error::parse(
+                    "Invalid abstract method declaration",
+                    self.token().line,
+                ));
+            }
+            if is_interface && visibility != Visibility::Public && self.is("const") {
                 return Err(Error::parse(
                     "Invalid non-public member declaration",
                     self.token().line,
                 ));
             }
-            if abstract_method
-                && visibility == Visibility::Private
-                && !is_trait
-                && self.is("function")
-            {
-                return Err(Error::parse(
-                    "Abstract methods cannot be private",
+            if readonly_property && (self.is("function") || self.is("const")) {
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
+                    if self.is("function") {
+                        "Cannot use the readonly modifier on a method"
+                    } else {
+                        "Cannot use the readonly modifier on a class constant"
+                    },
                     self.token().line,
                 ));
             }
-            if is_interface
-                && ((abstract_method && (self.is("function") || self.is("const")))
-                    || (final_method && self.is("function")))
-            {
-                return Err(Error::parse(
-                    "Invalid interface member declaration",
-                    self.token().line,
-                ));
-            }
-            if abstract_method && ((self.is("function") && final_method) || var || self.is("const"))
-            {
-                return Err(Error::parse(
-                    "Invalid abstract method declaration",
-                    self.token().line,
-                ));
+            let pending_method = if self.is("function") {
+                let mut index = self.pos + 1;
+                if matches!(&self.tokens[index].kind, Kind::Symbol(symbol) if symbol == "&") {
+                    index += 1;
+                }
+                match &self.tokens[index].kind {
+                    Kind::Word(method) => Some((
+                        String::from_utf8_lossy(method).into_owned(),
+                        self.tokens[index].line,
+                    )),
+                    _ => None,
+                }
+            } else {
+                None
+            };
+            if let Some((method, method_line)) = &pending_method {
+                let class = String::from_utf8_lossy(&name);
+                let message = if is_interface && abstract_method {
+                    Some(format!(
+                        "Interface method {class}::{method}() must not be abstract"
+                    ))
+                } else if is_interface && visibility != Visibility::Public {
+                    Some(format!(
+                        "Access type for interface method {class}::{method}() must be public"
+                    ))
+                } else if is_interface && final_method {
+                    Some(format!(
+                        "Interface method {class}::{method}() must not be final"
+                    ))
+                } else if abstract_method && !is_abstract && !is_trait {
+                    Some(if anonymous_line.is_some() {
+                        format!("Anonymous class method {method}() must not be abstract")
+                    } else if is_enum {
+                        format!("Enum method {class}::{method}() must not be abstract")
+                    } else {
+                        format!(
+                            "Class {class} declares abstract method {method}() and must therefore be declared abstract"
+                        )
+                    })
+                } else if abstract_method && visibility == Visibility::Private && !is_trait {
+                    Some(format!(
+                        "Abstract function {class}::{method}() cannot be declared private"
+                    ))
+                } else {
+                    None
+                };
+                if let Some(message) = message {
+                    return Err(Error::compile_fatal(message, *method_line));
+                }
             }
             if var
                 && (static_method
@@ -317,31 +382,27 @@ impl Parser {
                     self.token().line,
                 ));
             }
-            if readonly_property && (self.is("function") || self.is("const")) {
-                return Err(Error::parse(
-                    "Readonly modifier is only allowed on properties",
-                    self.token().line,
-                ));
-            }
             if self.eat("function") {
                 let doc_comment = self.tokens[member_start..self.pos]
                     .iter()
                     .rev()
                     .find_map(|t| t.doc_comment.clone());
                 let abstract_method = abstract_method || is_interface;
-                if abstract_method && !is_abstract && !is_trait {
-                    return Err(Error::parse(
-                        "A class with abstract methods must be abstract",
-                        self.token().line,
-                    ));
-                }
-                let Stmt::Function(mut method) = self.function(true, abstract_method)? else {
+                let Stmt::Function(mut method) = self.function(
+                    true,
+                    abstract_method.then_some(if is_interface {
+                        "Interface"
+                    } else {
+                        "Abstract"
+                    }),
+                )?
+                else {
                     unreachable!()
                 };
                 Rc::make_mut(&mut method).doc_comment = doc_comment;
                 self.attach_function_attributes(attribute_range, Rc::make_mut(&mut method), true)?;
                 if abstract_method && method.parameters.iter().any(|p| p.promotion.is_some()) {
-                    return Err(Error::parse(
+                    return Err(Error::compile_fatal(
                         "Cannot declare promoted property in an abstract constructor",
                         method.line,
                     ));

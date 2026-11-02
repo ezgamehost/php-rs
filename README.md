@@ -799,6 +799,10 @@ new request. The CLI returns the low eight bits of the requested status.
   distinguish unavailable class types from incompatible declarations. Definite
   signature failures bypass autoloading; final classes may replace inherited
   `static` return types with their own class type, including `self`.
+- [Declaration diagnostics](docs/conformance/php-8.5.0-declarations-hillclimb.txt)
+  preserve catchable compile errors for invalid modifiers in `eval`, while
+  abstract/interface method and missing-body violations terminate as native
+  compile failures. Messages retain declaration names and source locations.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

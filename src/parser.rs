@@ -214,6 +214,7 @@ impl Parser {
             let mut is_readonly = false;
             let mut is_abstract = false;
             loop {
+                let modifier = self.token().kind.clone();
                 let flag = if self.eat("final") {
                     &mut is_final
                 } else if self.eat("readonly") {
@@ -224,7 +225,17 @@ impl Parser {
                     break;
                 };
                 if *flag {
-                    return Err(Error::parse("Duplicate class modifier", self.token().line));
+                    let Kind::Word(modifier) = modifier else {
+                        unreachable!()
+                    };
+                    return Err(Error::new(
+                        crate::ErrorKind::CompileError,
+                        format!(
+                            "Multiple {} modifiers are not allowed",
+                            String::from_utf8_lossy(&modifier).to_ascii_lowercase()
+                        ),
+                        self.token().line,
+                    ));
                 }
                 *flag = true;
             }
@@ -275,7 +286,7 @@ impl Parser {
                 )
         {
             self.pos += 1;
-            return self.function(false, false);
+            return self.function(false, None);
         }
         if let Kind::Text(bytes) = self.token().kind.clone() {
             self.pos += 1;
@@ -547,7 +558,8 @@ impl Parser {
         self.control_depth -= 1;
         Ok(body)
     }
-    fn function(&mut self, method: bool, is_abstract: bool) -> Result<Stmt, Error> {
+    fn function(&mut self, method: bool, abstract_kind: Option<&str>) -> Result<Stmt, Error> {
+        let is_abstract = abstract_kind.is_some();
         let doc_comment = self.tokens[self.pos - 1].doc_comment.clone();
         let returns_reference = self.eat("&");
         let outer_parent = if method {
@@ -631,6 +643,26 @@ impl Parser {
             name.clone()
         };
         self.validate_defaults(&diagnostic_name, &mut parameters, line)?;
+        if let Some(kind) = abstract_kind
+            && self.is("{")
+        {
+            return Err(Error::compile_fatal(
+                format!(
+                    "{kind} function {}() cannot contain body",
+                    String::from_utf8_lossy(&diagnostic_name)
+                ),
+                line,
+            ));
+        }
+        if method && !is_abstract && self.is(";") {
+            return Err(Error::compile_fatal(
+                format!(
+                    "Non-abstract method {}() must contain body",
+                    String::from_utf8_lossy(&diagnostic_name)
+                ),
+                line,
+            ));
+        }
         self.expect(if is_abstract { ";" } else { "{" })?;
         let outer_return_type = std::mem::replace(&mut self.return_type, return_type.clone());
         let outer_static_names = std::mem::take(&mut self.static_names);

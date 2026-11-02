@@ -39,6 +39,10 @@ impl Error {
             throwable: None,
         }
     }
+    /// A parser-detected declaration fatal, materialized at the source boundary.
+    pub(crate) fn compile_fatal(message: impl Into<String>, line: usize) -> Self {
+        Self::new(ErrorKind::UnwindExit, message, line)
+    }
     pub(crate) fn parse(message: impl Into<String>, line: usize) -> Self {
         Self::new(ErrorKind::ParseError, message, line)
     }

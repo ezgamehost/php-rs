@@ -98,15 +98,17 @@ impl Parser {
                     };
                     if let Some(access) = access {
                         if visibility.replace(access).is_some() {
-                            return Err(Error::parse(
+                            return Err(Error::new(
+                                crate::ErrorKind::CompileError,
                                 "Multiple access type modifiers are not allowed",
                                 self.token().line,
                             ));
                         }
                     } else if self.eat("final") {
                         if is_final {
-                            return Err(Error::parse(
-                                "Duplicate final modifier",
+                            return Err(Error::new(
+                                crate::ErrorKind::CompileError,
+                                "Multiple final modifiers are not allowed",
                                 self.token().line,
                             ));
                         }
