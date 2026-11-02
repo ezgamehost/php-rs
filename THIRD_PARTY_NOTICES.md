@@ -1,5 +1,10 @@
 # Third-party notices
 
+Environment functions in `src/runtime/environment.rs` follow PHP 8.5.0's
+`ext/standard/basic_functions.c` and `main/php_variables.c`, copyright (c) The PHP
+Group. PHPT environment handling follows `run-tests.php`. The PHP license below
+applies to these adaptations.
+
 INI parsing in `src/runtime/ini.rs` and `src/runtime/ini/scanner.rs` adapts
 PHP 8.5.0's `Zend/zend_ini_parser.y` and `Zend/zend_ini_scanner.l`, copyright (c)
 Zend Technologies Ltd., by Zeev Suraski and Jani Taskinen. The Zend license below

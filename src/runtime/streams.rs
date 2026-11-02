@@ -936,7 +936,10 @@ impl Runtime {
                 {
                     Value::Bool(false)
                 } else {
-                    match stream.write_bytes(&data) {
+                    let temporary_directory = stream.needs_temporary_spill(data.len()).then(|| {
+                        crate::source::path_from_bytes(&self.system_temporary_directory())
+                    });
+                    match stream.write_bytes(&data, temporary_directory.as_deref()) {
                         Ok(count) => {
                             // PHP tracks the logical position separately from
                             // O_APPEND's underlying file offset.

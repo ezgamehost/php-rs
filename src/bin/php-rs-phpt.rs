@@ -92,8 +92,13 @@ fn run() -> Result<bool, String> {
             Ok(case) => match case.prepare(&path) {
                 Err(error) => Outcome::Failed(error),
                 Ok(prepared) => {
-                    let (outcome, status) =
-                        run_worker(&path, &working_directory, reference.as_deref(), timeout);
+                    let (outcome, status) = run_worker(
+                        &case,
+                        &path,
+                        &working_directory,
+                        reference.as_deref(),
+                        timeout,
+                    );
                     let outcome = cleanup_after(
                         outcome,
                         reference.as_deref(),
@@ -202,6 +207,12 @@ fn reference_check(
         .arg(path)
         .current_dir(working_directory)
         .stdin(Stdio::null());
+    match case.environment(path) {
+        Ok(environment) => {
+            command.envs(environment);
+        }
+        Err(error) => return Outcome::Failed(error),
+    }
     let output = match timed_output(&mut command, timeout) {
         Ok(output) => output,
         Err(error) => return Outcome::Failed(format!("Reference PHP: {error}")),
@@ -238,6 +249,7 @@ fn cleanup_after(
             .args(["-n", "-d", "display_errors=1", "-d", "log_errors=0"])
             .arg(path)
             .current_dir(working_directory);
+        command.envs(prepared.environment()?);
         let output = timed_output(&mut command, timeout)?;
         if !output.status.success() || !output.stdout.is_empty() || !output.stderr.is_empty() {
             return Err(format!(
@@ -286,6 +298,7 @@ fn worker() -> ExitCode {
 }
 
 fn run_worker(
+    case: &Case,
     fixture: &Path,
     cwd: &Path,
     reference: Option<&OsStr>,
@@ -294,6 +307,7 @@ fn run_worker(
     let result = (|| -> Result<(Outcome, u8), String> {
         let mut command = Command::new(env::current_exe().map_err(|error| error.to_string())?);
         command.arg("--worker").arg(fixture).arg(cwd);
+        command.envs(case.environment(fixture)?);
         if let Some(reference) = reference {
             command.arg(reference);
         }

@@ -11,11 +11,15 @@ use std::{
 };
 
 impl Runtime {
-    fn system_temporary_directory(&mut self) -> Vec<u8> {
+    pub(super) fn system_temporary_directory(&mut self) -> Vec<u8> {
+        let directory = self
+            .temporary_directory
+            .is_none()
+            .then(|| self.environment_value(b"TMPDIR"))
+            .flatten();
         self.temporary_directory
             .get_or_insert_with(|| {
-                if let Some(value) = std::env::var_os("TMPDIR").filter(|value| !value.is_empty()) {
-                    let mut bytes = value.as_encoded_bytes().to_vec();
+                if let Some(mut bytes) = directory.filter(|value| !value.is_empty()) {
                     if bytes.ends_with(b"/") {
                         bytes.pop();
                     }

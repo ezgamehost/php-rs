@@ -1,0 +1,120 @@
+PHP 8.5.0 request environment hillclimb
+Baseline: f93504423caa1a263fdde6400e3a6eedb2436403
+
+zend
+Before: 5256 cases; 2791 passed, 2065 failed, 400 unsupported
+After: 5256 cases; 2791 passed, 2065 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 668 passed, 57 failed, 53 unsupported
+After: 778 cases; 668 passed, 57 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 535 passed, 43 failed, 152 unsupported
+After: 730 cases; 535 passed, 43 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+focused
+Before: 47 cases; 39 passed, 1 failed, 7 unsupported
+After: 47 cases; 41 passed, 0 failed, 6 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/standard/tests/general_functions/getenv.phpt
+NEW PASS: ext/standard/tests/general_functions/putenv.phpt
+
+The twelve-suite gate remains at 9,676 fixtures: 5,769 passed, 2,451 failed,
+1,456 unsupported. Zero regressions across these suites and the project fixtures.
+
+The focused selection contains 47 existing fixtures: the preceding INI selection
+plus files named for getenv/putenv in Zend/tests and ext/standard/tests. Baseline
+results were measured with a separate checkout of the baseline commit.
+Before: 39 passed, 1 failed, 7 unsupported.
+After: 41 passed, 0 failed, 6 unsupported.
+New passes: general_functions/getenv.phpt and general_functions/putenv.phpt.
+The getenv fixture is now runnable because the isolated runner supports ENV.
+These two passes are outside the twelve-suite gate and are counted separately.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match for repeated assignments, unset/empty
+  values, embedded NULs, enumeration order, invalid-name enumeration filtering,
+  numeric names, INI substitution/fallbacks and cached temporary directories.
+- Temporary-stream probes set TMPDIR between opening and spilling a stream,
+  confirming the request's directory is selected at spill time.
+- The existing getenv PHPT also passes when invoked using a relative path.
+- No new tests or upstream fixture changes; no dependencies added.
+
+Implementation:
+- getenv/putenv with request-local state, preserving the host process environment.
+- Enumeration filters malformed names while direct lookups retain their values.
+- Reassignment restores the original entry before replacing it, matching native
+  environment enumeration order.
+- INI interpolation, sys_get_temp_dir, tempnam/tmpfile fallback and temporary
+  stream spill use the request's environment and cached temporary directory.
+- Isolated PHPT ENV handling for workers, reference checks and CLEAN, including
+  absolute {PWD} expansion, duplicate assignment replacement and native trimming.
+  Ordinary library parsing continues to report ENV as unsupported.
+- Native reflection metadata now covers 429 implemented function names.
+
+Remaining limits:
+- This CLI runtime has no separate web SAPI environment; local_only selects the
+  same request environment.
+- Windows-specific environment-name/code-page behavior remains unfinished.
+- Configuration-directive lookup for INI interpolation and other unsupported
+  PHPT sections remain unfinished.
+- The broader PHP 8.5 runtime remains incomplete, including subprocess APIs.

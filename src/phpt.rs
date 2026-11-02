@@ -14,6 +14,7 @@ pub struct Case {
     pub name: String,
     pub source: Vec<u8>,
     cleanup: Option<Vec<u8>>,
+    environment: Option<Vec<u8>>,
     expected: Vec<u8>,
     unsupported: Vec<String>,
     expectation: String,
@@ -45,6 +46,10 @@ impl PreparedCase<'_> {
         self.cleanup_path.as_deref()
     }
 
+    pub fn environment(&self) -> Result<Vec<(std::ffi::OsString, std::ffi::OsString)>, String> {
+        self.case.environment(&self.path)
+    }
+
     pub fn run(&self, working_directory: &Path) -> Outcome {
         self.run_with_status(working_directory).0
     }
@@ -61,6 +66,16 @@ impl Case {
     /// lifetime in the parent allows cleanup even if a worker aborts.
     pub fn run_file_with_status(&self, path: &Path, working_directory: &Path) -> (Outcome, u8) {
         let mut runtime = Runtime::default();
+        let environment = match self.environment(path) {
+            Ok(environment) => environment,
+            Err(error) => return (Outcome::Failed(error), 255),
+        };
+        runtime.set_environment(environment.into_iter().map(|(name, value)| {
+            (
+                name.as_encoded_bytes().to_vec(),
+                value.as_encoded_bytes().to_vec(),
+            )
+        }));
         runtime.set_fatal_error_backtraces(false);
         if let Err(error) = runtime.set_working_directory(working_directory) {
             return (Outcome::Failed(format!("Working directory: {error}")), 255);
@@ -160,6 +175,7 @@ impl Case {
             .filter(|key| {
                 !(["TEST", "FILE", "EXPECT", "DESCRIPTION", "CREDITS"].contains(&key.as_str())
                     || reference.is_some() && ["EXPECTF", "EXPECTREGEX"].contains(&key.as_str())
+                    || cleanup_enabled && key.as_str() == "ENV"
                     || cleanup_enabled && reference.is_some() && key.as_str() == "CLEAN")
             })
             .cloned()
@@ -168,12 +184,55 @@ impl Case {
             name,
             source: sections[files[0]].clone(),
             cleanup: sections.get("CLEAN").cloned(),
+            environment: sections.get("ENV").cloned(),
             expected: sections[expected[0]].clone(),
             unsupported,
             expectation: expected[0].to_owned(),
             reference: reference.map(Path::to_owned),
         })
     }
+    /// PHPT ENV assignments, including run-tests.php's {PWD} substitution.
+    /// The caller applies these only to isolated fixture/reference processes.
+    pub fn environment(
+        &self,
+        path: &Path,
+    ) -> Result<Vec<(std::ffi::OsString, std::ffi::OsString)>, String> {
+        let Some(mut input) = self.environment.as_deref() else {
+            return Ok(Vec::new());
+        };
+        let path = fs::canonicalize(path).map_err(|error| format!("PHPT ENV path: {error}"))?;
+        let directory = path.parent().unwrap_or(Path::new("."));
+        let mut bytes = Vec::new();
+        while let Some(index) = input.windows(5).position(|part| part == b"{PWD}") {
+            bytes.extend_from_slice(&input[..index]);
+            bytes.extend_from_slice(directory.as_os_str().as_encoded_bytes());
+            input = &input[index + 5..];
+        }
+        bytes.extend_from_slice(input);
+        let mut entries = Vec::new();
+        for line in bytes.split(|b| *b == b'\n') {
+            let trim = |b: &u8| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0 | 11);
+            let start = line.iter().position(|b| !trim(b)).unwrap_or(line.len());
+            let end = line.iter().rposition(|b| !trim(b)).map_or(start, |i| i + 1);
+            let line = &line[start..end];
+            let Some(index) = line.iter().position(|b| *b == b'=') else {
+                continue;
+            };
+            let (name, value) = (&line[..index], &line[index + 1..]);
+            if name.is_empty() || name == b"0" {
+                continue;
+            }
+            if name.contains(&0) || value.contains(&0) {
+                return Err("PHPT ENV contains a null byte".into());
+            }
+            entries.push((
+                crate::source::path_from_bytes(name).into_os_string(),
+                crate::source::path_from_bytes(value).into_os_string(),
+            ));
+        }
+        Ok(entries)
+    }
+
     pub fn unsupported_sections(&self) -> &[String] {
         &self.unsupported
     }

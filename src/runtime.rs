@@ -53,6 +53,7 @@ pub(crate) mod directory_iterator;
 pub(crate) mod dual_iterator;
 mod dumping;
 mod enums;
+mod environment;
 mod error_handlers;
 mod exception_handlers;
 mod exporting;
@@ -164,6 +165,7 @@ pub struct Runtime {
     unserialization: Option<Rc<RefCell<unserialization::UnserializeState>>>,
     recursive_child_slots: HashMap<usize, std::rc::Weak<crate::PhpObject>>,
     pub output: Vec<u8>,
+    environment: environment::Environment,
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,
     dump_guards: HashSet<(bool, usize)>,

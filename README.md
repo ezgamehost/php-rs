@@ -300,6 +300,11 @@ new request. The CLI returns the low eight bits of the requested status.
   uses the decoder's grammar without building decoded arrays or objects.
   Configurable serialization precision and property hooks remain unfinished;
   encoding currently limits native traversal to 1,024 container levels.
+- [Environment functions](docs/conformance/php-8.5.0-environment-hillclimb.txt)
+  support `getenv` and `putenv`, including enumeration, deletion, native name
+  filtering and reassignment order. Environment changes are local to the request;
+  INI interpolation and temporary-file creation use that same state. The CLI has
+  no separate SAPI environment for `getenv`'s `local_only` argument.
 - [INI parsing](docs/conformance/php-8.5.0-ini-hillclimb.txt) supports
   `parse_ini_file` and `parse_ini_string`, normal/raw/typed scanner modes,
   sections, array entries, constants, bitwise expressions, quoted strings,
@@ -523,7 +528,7 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion, non-public methods, and closure creation.
   Function, method, and parameter declaration strings include defaults, documentation,
   source locations, closure captures, and inheritance/prototype flags. Native function
-  metadata covers all 427 implemented function names, including types, symbolic defaults,
+  metadata covers all 429 implemented function names, including types, symbolic defaults,
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, full reflector
@@ -863,7 +868,10 @@ remain to be implemented. Passing the repository tests does not establish PHP
 conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation plan.
 
 The PHPT runner supports `TEST`, `FILE`, and exact `EXPECT` output,
-plus descriptive `DESCRIPTION` and `CREDITS` sections. With `--reference`, it also
+plus descriptive `DESCRIPTION` and `CREDITS` sections. The isolated CLI runner
+supports `ENV` assignments and `{PWD}` substitution for workers, reference runs,
+and cleanup processes; the ordinary library parser keeps `ENV` unsupported.
+With `--reference`, it also
 supports `EXPECTF` (including `%r` fragments) and `EXPECTREGEX`, using the reference
 PHP binary's PCRE engine to match output. It also supports `CLEAN`, running its
 cleanup script with reference PHP after the Rust worker and again after reference

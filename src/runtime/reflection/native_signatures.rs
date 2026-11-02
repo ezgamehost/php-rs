@@ -1343,6 +1343,13 @@ pub(super) fn lookup(name: &[u8]) -> Option<NativeSignature> {
             defaults: &[],
             by_value: &[],
         },
+        b"getenv" => NativeSignature {
+            name: "getenv",
+            extension: "standard",
+            declaration: "<?php function __native(?string $name = null, bool $local_only = false): array|string|false {}",
+            defaults: &[Some("null"), Some("false")],
+            by_value: &[true, true],
+        },
         b"getrandmax" => NativeSignature {
             name: "getrandmax",
             extension: "random",
@@ -2035,6 +2042,13 @@ pub(super) fn lookup(name: &[u8]) -> Option<NativeSignature> {
             declaration: "<?php function __native($object_or_class, string $property): bool {}",
             defaults: &[None, None],
             by_value: &[true, true],
+        },
+        b"putenv" => NativeSignature {
+            name: "putenv",
+            extension: "standard",
+            declaration: "<?php function __native(string $assignment): bool {}",
+            defaults: &[None],
+            by_value: &[true],
         },
         b"quoted_printable_decode" => NativeSignature {
             name: "quoted_printable_decode",

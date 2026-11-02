@@ -393,9 +393,9 @@ impl<'a> Parser<'a> {
             },
         )?;
         self.depth -= 1;
-        use std::os::unix::ffi::{OsStrExt, OsStringExt};
-        let value = std::env::var_os(std::ffi::OsStr::from_bytes(&name))
-            .map(|v| v.into_vec())
+        let value = self
+            .runtime
+            .environment_value(&name)
             .or(fallback)
             .unwrap_or_default();
         Ok(Item::string(value))

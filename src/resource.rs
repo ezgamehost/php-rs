@@ -198,7 +198,30 @@ impl Stream {
         })
     }
 
-    pub(crate) fn write_bytes(&mut self, bytes: &[u8]) -> io::Result<usize> {
+    pub(crate) fn needs_temporary_spill(&self, length: usize) -> bool {
+        let Backend::Temporary(resource, limit) = &self.backend else {
+            return false;
+        };
+        let kind = resource.kind.borrow();
+        let Kind::Stream(inner) = &*kind else {
+            return false;
+        };
+        let Backend::Memory(buffer) = &inner.backend else {
+            return false;
+        };
+        let position = if self.read_buffer.len() != 0 {
+            self.position
+        } else {
+            buffer.position()
+        };
+        position.saturating_add(length as u64) >= *limit as u64
+    }
+
+    pub(crate) fn write_bytes(
+        &mut self,
+        bytes: &[u8],
+        temporary_directory: Option<&std::path::Path>,
+    ) -> io::Result<usize> {
         if self.read_buffer.len() != 0 && self.backend.seek(SeekFrom::Start(self.position)).is_ok()
         {
             self.read_buffer.clear();
@@ -208,6 +231,28 @@ impl Stream {
             && let Backend::Memory(buffer) = &mut self.backend
         {
             buffer.set_position(buffer.get_ref().len() as u64);
+        }
+        if let (Some(directory), Backend::Temporary(resource, limit)) =
+            (temporary_directory, &mut self.backend)
+        {
+            resource.with_stream(|stream| {
+                if let Backend::Memory(buffer) = &stream.backend
+                    && buffer.position().saturating_add(bytes.len() as u64) >= *limit as u64
+                {
+                    let (mut file, path) =
+                        crate::runtime::temporary_files::create_temporary(directory, b"php")?;
+                    let copied = file
+                        .write_all(buffer.get_ref())
+                        .and_then(|()| file.seek(SeekFrom::Start(buffer.position())));
+                    if let Err(error) = copied {
+                        let _ = std::fs::remove_file(path);
+                        return Err(error);
+                    }
+                    stream.backend = Backend::File(file);
+                    stream.remove_on_close = Some(path);
+                }
+                Ok(())
+            })?;
         }
         self.backend.write(bytes)
     }
@@ -295,25 +340,8 @@ impl Write for Backend {
                 }
                 buffer.write(bytes)
             }
-            Self::Temporary(resource, limit) => resource.with_stream(|stream| {
-                if let Backend::Memory(buffer) = &stream.backend
-                    && buffer.position().saturating_add(bytes.len() as u64) >= *limit as u64
-                {
-                    let (mut file, path) = crate::runtime::temporary_files::create_temporary(
-                        &std::env::temp_dir(),
-                        b"php",
-                    )?;
-                    let copied = file
-                        .write_all(buffer.get_ref())
-                        .and_then(|()| file.seek(SeekFrom::Start(buffer.position())));
-                    if let Err(error) = copied {
-                        let _ = std::fs::remove_file(path);
-                        return Err(error);
-                    }
-                    stream.backend = Backend::File(file);
-                    stream.remove_on_close = Some(path);
-                }
-                let count = stream.write_bytes(bytes)?;
+            Self::Temporary(resource, _) => resource.with_stream(|stream| {
+                let count = stream.write_bytes(bytes, None)?;
                 stream.position += count as u64;
                 Ok(count)
             }),
