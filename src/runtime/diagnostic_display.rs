@@ -1,6 +1,25 @@
 use super::*;
 
 impl Runtime {
+    pub(super) fn compile_fatal_at(
+        &mut self,
+        message: &str,
+        source: &crate::source::Source,
+        line: usize,
+    ) -> Error {
+        self.diagnostics.last_fatal_trace = None;
+        self.diagnostics.output_position = self.output.len();
+        self.diagnostics.display(
+            64,
+            "Fatal error",
+            message.as_bytes(),
+            &source.name,
+            line as i64,
+        );
+        self.exit_status = Some(255);
+        Error::new(ErrorKind::UnwindExit, "", line)
+    }
+
     /// Configure native fatal backtraces. PHP's PHPT runner disables these by
     /// default; ordinary requests use PHP 8.5's enabled default.
     pub fn set_fatal_error_backtraces(&mut self, enabled: bool) {

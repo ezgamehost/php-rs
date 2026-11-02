@@ -412,7 +412,12 @@ impl Export {
             if i > 0 {
                 self.put(b", ");
             }
-            self.attributes(&p.attributes, indent)?;
+            self.attributes(
+                p.promotion
+                    .as_ref()
+                    .map_or(&p.attributes, |p| &p.attributes),
+                indent,
+            )?;
             if let Some(promotion) = &p.promotion {
                 self.visibility(promotion.visibility);
                 if promotion.is_final {

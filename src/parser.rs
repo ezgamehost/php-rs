@@ -666,9 +666,18 @@ impl Parser {
         let mut parameters = Vec::new();
         while !self.eat(")") {
             let attribute_range = self.take_attributes()?;
-            let attributes =
-                self.parse_attributes_at(attribute_range, attributes::Target::Parameter)?;
-            let promotion = self.parameter_promotion(allow_promotion)?;
+            let mut promotion = self.parameter_promotion(allow_promotion)?;
+            let attributes = self.parse_attributes_at(
+                attribute_range,
+                if promotion.is_some() {
+                    attributes::Target::PromotedParameter
+                } else {
+                    attributes::Target::Parameter
+                },
+            )?;
+            if let Some(promotion) = &mut promotion {
+                promotion.attributes = attributes.clone();
+            }
             let ty = if self.is("?") || matches!(self.token().kind, Kind::Word(_)) {
                 Some(self.type_declaration(false)?)
             } else {

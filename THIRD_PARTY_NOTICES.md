@@ -44,6 +44,12 @@ adapt PHP 8.5.0's `Zend/zend_ast.c`, `Zend/zend_compile.c`, and
 `Zend/zend_language_scanner.l`, copyright (c) Zend Technologies Ltd. The Zend
 license below also applies to these adaptations.
 
+Override validation in `src/runtime/inheritance.rs` and promoted attribute
+filtering in `src/parser.rs`, `src/parser/attributes.rs`, and
+`src/parser/promotion.rs` adapt PHP 8.5.0's `Zend/zend_inheritance.c` and
+`Zend/zend_compile.c`, copyright (c) Zend Technologies Ltd. The Zend license
+below also applies to these adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.

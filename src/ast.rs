@@ -362,6 +362,8 @@ pub(crate) struct ClassConstant {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Promotion {
+    // Original source attributes, before internal target filtering.
+    pub attributes: Vec<Attribute>,
     pub is_final: bool,
     pub visibility: Visibility,
     pub set_visibility: Option<Visibility>,

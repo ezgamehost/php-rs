@@ -2234,6 +2234,31 @@ disabled assertion compilation, complete AST description coverage (including
 complex statements, traits, and original magic-constant spelling), binary warning
 messages, and the remaining operator type errors are unfinished.
 
+The [Override attribute slice](conformance/php-8.5.0-override-hillclimb.txt)
+adds **23 upstream Zend passes**, reaching **2428 / 2420 / 408**, with zero
+regressions across all six suites (8,267 fixtures). Two gains cover
+DelayedTargetValidation. It validates methods and properties after inheritance
+compatibility checks. Methods
+can satisfy non-private parent declarations, interface declarations, or distinct
+abstract trait requirements. Constructors require an abstract or interface
+prototype. Concrete trait methods hidden by a class declaration do not qualify.
+Trait declarations defer validation until composition; inherited declarations
+remain validated in their original class. Static and promoted properties use
+the same inherited-member requirement. Failed declarations emit E_COMPILE_ERROR,
+terminate with status 255, and bypass catch/finally and user handlers. Method
+locations retain their defining source, including imported trait methods.
+Promoted internal attributes are assigned to their supported target: Override
+to the property and SensitiveParameter to the parameter. Assertion descriptions
+retain the original attribute list.
+
+The focused set improves from **19 / 31 / 0** to **40 / 10 / 0**. Its remaining
+ten failures require generator syntax (one) or interface property hooks (nine).
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or generated matrices were added. PHP 8.5.0
+`Zend/zend_inheritance.c`, `Zend/zend_compile.c`, and `Zend/zend.c` establish the
+behavior. Property-hook override checks and other documented inheritance gaps
+remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2241,7 +2266,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2405 | 2443 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2428 | 2420 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

@@ -94,6 +94,90 @@ impl Runtime {
         if class.declaration.is_trait {
             return Ok(());
         }
+        self.validate_inheritance(class)?;
+        self.validate_override_attributes(class)
+    }
+
+    // Adapted from PHP 8.5.0 Zend/zend_inheritance.c override checks.
+    // Check only declarations introduced by this class: inherited declarations
+    // were already checked in their original class, before any child interfaces.
+    fn validate_override_attributes(&mut self, class: &Class) -> Result<(), Error> {
+        let has_override = |attributes: &[crate::ast::Attribute]| {
+            attributes
+                .iter()
+                .any(|attribute| attribute.name.eq_ignore_ascii_case(b"Override"))
+        };
+        for function in &class.declaration.methods {
+            if !has_override(&function.attributes) {
+                continue;
+            }
+            let name = method_name(function);
+            let parent = class.parent.as_ref().and_then(|parent| {
+                if name.eq_ignore_ascii_case(b"__construct") {
+                    abstract_constructor(parent)
+                } else {
+                    objects::method(parent, name)
+                        .filter(|method| method.visibility != crate::ast::Visibility::Private)
+                }
+            });
+            let interface = class
+                .interfaces
+                .iter()
+                .any(|interface| objects::method(interface, name).is_some());
+            let requirement = class.declaration.trait_requirements.iter().any(|required| {
+                method_name(required).eq_ignore_ascii_case(name)
+                    && required.trait_origin != function.trait_origin
+            });
+            if parent.is_none() && !interface && !requirement {
+                return Err(self.compile_fatal_at(
+                    &format!(
+                        "{}::{}() has #[\\Override] attribute, but no matching parent method exists",
+                        class.display_name(),
+                        String::from_utf8_lossy(name)
+                    ),
+                    &function.source,
+                    function.line,
+                ));
+            }
+        }
+        let mut properties: Vec<_> = class
+            .declaration
+            .properties
+            .iter()
+            .chain(&class.declaration.static_properties)
+            .collect();
+        properties.sort_by_key(|property| property.order);
+        for property in properties {
+            if !has_override(&property.attributes) {
+                continue;
+            }
+            let matches = |parent: &crate::ast::PropertyDecl| {
+                parent.name == property.name && parent.visibility != crate::ast::Visibility::Private
+            };
+            let parent = class.parent.as_ref().is_some_and(|parent| {
+                parent.properties.iter().any(matches)
+                    || parent.static_properties.iter().any(matches)
+            });
+            let interface = class
+                .interfaces
+                .iter()
+                .any(|interface| interface.properties.iter().any(matches));
+            if !parent && !interface {
+                return Err(self.compile_fatal_at(
+                    &format!(
+                        "{}::${} has #[\\Override] attribute, but no matching parent property exists",
+                        class.display_name(),
+                        String::from_utf8_lossy(&property.name)
+                    ),
+                    &class.declaration.source,
+                    class.declaration.end_line,
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_inheritance(&mut self, class: &Class) -> Result<(), Error> {
         self.validate_trait_requirements(class)?;
         self.validate_interfaces(class)?;
         if !class.declaration.is_abstract

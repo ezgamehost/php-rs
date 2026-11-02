@@ -405,6 +405,10 @@ new request. The CLI returns the low eight bits of the requested status.
   methods, nullsafe calls, pipes, and suppressed expressions. Assignment and
   `(void)` consume the result. Attribute messages use caller strictness; throwing
   handlers prevent execution, and `Deprecated` diagnostics run first.
+- `#[Override]` validates methods and properties against inherited declarations,
+  including interfaces, trait requirements, static members, and promoted
+  properties. Private parent members and concrete constructors do not qualify.
+  Invalid declarations produce fatal diagnostics; property hooks remain unfinished.
 - Default-enabled `assert` validates descriptions, throws supplied Throwable
   objects unchanged, and creates AssertionError with code 1 on failure. Direct
   calls receive generated descriptions for supported expressions and declarations.

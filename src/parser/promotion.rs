@@ -67,6 +67,7 @@ impl Parser {
         Ok(
             (visibility.is_some() || set_visibility.is_some() || readonly || is_final).then_some(
                 Promotion {
+                    attributes: Vec::new(),
                     is_final,
                     visibility: visibility.unwrap_or(Visibility::Public),
                     set_visibility,
@@ -85,7 +86,7 @@ impl Parser {
     ) -> Result<(), Error> {
         let function = Rc::make_mut(method);
         let mut assignments = Vec::new();
-        for param in &function.parameters {
+        for param in &mut function.parameters {
             let Some(promotion) = &param.promotion else {
                 continue;
             };
@@ -125,7 +126,12 @@ impl Parser {
                 doc_comment: None,
                 order: properties.len() + static_properties.len(),
                 is_promoted: true,
-                attributes: param.attributes.clone(),
+                attributes: promotion
+                    .attributes
+                    .iter()
+                    .filter(|attribute| !attribute.name.eq_ignore_ascii_case(b"SensitiveParameter"))
+                    .cloned()
+                    .collect(),
                 declaring_class: Vec::new(),
                 visibility: promotion.visibility,
                 set_visibility,
@@ -137,6 +143,9 @@ impl Parser {
                 is_readonly,
                 default: None,
             });
+            param
+                .attributes
+                .retain(|attribute| !attribute.name.eq_ignore_ascii_case(b"Override"));
             let line = function.line;
             // Promotion is an assignment at constructor entry. The parameter
             // retains its own slot; defaults do not become property defaults.

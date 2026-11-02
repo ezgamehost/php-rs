@@ -9,6 +9,7 @@ pub(super) enum Target {
     Property,
     ClassConstant,
     Parameter,
+    PromotedParameter,
     Constant,
 }
 
@@ -20,7 +21,7 @@ impl Target {
             Self::Method => "method",
             Self::Property => "property",
             Self::ClassConstant => "class constant",
-            Self::Parameter => "parameter",
+            Self::Parameter | Self::PromotedParameter => "parameter",
             Self::Constant => "constant",
         }
     }
@@ -176,7 +177,11 @@ impl Parser {
                 ),
                 _ => continue,
             };
-            if !allowed.contains(&target) && !delayed {
+            let permitted = allowed.contains(&target)
+                || (target == Target::PromotedParameter
+                    && (allowed.contains(&Target::Parameter)
+                        || allowed.contains(&Target::Property)));
+            if !permitted && !delayed {
                 return Err(Error::parse(
                     format!(
                         "Attribute \"{canonical}\" cannot target {} (allowed targets: {})",
