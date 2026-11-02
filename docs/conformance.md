@@ -2973,6 +2973,23 @@ invalidation. SplFileObject and openFile(), directory iterator classes, custom
 stream wrappers, PHP's realpath cache, and complete mutation/destructor timing
 remain unfinished.
 
+The [directory iterator slice](conformance/php-8.5.0-directory-iterator-hillclimb.txt)
+implements DirectoryIterator, FilesystemIterator, and RecursiveDirectoryIterator
+using native directory handles. It provides key/current modes, dot filtering,
+seeking, independent cloned handles, recursive children, and subpaths. Native
+filesystem iterators cache current values; explicit current() calls create fresh
+file-info objects. Recursive wrappers now dispatch child methods and forwarding
+to source objects and return those sources from inner/subiterator accessors.
+
+This slice adds **17 upstream passes**, with **zero regressions** across all seven
+full suites (**8,430 fixtures**). SPL reaches **534 / 150 / 94**; other suite totals
+are unchanged. All **797 existing Rust tests**, **57 reference-checked project PHPT**,
+formatting, Clippy, and diff checks pass. No custom tests or matrices were added.
+Direct CLI comparisons match clone cursor independence, recursive traversal,
+inner/subiterator identity, resource numbering, and native value caching across
+flag changes. GlobIterator, SplFileObject, custom stream wrappers, collector
+accounting, and complete mutation/destructor timing remain unfinished.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2982,7 +2999,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2582 | 2266 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 517 | 167 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 534 | 150 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

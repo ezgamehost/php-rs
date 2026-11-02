@@ -146,8 +146,14 @@ new request. The CLI returns the low eight bits of the requested status.
   targets, canonical paths, cloning, debug output, and file-info class factories.
   Native stat/lstat caches are cleared by `clearstatcache()` and ordinary file I/O.
   File-info objects cannot be serialized. `openFile()` still requires the missing
-  SplFileObject implementation; directory iterator classes, custom stream wrappers,
+  SplFileObject implementation; custom stream wrappers,
   and PHP's realpath cache remain unfinished.
+- `DirectoryIterator`, `FilesystemIterator`, and `RecursiveDirectoryIterator`
+  provide native directory cursors, seeking, key/current modes, dot filtering,
+  recursive children, subpaths, and independent cloned handles. Native filesystem
+  iteration caches current values; explicit current() calls create fresh file-info
+  objects. Recursive wrappers expose the source iterator for child methods and
+  forwarding. GlobIterator and complete mutation/destructor timing remain unfinished.
 - `SplFixedArray` provides dense storage, resizing, offsets, array conversion,
   independent storage clones, and native iteration through `InternalIterator`.
   Resizing preserves destructor order and deferred size changes. Property inspection,

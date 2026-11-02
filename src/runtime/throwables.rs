@@ -279,6 +279,9 @@ impl Runtime {
         if matches!(method, NativeMethod::DualIterator) {
             return self.native_dual_iterator_method(line, None);
         }
+        if matches!(method, NativeMethod::DirectoryIterator) {
+            return self.native_directory_iterator_method(line);
+        }
         if matches!(method, NativeMethod::FileInfo) {
             return self.native_file_info_method(line);
         }

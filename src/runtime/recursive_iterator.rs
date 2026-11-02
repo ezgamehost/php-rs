@@ -20,7 +20,7 @@ pub(crate) struct Frame {
     // Release the cached value and inner object before the iterator handle.
     current: Option<Value>,
     object: Rc<PhpObject>,
-    _wrapper: ObjectHandle,
+    _wrapper: Option<ObjectHandle>,
     state: State,
 }
 
@@ -213,7 +213,9 @@ impl Runtime {
         object: &PhpObject,
         line: usize,
     ) -> Result<Rc<PhpObject>, Error> {
-        Ok(frame(object, line)?.borrow().object.clone())
+        Ok(native_iterator::source_object(
+            &frame(object, line)?.borrow().object,
+        ))
     }
 
     fn recursive_call(
@@ -222,6 +224,7 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
+        let object = native_iterator::source_object(object);
         let Some(method) = objects::method(&object.class, name) else {
             let message = format!(
                 "Couldn't find implementation for method {}::{}",
@@ -300,7 +303,8 @@ impl Runtime {
         line: usize,
     ) -> Result<Rc<RefCell<Frame>>, Error> {
         let object = self.resolve_iterator(&object, false, line)?;
-        let wrapper = self.allocate_object_handle();
+        let wrapper =
+            (!native_iterator::hidden_iterator(&object)).then(|| self.allocate_object_handle());
         Ok(Rc::new(RefCell::new(Frame {
             current: None,
             object,
@@ -583,7 +587,10 @@ impl Runtime {
                     value
                 } else {
                     let value = self.iterator_method(&inner, name, line)?;
-                    if !array_iterator::native_iteration(&inner) && !native_iteration(&inner) {
+                    if !array_iterator::native_iteration(&inner)
+                        && !native_iteration(&inner)
+                        && !native_iterator::hidden_iterator(&inner)
+                    {
                         active.borrow_mut().current = Some(value.clone());
                     }
                     value
@@ -708,14 +715,16 @@ impl Runtime {
                     return Ok(Value::Null);
                 }
                 frame(&object, line)?;
-                Ok(Value::Object(
-                    object.recursive_iterator.borrow().as_ref().unwrap().frames[level as usize]
+                Ok(Value::Object(native_iterator::source_object(
+                    &object.recursive_iterator.borrow().as_ref().unwrap().frames[level as usize]
                         .borrow()
                         .object
                         .clone(),
-                ))
+                )))
             }
-            b"getinneriterator" => Ok(Value::Object(frame(&object, line)?.borrow().object.clone())),
+            b"getinneriterator" => Ok(Value::Object(native_iterator::source_object(
+                &frame(&object, line)?.borrow().object,
+            ))),
             b"callhaschildren" | b"callgetchildren" => {
                 if name == b"callhaschildren"
                     && !object

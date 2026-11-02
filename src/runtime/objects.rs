@@ -137,6 +137,7 @@ impl Runtime {
             || self.builtin_recursive_iterator_class(&name).is_some()
             || self.builtin_fixed_array_class(&name).is_some()
             || self.builtin_dual_iterator_class(&name).is_some()
+            || self.builtin_directory_iterator_class(&name).is_some()
             || self.builtin_file_info_class(&name).is_some()
             || self.builtin_heap_class(&name).is_some()
             || self.builtin_object_storage_class(&name).is_some()
@@ -339,6 +340,9 @@ impl Runtime {
             return Some(class.clone());
         }
         if let Some(class) = self.builtin_dual_iterator_class(&name) {
+            return Some(class);
+        }
+        if let Some(class) = self.builtin_directory_iterator_class(&name) {
             return Some(class);
         }
         if let Some(class) = self.builtin_file_info_class(&name) {

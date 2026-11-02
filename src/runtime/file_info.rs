@@ -6,13 +6,14 @@ use crate::{PhpObject, ast::NativeMethod, object::Class};
 
 #[derive(Clone, Default)]
 pub(crate) struct FileInfoData {
-    filename: Option<Vec<u8>>,
-    path: Vec<u8>,
-    info_class: Option<Rc<Class>>,
-    file_class: Option<Rc<Class>>,
+    pub(super) directory: Option<Rc<RefCell<directory_iterator::DirectoryData>>>,
+    pub(super) filename: Option<Vec<u8>>,
+    pub(super) path: Vec<u8>,
+    pub(super) info_class: Option<Rc<Class>>,
+    pub(super) file_class: Option<Rc<Class>>,
 }
 impl FileInfoData {
-    fn set_filename(&mut self, mut filename: Vec<u8>) {
+    pub(super) fn set_filename(&mut self, mut filename: Vec<u8>) {
         while filename.len() > 1 && filename.ends_with(b"/") {
             filename.pop();
         }
@@ -23,6 +24,29 @@ impl FileInfoData {
         end = end.saturating_sub(1);
         self.path = filename[..end].to_vec();
         self.filename = Some(filename);
+    }
+    pub(super) fn ensure_filename(&mut self) -> Option<Vec<u8>> {
+        if self.filename.is_none()
+            && let Some(directory) = &self.directory
+            && directory.borrow().active
+        {
+            let mut filename = self.path.clone();
+            filename.push(b'/');
+            filename.extend_from_slice(&directory.borrow().entry);
+            self.filename = Some(filename);
+        }
+        self.filename.clone()
+    }
+    fn pathname(&mut self) -> Option<Vec<u8>> {
+        if let Some(directory) = &self.directory
+            && directory.borrow().active
+        {
+            if directory.borrow().entry.is_empty() {
+                return None;
+            }
+            return self.ensure_filename();
+        }
+        self.filename.clone()
     }
     fn basename(&self) -> Option<&[u8]> {
         self.filename.as_deref().map(|name| {
@@ -165,22 +189,58 @@ impl Runtime {
                 line,
             ));
         }
+        let pathname = {
+            let mut payload = object.file_info.borrow_mut();
+            let data = payload.as_mut().unwrap();
+            if matches!(
+                name,
+                b"getpathname" | b"__tostring" | b"__debuginfo" | b"getrealpath"
+            ) {
+                data.pathname()
+            } else if matches!(
+                name,
+                b"getpath" | b"getfilename" | b"getextension" | b"getbasename"
+            ) {
+                None
+            } else {
+                data.ensure_filename()
+            }
+        };
         let data = object.file_info.borrow().as_ref().unwrap().clone();
         match name {
             b"getpath" => Ok(Value::String(data.path.into())),
             b"getpathname" | b"__tostring" => {
-                Ok(Value::String(data.filename.unwrap_or_default().into()))
+                Ok(Value::String(pathname.unwrap_or_default().into()))
             }
             b"__debuginfo" => {
                 let mut props = object.snapshot();
                 props.insert(
                     ArrayKey::String(b"\0SplFileInfo\0pathName".to_vec()),
-                    Value::String(data.filename.clone().unwrap_or_default().into()),
+                    Value::String(pathname.unwrap_or_default().into()),
                 );
                 if let Some(name) = data.basename() {
                     props.insert(
                         ArrayKey::String(b"\0SplFileInfo\0fileName".to_vec()),
                         Value::String(name.to_vec().into()),
+                    );
+                }
+                if let Some(directory) = &data.directory
+                    && directory.borrow().active
+                {
+                    props.insert(
+                        ArrayKey::String(b"\0DirectoryIterator\0glob".to_vec()),
+                        Value::Bool(false),
+                    );
+                    props.insert(
+                        ArrayKey::String(b"\0RecursiveDirectoryIterator\0subPathName".to_vec()),
+                        Value::String(
+                            directory
+                                .borrow()
+                                .sub_path
+                                .clone()
+                                .unwrap_or_default()
+                                .into(),
+                        ),
                     );
                 }
                 Ok(Value::Array(Rc::new(props)))
@@ -322,7 +382,27 @@ impl Runtime {
             }
             return Ok(Value::Null);
         }
-        let Some(mut filename) = data.filename else {
+        let filename = if name == b"getpathinfo" {
+            object.file_info.borrow_mut().as_mut().unwrap().pathname()
+        } else {
+            if let Some(directory) = &data.directory
+                && directory.borrow().active
+                && directory.borrow().entry.is_empty()
+            {
+                return Err(self.array_iterator_exception(
+                    b"RuntimeException",
+                    "Could not open file".into(),
+                    line,
+                ));
+            }
+            object
+                .file_info
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .ensure_filename()
+        };
+        let Some(mut filename) = filename else {
             return if name == b"getpathinfo" {
                 Ok(Value::Null)
             } else {
@@ -335,9 +415,29 @@ impl Runtime {
             }
             filename = path_parts::dirname(&filename);
         }
+        if !file {
+            return self.create_file_info(class, filename, line);
+        }
         let result = self.allocate_class_object(class.clone(), line)?;
         let constructor = objects::method(&class, b"__construct").unwrap();
-        if !file && matches!(constructor.native, Some(NativeMethod::FileInfo)) {
+        let args = vec![
+            Value::String(filename.into()),
+            self.lookup(b"mode").unwrap(),
+        ];
+        let target =
+            self.unchecked_method_target(constructor, class, Some(result.clone()), line)?;
+        self.call_callback_at(&target, &args, line, true)?;
+        Ok(Value::Object(result))
+    }
+    pub(super) fn create_file_info(
+        &mut self,
+        class: Rc<Class>,
+        filename: Vec<u8>,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let result = self.allocate_class_object(class.clone(), line)?;
+        let constructor = objects::method(&class, b"__construct").unwrap();
+        if matches!(constructor.native, Some(NativeMethod::FileInfo)) {
             result
                 .file_info
                 .borrow_mut()
@@ -345,10 +445,7 @@ impl Runtime {
                 .unwrap()
                 .set_filename(filename);
         } else {
-            let mut args = vec![Value::String(filename.into())];
-            if file {
-                args.push(self.lookup(b"mode").unwrap());
-            }
+            let args = vec![Value::String(filename.into())];
             let target =
                 self.unchecked_method_target(constructor, class, Some(result.clone()), line)?;
             self.call_callback_at(&target, &args, line, true)?;
@@ -356,7 +453,7 @@ impl Runtime {
         Ok(Value::Object(result))
     }
 
-    fn file_info_stat(
+    pub(super) fn file_info_stat(
         &mut self,
         filename: &[u8],
         name: &[u8],

@@ -180,6 +180,7 @@ impl Runtime {
             drop(old);
             self.drain_destructors(result, line)?;
         }
+        self.clone_directory_iterator(original, &object, line)?;
         self.inherit_reference_sources(&object);
         if let Some(method) = objects::method(&object.class, b"__clone") {
             unlock_readonly(&object);

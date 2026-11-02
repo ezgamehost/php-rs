@@ -385,6 +385,13 @@ Group, including work by Marcus Boerger. Stat/lstat caching, access checks, and
 follows `main/streams/plain_wrapper.c`. Path components reuse the string and
 Zend dirname adaptations described above.
 
+DirectoryIterator, FilesystemIterator, and RecursiveDirectoryIterator in
+`src/runtime/directory_iterator.rs`, including native cursor wrappers, independent
+directory clones, cached current values, and recursive child construction, adapt
+the same `ext/spl/spl_directory.c` and `.stub.php` sources. RecursiveIteratorIterator
+source-object dispatch in `src/runtime/recursive_iterator.rs` follows
+`ext/spl/spl_iterators.c`; native directory handles use the existing platform adapter.
+
 SplDoublyLinkedList, SplQueue, and SplStack storage, cursor behavior, cloning,
 offsets, debug output, serialization hooks, and legacy Serializable methods
 in `src/runtime/linked_list.rs`

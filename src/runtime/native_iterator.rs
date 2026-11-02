@@ -5,6 +5,9 @@ use crate::{PhpObject, object::ObjectHandle};
 
 pub(super) enum IteratorState {
     FixedArray(usize),
+    Directory {
+        current: Option<Value>,
+    },
     Heap {
         current: Option<Value>,
     },
@@ -28,6 +31,14 @@ pub(super) fn hidden_iterator(object: &PhpObject) -> bool {
         .borrow()
         .as_ref()
         .is_some_and(|data| data.hidden)
+}
+pub(super) fn source_object(object: &Rc<PhpObject>) -> Rc<PhpObject> {
+    object
+        .internal_iterator
+        .borrow()
+        .as_ref()
+        .filter(|data| data.hidden)
+        .map_or_else(|| object.clone(), |data| data.source.clone())
 }
 impl Runtime {
     pub(super) fn native_iterator(
@@ -56,6 +67,51 @@ impl Runtime {
         raw: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        let directory = {
+            let payload = object.internal_iterator.borrow();
+            payload.as_ref().and_then(|data| match &data.state {
+                IteratorState::Directory { current } => Some((
+                    data.source.clone(),
+                    (name == b"current").then(|| current.clone()).flatten(),
+                )),
+                _ => None,
+            })
+        };
+        if let Some((source, cached)) = directory {
+            let cache = name == b"current" && directory_iterator::caches_current(&source);
+            if cache && let Some(value) = cached {
+                return Ok(value);
+            }
+            let result = self.directory_iterator_step(
+                &source,
+                name,
+                source.class.is_a(b"FilesystemIterator"),
+                true,
+                line,
+            );
+            if matches!(name, b"next" | b"rewind") {
+                let old = {
+                    let mut payload = object.internal_iterator.borrow_mut();
+                    let IteratorState::Directory { current } = &mut payload.as_mut().unwrap().state
+                    else {
+                        unreachable!()
+                    };
+                    current.take()
+                };
+                drop(old);
+                return self.drain_destructors(result, line);
+            }
+            let value = result?;
+            if cache {
+                let mut payload = object.internal_iterator.borrow_mut();
+                let IteratorState::Directory { current } = &mut payload.as_mut().unwrap().state
+                else {
+                    unreachable!()
+                };
+                *current = Some(value.clone());
+            }
+            return Ok(value);
+        }
         let heap = {
             let payload = object.internal_iterator.borrow();
             payload.as_ref().and_then(|data| {
@@ -154,6 +210,9 @@ impl Runtime {
         match data.as_ref().map(|data| &data.state) {
             Some(IteratorState::LinkedList { cursor, .. }) => {
                 linked_list::has_current(&cursor.borrow())
+            }
+            Some(IteratorState::Directory { .. }) => {
+                directory_iterator::has_current(&data.as_ref().unwrap().source)
             }
             Some(IteratorState::Heap { .. }) => {
                 self.heap_has_current(&data.as_ref().unwrap().source)
