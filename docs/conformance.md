@@ -2344,6 +2344,39 @@ PHP 8.5.0 `ext/standard/array.c` and `ext/standard/string.c` establish the
 implementation. Physical bucket history and destructor execution remain
 unfinished; other previously documented runtime gaps still apply.
 
+The [object destruction slice](conformance/php-8.5.0-destructors-hillclimb.txt)
+adds **62 upstream passes** across the six suites, with **zero regressions**.
+Zend reaches **2502 / 2346 / 408** and array **759 / 29 / 52**; reflection,
+SPL, strings, and math retain their previous counts. The source-selected
+destructor fixtures, complete Zend GC directory, and reflection constructor
+failure fixture improve from **41 / 168 / 65** to **101 / 108 / 65**.
+
+Destructors execute on reference release, discarded results, local cleanup, and
+shutdown. A request queue transfers dying objects out of Rust Drop so PHP code
+can safely run and resurrect them. Object handles and typed-property reference
+constraints survive resurrection. Calls use inherited methods, visibility,
+attribute diagnostics, and exception chaining. Failed constructors suppress
+automatic destruction through both ordinary and reflection instantiation.
+Invalid static, parameterized, and return-typed destructor declarations produce
+compile diagnostics. Shutdown callbacks run first, followed by unique globals
+in reverse order and remaining objects in handle order; reference-bound globals
+remain available during the final sweep.
+
+`gc_collect_cycles` implements trial deletion over tracked object properties,
+arrays, and reference cells. External references protect live roots, reentrant
+collection returns zero, and reachability is recomputed after destructors to
+protect resurrection. Array-only cycles, closure/native payload cycles,
+automatic collection thresholds, and GC status/configuration APIs remain
+unfinished. Some temporary cleanup locations, reentrant assignment behavior,
+complex collection counts, and shutdown exception chaining also remain incomplete.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or matrices were added. Direct CLI reference probes
+also match resurrection, cleanup order, typed aliases, live cycle roots,
+reentrant collection, basic collected counts, output, and exit status.
+PHP 8.5.0's Zend object lifecycle, executor shutdown, and VM sources establish
+the destruction behavior; other previously documented runtime gaps still apply.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2351,11 +2384,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2442 | 2406 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2502 | 2346 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 283 | 172 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 757 | 31 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 759 | 29 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 399 | 179 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

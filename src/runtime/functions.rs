@@ -388,7 +388,7 @@ impl Runtime {
         if !optimized {
             self.trace_frames.pop();
         }
-        result
+        self.drain_destructors(result, line)
     }
 
     fn bind_call_arguments(

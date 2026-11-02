@@ -12,6 +12,7 @@ pub(super) enum Builtin {
     MtRand(bool),
     RandMax,
     LcgValue,
+    CollectCycles,
     ArrayRand,
     ArrayShuffle,
     StrShuffle,
@@ -185,6 +186,7 @@ impl Builtin {
             b"rand" => Self::MtRand(true),
             b"mt_getrandmax" | b"getrandmax" => Self::RandMax,
             b"lcg_value" => Self::LcgValue,
+            b"gc_collect_cycles" => Self::CollectCycles,
             b"array_rand" => Self::ArrayRand,
             b"shuffle" => Self::ArrayShuffle,
             b"str_shuffle" => Self::StrShuffle,
@@ -493,7 +495,7 @@ impl Builtin {
             Self::RandomInt => &[("min", false, false), ("max", false, false)],
             Self::MtSeed => &[("seed", true, false), ("mode", true, false)],
             Self::MtRand(_) => &[("min", true, false), ("max", true, false)],
-            Self::RandMax | Self::LcgValue => &[],
+            Self::RandMax | Self::LcgValue | Self::CollectCycles => &[],
             Self::ArrayRand => &[("array", false, false), ("num", true, false)],
             Self::ArrayShuffle => &[("array", false, false)],
             Self::StrShuffle => &[("string", false, false)],
@@ -1099,6 +1101,7 @@ impl Runtime {
             Builtin::MtRand(inverted) => return self.mt_rand(&args, &name, inverted, line),
             Builtin::RandMax => return Ok(Value::Int(i32::MAX as i64)),
             Builtin::LcgValue => return Ok(self.lcg_value()),
+            Builtin::CollectCycles => return self.collect_cycles(line),
             _ => {}
         }
         if let Builtin::Math(kind) = builtin {
@@ -1229,6 +1232,7 @@ impl Runtime {
             Builtin::RandomBytes => self.random_bytes(&args, line),
             Builtin::RandomInt => self.random_int(&args, line),
             Builtin::ArrayRand => self.array_rand(&args, line),
+            Builtin::CollectCycles => unreachable!(),
             Builtin::StrShuffle => self.shuffle_string(first, line),
             Builtin::ArrayShuffle => unreachable!(),
             Builtin::MtSeed | Builtin::MtRand(_) | Builtin::RandMax | Builtin::LcgValue => {

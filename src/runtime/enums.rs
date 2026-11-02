@@ -200,7 +200,7 @@ impl Runtime {
             properties.insert(ArrayKey::String(b"value".to_vec()), value);
         }
         let handle = self.allocate_object_handle();
-        Ok(Value::Object(Rc::new(PhpObject {
+        Ok(Value::Object(self.create_object(PhpObject {
             class: class.clone(),
             class_name: class.display_name().into_owned(),
             object_id: handle.id,

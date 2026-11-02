@@ -412,7 +412,6 @@ impl Parser {
                 if static_method
                     && [
                         b"__construct".as_slice(),
-                        b"__destruct",
                         b"__clone",
                         b"__invoke",
                         b"__get",

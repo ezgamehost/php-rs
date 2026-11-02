@@ -41,6 +41,7 @@ mod closures;
 mod comparison;
 mod constants;
 mod csv;
+mod destructors;
 mod destructuring;
 mod diagnostic_display;
 mod directories;
@@ -56,6 +57,7 @@ mod foreach;
 mod formatting;
 mod function_arguments;
 mod functions;
+mod garbage_collection;
 mod inheritance;
 mod interfaces;
 mod jumps;
@@ -159,6 +161,7 @@ pub struct Runtime {
     working_directory: Option<std::path::PathBuf>,
     exit_status: Option<i32>,
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
+    collecting_cycles: bool,
     resources: crate::resource::Store,
     default_directory: Option<Rc<crate::PhpResource>>,
     error_handler: Option<Value>,
@@ -298,6 +301,15 @@ impl Runtime {
     }
     fn statement(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
         let result = self.statement_inner(stmt);
+        let line = match stmt {
+            Stmt::Static(declarations) => declarations
+                .iter()
+                .find_map(|(_, value)| value.as_ref().map(|expr| expr.line))
+                .unwrap_or(0),
+            Stmt::Global(values) | Stmt::Unset(values) => values.last().map_or(0, |expr| expr.line),
+            _ => 0,
+        };
+        let result = self.drain_destructors(result, line);
         result.map_err(|error| self.materialize_error(error))
     }
     fn statement_inner(&mut self, stmt: &Stmt) -> Result<Flow, Error> {
@@ -527,6 +539,8 @@ impl Runtime {
                     {
                         reference_paths::unset_cell(value, &mut location.keys, target.line, self)?;
                     }
+                    drop(location);
+                    self.drain_destructors(Ok(()), target.line)?;
                 }
             }
             Stmt::Break(level) => return Ok(Flow::Break(*level)),
@@ -547,7 +561,7 @@ impl Runtime {
         Ok(Flow::Next)
     }
     fn eval_discard(&mut self, expression: &Expr) -> Result<(), Error> {
-        match &expression.kind {
+        let result = match &expression.kind {
             ExprKind::Group(inner) => self.eval_discard(inner),
             ExprKind::Call(callee, args) if !expression.has_nullsafe_chain() => {
                 self.call(callee, args, expression.line, false).map(drop)
@@ -563,7 +577,8 @@ impl Runtime {
             }
             ExprKind::Unary(op, inner) if op == "@" => self.eval_silenced(inner, false).map(drop),
             _ => self.eval(expression).map(drop),
-        }
+        };
+        self.drain_destructors(result, expression.line)
     }
 
     fn eval_silenced(&mut self, expression: &Expr, result_used: bool) -> Result<Value, Error> {
@@ -875,7 +890,8 @@ impl Runtime {
         }
     }
     fn eval(&mut self, expr: &Expr) -> Result<Value, Error> {
-        self.eval_inner(expr).map(|value| value.dereferenced())
+        let result = self.eval_inner(expr).map(|value| value.dereferenced());
+        self.drain_destructors(result, expr.line)
     }
     fn eval_inner(&mut self, expr: &Expr) -> Result<Value, Error> {
         if expr.has_nullsafe_chain() {

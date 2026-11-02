@@ -2,7 +2,11 @@ use crate::{
     PhpArray,
     ast::{ClassDecl, FunctionDecl, PropertyDecl},
 };
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    collections::{BTreeMap, VecDeque},
+    rc::{Rc, Weak},
+};
 
 pub(crate) struct PropertyName<'a> {
     pub scope: Option<&'a [u8]>,
@@ -86,20 +90,33 @@ impl PropertyCursor {
 #[derive(Debug, Default)]
 pub(crate) struct ObjectStore {
     next: usize,
-    free: Vec<usize>,
+    pub free: Vec<usize>,
+    pub pending: VecDeque<Destruction>,
+    pub objects: BTreeMap<usize, Weak<PhpObject>>,
+    pub no_reuse: bool,
+    pub destructors_finished: bool,
+}
+
+#[derive(Debug)]
+pub(crate) enum Destruction {
+    Object(Rc<PhpObject>),
+    Free(usize),
 }
 
 #[derive(Debug)]
 pub(crate) struct ObjectHandle {
     pub id: usize,
-    store: Rc<RefCell<ObjectStore>>,
+    pub destructor_called: Cell<bool>,
+    store: Weak<RefCell<ObjectStore>>,
 }
 
 impl ObjectHandle {
     pub fn allocate(store: &Rc<RefCell<ObjectStore>>) -> Self {
         let id = {
             let mut store = store.borrow_mut();
-            if let Some(id) = store.free.pop() {
+            if !store.no_reuse
+                && let Some(id) = store.free.pop()
+            {
                 id
             } else {
                 store.next += 1;
@@ -108,14 +125,75 @@ impl ObjectHandle {
         };
         Self {
             id,
-            store: store.clone(),
+            destructor_called: Cell::new(false),
+            store: Rc::downgrade(store),
         }
     }
 }
 
 impl Drop for ObjectHandle {
     fn drop(&mut self) {
-        self.store.borrow_mut().free.push(self.id);
+        if let Some(store) = self.store.upgrade() {
+            let mut store = store.borrow_mut();
+            store.objects.remove(&self.id);
+            if store.pending.is_empty() {
+                store.free.push(self.id);
+            } else {
+                // A property's destructor must finish before its owner's
+                // handle becomes available for reuse.
+                store.pending.push_back(Destruction::Free(self.id));
+            }
+        }
+    }
+}
+
+impl Drop for PhpObject {
+    fn drop(&mut self) {
+        if self._handle.destructor_called.replace(true)
+            || !self.class.methods.iter().any(|method| {
+                method
+                    .name
+                    .rsplit(|byte| *byte == b':')
+                    .next()
+                    .is_some_and(|name| name.eq_ignore_ascii_case(b"__destruct"))
+            })
+        {
+            return;
+        }
+        let Some(store) = self._handle.store.upgrade() else {
+            return;
+        };
+        if store.borrow().destructors_finished {
+            return;
+        }
+        // Rust cannot execute PHP from Drop. Transfer the dying object's
+        // payload and handle to the request's queue. No strong references to
+        // the old allocation remain; the destructor may resurrect this one.
+        let object = Rc::new(Self {
+            property_cursor: std::mem::take(&mut self.property_cursor),
+            property_iterators: std::mem::take(&mut self.property_iterators),
+            reflection: std::mem::take(&mut self.reflection),
+            throwable: std::mem::take(&mut self.throwable),
+            class: self.class.clone(),
+            class_name: std::mem::take(&mut self.class_name),
+            properties: std::mem::take(&mut self.properties),
+            unset_properties: std::mem::take(&mut self.unset_properties),
+            reinitializable: std::mem::take(&mut self.reinitializable),
+            object_id: self.object_id,
+            _handle: std::mem::replace(
+                &mut self._handle,
+                ObjectHandle {
+                    id: 0,
+                    destructor_called: Cell::new(true),
+                    store: Weak::new(),
+                },
+            ),
+        });
+        let mut store = store.borrow_mut();
+        store
+            .objects
+            .insert(object.object_id, Rc::downgrade(&object));
+        store.pending.push_back(Destruction::Object(object));
     }
 }
 

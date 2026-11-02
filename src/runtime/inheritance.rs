@@ -91,6 +91,34 @@ impl Runtime {
     }
 
     pub(super) fn validate_overrides(&mut self, class: &Class) -> Result<(), Error> {
+        for method in &class.declaration.methods {
+            if method
+                .name
+                .rsplit(|byte| *byte == b':')
+                .next()
+                .is_some_and(|name| name.eq_ignore_ascii_case(b"__destruct"))
+            {
+                let invalid = if method.is_static {
+                    Some("be static")
+                } else if !method.parameters.is_empty() {
+                    Some("take arguments")
+                } else if method.return_type.is_some() {
+                    Some("declare a return type")
+                } else {
+                    None
+                };
+                if let Some(invalid) = invalid {
+                    return Err(self.compile_fatal_at(
+                        &format!(
+                            "Method {}() cannot {invalid}",
+                            String::from_utf8_lossy(&method.name)
+                        ),
+                        &method.source,
+                        method.line,
+                    ));
+                }
+            }
+        }
         if class.declaration.is_trait {
             return Ok(());
         }

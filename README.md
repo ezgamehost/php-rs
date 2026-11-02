@@ -37,7 +37,7 @@ Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
 Call `Runtime::shutdown()` after reporting any execution error and before consuming
-output. It runs shutdown callbacks once; callback errors are reported and returned,
+output. It runs shutdown callbacks and object destructors once; errors are reported and returned,
 so callers must not report them again. The CLI, PHPT runner, and `run` helper do
 this automatically. The `run` helper still returns execution errors even when an
 exception handler runs.
@@ -136,7 +136,7 @@ new request. The CLI returns the low eight bits of the requested status.
   references and omitting undefined locals and the implicit `$this` context value.
 - `array_splice` edits arrays by reference, preserves string keys and reference cells,
   renumbers numeric keys, converts replacements, and resets the internal cursor.
-  Sparse-table iterator history and destructor callbacks remain incomplete.
+  Sparse-table iterator history and some reentrant mutation timing remain incomplete.
 - `array_push`, `array_pop`, `array_shift`, and `array_unshift` support reference
   targets, copy-on-write, numeric append-key restoration, and cursor/iterator updates.
   Pop/shift return values without retaining the removed element’s reference binding.
@@ -216,8 +216,14 @@ new request. The CLI returns the low eight bits of the requested status.
   Method-array callbacks and invokable objects work with pipes and array callbacks.
 - Request-local object handles are shared by objects and closures and recycled
   after their last owning reference is released. `spl_object_id` and `spl_object_hash`
-  expose those handles. Cyclic garbage collection and destructor callbacks remain
-  unfinished.
+  expose those handles.
+- Object destructors run on reference release and after shutdown callbacks, with
+  visibility checks, resurrection, constructor-failure suppression, and exception
+  propagation. Shutdown visits unique globals before remaining live objects.
+  `gc_collect_cycles` collects unreachable object cycles through properties,
+  arrays, and reference cells, protecting live roots and reentrant collection.
+  Array-only and closure cycles, automatic GC thresholds, and some temporary
+  cleanup and mutation timing remain incomplete.
 - Anonymous classes, including readonly declarations, constructor arguments,
   inheritance, interfaces, and traits. Repeated executions share the declaration's
   class and static state; separately compiled declarations have distinct identities.
@@ -546,13 +552,13 @@ and invokable instances of implemented classes.
 Variable and array-element reference assignment, array reference entries, closure
 reference captures, reference parameters/returns, and reference destructuring work.
 Traversable unpacking, complete reference coercion compatibility and diagnostics,
-and cycle collection remain unfinished.
-Reference cycles are not yet collected.
+and complete cycle collection remain unfinished. Cycles without a tracked object
+and cycles through closures are not yet collected.
 Throwable property layouts, configurable trace settings, error
 handlers, protected exception-property access (including severity), and complete compile-time fatal
 error distinctions remain unfinished.
-Other `declare` directives are not implemented. Output handlers and object
-destructor execution remain unimplemented.
+Other `declare` directives and output handlers are not implemented. Destructor
+timing during complex expressions and reentrant mutations remains incomplete.
 Automatic initialization and scope handling for the other superglobals are not
 implemented; `$GLOBALS` currently exposes the variables created by PHP code or
 provided through `Runtime::variables`. File loading currently

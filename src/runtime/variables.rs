@@ -6,6 +6,7 @@ pub(super) struct Scope {
     values: HashMap<Vec<u8>, Cell>,
     order: Vec<Vec<u8>>,
     slots: HashSet<Vec<u8>>,
+    references: HashSet<Vec<u8>>,
 }
 
 impl Drop for Scope {
@@ -19,6 +20,13 @@ impl Drop for Scope {
 }
 
 impl Scope {
+    pub(super) fn mark_reference(&mut self, name: &[u8]) {
+        self.references.insert(name.to_vec());
+    }
+
+    pub(super) fn is_reference(&self, name: &[u8]) -> bool {
+        self.references.contains(name)
+    }
     pub(super) fn reserve(&mut self, name: &[u8]) {
         if self.slots.insert(name.to_vec()) && !self.values.contains_key(name) {
             self.order.push(name.to_vec());
@@ -40,6 +48,7 @@ impl Scope {
     }
 
     pub(super) fn remove(&mut self, name: &[u8]) {
+        self.references.remove(name);
         if self.values.remove(name).is_some() && !self.slots.contains(name) {
             self.order.retain(|key| key != name);
         }
@@ -220,6 +229,7 @@ impl Runtime {
             ));
         }
         if target.keys.is_empty() {
+            self.location_scope(target).mark_reference(&target.name);
             self.location_scope(target)
                 .insert(target.name.clone(), reference);
         } else {
@@ -238,6 +248,9 @@ impl Runtime {
     ) -> Result<Cell, Error> {
         if location.object.is_some() || location.static_class.is_some() {
             return self.property_reference(location, line);
+        }
+        if location.keys.is_empty() {
+            self.location_scope(location).mark_reference(&location.name);
         }
         let root = self
             .location_scope(location)
@@ -283,6 +296,7 @@ impl Runtime {
 
     pub(super) fn bind_global(&mut self, name: Vec<u8>) {
         let globals = self.callers.first_mut().unwrap_or(&mut self.scope);
+        globals.mark_reference(&name);
         let value = globals.get_or_insert(&name, Value::Null);
         self.scope.insert(name, value);
     }

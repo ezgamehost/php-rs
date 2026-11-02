@@ -50,6 +50,13 @@ filtering in `src/parser.rs`, `src/parser/attributes.rs`, and
 `Zend/zend_compile.c`, copyright (c) Zend Technologies Ltd. The Zend license
 below also applies to these adaptations.
 
+Object destruction in `src/object.rs` and `src/runtime/destructors.rs`, with
+integration in the evaluator, shutdown, constructor, reflection, and inheritance
+paths, adapts PHP 8.5.0's `Zend/zend_objects.c`, `Zend/zend_objects_API.c`,
+`Zend/zend_execute_API.c`, `Zend/zend_compile.c`, and `Zend/zend_vm_def.h`,
+copyright (c) Zend Technologies Ltd. The Zend license below also applies to
+these adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.

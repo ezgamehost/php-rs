@@ -1,0 +1,264 @@
+PHP 8.5.0 object destruction and object-cycle collection hillclimb
+
+Baseline: 5af81056f838db5e9d7f708e5110ece43542869e
+Reference: PHP 8.5.0, local CLI build
+Full six-suite comparison: 8,267 upstream fixtures
+
+ZEND
+Before: 5256 cases; 2442 passed, 2406 failed, 408 unsupported
+After: 5256 cases; 2502 passed, 2346 failed, 408 unsupported
+New passes: 60; regressions: 0
+NEW PASS: Zend/tests/attributes/deprecated/functions/001.phpt
+NEW PASS: Zend/tests/attributes/deprecated/functions/throwing_error_handler_001.phpt
+NEW PASS: Zend/tests/backtrace/bug76047.phpt
+NEW PASS: Zend/tests/bind_static_exception.phpt
+NEW PASS: Zend/tests/bug20240.phpt
+NEW PASS: Zend/tests/bug32799.phpt
+NEW PASS: Zend/tests/bug38220.phpt
+NEW PASS: Zend/tests/bug49893.phpt
+NEW PASS: Zend/tests/bug62763.phpt
+NEW PASS: Zend/tests/bug65051.phpt
+NEW PASS: Zend/tests/closures/closure_005.phpt
+NEW PASS: Zend/tests/coalesce/assign_coalesce_002.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_019.phpt
+NEW PASS: Zend/tests/errmsg/errmsg_033.phpt
+NEW PASS: Zend/tests/ex_func_null_during_property_write.phpt
+NEW PASS: Zend/tests/exceptions/bug53511.phpt
+NEW PASS: Zend/tests/exceptions/exception_008.phpt
+NEW PASS: Zend/tests/exceptions/exception_026.phpt
+NEW PASS: Zend/tests/fe_fetch_dtor_exception.phpt
+NEW PASS: Zend/tests/frameless_throwing_destructor.phpt
+NEW PASS: Zend/tests/function_arguments/sensitive_parameter_value_keeps_object_alive.phpt
+NEW PASS: Zend/tests/gc/bug70805.phpt
+NEW PASS: Zend/tests/gc/bug72530.phpt
+NEW PASS: Zend/tests/gc/bug78379.phpt
+NEW PASS: Zend/tests/gc/bug78379_2.phpt
+NEW PASS: Zend/tests/gc/bug78589.phpt
+NEW PASS: Zend/tests/gc/bug78999.phpt
+NEW PASS: Zend/tests/gc/gc_042.phpt
+NEW PASS: Zend/tests/gh10168/assign_prop.phpt
+NEW PASS: Zend/tests/gh10168/assign_prop_with_prop_ref.phpt
+NEW PASS: Zend/tests/gh10168/assign_untyped_prop.phpt
+NEW PASS: Zend/tests/gh10168/assign_untyped_prop_with_prop_ref.phpt
+NEW PASS: Zend/tests/lsb/lsb_010.phpt
+NEW PASS: Zend/tests/magic_methods/bug29368_2.phpt
+NEW PASS: Zend/tests/magic_methods/bug29368_3.phpt
+NEW PASS: Zend/tests/magic_methods/bug32596.phpt
+NEW PASS: Zend/tests/magic_methods/bug36268.phpt
+NEW PASS: Zend/tests/magic_methods/bug36759.phpt
+NEW PASS: Zend/tests/magic_methods/bug43175.phpt
+NEW PASS: Zend/tests/magic_methods/bug51822.phpt
+NEW PASS: Zend/tests/magic_methods/bug52361.phpt
+NEW PASS: Zend/tests/magic_methods/bug74053.phpt
+NEW PASS: Zend/tests/magic_methods/dtor_scope.phpt
+NEW PASS: Zend/tests/new_without_parentheses/garbage_collection.phpt
+NEW PASS: Zend/tests/return_types/018.phpt
+NEW PASS: Zend/tests/static_variables/static_variables_destructor.phpt
+NEW PASS: Zend/tests/temporary_cleaning/temporary_cleaning_009.phpt
+NEW PASS: Zend/tests/temporary_cleaning/temporary_cleaning_011.phpt
+NEW PASS: Zend/tests/traits/gh16198_2.phpt
+NEW PASS: Zend/tests/traits/methods_003.phpt
+NEW PASS: Zend/tests/try/bug73337.phpt
+NEW PASS: Zend/tests/try/catch_novar_2.phpt
+NEW PASS: Zend/tests/try/try_finally_012.phpt
+NEW PASS: Zend/tests/try/try_finally_016.phpt
+NEW PASS: Zend/tests/try/try_finally_017.phpt
+NEW PASS: Zend/tests/try/try_finally_019.phpt
+NEW PASS: Zend/tests/try/try_finally_020.phpt
+NEW PASS: Zend/tests/try/try_finally_022.phpt
+NEW PASS: Zend/tests/try/try_finally_023.phpt
+NEW PASS: Zend/tests/type_coercion/type_casts/cast_to_void_destructor.phpt
+
+Most frequent remaining failure messages:
+4: Expected "Parse error: syntax error, unexpected token \"exit\", expecting identifier in %s
+4: Expected "NULL\n", got "object(Test)#2 (0) {\n}\n"
+4: Expected "Fatal error: Duplicate type Foo is redundant in %s
+2: Expected "Array\n(\n    [0] => 123\n)\nArray\n(\n    [0] => 123\n)\n", got "Array\n(\n    [0] => Array\n *RECURSION*\n)\nArray\n(\n    [0] => 123\n)\n"
+2: Expected "Warning: Constant __COMPILER_HALT_OFFSET__ already defined, this will be an error in PHP 9 in %s
+2: Expected "Parse error: syntax error, unexpected token \"exit\", expecting \"(\" in %s
+2: Expected "NULL\nobject(Test)#2 (0) {\n}\n", got "object(Test)#3 (0) {\n}\nobject(Test)#3 (0) {\n}\n"
+2: Expected "object(Test)#3 (0) {\n}\nNULL\n", got "object(Test)#3 (0) {\n}\nobject(Test)#4 (0) {\n}\n"
+2: Expected "Cannot increment Foo\nobject(Foo)#1 (0) {\n}\nCannot decrement Foo\nobject(Foo)#1 (0) {\n}\nCannot increment Foo\nobject(Foo)#1 (0) {\n}\nCannot decrement Foo\nobject(Foo
+2: Expected "The float 1.0E+42 is not representable as an int, cast occurred\nbool(false)\n", got "The float 1.0E+42 is not representable as an int, cast occurred\nbool(true)\n"
+1: Expected "done\n", got "\nFatal error: Uncaught Error: Call to undefined function highlight_string() in /private/tmp/php-rs-reference/php-8.5.0/Zend/tests/67468.php:2\nStack trace:
+1: Expected "string(5) \"1test\"\nstring(5) \"1test\"\n", got "\nFatal error: Uncaught Error: Class \"ArrayObject\" not found in /private/tmp/php-rs-reference/php-8.5.0/Zend/tests/Arr
+1: Expected "Fatal error: Class NotAbstract declares abstract method bar() and must therefore be declared abstract in %s on line %d\n", got "\nParse error: A class with abstract metho
+1: Expected "Fatal error: Multiple access type modifiers are not allowed in %s on line %d\n", got "\nParse error: Multiple access type modifiers are not allowed in /private/tmp/php-rs
+1: Expected "Fatal error: Multiple access type modifiers are not allowed in %s on line %d\n", got "\nParse error: Multiple access type modifiers are not allowed in /private/tmp/php-rs
+
+Unsupported section combinations:
+183: INI
+66: EXTENSIONS
+65: SKIPIF
+28: EXTENSIONS, INI
+25: INI, SKIPIF
+16: EXTENSIONS, INI, SKIPIF
+8: CLEAN
+3: EXTENSIONS, SKIPIF
+2: INI, WHITESPACE_SENSITIVE
+2: CLEAN, INI, SKIPIF
+2: INI, PHPDBG, SKIPIF
+1: CLEAN, STDIN
+1: EXPECTHEADERS, INI
+1: CLEAN, EXTENSIONS
+1: CLEAN, POST_RAW
+
+ARRAY
+Before: 840 cases; 757 passed, 31 failed, 52 unsupported
+After: 840 cases; 759 passed, 29 failed, 52 unsupported
+New passes: 2; regressions: 0
+NEW PASS: ext/standard/tests/array/gh16649/array_splice_normal_destructor.phpt
+NEW PASS: ext/standard/tests/array/gh19926.phpt
+
+Most frequent remaining failure messages:
+6: Expected "Exception caught: Array was modified during array_splice operation\n", got "ERROR: Should have thrown exception\n"
+1: Expected "--- Testing: [\"single element\"] ---\nFirst: \"single element\"\nLast: \"single element\"\n--- Testing: [\"hello world\",1] ---\nFirst: \"hello world\"\nLast: 1\n--- Tes
+1: Expected "*** Testing array_product() : variation - using non numeric values ***\nboolean (true)\nint(1)\n\nboolean (false)\nint(0)\n\nstring\n\nWarning: array_product(): Multiplic
+1: Expected "array_product() version:\n\nWarning: array_product(): Multiplication is not supported on type resource in %s on line %d\nint(30)\narray_reduce() version:\nUnsupported ope
+1: Expected "array_sum() version:\n\nWarning: array_sum(): Addition is not supported on type resource in %s on line %d\nint(13)\narray_reduce() version:\nUnsupported operand types: in
+1: Expected "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  string(3) \"one\"\n}\narray(2) {\n  [0]=>\n  int(2)\n  [1]=>\n  string(3) \"two\"\n}\narray(2) {\n  [0]=>\n  int(3)\n  [1]=>\n  
+1: Expected "val: v; key: k\nFirst value: k\nDone\n", got "val: v; key: k\n\nFatal error: Uncaught Error: Call to undefined function flush() in /private/tmp/php-rs-reference/php-8.5.0
+1: Expected "gen_xml(prefix=/Docs/)\ngen_xml(prefix=/Docs/@)\n/Docs/@Version=1.0\ngen_xml(prefix=/Docs/@) end\ngen_xml(prefix=/Docs/@)\n/Docs/@ProducerName=xxxxxxxx\ngen_xml(prefix=/D
+1: Expected "7: foo%00bar\n", got "7: \nFatal error: Uncaught Error: Call to undefined function urlencode() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/array/bug1458
+1: Malformed PHPT: Content before first PHPT section
+1: Expected "array(2) {\n  [1]=>\n  int(18)\n  [2]=>\n  int(52)\n}\narray(2) {\n  [1]=>\n  int(18)\n  [2]=>\n  int(52)\n}\narray(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\narray(2
+1: Expected "array(1) {\n  [\"A%0B\"]=>\n  string(11) \"Hello world\"\n}\narray (\n  'A' . \"\\0\" . 'B' => 'Hello world',\n)array(1) %s{\n  [\"A%0B\"]=>\n  string(11) \"Hello world\"
+1: Expected "array_unique(): Argument #1 ($array) must be of type array, ArrayObject given\nDone\n", got "\nFatal error: Uncaught Error: Class \"ArrayObject\" not found in /private/tm
+1: Expected "Cannot call compact() dynamically\n", got "\nFatal error: Uncaught Error: Call to undefined function ob_start() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/te
+1: Expected "array(1) refcount(%d){\n  [\"test\"]=>\n  string(3) \"xxx\" interned\n}\n", got "\nFatal error: Uncaught Error: Call to undefined function debug_zval_dump() in /private/t
+
+Unsupported section combinations:
+29: INI
+9: SKIPIF
+8: INI, SKIPIF
+5: EXTENSIONS
+1: CLEAN
+
+REFLECTION
+Before: 492 cases; 283 passed, 172 failed, 37 unsupported
+After: 492 cases; 283 passed, 172 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "Method [ <user, overwrites Foo, prototype Foo> public method func ] {\n  @@ %s010.php 7 - 8\n}\n", got "\nFatal error: Uncaught Error: Object of class ReflectionMethod co
+1: Expected "ReflectionException\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getClasses() in /private/tmp/php-rs-reference/php-8.5.0/ext/refl
+1: Expected "sleep\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getFunctions() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests
+1: Expected "int(0)\n", got "\nFatal error: Uncaught Error: Call to undefined method ReflectionExtension::getConstants() in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/test
+1: Expected "Class [ <user> class Foo ] {\n  @@ %s017.php 2-4\n\n  - Constants [1] {\n    Constant [ public string test ] { ok }\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static
+1: Expected "array(2) {\n  [0]=>\n  string(5) \"final\"\n  [1]=>\n  string(9) \"protected\"\n}\n", got "\nFatal error: Uncaught Error: Class \"Reflection\" not found in /private/tmp/p
+1: Expected "string(8) \"standard\"\n", got "\nFatal error: Uncaught ReflectionException: Function sleep() does not exist in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tes
+1: Expected "Object of class [ <user> class C1 ] {\n  @@ %s\n\n  - Constants [0] {\n  }\n\n  - Static properties [0] {\n  }\n\n  - Static methods [0] {\n  }\n\n  - Properties [3] {\n 
+1: Expected "Reflection\n\nReflection => enabled\n\ndate\n\ndate/time support => enabled\ntimelib version => %s\n\"Olson\" Timezone Database Version => %s\nTimezone Database => %s\nDe
+1: Expected "Cannot fetch information from a closed Generator\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/027.php
+1: Expected "object(ReflectionGenerator)#%d (0) {\n}\n", got "\nParse error: Expected ';' in /private/tmp/php-rs-reference/php-8.5.0/ext/reflection/tests/028.php
+1: Expected "Cannot directly instantiate ReflectionAttribute\n", got "\nFatal error: Uncaught ArgumentCountError: ReflectionAttribute::__construct() expects exactly 0 arguments, 3 giv
+1: Expected "Attribute [ Foo ]\nAttribute [ Bar ] {\n  - Arguments [2] {\n    Argument #0 [ a = 'foo' ]\n    Argument #1 [ b = 1234 ]\n  }\n}\nAttribute [ Baz ] {\n  - Arguments [2] {
+1: Expected "int(2)\nConstant [ public int X ] { 2 }\nClass [ <user> class C ] {\n  @@ %s 12-15\n\n  - Constants [2] {\n    Constant [ public int X ] { 2 }\n    Constant [ public int 
+1: Expected "Class [ <user> class A ] {\n  @@ %s 2-5\n\n  - Constants [2] {\n    Constant [ public int A ] { 8 }\n    Constant [ public array B ] { Array }\n  }\n\n  - Static properti
+
+Unsupported section combinations:
+17: INI
+16: EXTENSIONS
+3: SKIPIF
+1: EXTENSIONS, INI
+
+SPL
+Before: 778 cases; 23 passed, 661 failed, 94 unsupported
+After: 778 cases; 23 passed, 661 failed, 94 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "Fatal error: Uncaught ArgumentCountError: AppendIterator::__construct() expects exactly 0 arguments, 1 given in %s:%d\nStack trace:\n#0 %s(%d): AppendIterator->__construc
+1: Expected "MyArrayIterator\n", got "\nFatal error: Uncaught Error: Class \"ArrayIterator\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayObject
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "object(ArrayObject)#1 (1) {\n  [\"storage\":\"ArrayObject\":private]=>\n  array(3) {\n    [0]=>\n    int(1)\n    [1]=>\n    int(2)\n    [2]=>\n    int(3)\n  }\n}\n", got 
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Modification of ArrayObject during sorting is prohibited\nobject(ArrayObject)#1 (1) {\n  [\"storage\":\"ArrayObject\":private]=>\n  array(3) {\n    [0]=>\n    int(1)\n   
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Cannot access offset of type array on ArrayObject\nCannot access offset of type array on ArrayObject\nCannot access offset of type array on ArrayObject\nCannot access off
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::exchangeArray(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s 
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: ArrayObject::__construct(): Using an object as a backing array for ArrayObject is deprecated, as it allows violating class constraints and invariants in %s on
+1: Expected "Deprecated: Creation of dynamic property ArrayObject::$prop is deprecated in %s on line %d\n\nDeprecated: ArrayObject::__construct(): Using an object as a backing array f
+1: Expected "Done\n", got "\nFatal error: Uncaught Error: Class \"ArrayObject\" not found in /private/tmp/php-rs-reference/php-8.5.0/ext/spl/tests/ArrayObject/ArrayObject_unserialize_
+
+Unsupported section combinations:
+41: CLEAN
+31: INI
+6: CLEAN, SKIPIF
+5: SKIPIF
+4: EXTENSIONS
+2: CLEAN, EXTENSIONS, SKIPIF
+2: CLEAN, INI
+2: CLEAN, EXTENSIONS, INI
+1: INI, SKIPIF
+
+STRINGS
+Before: 730 cases; 399 passed, 179 failed, 152 unsupported
+After: 730 cases; 399 passed, 179 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "Warning: highlight_file(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+1: Expected "delimiter: |\ndelimiter: |\n", got "\nFatal error: Uncaught Error: Call to undefined function set_time_limit() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tes
+1: Expected "c3a0c3a1\nc3a0c3a1\n", got "c3a0c3a1\n\nFatal error: Uncaught Error: Call to undefined function htmlspecialchars() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard
+1: Expected "string(0) \"\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strin
+1: Expected "array(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2]=>\n  int(9)\n}\narray(3) {\n  [0]=>\n  string(3) \"ABC\"\n  [1]=>\n  string(3) \"DEF\"\n  [2
+1: Expected "Warning: Array to string conversion in %s on line %d\na:4:{i:0;s:19:\"This is strung one.\";i:1;s:19:\"This is strung two.\";i:2;s:5:\"Array\";i:3;s:22:\"This is a last s
+1: Expected "string(4) \"&lt;\"\nstring(5) \"&#38;\"\nstring(8) \"&#38;lt;\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/ph
+1: Expected "Alive!\n", got "\nFatal error: Uncaught Error: Call to undefined function ini_set() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug27276.php:2\n
+1: Expected "foo = bar\nbar = foo\n", got "\nFatal error: Uncaught Error: Call to undefined function sscanf() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug
+1: Expected "string(42) \"e28082e28089e28098e280a0e280b2e28184e282ac\"\n", got "\nFatal error: Uncaught Error: Call to undefined function html_entity_decode() in /private/tmp/php-rs-r
+1: Expected "array(1) {\n  [1]=>\n  string(3) \"181\"\n}\narray(1) {\n  [1]=>\n  string(2) \"18\"\n}\narray(1) {\n  [1]=>\n  string(1) \"1\"\n}\n", got "\nFatal error: Uncaught Error:
+1: Expected "a: array(1) {\n  [1]=>\n  string(2) \"a0\"\n}\naa: array(1) {\n  [1]=>\n  string(2) \"aa\"\n}\naaa: array(1) {\n  [1]=>\n  string(4) \"aaa0\"\n}\naaaa: array(1) {\n  [1]=
+1: Expected "cbd056ba\n", got "\nFatal error: Uncaught Error: Call to undefined function crc32() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug36306.php:9\n
+1: Expected "int(1)\nDone\n", got "\nFatal error: Uncaught Error: Call to undefined function sscanf() in /private/tmp/php-rs-reference/php-8.5.0/ext/standard/tests/strings/bug38322.ph
+1: Expected "array(2) {\n  [0]=>\n  string(3) \"one\"\n  [1]=>\n  string(3) \"two\"\n}\narray(2) {\n  [0]=>\n  string(3) \"two\"\n  [1]=>\n  string(3) \"one\"\n}\n--\nstring(3) \"one\
+
+Unsupported section combinations:
+84: SKIPIF
+40: INI
+11: INI, SKIPIF
+7: EXTENSIONS, INI
+5: CLEAN, INI
+3: EXTENSIONS
+2: ENV, SKIPIF
+
+MATH
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+Most frequent remaining failure messages:
+1: Expected "string(2775) \"-2,000.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1: Expected "float(1%f)\nstring(%d) \"d:1%s;\"\nfloat(1%f)\nfloat(-1%f)\nstring(%d) \"d:-1%s;\"\nfloat(-1%f)\nfloat(-INF)\nstring(7) \"d:-INF;\"\nfloat(-INF)\nfloat(INF)\nstring(6) \"
+
+Unsupported section combinations:
+56: INI
+41: SKIPIF
+20: INI, SKIPIF
+
+Focused source-selected destructor fixtures, full Zend GC directory, and reflection
+constructor failure fixture: 41/168/65 -> 101/108/65 (pass/fail/unsupported).
+The full suites add 62 passes: 60 Zend and 2 array, with zero regressions.
+All 797 existing Rust tests and 57 reference-checked project PHPT pass.
+Formatting, Clippy, and diff checks pass. No custom tests or matrices added.
+Direct CLI reference probes match resurrection, local/global/shutdown order,
+shared references, typed-property aliases across resurrection, live cycle roots,
+reentrant collection, basic collected counts, output, and exit status.
+
+The Drop queue retains dying objects for safe PHP execution outside Rust Drop.
+It preserves object IDs, restores typed-reference holders, invokes inherited
+methods and attributes, and chains destructor exceptions during unwinding.
+Constructors that throw suppress automatic destruction, including reflection.
+Shutdown callbacks precede reverse unique-global destruction, followed by live
+object handle order. Visibility and invalid destructor signatures are checked.
+
+Cycle collection performs trial deletion over tracked objects, property arrays,
+and reference cells. It rescans after destructors to protect resurrection.
+Array-only cycles, closure/native payload cycles, automatic GC thresholds and
+status/configuration APIs remain incomplete. Exact temporary cleanup locations,
+reentrant assignment semantics, cyclic collection counts in complex graphs,
+shutdown exception chaining, and other previously documented gaps remain.

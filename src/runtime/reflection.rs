@@ -133,7 +133,7 @@ impl Runtime {
             _ => {}
         }
         let handle = self.allocate_object_handle();
-        Value::Object(Rc::new(PhpObject {
+        Value::Object(self.create_object(PhpObject {
             reflection: RefCell::new(Some(data)),
             throwable: RefCell::default(),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
@@ -723,6 +723,9 @@ impl Runtime {
                     let strict = std::mem::replace(&mut self.strict_types, false);
                     let result = self.invoke_at(target, &args, line, true, true);
                     self.strict_types = strict;
+                    if result.is_err() {
+                        receiver._handle.destructor_called.set(true);
+                    }
                     result?;
                 }
                 return Ok(object);

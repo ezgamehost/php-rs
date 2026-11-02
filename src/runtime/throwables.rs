@@ -292,7 +292,8 @@ impl Runtime {
         };
         let class = self.find_class(name.as_bytes()).expect("error class");
         let handle = self.allocate_object_handle();
-        error.throwable = Some(Rc::new(crate::PhpObject {
+        let trace = self.capture_trace();
+        error.throwable = Some(self.create_object(crate::PhpObject {
             class_name: name,
             class,
             object_id: handle.id,
@@ -304,7 +305,7 @@ impl Runtime {
             reinitializable: RefCell::default(),
             reflection: RefCell::default(),
             throwable: RefCell::new(Some(ThrowableData {
-                trace: self.capture_trace(),
+                trace,
                 message: error.message.as_bytes().to_vec(),
                 code: 0,
                 file: file.to_vec(),
@@ -396,12 +397,15 @@ impl Runtime {
                     {
                         if let Some(name) = &catches[index].variable {
                             let reference = self.scope.get_or_insert(name, Value::Null);
-                            if let Err(error) = self.write_reference_value(
+                            let assigned = self.write_reference_value(
                                 &reference,
                                 Value::Object(object),
                                 true,
                                 catches[index].line,
-                            ) {
+                            );
+                            if let Err(error) =
+                                self.drain_destructors(assigned, catches[index].line)
+                            {
                                 let error = self.materialize_error(error);
                                 return self.finish_finally(Err(error), finally);
                             }

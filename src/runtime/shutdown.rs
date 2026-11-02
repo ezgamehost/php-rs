@@ -64,6 +64,11 @@ impl Runtime {
             }
         }
         self.shutdown_functions.clear();
+        if let Err(error) = self.shutdown_destructors()
+            && error.kind != ErrorKind::UnwindExit
+        {
+            result = Err(error);
+        }
         self.replace_source(source);
         self.exit_status.get_or_insert(0);
         self.warnings = std::mem::take(&mut self.diagnostics.messages);

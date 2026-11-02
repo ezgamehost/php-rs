@@ -512,9 +512,10 @@ impl Runtime {
         let properties = self.property_defaults(&class)?;
         let handle = self.allocate_object_handle();
         let object_id = handle.id;
-        let object = Rc::new(PhpObject {
+        let throwable = self.throwable_data(&class, line);
+        let object = self.create_object(PhpObject {
             reflection: RefCell::default(),
-            throwable: RefCell::new(self.throwable_data(&class, line)),
+            throwable: RefCell::new(throwable),
             class_name: String::from_utf8_lossy(&class.name).into_owned(),
             class,
             properties: RefCell::new(properties),
@@ -535,7 +536,10 @@ impl Runtime {
                 Some(object.clone()),
                 line,
             )?;
-            self.invoke(target, args, line, false)?;
+            if let Err(error) = self.invoke(target, args, line, false) {
+                object._handle.destructor_called.set(true);
+                return Err(error);
+            }
         } else {
             // PHP evaluates positional arguments even without a constructor.
             for arg in args {

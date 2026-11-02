@@ -118,7 +118,7 @@ impl Runtime {
                 line,
             ));
         }
-        let object = Rc::new(PhpObject {
+        let object = self.create_object(PhpObject {
             reflection: RefCell::default(),
             throwable: RefCell::new(None),
             class: original.class.clone(),
