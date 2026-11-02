@@ -1,6 +1,68 @@
 use super::*;
 
 impl Runtime {
+    /// Configure native fatal backtraces. PHP's PHPT runner disables these by
+    /// default; ordinary requests use PHP 8.5's enabled default.
+    pub fn set_fatal_error_backtraces(&mut self, enabled: bool) {
+        self.fatal_backtraces = Some(enabled);
+    }
+
+    pub(super) fn native_fatal(&mut self, message: &[u8], line: usize, capture: bool) -> Error {
+        self.diagnostics.last_fatal_trace =
+            (capture && self.fatal_backtraces.unwrap_or(true)).then(|| self.capture_trace());
+        self.diagnostics.output_position = self.output.len();
+        let previous = self.diagnostics.events.len();
+        self.diagnostics.display(
+            1,
+            "Fatal error",
+            message,
+            &self.source.name.clone(),
+            line as i64,
+        );
+        if self.diagnostics.events.len() > previous
+            && let Some(trace) = &self.diagnostics.last_fatal_trace
+        {
+            let event = self.diagnostics.events.last_mut().unwrap();
+            event.rendered.extend_from_slice(b"Stack trace:\n");
+            event.rendered.extend(traces::trace_string(trace));
+            event.rendered.push(b'\n');
+        }
+        self.exit_status = Some(255);
+        Error::new(ErrorKind::UnwindExit, "", line)
+    }
+
+    // An exception pending when Zend raises a native fatal is rendered as a
+    // warning first. This bypasses PHP error and exception handlers.
+    pub(super) fn report_pending_exception(&mut self, mut error: Error) -> Result<(), Error> {
+        loop {
+            if error.kind == ErrorKind::UnwindExit {
+                return Err(error);
+            }
+            let materialized = self.materialize_error(error);
+            let object = materialized.throwable.unwrap();
+            let data = object.throwable.borrow().as_ref().unwrap().clone();
+            let method = objects::method(&object.class, b"__toString").unwrap();
+            let result = self
+                .unchecked_method_target(method, object.class.clone(), Some(object), 0)
+                .and_then(|target| self.invoke_at(target, &[], 0, false, true));
+            let text = match result {
+                Ok(value) => value.to_bytes(),
+                Err(next) => {
+                    error = next;
+                    continue;
+                }
+            };
+            let mut message = b"Uncaught ".to_vec();
+            message.extend(text);
+            message.extend_from_slice(b"\n  thrown");
+            self.diagnostics.last_fatal_trace = None;
+            self.diagnostics.output_position = self.output.len();
+            self.diagnostics
+                .display(2, "Warning", &message, &data.file, data.line);
+            return Ok(());
+        }
+    }
+
     /// Report an execution error as an uncaught PHP error. Call once at the
     /// request boundary, before reading/writing displayed output. This may run
     /// a registered exception handler or user-defined exception __toString(),

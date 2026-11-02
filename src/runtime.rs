@@ -43,6 +43,7 @@ mod csv;
 mod destructuring;
 mod diagnostic_display;
 mod directories;
+mod dumping;
 mod enums;
 mod error_handlers;
 mod exception_handlers;
@@ -114,6 +115,8 @@ pub struct Runtime {
     pub output: Vec<u8>,
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,
+    dump_guards: HashSet<(bool, usize)>,
+    fatal_backtraces: Option<bool>,
     property_guards: HashSet<(usize, Vec<u8>, magic_properties::Magic)>,
     autoloaders: Vec<Option<autoload::Autoloader>>,
     autoloading: HashSet<Vec<u8>>,

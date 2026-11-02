@@ -26,6 +26,11 @@ write diagnostic ordering and storage guards from PHP 8.5.0's
 `Zend/zend_execute.c`, copyright (c) Zend Technologies Ltd. The Zend license
 below also applies to these adaptations.
 
+`src/runtime/printing.rs` and `src/runtime/diagnostic_display.rs` adapt debug
+hook results and pending-exception fatal reporting from PHP 8.5.0's
+`Zend/zend_object_handlers.c` and `Zend/zend.c`, copyright (c) Zend Technologies
+Ltd. The Zend license below also applies to these adaptations.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -230,6 +235,10 @@ Its authors are Andi Gutmans and Zeev Suraski.
 Forwarding callback operations in `src/runtime/callbacks.rs` adapt PHP 8.5.0's
 `ext/standard/basic_functions.c`, copyright (c) The PHP Group, by Andi Gutmans
 and Zeev Suraski.
+
+`src/runtime/dumping.rs` adapts dump traversal and diagnostic ordering from
+PHP 8.5.0's `ext/standard/var.c`, copyright (c) The PHP Group, by Jani Lehtimäki,
+Thies C. Arntzen, and Sascha Schumann.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

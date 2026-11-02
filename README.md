@@ -306,13 +306,15 @@ new request. The CLI returns the low eight bits of the requested status.
   propagate synchronously. Handleable compile warnings from eval/includes also
   dispatch; compile-only warnings bypass user handlers. Array-key and string-offset
   write diagnostics release storage borrows before dispatch and observe handler
-  replacement of live variables/properties. Malformed-property dump notices,
-  compound writes, and some nested mutation cases remain incomplete. Float-to-int
+  replacement of live variables/properties. Compound writes and some nested
+  mutation cases remain incomplete. Float-to-int
   precision/overflow diagnostics preserve the shortest round-tripping value.
 - `error_get_last` returns the latest default-reported diagnostic, including
   suppressed warnings and uncaught errors, as a fresh type/message/file/line array.
   Handled diagnostics preserve the prior record. `error_clear_last` clears the
-  record and fatal backtrace; user fatal errors retain a trace for shutdown code.
+  record and fatal backtrace; native fatal errors retain a trace for shutdown code.
+  The PHPT harness disables fatal backtraces on both Rust and reference PHP,
+  matching PHP's official test-runner default. CLI requests retain them.
 - `set_exception_handler`, `get_exception_handler`, and `restore_exception_handler`
   preserve callable identity and handler stacks, including null entries. Uncaught
   file/stdin exceptions dispatch at the request boundary; replacement handlers can
@@ -403,7 +405,10 @@ new request. The CLI returns the low eight bits of the requested status.
   strict calls also check scalar arguments to the supported internal functions.
 - `print_r` writes or returns binary-safe formatted values, detects array/object
   reference cycles, labels private/protected property keys, and invokes
-  `__debugInfo` for custom object output.
+  `__debugInfo` for custom object output. `var_dump` invokes the same hooks with
+  recursion guards across nested calls, numeric/property keys, and null-return
+  deprecations. Dump-time handler exceptions are deferred until traversal ends;
+  invalid hook results or hook exceptions produce native fatal errors.
 - `get_class_methods` lists methods in declaration/inheritance order with caller-scope
   visibility. Trait aliases precede their original method. `get_class_vars` returns
   visible instance and static declaration defaults, including null for uninitialized

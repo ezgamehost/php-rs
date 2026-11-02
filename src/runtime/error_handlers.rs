@@ -68,7 +68,9 @@ impl Runtime {
                     self.warn(format!("Deprecated: Passing E_USER_ERROR to trigger_error() is deprecated since 8.4, throw an exception or call exit with a string message instead on line {line}"))?;
                 }
                 let file = self.diagnostics.source.name.clone();
-                self.diagnostics.last_fatal_trace = (level == 256).then(|| self.capture_trace());
+                self.diagnostics.last_fatal_trace = (level == 256
+                    && self.fatal_backtraces.unwrap_or(true))
+                .then(|| self.capture_trace());
                 if !self.dispatch_error_handler(level, &message, &file, line)? {
                     let label = match level {
                         256 => "Fatal error",

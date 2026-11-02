@@ -54,6 +54,7 @@ impl Case {
     /// lifetime in the parent allows cleanup even if a worker aborts.
     pub fn run_file_with_status(&self, path: &Path, working_directory: &Path) -> (Outcome, u8) {
         let mut runtime = Runtime::default();
+        runtime.set_fatal_error_backtraces(false);
         if let Err(error) = runtime.set_working_directory(working_directory) {
             return (Outcome::Failed(format!("Working directory: {error}")), 255);
         }
@@ -183,6 +184,7 @@ impl Case {
             return Outcome::Unsupported(self.unsupported.clone());
         }
         let mut runtime = Runtime::default();
+        runtime.set_fatal_error_backtraces(false);
         let result = runtime.execute(&self.source);
         self.runtime_outcome(&mut runtime, result)
     }

@@ -2131,14 +2131,41 @@ Clippy pass; no custom tests or generated matrices were added. PHP 8.5.0
 `Zend/zend_operators.c` and upstream fixtures establish the diagnostic format.
 Configurable precision and the other documented runtime gaps remain incomplete.
 
+The [debug-info slice](conformance/php-8.5.0-debug-info-hillclimb.txt) adds
+**22 upstream Zend passes**, reaching **2334 / 2514 / 408**, with no regressions
+across the six full suites. Fourteen gains implement `var_dump` debug hooks;
+eight correct the PHPT environment for native fatal backtraces (seven class-alias
+errors and one user fatal). The harness now disables native fatal backtraces in
+both Rust and reference PHP, matching PHP 8.5.0 `run-tests.php`. Ordinary CLI
+requests keep PHP's enabled default. INI sections remain unsupported.
+
+`var_dump` invokes `__debugInfo` using internal call frames and recursion guards
+that span nested dump calls. It handles returned references, integer/mangled keys,
+null deprecations, partial output, and malformed-key notices without retaining
+storage borrows across PHP callbacks. Dump-time handler exceptions are deferred
+while rendering finishes; subsequent handler or hook entry observes the pending
+exception. Invalid returns and hook exceptions trigger native fatal reporting,
+including shutdown, last-error records, and backtraces. `print_r` shares the
+hook-result and deferred-error handling.
+
+All 797 existing Rust tests, 57 project PHPT, formatting, and Clippy pass. The
+focused debug-info set is **14 / 0 / 1**; the current `print_r` set is **6 / 0 / 7**.
+Five temporary reference probes match exact output and statuses (0 or 255) for
+reentry, deferred exceptions, malformed keys, fatal errors, and shutdown. No custom
+tests or generated matrices were added. PHP 8.5.0 `ext/standard/var.c`,
+`Zend/zend_object_handlers.c`, `Zend/zend.c`, and the official test runner establish
+the behavior; the notices file records the adaptations. Later snapshotted-property
+mutation, `print_r` callback/output-buffer interleaving and cross-call recursion,
+arbitrary INI configuration, lazy objects, and other documented gaps remain.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
 | Suite | Passed | Failed | Unsupported |
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
-| PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2312 | 2536 | 408 |
+| PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2334 | 2514 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
