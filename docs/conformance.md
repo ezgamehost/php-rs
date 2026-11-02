@@ -2411,6 +2411,30 @@ multiple throwing destructors, exception-chain getters, and trace arguments.
 Sparse physical bucket history, complete iterator behavior under reentrancy,
 coercion callback timing, and previously documented runtime gaps remain.
 
+The [Countable slice](conformance/php-8.5.0-countable-hillclimb.txt) adds **six
+passes across the six suites**, plus **one general-functions pass**, with
+**zero regressions**. Array reaches **772 / 16 / 52** and SPL **25 / 659 / 94**;
+the other suites retain their counts. The focused Countable/count/sizeof/
+is_countable set improves from **7 / 19 / 3** to **14 / 12 / 3**.
+
+The internal Countable interface exposes a tentative `int` return type, using
+existing interface compatibility and ReturnTypeWillChange handling. `count` and
+`sizeof` validate the optional mode before checking the value, dispatch object
+methods with native trace context, convert results using PHP's non-strict integer
+rules, and propagate exceptions and result destructors. `is_countable` recognizes
+arrays and Countable instances without invoking user code. Recursive array
+counting preserves recursion protection across warning-handler calls, removes
+it on exceptions or exit, and names the invoked alias in its diagnostics.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or matrices were added. A direct CLI reference probe
+also matches object counting, aliases, tentative-return reflection, mode-validation
+order, and recursion reentry through an error handler, including output/status
+with equivalent CLI diagnostic settings. PHP 8.5.0's standard array/type functions,
+Zend interface declarations, and scalar conversion code establish the behavior.
+Extension-native counting handlers, SPL containers/iterators, full reflection
+strings, intersection/DNF types, and other documented runtime gaps remain.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2420,9 +2444,9 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2502 | 2346 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 283 | 172 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 25 | 659 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 768 | 20 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 772 | 16 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 399 | 179 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

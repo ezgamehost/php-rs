@@ -5,6 +5,7 @@ use crate::object::{Class, ThrowableData};
 fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
         b"arrayaccess" => ("ArrayAccess", None),
+        b"countable" => ("Countable", None),
         b"unitenum" => ("UnitEnum", None),
         b"backedenum" => ("BackedEnum", None),
         b"stringable" => ("Stringable", None),
@@ -61,6 +62,8 @@ impl Runtime {
                 public function offsetUnset(mixed $offset): void;
             }"
             .to_owned()
+        } else if canonical == "Countable" {
+            "<?php interface Countable { public function count(): int; }".to_owned()
         } else if canonical == "UnitEnum" {
             "<?php interface UnitEnum { public static function cases(): array; }".to_owned()
         } else if canonical == "BackedEnum" {
@@ -106,7 +109,7 @@ impl Runtime {
             let function = Rc::make_mut(function);
             if function.is_abstract {
                 function.native = Some(NativeMethod::Abstract);
-                if canonical == "ArrayAccess" {
+                if matches!(canonical, "ArrayAccess" | "Countable") {
                     function.tentative_return_type = function.return_type.take();
                 }
                 continue;

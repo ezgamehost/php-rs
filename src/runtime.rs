@@ -40,6 +40,7 @@ mod cloning;
 mod closures;
 mod comparison;
 mod constants;
+mod counting;
 mod csv;
 mod destructors;
 mod destructuring;
@@ -121,6 +122,7 @@ pub struct Runtime {
     pub warnings: Vec<String>,
     diagnostics: Diagnostics,
     dump_guards: HashSet<(bool, usize)>,
+    counting_arrays: HashSet<usize>,
     deprecated_constants: HashSet<(usize, Vec<u8>)>,
     assertion_options: assertions::Options,
     mt_state: mersenne_twister::State,

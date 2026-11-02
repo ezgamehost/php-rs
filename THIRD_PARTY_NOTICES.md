@@ -57,6 +57,10 @@ paths, adapts PHP 8.5.0's `Zend/zend_objects.c`, `Zend/zend_objects_API.c`,
 copyright (c) Zend Technologies Ltd. The Zend license below also applies to
 these adaptations.
 
+The Countable declaration in `src/runtime/throwables.rs` adapts PHP 8.5.0's
+`Zend/zend_interfaces.stub.php`, copyright (c) Zend Technologies Ltd. The Zend
+license below also applies to this adaptation.
+
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -288,6 +292,9 @@ Array and binary-string shuffling in `src/array.rs` and
 Splice deletion, destructor timing, and mutation checks in `src/array.rs` and
 `src/runtime/array_splice.rs` adapt PHP 8.5.0's `php_splice` in
 `ext/standard/array.c`, copyright (c) The PHP Group.
+
+Counting in `src/runtime/counting.rs` adapts PHP 8.5.0's `ext/standard/array.c`
+and `ext/standard/type.c`, copyright (c) The PHP Group.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

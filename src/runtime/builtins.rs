@@ -302,6 +302,7 @@ impl Builtin {
             b"is_string" => Self::Is("string"),
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
+            b"is_countable" => Self::Is("countable"),
             b"is_resource" => Self::Is("resource"),
             b"is_numeric" => Self::Is("numeric"),
             b"is_scalar" => Self::Is("scalar"),
@@ -1433,6 +1434,7 @@ impl Runtime {
                 };
                 Ok(Value::String(kind.as_bytes().to_vec().into()))
             }
+            Builtin::Is("countable") => Ok(Value::Bool(counting::is_countable(first))),
             Builtin::Is("numeric") => Ok(Value::Bool(match first {
                 Value::Int(_) | Value::Float(_) => true,
                 Value::String(bytes) => crate::value::numeric_string(&bytes.bytes()).is_some(),
@@ -1478,29 +1480,7 @@ impl Runtime {
                 self.diagnostics.output_position = self.output.len();
                 pending.map_or(Ok(Value::Null), Err)
             }
-            Builtin::Count => {
-                let array = require_array(first, &name, 1, line)?;
-                let mode = match &args[1] {
-                    None => 0,
-                    Some(v) => self.native_int(v, &name, 2, line)?,
-                };
-                if mode != 0 && mode != 1 {
-                    return Err(Error::new(
-                        ErrorKind::ValueError,
-                        format!(
-                            "{name}(): Argument #2 ($mode) must be either COUNT_NORMAL or COUNT_RECURSIVE"
-                        ),
-                        line,
-                    ));
-                }
-                Ok(Value::Int(count(
-                    array,
-                    mode == 1,
-                    &mut HashSet::new(),
-                    line,
-                    self,
-                )?))
-            }
+            Builtin::Count => self.count_value(first, args[1].as_ref(), &name, line),
             Builtin::ArrayValues => {
                 let array = require_array(first, &name, 1, line)?;
                 let mut result = PhpArray::default();
@@ -1845,30 +1825,6 @@ pub(super) fn debug_type(value: &Value) -> &str {
         Value::Object(object) => object.class_name.split('\0').next().unwrap(),
         Value::Resource(_) => "resource",
     }
-}
-fn count(
-    array: &PhpArray,
-    recursive: bool,
-    seen: &mut HashSet<usize>,
-    line: usize,
-    warnings: &mut dyn WarningSink,
-) -> Result<i64, Error> {
-    if !recursive {
-        return Ok(array.len() as i64);
-    }
-    let identity = array as *const PhpArray as usize;
-    if !seen.insert(identity) {
-        warnings.warn(format!("count(): Recursion detected on line {line}"))?;
-        return Ok(0);
-    }
-    let mut result = array.len() as i64;
-    for (_, value) in array.entries() {
-        if let Value::Array(array) = value.dereferenced() {
-            result += count(&array, true, seen, line, warnings)?;
-        }
-    }
-    seen.remove(&identity);
-    Ok(result)
 }
 pub(super) fn closure_debug_properties(closure: &crate::Closure) -> PhpArray {
     let parameters = if closure.magic_name.is_some() {
