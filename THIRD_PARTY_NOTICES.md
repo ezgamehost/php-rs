@@ -1,5 +1,16 @@
 # Third-party notices
 
+Function/parameter reflection rendering in `src/runtime/reflection/display.rs`
+follows PHP 8.5.0's `ext/reflection/php_reflection.c`, copyright (c) The PHP Group,
+by Timm Friebe, George Schlossnagle, Andrei Zmievski, Marcus Boerger, and Johannes
+Schlueter. `native_signatures.rs` contains PHP 8.5.0 function signature metadata
+extracted with `tools/generate_native_signatures.py`. The PHP license below
+applies to these adaptations.
+
+Default-expression rendering in `src/runtime/reflection/expressions.rs` adapts
+PHP 8.5.0's `Zend/zend_ast.c`, copyright (c) Zend Technologies Ltd., by Bob Weinand
+and Dmitry Stogov. The Zend license below applies to this adaptation.
+
 `src/runtime/sorting/algorithm.rs` is a Rust adaptation of PHP 8.5.0's
 `Zend/zend_sort.c`, by Xinchen Hui and Sterling Hughes, including its libc++
 derived sorting algorithm. This product includes the Zend Engine, freely

@@ -1,0 +1,118 @@
+PHP 8.5.0 function reflection and signature hillclimb
+Baseline: 81c9dc81b2c28082a33325dafcc33ade48a23356
+
+zend
+Before: 5256 cases; 2593 passed, 2263 failed, 400 unsupported
+After: 5256 cases; 2595 passed, 2261 failed, 400 unsupported
+New passes: 2; regressions: 0
+NEW PASS: Zend/tests/bug50174.phpt
+NEW PASS: Zend/tests/first_class_callable/first_class_callable_signature.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 306 passed, 149 failed, 37 unsupported
+New passes: 15; regressions: 0
+NEW PASS: ext/reflection/tests/010.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getExtension.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getExtensionName.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_basic2.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_defaultArg.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_getPrototype_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionMethod_hasPrototype_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_canBePassedByValue.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_export_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_getDeclaringFunction_basic.phpt
+NEW PASS: ext/reflection/tests/ReflectionParameter_toString_basic.phpt
+NEW PASS: ext/reflection/tests/bug41061.phpt
+NEW PASS: ext/reflection/tests/bug60357.phpt
+NEW PASS: ext/reflection/tests/gh9409.phpt
+NEW PASS: ext/reflection/tests/gh9470.phpt
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 554 passed, 171 failed, 53 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/spl/tests/bug71412.phpt
+
+array
+Before: 840 cases; 776 passed, 13 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 532 passed, 46 failed, 152 unsupported
+After: 730 cases; 533 passed, 45 failed, 152 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug61116.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 28 passed, 3 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+Across 9,588 upstream fixtures: 5,340 passed, 2,806 failed, 1,442 unsupported.
+19 new passes; zero regressions. Unsupported fixtures are not counted as passes.
+
+Implements ReflectionFunction, ReflectionMethod and ReflectionParameter string
+rendering, with source locations, documentation comments, optional/required and
+variadic/reference markers, default expressions, canonical union/iterable type
+ordering, return types, deprecation/extension labels, closure captures and static
+locals, and method inheritance/override/prototype/constructor flags. Method-based
+closures preserve PHP's visibility rendering. Function and method documentation
+comments are retained by the parser and exposed through getDocComment().
+Function extension queries and method prototype queries are also supported,
+including abstract/interface constructor prototypes retained through concrete
+intermediate implementations. Reflectors with __toString implement Stringable.
+
+Generated metadata covers the 417 currently implemented native function names.
+It supplies reflection parameter names/types, exact symbolic default expressions,
+return types, extension ownership, SensitiveParameter attributes and native
+by-reference/value modes. Omitted-default sentinels stay distinct from null
+and do not create implicit nullable types. Native invocation retains its own
+binding/coercion path. Parsed metadata is cached per thread; runtime execution
+has no PHP binary dependency.
+
+tools/generate_native_signatures.py extracts metadata from a PHP 8.5.0 binary.
+Regeneration is byte-identical after rustfmt, SHA256:
+d5c635369c6602da77a8554ecd5a05ca7186f40752961431ee7cbab2636bf122
+All 417 declaration strings and their parameter metadata match the reference,
+including names, return types, required counts, optional/variadic/reference flags,
+nullability, default-value availability, symbolic constant names, serialized default
+values and parameter attribute names. Direct comparisons also cover userland
+function/method documentation, closures and bound variables, callable defaults,
+constant-expression syntax/precedence, namespace-qualified names, canonical type
+ordering, method callables and inherited constructor prototypes.
+
+Native method signatures/default strings, advanced default-expression folding,
+class reflector declaration strings, static-variable queries and full reflector
+interfaces remain incomplete. Existing parser/type-system limitations remain.
+Source attribution is retained in THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.

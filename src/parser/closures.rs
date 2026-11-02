@@ -8,6 +8,11 @@ impl Parser {
         is_static: bool,
         line: usize,
     ) -> Result<ExprKind, Error> {
+        let doc_comment = self.tokens[self.pos - 1].doc_comment.clone().or_else(|| {
+            is_static
+                .then(|| self.tokens[self.pos.saturating_sub(2)].doc_comment.clone())
+                .flatten()
+        });
         let returns_reference = self.eat("&");
         let context = if self.function_name.is_empty() {
             String::from_utf8_lossy(&self.source.name).into_owned()
@@ -114,6 +119,7 @@ impl Parser {
         self.control_depth = outer_depth;
         self.finally_depths = outer_finally_depths;
         let function = Rc::new(FunctionDecl {
+            doc_comment,
             tentative_return_type: None,
             end_line: self.tokens[self.pos - 1].line,
             attributes: Vec::new(),

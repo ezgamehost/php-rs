@@ -73,12 +73,22 @@ impl Runtime {
         let default = parameter
             .default
             .as_ref()
-            .filter(|_| optional && !parameter.variadic);
+            .filter(|_| optional && !parameter.variadic)
+            .filter(|_| {
+                function
+                    .signature()
+                    .is_none_or(|s| s.defaults[index] != Some("<default>"))
+            });
         Ok(match name {
+            b"__tostring" => string(self.reflection_parameter_string(&function, index, line)?),
             b"getname" => string(&parameter.name),
             b"getposition" => Value::Int(index as i64),
             b"ispassedbyreference" => Value::Bool(parameter.by_reference),
-            b"canbepassedbyvalue" => Value::Bool(!parameter.by_reference),
+            b"canbepassedbyvalue" => Value::Bool(
+                function
+                    .signature()
+                    .map_or(!parameter.by_reference, |s| s.by_value[index]),
+            ),
             b"isoptional" => Value::Bool(optional),
             b"isvariadic" => Value::Bool(parameter.variadic),
             b"ispromoted" => Value::Bool(parameter.promotion.is_some()),

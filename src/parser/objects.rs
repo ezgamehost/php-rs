@@ -307,6 +307,10 @@ impl Parser {
                 ));
             }
             if self.eat("function") {
+                let doc_comment = self.tokens[member_start..self.pos]
+                    .iter()
+                    .rev()
+                    .find_map(|t| t.doc_comment.clone());
                 let abstract_method = abstract_method || is_interface;
                 if abstract_method && !is_abstract && !is_trait {
                     return Err(Error::parse(
@@ -317,6 +321,7 @@ impl Parser {
                 let Stmt::Function(mut method) = self.function(true, abstract_method)? else {
                     unreachable!()
                 };
+                Rc::make_mut(&mut method).doc_comment = doc_comment;
                 self.attach_function_attributes(attribute_range, Rc::make_mut(&mut method), true)?;
                 if abstract_method && method.parameters.iter().any(|p| p.promotion.is_some()) {
                     return Err(Error::parse(

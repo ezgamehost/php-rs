@@ -478,12 +478,19 @@ new request. The CLI returns the low eight bits of the requested status.
 - `ReflectionClass`/`ReflectionObject` class names, source locations, flags,
   inheritance/interface/trait queries, constants, defaults, static property access,
   and construction with or without constructors.
-- Function/method/parameter reflection exposes names, source lines, visibility,
+- [Function/method/parameter reflection](docs/conformance/php-8.5.0-function-rendering-hillclimb.txt)
+  exposes names, source lines, visibility,
   signature metadata, defaults, attributes, named/union types, and closure captures.
   Reflective invocation supports named arguments, argument-array references, weak
   coercion, non-public methods, and closure creation.
-  Complete builtin signatures, prototypes/static variables, lazy objects, full reflector
-  interfaces, and declaration string representations remain unfinished.
+  Function, method, and parameter declaration strings include defaults, documentation,
+  source locations, closure captures, and inheritance/prototype flags. Native function
+  metadata covers all 417 implemented function names, including types, symbolic defaults,
+  extension ownership, SensitiveParameter attributes, and by-reference modes.
+  Method prototype queries and function/method documentation queries are supported.
+  Complete native method signatures, static-variable queries, lazy objects, full reflector
+  interfaces, class declaration strings, and advanced default-expression folding remain
+  unfinished.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining

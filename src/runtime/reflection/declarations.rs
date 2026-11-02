@@ -117,6 +117,9 @@ impl Runtime {
                 public function isGenerator(): bool {}
                 public function isVariadic(): bool {}
                 public function isStatic(): bool {}
+                public function getExtensionName(): string|false {}
+                public function getExtension(): ?ReflectionExtension {}
+                public function getDocComment(): string|false {}
                 public function getClosureThis(): ?object {}
                 public function getClosureScopeClass(): ?ReflectionClass {}
                 public function getClosureCalledClass(): ?ReflectionClass {}
@@ -137,6 +140,7 @@ impl Runtime {
             b"reflectionfunction" => ("ReflectionFunction", Some("ReflectionFunctionAbstract"), "
                 public const int IS_DEPRECATED=2048;
                 public function __construct(Closure|string $function) {}
+                public function __toString(): string {}
                 public function isAnonymous(): bool {}
                 public function getClosure(): Closure {}
                 public function invoke(mixed ...$args): mixed {}
@@ -146,6 +150,7 @@ impl Runtime {
                 public const int IS_STATIC=16, IS_PUBLIC=1, IS_PROTECTED=2, IS_PRIVATE=4, IS_ABSTRACT=64, IS_FINAL=32;
                 public string $class;
                 public function __construct(object|string $objectOrMethod, ?string $method=null) {}
+                public function __toString(): string {}
                 public static function createFromMethodName(string $method): static {}
                 public function isPublic(): bool {}
                 public function isProtected(): bool {}
@@ -154,6 +159,8 @@ impl Runtime {
                 public function isFinal(): bool {}
                 public function isConstructor(): bool {}
                 public function isDestructor(): bool {}
+                public function hasPrototype(): bool {}
+                public function getPrototype(): ReflectionMethod {}
                 public function getModifiers(): int {}
                 public function getDeclaringClass(): ReflectionClass {}
                 public function getClosure(?object $object=null): Closure {}
@@ -258,6 +265,7 @@ impl Runtime {
                 public function hasType(): bool {}
                 public function getType(): ?ReflectionType {}
                 public function allowsNull(): bool {}
+                public function __toString(): string {}
                 public function getPosition(): int {}
                 public function isOptional(): bool {}
                 public function isDefaultValueAvailable(): bool {}
@@ -293,6 +301,9 @@ impl Runtime {
                 | "ReflectionProperty"
                 | "ReflectionClassConstant"
                 | "ReflectionConstant"
+                | "ReflectionFunction"
+                | "ReflectionMethod"
+                | "ReflectionParameter"
         ) {
             " implements Stringable"
         } else {
@@ -343,6 +354,9 @@ impl Runtime {
                     | "ReflectionProperty"
                     | "ReflectionClassConstant"
                     | "ReflectionConstant"
+                    | "ReflectionFunction"
+                    | "ReflectionMethod"
+                    | "ReflectionParameter"
             ) {
                 vec![self.find_class(b"Stringable").unwrap()]
             } else {

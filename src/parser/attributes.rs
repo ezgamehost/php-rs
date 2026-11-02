@@ -306,6 +306,14 @@ impl Parser {
         self.function_name = outer_name;
         self.class_name = outer_class;
         self.function_class = outer_function_class;
+        if function.doc_comment.is_none()
+            && let Some((start, end)) = range
+        {
+            function.doc_comment = self.tokens[start..end]
+                .iter()
+                .rev()
+                .find_map(|t| t.doc_comment.clone());
+        }
         function.attributes = result?;
         if function
             .attributes

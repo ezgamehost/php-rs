@@ -478,7 +478,7 @@ fn visibility_name(visibility: Visibility) -> &'static [u8] {
     }
 }
 
-fn format_value(value: &Value, out: &mut Vec<u8>) {
+pub(super) fn format_value(value: &Value, out: &mut Vec<u8>) {
     match value.dereferenced() {
         Value::Null => out.extend(b"NULL"),
         Value::Bool(true) => out.extend(b"true"),

@@ -547,6 +547,7 @@ impl Parser {
         Ok(body)
     }
     fn function(&mut self, method: bool, is_abstract: bool) -> Result<Stmt, Error> {
+        let doc_comment = self.tokens[self.pos - 1].doc_comment.clone();
         let returns_reference = self.eat("&");
         let outer_parent = if method {
             self.class_parent.clone()
@@ -642,6 +643,7 @@ impl Parser {
         self.class_name = outer_class;
         self.class_parent = outer_parent;
         Ok(Stmt::Function(Rc::new(FunctionDecl {
+            doc_comment,
             tentative_return_type: None,
             end_line: self.tokens[self.pos - 1].line,
             attributes: Vec::new(),

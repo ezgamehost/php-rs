@@ -4,6 +4,9 @@ use crate::runtime::functions::CallTarget;
 
 impl FunctionReflection {
     pub(super) fn name(&self) -> &[u8] {
+        if let Some(signature) = self.signature() {
+            return signature.name.as_bytes();
+        }
         let name = self
             .target
             .function
@@ -27,6 +30,9 @@ impl FunctionReflection {
     }
 
     pub(super) fn parameters(&self) -> Vec<Parameter> {
+        if let Some(signature) = self.signature() {
+            return signature.function().parameters.clone();
+        }
         self.target.function.as_ref().map_or_else(
             || {
                 self.target
@@ -48,7 +54,7 @@ impl FunctionReflection {
         )
     }
 
-    fn internal(&self) -> bool {
+    pub(super) fn internal(&self) -> bool {
         self.target.builtin.is_some()
             || self
                 .target
@@ -233,6 +239,43 @@ impl Runtime {
         let function = target.function.as_ref();
         let internal = reflection.internal();
         Ok(match name {
+            b"__tostring" => string(self.reflection_function_string(&reflection, line)?),
+            b"getextensionname" => reflection.extension().map_or(Value::Bool(false), string),
+            b"getextension" => reflection.extension().map_or(Value::Null, |name| {
+                self.reflection_object(
+                    b"ReflectionExtension",
+                    ReflectionData::Extension(name.to_owned()),
+                )
+            }),
+            b"getdoccomment" => function
+                .and_then(|f| f.doc_comment.as_ref())
+                .map_or(Value::Bool(false), string),
+            b"hasprototype" => Value::Bool(
+                display::method_prototype(
+                    &target.context.as_ref().unwrap().scope,
+                    reflection.name(),
+                )
+                .is_some(),
+            ),
+            b"getprototype" => {
+                let context = target.context.as_ref().unwrap();
+                let prototype = display::method_prototype(&context.scope, reflection.name())
+                    .ok_or_else(|| {
+                        self.reflection_error(
+                            format!(
+                                "Method {}::{} does not have a prototype",
+                                context.scope.display_name(),
+                                String::from_utf8_lossy(reflection.name())
+                            ),
+                            line,
+                        )
+                    })?;
+                let class = self
+                    .find_class(method_visibility::declaring_name(&prototype))
+                    .unwrap();
+                let reflected = self.reflected_method(&class, reflection.name(), line)?;
+                self.reflection_object(b"ReflectionMethod", ReflectionData::Function(reflected))
+            }
             b"getname" => string(reflection.name()),
             b"getshortname" => string(if reflection.namespace().is_empty() {
                 reflection.name()
@@ -295,9 +338,9 @@ impl Runtime {
                     }
                 }
             }
-            b"returnsreference" => Value::Bool(function.is_some_and(|f| f.returns_reference)),
-            b"hasreturntype" => Value::Bool(function.is_some_and(|f| f.return_type.is_some())),
-            b"getreturntype" => match function.and_then(|f| f.return_type.clone()) {
+            b"returnsreference" => Value::Bool(reflection.returns_reference()),
+            b"hasreturntype" => Value::Bool(reflection.return_type().is_some()),
+            b"getreturntype" => match reflection.return_type() {
                 Some(ty) => self.reflection_type(ty),
                 None => Value::Null,
             },
@@ -450,19 +493,7 @@ impl Runtime {
     }
 
     pub(super) fn reflection_type(&mut self, mut ty: TypeDecl) -> Value {
-        ty.members = ty
-            .members
-            .into_iter()
-            .flat_map(|m| {
-                if m == "iterable" {
-                    vec!["Traversable".to_owned(), "array".to_owned()]
-                } else {
-                    vec![m]
-                }
-            })
-            .collect();
-        ty.members.sort_by_key(|m| type_order(m));
-        ty.members.dedup();
+        ty = normalize_type(ty);
         let nullable_named = ty.members.len() == 2 && ty.contains("null");
         let kind = if ty.members.len() == 1 || nullable_named {
             b"ReflectionNamedType".as_slice()
@@ -519,4 +550,21 @@ fn type_order(name: &str) -> u8 {
         "mixed" | "void" | "never" => 10,
         _ => 0,
     }
+}
+
+pub(super) fn normalize_type(mut ty: TypeDecl) -> TypeDecl {
+    ty.members = ty
+        .members
+        .into_iter()
+        .flat_map(|m| {
+            if m == "iterable" {
+                vec!["Traversable".to_owned(), "array".to_owned()]
+            } else {
+                vec![m]
+            }
+        })
+        .collect();
+    ty.members.sort_by_key(|m| type_order(m));
+    ty.members.dedup();
+    ty
 }

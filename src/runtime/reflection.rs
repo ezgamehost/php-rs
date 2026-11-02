@@ -8,9 +8,13 @@ use crate::{
 mod attributes;
 mod constants;
 mod declarations;
+mod display;
 mod enums;
+mod expressions;
 mod functions;
 mod global_constants;
+mod native;
+mod native_signatures;
 mod parameters;
 mod properties;
 use properties::PropertyReflection;
