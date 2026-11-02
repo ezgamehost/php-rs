@@ -24,6 +24,7 @@ pub(super) enum Builtin {
     StrUpper,
     Bin2Hex,
     Digest(crate::digest::Algorithm, bool),
+    Clock(clocks::Operation),
     Base64(bool),
     Rot13,
     Wordwrap,
@@ -224,6 +225,9 @@ impl Builtin {
             b"strtoupper" => Self::StrUpper,
             b"bin2hex" => Self::Bin2Hex,
             b"md5" => Self::Digest(crate::digest::Algorithm::Md5, false),
+            b"time" => Self::Clock(clocks::Operation::Time),
+            b"microtime" => Self::Clock(clocks::Operation::Microtime),
+            b"hrtime" => Self::Clock(clocks::Operation::Hrtime),
             b"md5_file" => Self::Digest(crate::digest::Algorithm::Md5, true),
             b"sha1" => Self::Digest(crate::digest::Algorithm::Sha1, false),
             b"sha1_file" => Self::Digest(crate::digest::Algorithm::Sha1, true),
@@ -611,6 +615,9 @@ impl Builtin {
             Self::MtSeed => &[("seed", true, false), ("mode", true, false)],
             Self::MtRand(_) => &[("min", true, false), ("max", true, false)],
             Self::RandMax | Self::LcgValue | Self::CollectCycles => &[],
+            Self::Clock(clocks::Operation::Time) => &[],
+            Self::Clock(clocks::Operation::Microtime) => &[("as_float", true, false)],
+            Self::Clock(clocks::Operation::Hrtime) => &[("as_number", true, false)],
             Self::ArrayRand => &[("array", false, false), ("num", true, false)],
             Self::ArrayShuffle => &[("array", false, false)],
             Self::StrShuffle => &[("string", false, false)],
@@ -1152,6 +1159,7 @@ impl Builtin {
                             (Self::Nl2Br, "use_xhtml") => Value::Bool(true),
                             (Self::Base64(false), "strict") => Value::Bool(false),
                             (Self::Digest(_, _), "binary") => Value::Bool(false),
+                            (Self::Clock(_), _) => Value::Bool(false),
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
@@ -1339,6 +1347,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::Clock(operation) = builtin {
+            return self.clock_builtin(operation, &name, &args, line);
+        }
         if let Builtin::IncludePath(operation) = builtin {
             return self.include_path_builtin(operation, &name, &args, line);
         }
@@ -1522,6 +1533,7 @@ impl Runtime {
             Builtin::RandomInt => self.random_int(&args, line),
             Builtin::ArrayRand => self.array_rand(&args, line),
             Builtin::CollectCycles => unreachable!(),
+            Builtin::Clock(_) => unreachable!("handled before required arguments"),
             Builtin::StrShuffle => self.shuffle_string(first, line),
             Builtin::ArrayShuffle => unreachable!(),
             Builtin::MtSeed | Builtin::MtRand(_) | Builtin::RandMax | Builtin::LcgValue => {

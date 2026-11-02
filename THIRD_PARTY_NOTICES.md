@@ -687,3 +687,7 @@ core follows the OpenSSL-compatible implementation written by Solar Designer
 in 2001 and placed in the public domain, without warranty. SHA-1 follows PHP's
 implementation by Stefan Esser. Shared wrapper-opening and read helpers preserve
 native file hashing diagnostics, EOF handling and stream lifetime.
+
+`src/runtime/clocks.rs` adapts PHP 8.5.0's `ext/standard/{microtime,hrtime}.c`
+and `ext/date/php_date.c`, copyright (c) The PHP Group, using Rust's system
+and monotonic clocks.

@@ -1,0 +1,83 @@
+PHP 8.5.0 clock functions hillclimb
+Baseline: 54d5435141652d5460149d8a30c14e4fca85fda0
+
+zend
+Before: 5256 cases; 2590 passed, 2266 failed, 400 unsupported
+After: 5256 cases; 2591 passed, 2265 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/bug51827.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 431 passed, 147 failed, 152 unsupported
+After: 730 cases; 431 passed, 147 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 311 passed, 77 failed, 508 unsupported
+After: 896 cases; 312 passed, 76 failed, 508 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/file/bug43137.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 30 passed, 76 failed, 51 unsupported
+After: 157 cases; 30 passed, 76 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,184 passed, 2,931 failed, 1,441 unsupported.
+Two new passes (one Zend, one file); zero regressions across all ten suites.
+
+Additional existing upstream fixtures pass:
+- ext/date/tests/time_basic.phpt
+- ext/date/tests/microtime_basic.phpt
+- ext/standard/tests/hrtime/hrtime_array.phpt
+These three fixtures are outside the tracked ten-suite total.
+The hrtime elapsed-time fixture has an unsupported FLAKY section; its timing
+comparison was also exercised directly with both runtimes and passed.
+
+The clock builtins use Rust's system and monotonic clocks, preserve microsecond
+truncation and eight-decimal-place string formatting, and support native boolean
+coercion, strict types, named arguments and false reflection defaults. The
+monotonic timestamp is captured before argument conversion; microtime captures
+after conversion, preserving warning-handler callback ordering. The monotonic
+origin is process-local and arbitrary. All runtime PHP integers remain 64-bit.
+Direct reference comparisons cover result types, formatting, elapsed time,
+coercion diagnostics (apart from the existing blank-line formatting difference),
+argument counts, reflection defaults, throwing handlers and callback ordering.
+Timezone/date APIs and gettimeofday remain unfinished. File fixture 004 now
+passes its float checks before reaching the existing missing $_SERVER support.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-clocks-*1.log.
+Rust validation logs: /tmp/php-rs-clocks-{tests,clippy}1.log.

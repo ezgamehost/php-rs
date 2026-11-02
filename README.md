@@ -51,6 +51,9 @@ new request. The CLI returns the low eight bits of the requested status.
 ## Current coverage
 
 - Null, booleans, 64-bit integers, floats, and binary-safe strings.
+- `time` returns Unix seconds, `microtime` returns a microsecond-resolution
+  string or float, and `hrtime` returns monotonic nanoseconds or a seconds/nanoseconds
+  pair. Boolean conversion, named arguments, and optional defaults follow PHP.
 - PHP 8.5 NaN conversion warnings for boolean, string, and array conversions;
   NaN comparisons remain silent and unordered against numbers and strings.
 - Explicit scalar, array, and object casts, cast-alias deprecations, and PHP 8.5 `(void)`
