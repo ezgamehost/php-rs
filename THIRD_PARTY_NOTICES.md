@@ -662,3 +662,7 @@ and `main/streams/streams.c`, reusing the existing file-transfer adaptation.
 The PHP Group. Its stream-copy integration in `src/runtime/file_writing.rs`,
 file-URL normalization and private file creation in `src/runtime/streams.rs`, and
 scoped pending-exception warning suppression preserve those native operations.
+
+Character reads and stream truncation in `src/runtime/streams.rs` and
+`src/resource.rs` adapt PHP 8.5.0's `ext/standard/file.c` and
+`main/streams/{streams,memory,plain_wrapper}.c`, copyright (c) The PHP Group.

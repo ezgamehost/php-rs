@@ -118,24 +118,5 @@ fn stat_stream(stream: &Stream, line: usize) -> Result<Value, Error> {
 }
 
 fn output_metadata(stderr: bool) -> io::Result<Metadata> {
-    #[cfg(unix)]
-    {
-        use std::os::fd::AsFd;
-        let descriptor = if stderr {
-            io::stderr().as_fd().try_clone_to_owned()?
-        } else {
-            io::stdout().as_fd().try_clone_to_owned()?
-        };
-        std::fs::File::from(descriptor).metadata()
-    }
-    #[cfg(windows)]
-    {
-        use std::os::windows::io::AsHandle;
-        let handle = if stderr {
-            io::stderr().as_handle().try_clone_to_owned()?
-        } else {
-            io::stdout().as_handle().try_clone_to_owned()?
-        };
-        std::fs::File::from(handle).metadata()
-    }
+    crate::resource::output_file(stderr)?.metadata()
 }

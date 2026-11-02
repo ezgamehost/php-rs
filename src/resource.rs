@@ -31,6 +31,43 @@ pub(crate) struct Stream {
 }
 
 impl Stream {
+    // PHP's truncate callbacks leave the logical position, EOF and stat cache
+    // unchanged. Memory streams clamp only their internal cursor on shrink.
+    pub(crate) fn truncate(&mut self, size: u64) -> Option<io::Result<()>> {
+        Some(match &mut self.backend {
+            Backend::Directory(_) => return None,
+            Backend::File(file) => file.set_len(size),
+            Backend::StandardInput(reader) => reader.get_ref().set_len(size),
+            Backend::StandardOutput(stderr) => {
+                output_file(*stderr).and_then(|file| file.set_len(size))
+            }
+            Backend::Temporary(resource) => {
+                let mut kind = resource.kind.borrow_mut();
+                let Kind::Stream(inner) = &mut *kind else {
+                    return Some(Err(io::Error::from_raw_os_error(9)));
+                };
+                return inner.truncate(size);
+            }
+            Backend::Memory(buffer) => {
+                if !self.writable {
+                    return Some(Err(io::Error::from(io::ErrorKind::PermissionDenied)));
+                }
+                let Ok(size) = usize::try_from(size) else {
+                    return Some(Err(io::Error::from(io::ErrorKind::OutOfMemory)));
+                };
+                let old_size = buffer.get_ref().len();
+                if size > old_size && buffer.get_mut().try_reserve(size - old_size).is_err() {
+                    return Some(Err(io::Error::from(io::ErrorKind::OutOfMemory)));
+                }
+                buffer.get_mut().resize(size, 0);
+                if size <= old_size && buffer.position() > size as u64 {
+                    buffer.set_position(size as u64);
+                }
+                Ok(())
+            }
+        })
+    }
+
     pub(crate) fn write_bytes(&mut self, bytes: &[u8]) -> io::Result<usize> {
         if self.mode.starts_with(b"a")
             && let Backend::Memory(buffer) = &mut self.backend
@@ -279,4 +316,25 @@ pub(crate) fn standard_stream(index: usize) -> io::Result<Stream> {
         remove_on_close: None,
         context: None,
     })
+}
+
+pub(crate) fn output_file(stderr: bool) -> io::Result<File> {
+    #[cfg(unix)]
+    {
+        use std::os::fd::AsFd;
+        Ok(File::from(if stderr {
+            io::stderr().as_fd().try_clone_to_owned()?
+        } else {
+            io::stdout().as_fd().try_clone_to_owned()?
+        }))
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::io::AsHandle;
+        Ok(File::from(if stderr {
+            io::stderr().as_handle().try_clone_to_owned()?
+        } else {
+            io::stdout().as_handle().try_clone_to_owned()?
+        }))
+    }
 }

@@ -9,6 +9,8 @@ use std::{
 pub(super) enum Operation {
     Close,
     Read,
+    GetChar,
+    Truncate,
     Write,
     Eof,
     Tell,
@@ -607,7 +609,22 @@ impl Runtime {
         if matches!(operation, Operation::Stat) {
             return self.stream_stat(first, name, line);
         }
+        if matches!(operation, Operation::GetChar) {
+            return self
+                .stream_read_line(first, name, Some(1), line)
+                .map(|text| text.map_or(Value::Bool(false), |text| Value::String(text.into())));
+        }
         match operation {
+            Operation::Truncate => {
+                length = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
+                if length < 0 {
+                    return Err(Error::new(
+                        ErrorKind::ValueError,
+                        format!("{name}(): Argument #2 ($size) must be greater than or equal to 0"),
+                        line,
+                    ));
+                }
+            }
             Operation::Read => {
                 length = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
                 if length <= 0 {
@@ -724,7 +741,17 @@ impl Runtime {
             return Ok(Value::String(bytes.into()));
         }
         Ok(match operation {
-            Operation::Metadata | Operation::Stat => unreachable!(),
+            Operation::Metadata | Operation::Stat | Operation::GetChar => unreachable!(),
+            Operation::Truncate => match stream.truncate(length as u64) {
+                Some(result) => Value::Bool(result.is_ok()),
+                None => {
+                    drop(kind);
+                    self.warn(format!(
+                        "{name}(): Can't truncate this stream! on line {line}"
+                    ))?;
+                    Value::Bool(false)
+                }
+            },
             Operation::Close => {
                 if resource.id == 3
                     && self

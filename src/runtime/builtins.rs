@@ -228,6 +228,8 @@ impl Builtin {
             b"fgetcsv" => Self::StreamCsv(false),
             b"fputcsv" => Self::StreamCsv(true),
             b"fgets" => Self::Fgets,
+            b"fgetc" => Self::Stream(streams::Operation::GetChar),
+            b"ftruncate" => Self::Stream(streams::Operation::Truncate),
             b"sscanf" => Self::Scan(false),
             b"fscanf" => Self::Scan(true),
             b"tmpfile" => Self::TemporaryFile,
@@ -688,6 +690,9 @@ impl Builtin {
             ],
             Self::Stream(streams::Operation::Read) => {
                 &[("stream", false, false), ("length", false, false)]
+            }
+            Self::Stream(streams::Operation::Truncate) => {
+                &[("stream", false, false), ("size", false, false)]
             }
             Self::Stream(streams::Operation::Write) => &[
                 ("stream", false, false),

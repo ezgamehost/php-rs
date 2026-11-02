@@ -1,0 +1,82 @@
+PHP 8.5.0 character reads and stream truncation hillclimb
+Baseline: b80366a5042a60ceed57553737e3fc93ea29c9e2
+
+zend
+Before: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+After: 5256 cases; 2588 passed, 2268 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 278 passed, 110 failed, 508 unsupported
+After: 896 cases; 291 passed, 97 failed, 508 unsupported
+New passes: 13; regressions: 0
+NEW PASS: ext/standard/tests/file/bug71882.phpt
+NEW PASS: ext/standard/tests/file/fgetc_basic.phpt
+NEW PASS: ext/standard/tests/file/fgetc_variation1.phpt
+NEW PASS: ext/standard/tests/file/fgetc_variation2.phpt
+NEW PASS: ext/standard/tests/file/fgetc_variation3.phpt
+NEW PASS: ext/standard/tests/file/fgetc_variation4.phpt
+NEW PASS: ext/standard/tests/file/filesize_variation3.phpt
+NEW PASS: ext/standard/tests/file/ftruncate.phpt
+NEW PASS: ext/standard/tests/file/ftruncate_bug76803.phpt
+NEW PASS: ext/standard/tests/file/ftruncate_bug77081.phpt
+NEW PASS: ext/standard/tests/file/ftruncate_error.phpt
+NEW PASS: ext/standard/tests/file/ftruncate_variation4.phpt
+NEW PASS: ext/standard/tests/file/is_file_variation1.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 27 passed, 79 failed, 51 unsupported
+After: 157 cases; 27 passed, 79 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,142 passed, 2,973 failed, 1,441 unsupported.
+13 new passes in file; zero regressions across all ten suites.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+fgetc reads binary characters and returns false at EOF, using existing stream
+validation, read diagnostics and position tracking. ftruncate supports file,
+memory, temporary and standard streams, with read-only failures and warnings
+for unsupported stream kinds. It preserves logical position, EOF and stat caches;
+memory shrink clamps the internal cursor and growth adds zero bytes.
+Direct PHP comparisons match file/memory/temp positions, EOF and stat caches,
+read-only truncation, subsequent reads/writes, binary characters and directory
+stream warnings. Custom wrappers and temporary spill-to-disk remain unfinished.
+Final upstream logs: /tmp/php-rs-streamops-*2.log.
+Rust validation logs: /tmp/php-rs-streamops-{tests,clippy}1.log.
