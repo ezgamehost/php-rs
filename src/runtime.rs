@@ -77,6 +77,7 @@ pub(crate) mod heap;
 mod html;
 mod include_paths;
 mod inheritance;
+mod ini;
 mod interfaces;
 mod iterator_helpers;
 mod iterators;

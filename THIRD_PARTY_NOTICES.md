@@ -1,5 +1,12 @@
 # Third-party notices
 
+INI parsing in `src/runtime/ini.rs` and `src/runtime/ini/scanner.rs` adapts
+PHP 8.5.0's `Zend/zend_ini_parser.y` and `Zend/zend_ini_scanner.l`, copyright (c)
+Zend Technologies Ltd., by Zeev Suraski and Jani Taskinen. The Zend license below
+applies. The native function entry points and array/section callbacks follow
+`ext/standard/basic_functions.c` and `basic_functions.stub.php`, copyright (c)
+The PHP Group, under the PHP license below.
+
 JSON encoding, decoding, validation, constants, and error handling in
 `src/runtime/json.rs` and `src/runtime/json/` adapt PHP 8.5.0's `ext/json/json.c`,
 `json_encoder.c`, `json_parser.y`, `json_scanner.re`, `php_json.h`, and

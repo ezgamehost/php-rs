@@ -51,7 +51,8 @@ impl Runtime {
             "random"
         } else if name.starts_with(b"JSON_") {
             "json"
-        } else if name.starts_with(b"ASSERT_")
+        } else if ini::constant(name).is_some()
+            || name.starts_with(b"ASSERT_")
             || matches!(
                 name,
                 b"COUNT_NORMAL"
@@ -246,6 +247,9 @@ fn assertion_constant(name: &[u8]) -> Option<i64> {
 }
 
 fn predefined(name: &[u8]) -> Option<Value> {
+    if let Some(value) = ini::constant(name) {
+        return Some(Value::Int(value));
+    }
     if let Some(value) = json::constant(name) {
         return Some(Value::Int(value));
     }

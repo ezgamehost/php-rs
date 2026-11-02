@@ -121,6 +121,7 @@ pub(super) enum Builtin {
     GetParentClass,
     ClassRelations(class_queries::Relation),
     Json(json::Operation),
+    ParseIni(bool),
     GetCalledClass,
     ClassExists,
     EnumExists,
@@ -381,6 +382,8 @@ impl Builtin {
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
             b"get_parent_class" => Self::GetParentClass,
+            b"parse_ini_file" => Self::ParseIni(true),
+            b"parse_ini_string" => Self::ParseIni(false),
             b"json_encode" => Self::Json(json::Operation::Encode),
             b"json_decode" => Self::Json(json::Operation::Decode),
             b"json_validate" => Self::Json(json::Operation::Validate),
@@ -802,6 +805,11 @@ impl Builtin {
                 ("from", false, false),
                 ("to", false, false),
                 ("context", true, false),
+            ],
+            Self::ParseIni(file) => &[
+                (if file { "filename" } else { "ini_string" }, false, false),
+                ("process_sections", true, false),
+                ("scanner_mode", true, false),
             ],
             Self::Json(json::Operation::Encode) => &[
                 ("value", false, false),
@@ -1479,6 +1487,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::ParseIni(file) = builtin {
+            return self.parse_ini(file, &name, &args, line);
+        }
         if let Builtin::Json(operation) = builtin {
             return self.json_builtin(operation, &name, &args, line);
         }
@@ -1693,6 +1704,7 @@ impl Runtime {
             Builtin::Clock(_)
             | Builtin::Html(_)
             | Builtin::ClassRelations(_)
+            | Builtin::ParseIni(_)
             | Builtin::Json(_) => {
                 unreachable!("handled before required arguments")
             }

@@ -1959,6 +1959,20 @@ pub(super) fn lookup(name: &[u8]) -> Option<NativeSignature> {
             defaults: &[None, None],
             by_value: &[true, true],
         },
+        b"parse_ini_file" => NativeSignature {
+            name: "parse_ini_file",
+            extension: "standard",
+            declaration: "<?php function __native(string $filename, bool $process_sections = false, int $scanner_mode = INI_SCANNER_NORMAL): array|false {}",
+            defaults: &[None, Some("false"), Some("INI_SCANNER_NORMAL")],
+            by_value: &[true, true, true],
+        },
+        b"parse_ini_string" => NativeSignature {
+            name: "parse_ini_string",
+            extension: "standard",
+            declaration: "<?php function __native(string $ini_string, bool $process_sections = false, int $scanner_mode = INI_SCANNER_NORMAL): array|false {}",
+            defaults: &[None, Some("false"), Some("INI_SCANNER_NORMAL")],
+            by_value: &[true, true, true],
+        },
         b"parse_url" => NativeSignature {
             name: "parse_url",
             extension: "standard",

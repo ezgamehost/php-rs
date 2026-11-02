@@ -1,0 +1,165 @@
+PHP 8.5.0 INI parsing hillclimb
+Baseline: dcae72516f953a533372d8782fc8f8f4deab7f37
+
+zend
+Before: 5256 cases; 2783 passed, 2073 failed, 400 unsupported
+After: 5256 cases; 2791 passed, 2065 failed, 400 unsupported
+New passes: 8; regressions: 0
+NEW PASS: Zend/tests/bug52508.phpt
+NEW PASS: Zend/tests/bug61087.phpt
+NEW PASS: Zend/tests/bug69551.phpt
+NEW PASS: Zend/tests/bug70748.phpt
+NEW PASS: Zend/tests/bug74603.phpt
+NEW PASS: Zend/tests/bug76965.phpt
+NEW PASS: Zend/tests/bug77589.phpt
+NEW PASS: Zend/tests/zend_ini/oss_fuzz_428983568.phpt
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 668 passed, 57 failed, 53 unsupported
+After: 778 cases; 668 passed, 57 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 534 passed, 44 failed, 152 unsupported
+After: 730 cases; 535 passed, 43 failed, 152 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug51899.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 8; regressions: 0
+NEW PASS: ext/standard/tests/file/bug46347.phpt
+NEW PASS: ext/standard/tests/file/bug51094.phpt
+NEW PASS: ext/standard/tests/file/bug63512.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_error.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_variation1.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_variation2.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_variation3.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+focused
+Before: 43 cases; 0 passed, 39 failed, 4 unsupported
+After: 43 cases; 39 passed, 0 failed, 4 unsupported
+New passes: 39; regressions: 0
+NEW PASS: Zend/tests/bug52508.phpt
+NEW PASS: Zend/tests/bug61087.phpt
+NEW PASS: Zend/tests/bug69551.phpt
+NEW PASS: Zend/tests/bug70748.phpt
+NEW PASS: Zend/tests/bug74603.phpt
+NEW PASS: Zend/tests/bug76965.phpt
+NEW PASS: Zend/tests/bug77589.phpt
+NEW PASS: Zend/tests/zend_ini/oss_fuzz_428983568.phpt
+NEW PASS: ext/standard/tests/file/bug46347.phpt
+NEW PASS: ext/standard/tests/file/bug51094.phpt
+NEW PASS: ext/standard/tests/file/bug63512.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_error.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_variation1.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_variation2.phpt
+NEW PASS: ext/standard/tests/file/parse_ini_file_variation3.phpt
+NEW PASS: ext/standard/tests/general_functions/bug40752.phpt
+NEW PASS: ext/standard/tests/general_functions/bug41445.phpt
+NEW PASS: ext/standard/tests/general_functions/bug41445_1.phpt
+NEW PASS: ext/standard/tests/general_functions/bug44461.phpt
+NEW PASS: ext/standard/tests/general_functions/bug47859.phpt
+NEW PASS: ext/standard/tests/general_functions/bug48660.phpt
+NEW PASS: ext/standard/tests/general_functions/bug48768.phpt
+NEW PASS: ext/standard/tests/general_functions/bug49056.phpt
+NEW PASS: ext/standard/tests/general_functions/bug49692.phpt
+NEW PASS: ext/standard/tests/general_functions/bug52138.phpt
+NEW PASS: ext/standard/tests/general_functions/bug70157.phpt
+NEW PASS: ext/standard/tests/general_functions/bug70947.phpt
+NEW PASS: ext/standard/tests/general_functions/bug77844.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_booleans.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_file.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_numeric_entry_name.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_string_001.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_string_002.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_string_003.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_string_bug76068.phpt
+NEW PASS: ext/standard/tests/general_functions/parse_ini_string_error.phpt
+NEW PASS: ext/standard/tests/gh11010.phpt
+NEW PASS: ext/standard/tests/strings/bug51899.phpt
+
+Twelve-suite upstream gate: 9,676 fixtures; 5,769 passed, 2,451 failed,
+1,456 unsupported. Net gain: 17 passes; zero regressions.
+
+The focused INI selection contains all 43 existing PHPT files in Zend/tests and
+ext/standard/tests that call parse_ini_file or parse_ini_string. It was measured
+against a separate checkout of the baseline commit: 0 passed, 39 failed,
+4 unsupported. After implementation: 39 passed, 0 failed, 4 unsupported.
+This includes the 17 new passes above and 22 additional passes outside the gate;
+they are not counted twice. The four unsupported fixtures require SKIPIF/INI.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- 18 inline comparisons with PHP 8.5.0 match exactly, covering numeric labels,
+  saturated integer operators, exhausted append indexes, quoting, whitespace,
+  repeated sections, and nested environment fallback expressions.
+- No new tests, fixture modifications, or dependencies.
+
+Implementation:
+- parse_ini_file and parse_ini_string with normal/raw/typed scanner modes.
+- Sections, array entries, PHP numeric-key conversion, duplicate entry handling,
+  constant expansion, bitwise/unary expressions and parenthesized expressions.
+- Single/double quoting, escapes, multiline strings, comments, UTF-8 BOMs,
+  environment substitution, nested fallbacks and syntax warnings.
+- Include-path file lookup, argument validation and scanner-mode diagnostics.
+- Native reflection metadata now covers 427 implemented function names.
+
+Remaining limits:
+- Configuration-directive lookup during ${...} substitution is unfinished.
+  Environment values and fallback expressions are supported.
+- Recursive expressions/substitutions have a 512-level native guard; PHP's
+  generated parser has different stack limits.
+- The broader PHP 8.5 runtime and unsupported PHPT sections remain incomplete.
