@@ -123,6 +123,15 @@ impl Runtime {
         strict: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        // SPL's callback sorts accept a zval here and delegate validation to
+        // uasort()/uksort(), whose internal frame owns the callback error.
+        if matches!(
+            function.native,
+            Some(crate::ast::NativeMethod::ArrayIterator)
+        ) && param.name == b"callback"
+        {
+            return Ok(value);
+        }
         let Some(ty) = &param.ty else {
             return Ok(value);
         };

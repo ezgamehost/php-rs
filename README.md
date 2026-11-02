@@ -85,7 +85,9 @@ new request. The CLI returns the low eight bits of the requested status.
   append, count, array copies, debug output, and shared-storage cloning with
   independent cursors. Native iteration supports references and typed backing
   properties; storage participates in destruction and cycle collection.
-  Sorting, serialization, `ARRAY_AS_PROPS`, and native comparison remain incomplete.
+  Six sorting methods use the array sort engine with callback mutation guards;
+  `ARRAY_AS_PROPS` routes property access and references to backing offsets.
+  Serialization and native comparison remain incomplete.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

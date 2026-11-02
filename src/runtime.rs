@@ -487,6 +487,16 @@ impl Runtime {
                     let Some(mut location) = self.unset_location(target)? else {
                         continue;
                     };
+                    if let Some((root, mut path)) = self.array_iterator_property_path(&location) {
+                        let result = reference_paths::unset_cell(
+                            cell(root),
+                            &mut path.keys,
+                            target.line,
+                            self,
+                        );
+                        self.drain_destructors(result, target.line)?;
+                        continue;
+                    }
                     if let Some(object) = &location.object {
                         if location.keys.is_empty() {
                             if self.magic_property_unset(object, &location.name, target.line)? {
@@ -722,6 +732,12 @@ impl Runtime {
         silent: bool,
         modify: Option<ReadModify>,
     ) -> Result<Value, Error> {
+        if let Some((root, mut path)) = self.array_iterator_property_path(location) {
+            let result = self.read_location_offsets(root, &mut path, line, silent, modify);
+            location.offset_reference = path.offset_reference;
+            location.keys = path.keys.into_iter().skip(1).collect();
+            return result;
+        }
         if let Some(object) = &location.object {
             let overloaded = !silent
                 && !location.keys.is_empty()
@@ -780,6 +796,9 @@ impl Runtime {
         new_value: Value,
         line: usize,
     ) -> Result<Value, Error> {
+        if let Some((root, mut path)) = self.array_iterator_property_path(location) {
+            return reference_paths::write_cell(cell(root), &mut path.keys, new_value, line, self);
+        }
         if location.object.is_none() && location.static_class.is_none() && location.name == b"this"
         {
             return Err(Error::new(ErrorKind::Error, "Cannot re-assign $this", line));

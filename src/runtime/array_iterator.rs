@@ -10,6 +10,7 @@ use crate::{
 pub(crate) struct ArrayIteratorData {
     pub storage: variables::Cell,
     pub flags: i64,
+    sorting: usize,
     cursor: PropertyCursor,
 }
 
@@ -18,6 +19,7 @@ impl Default for ArrayIteratorData {
         Self {
             storage: cell(Value::Array(Rc::new(PhpArray::default()))),
             flags: 0,
+            sorting: 0,
             cursor: PropertyCursor::default(),
         }
     }
@@ -34,6 +36,7 @@ impl ArrayIteratorData {
                 Value::Object(object.clone())
             }),
             flags: data.flags,
+            sorting: 0,
             cursor: PropertyCursor::default(),
         }
     }
@@ -133,6 +136,72 @@ pub(super) fn native_iteration(object: &PhpObject) -> bool {
 }
 
 impl Runtime {
+    pub(super) fn array_iterator_property(&self, object: &PhpObject, name: &[u8]) -> bool {
+        object
+            .array_iterator
+            .borrow()
+            .as_ref()
+            .is_some_and(|data| data.flags & 2 != 0)
+            && !(self
+                .check_instance_property_access(object, name, true, 0)
+                .unwrap_or(false)
+                && object
+                    .properties
+                    .borrow()
+                    .get(&self.instance_property_key(object, name))
+                    .is_some())
+    }
+
+    pub(super) fn array_iterator_property_path(
+        &self,
+        location: &Location,
+    ) -> Option<(Value, Location)> {
+        let object = location.object.as_ref()?;
+        if !self.array_iterator_property(object, &location.name) {
+            return None;
+        }
+        let mut keys = vec![Offset::new(Some(Value::String(
+            location.name.clone().into(),
+        )))];
+        keys.extend(location.keys.iter().cloned());
+        Some((
+            Value::Object(object.clone()),
+            Location {
+                offset_reference: None,
+                overloaded: None,
+                static_class: None,
+                object: None,
+                name: Vec::new(),
+                global: false,
+                keys,
+            },
+        ))
+    }
+
+    pub(super) fn array_iterator_property_exists(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let key = Value::String(name.to_vec().into());
+        let native_exists = objects::method(&object.class, b"offsetExists")
+            .is_some_and(|method| matches!(method.native, Some(NativeMethod::ArrayIterator)));
+        if !native_exists {
+            let exists =
+                self.array_access_call(object, b"offsetExists", vec![key.clone()], line)?;
+            if !exists.is_truthy() {
+                return Ok(Value::Bool(false));
+            }
+            if !native_offset_get(object) {
+                let value = self.array_access_call(object, b"offsetGet", vec![key], line)?;
+                return Ok(Value::Bool(value.is_truthy()));
+            }
+        }
+        let key = self.array_iterator_offset_key(object, &key, b"offsetexists", line)?;
+        Ok(Value::Bool(storage(object).read(&key).is_some()))
+    }
+
     pub(super) fn builtin_array_iterator_class(&self, name: &[u8]) -> Option<Rc<Class>> {
         if name != b"arrayiterator" {
             return None;
@@ -153,6 +222,12 @@ impl Runtime {
             public function count(): int {}
             public function getFlags(): int {}
             public function setFlags(int $flags): void {}
+            public function asort(int $flags = SORT_REGULAR): true {}
+            public function ksort(int $flags = SORT_REGULAR): true {}
+            public function uasort(callable $callback): true {}
+            public function uksort(callable $callback): true {}
+            public function natsort(): true {}
+            public function natcasesort(): true {}
             public function rewind(): void {}
             public function current(): mixed {}
             public function key(): string|int|null {}
@@ -257,14 +332,15 @@ impl Runtime {
                 // Reinitialization accumulates public flags; setFlags() is the
                 // API that replaces them. Storage/cursor are replaced below.
                 flags |= object.array_iterator.borrow().as_ref().unwrap().flags;
-                let old = object
-                    .array_iterator
-                    .borrow_mut()
-                    .replace(ArrayIteratorData {
-                        storage: cell(value),
-                        flags,
-                        cursor: PropertyCursor::default(),
-                    });
+                let old = {
+                    let mut state = object.array_iterator.borrow_mut();
+                    let data = state.as_mut().unwrap();
+                    data.flags = flags;
+                    data.cursor = PropertyCursor::default();
+                    // Keep the storage slot and active sort guard alive across
+                    // constructor calls made from a comparison callback.
+                    data.storage.replace(value)
+                };
                 drop(old);
                 self.drain_destructors(Ok(Value::Null), line)
             }
@@ -277,6 +353,9 @@ impl Runtime {
                 Ok(Value::Null)
             }
             b"getarraycopy" => Ok(Value::Array(Rc::new(storage(&object).snapshot()))),
+            b"asort" | b"ksort" | b"uasort" | b"uksort" | b"natsort" | b"natcasesort" => {
+                self.array_iterator_sort(&object, &name, line)
+            }
             b"count" => Ok(Value::Int(storage(&object).keys().len() as i64)),
             b"__debuginfo" => {
                 let mut properties = object.snapshot();
@@ -336,6 +415,65 @@ impl Runtime {
         match self.instantiate_class(class, &args, true, line) {
             Ok(value) => self.throw_value(value, line),
             Err(error) => error,
+        }
+    }
+
+    fn array_iterator_sort(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let backing = storage(object);
+        let source = cell(Value::Array(Rc::new(match &backing {
+            Storage::Array(source) => match &*source.borrow() {
+                Value::Array(array) => (**array).clone(),
+                _ => unreachable!(),
+            },
+            // Duplicate the actual symbol table, preserving its current order.
+            Storage::Object(object) => object.properties.borrow().clone(),
+        })));
+        let mut arguments = vec![Value::Reference(source.clone())];
+        match name {
+            b"asort" | b"ksort" => arguments.push(self.lookup(b"flags").unwrap()),
+            b"uasort" | b"uksort" => arguments.push(self.lookup(b"callback").unwrap()),
+            _ => {}
+        }
+        let target = self.resolve_callable(Value::String(name.to_vec().into()), line)?;
+        object.array_iterator.borrow_mut().as_mut().unwrap().sorting += 1;
+        let result = self.call_callback(&target, &arguments, line);
+        object.array_iterator.borrow_mut().as_mut().unwrap().sorting -= 1;
+        // PHP installs the sorted table even when comparison throws. Retain
+        // the original backing slot if a callback reinitializes the iterator.
+        let sorted = source.replace(Value::Null);
+        match backing {
+            Storage::Array(backing) => drop(backing.replace(sorted)),
+            Storage::Object(backing) => {
+                let Value::Array(sorted) = sorted else {
+                    unreachable!()
+                };
+                drop(backing.properties.replace((*sorted).clone()));
+                // A native sort can reorder even declared properties. Ordinary
+                // snapshots must retain that table order, including on clones.
+                backing.properties_reordered.set(true);
+            }
+        }
+        self.drain_destructors(result, line)
+    }
+
+    pub(super) fn array_iterator_check_mutation(
+        &self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<(), Error> {
+        if object.array_iterator.borrow().as_ref().unwrap().sorting != 0 {
+            Err(Error::new(
+                ErrorKind::Error,
+                "Modification of ArrayObject during sorting is prohibited",
+                line,
+            ))
+        } else {
+            Ok(())
         }
     }
 
@@ -450,6 +588,9 @@ impl Runtime {
         value: Option<Value>,
         line: usize,
     ) -> Result<Value, Error> {
+        if matches!(method, b"offsetset" | b"offsetunset" | b"append") {
+            self.array_iterator_check_mutation(object, line)?;
+        }
         let backing = storage(object);
         let append =
             method == b"append" || (method == b"offsetset" && offset == Some(&Value::Null));

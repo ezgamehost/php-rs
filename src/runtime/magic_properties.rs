@@ -162,6 +162,14 @@ impl Runtime {
         line: usize,
         access: Access,
     ) -> Result<Value, Error> {
+        if self.array_iterator_property(object, name) {
+            return self.read_offset(
+                Value::Object(object.clone()),
+                &mut Offset::new(Some(Value::String(name.to_vec().into()))),
+                line,
+                access,
+            );
+        }
         if self.property_backed(object, name) {
             return self.read_property_storage(object, name, line, access != Access::Read);
         }

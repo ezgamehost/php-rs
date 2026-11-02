@@ -1343,6 +1343,13 @@ impl Runtime {
                             })
                     }) || matches!(first, Value::Object(o) if self.check_instance_property_access(o, &member, true, line)? && o.properties.borrow().get(&self.instance_property_key(o, &member)).is_some())
                 };
+                if !exists
+                    && matches!(builtin, Builtin::PropertyExists)
+                    && let Value::Object(object) = first
+                    && self.array_iterator_property(object, &member)
+                {
+                    return self.array_iterator_property_exists(object, &member, line);
+                }
                 Ok(Value::Bool(exists))
             }
             Builtin::Range => self.range(&args, line),

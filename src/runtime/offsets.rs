@@ -21,6 +21,7 @@ impl Access {
 
 /// Keep the evaluated key and cache array coercion across read/modify/write.
 /// String offsets use different conversion rules from array keys.
+#[derive(Clone)]
 pub(super) struct Offset {
     value: Option<Value>,
     array_key: Option<ArrayKey>,

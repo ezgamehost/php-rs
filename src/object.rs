@@ -50,6 +50,7 @@ pub struct PhpObject {
     pub(crate) class: Rc<Class>,
     pub(crate) class_name: String,
     pub(crate) properties: RefCell<PhpArray>,
+    pub(crate) properties_reordered: Cell<bool>,
     pub(crate) unset_properties: RefCell<std::collections::HashSet<Vec<u8>>>,
     pub(crate) reinitializable: RefCell<std::collections::HashSet<Vec<u8>>>,
     // Native backing storage is released after ordinary object properties.
@@ -180,6 +181,7 @@ impl Drop for PhpObject {
             class: self.class.clone(),
             class_name: std::mem::take(&mut self.class_name),
             properties: std::mem::take(&mut self.properties),
+            properties_reordered: Cell::new(self.properties_reordered.get()),
             unset_properties: std::mem::take(&mut self.unset_properties),
             reinitializable: std::mem::take(&mut self.reinitializable),
             object_id: self.object_id,
@@ -281,10 +283,12 @@ impl PhpObject {
     pub(crate) fn snapshot(&self) -> PhpArray {
         let properties = self.properties.borrow();
         let mut result = PhpArray::default();
-        for property in &self.class.properties {
-            let key = crate::ArrayKey::String(property.storage_name());
-            if let Some(value) = properties.get(&key) {
-                result.insert(key, value.copy_array_entry());
+        if !self.properties_reordered.get() {
+            for property in &self.class.properties {
+                let key = crate::ArrayKey::String(property.storage_name());
+                if let Some(value) = properties.get(&key) {
+                    result.insert(key, value.copy_array_entry());
+                }
             }
         }
         for (key, value) in properties.entries() {

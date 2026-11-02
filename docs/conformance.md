@@ -2527,6 +2527,36 @@ and some cursor mutation/diagnostic edges. RecursiveArrayIterator and ArrayObjec
 are not implemented by this slice. Other existing generator, fiber, property-hook,
 reflection, and runtime gaps remain.
 
+The [ArrayIterator sorting/property slice](conformance/php-8.5.0-array-iterator-ops-hillclimb.txt)
+adds **one upstream pass**, with **zero regressions** across the six full suites.
+SPL reaches **55 / 629 / 94**; the other full-suite counts are unchanged.
+
+ArrayIterator now exposes asort, ksort, uasort, uksort, natsort, and natcasesort
+through the existing array sort engine. Callback validation belongs to the
+underlying function's internal frame. An object-local guard rejects direct writes,
+removals, and writable offset references during sorting, while PHP's nested-unset
+exception remains allowed. The result table is installed even when comparison
+throws. Constructor reentry preserves the active guard and storage slot. Sorting
+object backing retains the reordered property table in snapshots and clones.
+
+ARRAY_AS_PROPS routes reads, writes, probes, unsets, nested operations, and references
+to backing offsets when no accessible initialized ordinary property occupies the
+name. This includes inaccessible and uninitialized declared properties. Existing
+offset overrides participate; property_exists handles null entries and inherited
+offset hooks. Ordinary initialized properties retain priority over array entries.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, Clippy,
+and diff checks pass. No custom tests or matrices were added. Direct PHP CLI
+comparisons also cover all six sorting methods, callback errors and traces,
+mutation guards and nested unsets, constructor reentry, object backing order and
+cloning, property visibility/uninitialized slots, null entries, references, and
+offset/magic overrides with flag changes.
+
+Serialization/Serializable, native object comparison, disabled-function support,
+precise overloaded-object rejection, and remaining cursor/diagnostic edges are
+still incomplete. ArrayObject, RecursiveArrayIterator, and the previously listed
+runtime and PHPT-harness gaps remain outside this slice.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2536,7 +2566,7 @@ measurements reported by their individual slices.
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
 | PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2524 | 2324 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 285 | 170 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 54 | 630 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 55 | 629 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 772 | 16 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

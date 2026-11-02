@@ -215,6 +215,9 @@ impl Runtime {
         reference: Cell,
         line: usize,
     ) -> Result<(), Error> {
+        if let Some((root, mut path)) = self.array_iterator_property_path(target) {
+            return reference_paths::bind(cell(root), &mut path.keys, reference, line, self);
+        }
         if target.object.is_some() || target.static_class.is_some() {
             return self.bind_property_reference(target, reference, line);
         }
@@ -246,6 +249,9 @@ impl Runtime {
         location: &mut Location,
         line: usize,
     ) -> Result<Cell, Error> {
+        if let Some((root, mut path)) = self.array_iterator_property_path(location) {
+            return reference_paths::acquire(cell(root), &mut path.keys, line, self);
+        }
         if location.object.is_some() || location.static_class.is_some() {
             return self.property_reference(location, line);
         }

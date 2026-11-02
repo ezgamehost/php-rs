@@ -124,6 +124,7 @@ impl Runtime {
             class: original.class.clone(),
             class_name: original.class_name.clone(),
             properties: RefCell::new(original.properties.borrow().clone()),
+            properties_reordered: std::cell::Cell::new(original.properties_reordered.get()),
             array_iterator: RefCell::new(
                 original
                     .array_iterator

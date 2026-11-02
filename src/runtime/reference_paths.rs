@@ -282,6 +282,11 @@ fn finish(
                             continue;
                         }
                     } else {
+                        // BP_VAR_UNSET can traverse an entry during sorting;
+                        // only direct offset removal uses the unset guard.
+                        if !matches!(mutation, Mutation::Unset) {
+                            runtime.array_iterator_check_mutation(&object, line)?;
+                        }
                         let key =
                             runtime.array_iterator_offset_key(&object, &key, b"offsetget", line)?;
                         keys[0].cache_array_key(key.clone());

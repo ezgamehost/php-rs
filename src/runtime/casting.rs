@@ -132,6 +132,7 @@ impl Runtime {
             class_name: "stdClass".to_owned(),
             properties: RefCell::new(properties),
             array_iterator: RefCell::default(),
+            properties_reordered: std::cell::Cell::new(false),
             property_cursor: RefCell::default(),
             property_iterators: RefCell::default(),
             unset_properties: RefCell::default(),
