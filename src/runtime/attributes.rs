@@ -1,4 +1,4 @@
-// Altered Rust adaptation of PHP 8.5.0's Deprecated attribute diagnostics.
+// Altered Rust adaptation of PHP 8.5.0's call and constant attribute diagnostics.
 // See THIRD_PARTY_NOTICES.md.
 use super::*;
 use crate::{ast::NativeMethod, object::Class};
@@ -39,14 +39,14 @@ impl Runtime {
             }
             message.extend(name);
             message.extend(b" is deprecated");
-            message.extend(self.deprecation_suffix(attribute, scope, line)?);
-            self.attribute_deprecation(&message, 16384, line, false)
+            message.extend(self.diagnostic_attribute_suffix(attribute, scope, line)?);
+            self.attribute_diagnostic(&message, 16384, line, false)
         })();
         self.deprecated_constants.remove(&guard);
         result
     }
 
-    pub(super) fn deprecated_call(
+    pub(super) fn call_attribute_diagnostics(
         &mut self,
         target: &functions::CallTarget,
         requested: Option<&[u8]>,
@@ -56,48 +56,66 @@ impl Runtime {
         let Some(function) = &target.function else {
             return Ok(());
         };
-        let Some(attribute) = function
-            .attributes
-            .iter()
-            .find(|a| a.name.eq_ignore_ascii_case(b"Deprecated"))
-        else {
-            return Ok(());
-        };
-        let scope = target.context.as_ref().map(|c| c.scope.clone());
-        let suffix = self.deprecation_suffix(attribute, scope.clone(), line)?;
-        let mut message = if let Some(scope) = scope {
-            let name = requested.unwrap_or_else(|| {
-                if function.name.starts_with(b"{closure:") {
-                    &function.name
+        // Zend reports Deprecated first, and stops if its handler throws.
+        for (attribute_name, discarded) in [(b"Deprecated".as_slice(), false), (b"NoDiscard", true)]
+        {
+            if discarded && target.result_used {
+                continue;
+            }
+            let Some(attribute) = function
+                .attributes
+                .iter()
+                .find(|a| a.name.eq_ignore_ascii_case(attribute_name))
+            else {
+                continue;
+            };
+            let scope = target.context.as_ref().map(|c| c.scope.clone());
+            let suffix = self.diagnostic_attribute_suffix(attribute, scope.clone(), line)?;
+            let mut message = if let Some(scope) = scope {
+                let name = requested.unwrap_or_else(|| {
+                    if function.name.starts_with(b"{closure:") {
+                        &function.name
+                    } else {
+                        function.name.rsplit(|b| *b == b':').next().unwrap()
+                    }
+                });
+                let mut message = if discarded {
+                    b"The return value of method ".to_vec()
                 } else {
-                    function.name.rsplit(|b| *b == b':').next().unwrap()
-                }
-            });
-            let mut message = b"Method ".to_vec();
-            message.extend(&scope.name);
-            message.extend(b"::");
-            message.extend(name);
-            message
-        } else {
-            let mut message = b"Function ".to_vec();
-            message.extend(&function.name);
-            message
-        };
-        message.extend(b"() is deprecated");
-        message.extend(suffix);
-        self.attribute_deprecation(
-            &message,
-            if function.native.is_some() {
-                8192
+                    b"Method ".to_vec()
+                };
+                message.extend(&scope.name);
+                message.extend(b"::");
+                message.extend(name);
+                message
             } else {
-                16384
-            },
-            line,
-            internal,
-        )
+                let mut message = if discarded {
+                    b"The return value of function ".to_vec()
+                } else {
+                    b"Function ".to_vec()
+                };
+                message.extend(&function.name);
+                message
+            };
+            message.extend(if discarded {
+                b"() should either be used or intentionally ignored by casting it as (void)"
+                    .as_slice()
+            } else {
+                b"() is deprecated"
+            });
+            message.extend(suffix);
+            let level = match (discarded, function.native.is_some()) {
+                (true, true) => 2,
+                (true, false) => 512,
+                (false, true) => 8192,
+                (false, false) => 16384,
+            };
+            self.attribute_diagnostic(&message, level, line, internal)?;
+        }
+        Ok(())
     }
 
-    pub(super) fn deprecation_suffix(
+    pub(super) fn diagnostic_attribute_suffix(
         &mut self,
         attribute: &crate::ast::Attribute,
         scope: Option<Rc<Class>>,
@@ -143,7 +161,9 @@ impl Runtime {
         self.attribute_evaluation_line = outer_line;
         self.class_context = outer;
         let arguments = arguments?;
-        let class = self.find_class(b"Deprecated").expect("built-in attribute");
+        let class = self
+            .find_class(&attribute.name)
+            .expect("built-in attribute");
         let Value::Object(object) = self.instantiate_class(class, &arguments, true, line)? else {
             unreachable!()
         };

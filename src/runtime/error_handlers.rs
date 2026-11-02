@@ -4,7 +4,7 @@ use super::*;
 use builtins::Builtin;
 
 impl Runtime {
-    pub(super) fn attribute_deprecation(
+    pub(super) fn attribute_diagnostic(
         &mut self,
         message: &[u8],
         level: i64,
@@ -12,6 +12,11 @@ impl Runtime {
         internal: bool,
     ) -> Result<(), Error> {
         self.diagnostics.last_fatal_trace = None;
+        let label = if matches!(level, 8192 | 16384) {
+            "Deprecated"
+        } else {
+            "Warning"
+        };
         let (file, line) = self.attribute_constant_location.as_ref().map_or_else(
             || (self.diagnostics.source.name.clone(), line),
             |(source, line)| (source.name.clone(), *line),
@@ -19,10 +24,10 @@ impl Runtime {
         if !self.dispatch_error_handler(level, message, &file, line, internal.then_some(true))? {
             self.diagnostics.output_position = self.output.len();
             self.diagnostics
-                .display(level, "Deprecated", message, &file, line as i64);
+                .display(level, label, message, &file, line as i64);
             if self.diagnostics.reporting & level != 0 {
                 self.diagnostics.messages.push(format!(
-                    "Deprecated: {} on line {line}",
+                    "{label}: {} on line {line}",
                     String::from_utf8_lossy(message)
                 ));
             }

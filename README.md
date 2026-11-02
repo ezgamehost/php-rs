@@ -401,6 +401,10 @@ new request. The CLI returns the low eight bits of the requested status.
   strings, caller strictness, and declaration scope. Constant warnings guard
   recursive attribute evaluation and error handlers. Invalid class, interface,
   and enum targets produce compile errors; reflection honors delayed validation.
+- `#[NoDiscard]` warns before calls whose results are discarded, including magic
+  methods, nullsafe calls, pipes, and suppressed expressions. Assignment and
+  `(void)` consume the result. Attribute messages use caller strictness; throwing
+  handlers prevent execution, and `Deprecated` diagnostics run first.
 - Lexical `__LINE__`, `__FILE__`, `__DIR__`, `__FUNCTION__`, `__METHOD__`,
   `__CLASS__`, `__NAMESPACE__`, and `__TRAIT__`, including the using class for
   trait `__CLASS__` and the original defining trait for `__TRAIT__`/`__METHOD__`.

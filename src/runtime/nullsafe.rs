@@ -8,6 +8,15 @@ impl Runtime {
         expr: &Expr,
         access: Access,
     ) -> Result<Option<Value>, Error> {
+        self.nullsafe_chain_result(expr, access, true)
+    }
+
+    pub(super) fn nullsafe_chain_result(
+        &mut self,
+        expr: &Expr,
+        access: Access,
+        result_used: bool,
+    ) -> Result<Option<Value>, Error> {
         if !expr.has_nullsafe_chain() {
             return self.chain_read(expr, access).map(Some);
         }
@@ -18,7 +27,9 @@ impl Runtime {
             })
         };
         let kind = match &expr.kind {
-            ExprKind::Group(inner) => return self.nullsafe_chain(inner, access),
+            ExprKind::Group(inner) => {
+                return self.nullsafe_chain_result(inner, access, result_used);
+            }
             ExprKind::Property(base, name) | ExprKind::NullsafeProperty(base, name) => {
                 let Some(value) = self.nullsafe_chain(base, access.intermediate())? else {
                     return Ok(None);
@@ -78,7 +89,7 @@ impl Runtime {
                         },
                         args,
                         expr.line,
-                        true,
+                        result_used,
                     )
                     .map(Some);
             }

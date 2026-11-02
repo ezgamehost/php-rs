@@ -96,8 +96,10 @@ impl Runtime {
         callable: Value,
         value: Value,
         line: usize,
+        result_used: bool,
     ) -> Result<Value, Error> {
-        let target = self.resolve_callable(callable, line)?;
+        let mut target = self.resolve_callable(callable, line)?;
+        target.result_used = result_used;
         self.invoke(
             target,
             &[Argument::Positional(Expr {
@@ -361,7 +363,7 @@ impl Runtime {
             builtin.unwrap().parameters()
         };
         let mut bound = self.bind_call_arguments(&parameters, args, &target, line)?;
-        self.deprecated_call(&target, requested.as_deref(), line, internal)?;
+        self.call_attribute_diagnostics(&target, requested.as_deref(), line, internal)?;
         bound.direct_positional = !dynamic
             && !internal
             && args

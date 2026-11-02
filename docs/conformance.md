@@ -2184,6 +2184,31 @@ the behavior. The seven focused failures require destructors (two), `random_int`
 General constant-expression diagnostic overrides outside attribute deprecations
 and other documented runtime gaps remain unfinished.
 
+The [NoDiscard attribute slice](conformance/php-8.5.0-nodiscard-hillclimb.txt)
+adds **14 upstream Zend passes**, reaching **2385 / 2463 / 408**, with no
+regressions across all six suites (8,267 fixtures). Thirteen gains are focused
+attribute fixtures; one covers `(void)` casts in `for` expressions. The focused
+NoDiscard set is **17 / 4 / 4**, and Deprecated remains **40 / 7 / 0**.
+NoDiscard emits E_USER_WARNING before entering a call whose result is discarded.
+It shares attribute construction, binary-safe messages, declaration scope,
+caller strictness, and error-handler dispatch with Deprecated. Deprecation runs
+first; throwing handlers prevent subsequent diagnostics and function execution.
+Magic methods retain the requested name. Nullsafe calls, pipes, and `@` preserve
+whether the result is consumed, while `(void)`, assignments, and intermediate
+chain calls suppress the warning. Inline callback calls propagate result use;
+ordinary internal callback wrappers retain PHP's consumed-result behavior.
+Unsupported void/never declarations and forbidden magic methods report compile
+errors.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. One temporary reference probe matches exact output and exit status
+for nullsafe chains, pipes, suppressed calls, casts, conditional/coalescing
+expressions, and callback wrappers. No custom tests or generated matrices were
+added. PHP 8.5.0 `Zend/zend_execute.c`, `Zend/zend_vm_def.h`,
+`Zend/zend_attributes.c`, and `Zend/zend_compile.c` establish the behavior.
+Remaining focused failures require DateTimeImmutable, Random\IntervalBoundary,
+and property hooks; four extension/INI fixtures remain unsupported.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2191,7 +2216,7 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2371 | 2477 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2385 | 2463 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |

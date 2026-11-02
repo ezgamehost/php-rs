@@ -31,10 +31,11 @@ hook results and pending-exception fatal reporting from PHP 8.5.0's
 `Zend/zend_object_handlers.c` and `Zend/zend.c`, copyright (c) Zend Technologies
 Ltd. The Zend license below also applies to these adaptations.
 
-Deprecated attribute diagnostics in `src/runtime/attributes.rs`,
+Deprecated and NoDiscard attribute diagnostics in `src/runtime/attributes.rs`,
 `src/runtime/static_members.rs`, and `src/runtime/objects.rs` adapt PHP 8.5.0's
 `Zend/zend_execute.c`, `Zend/zend_constants.c`, `Zend/zend_ast.c`, and
-`Zend/zend_inheritance.c`, copyright (c) Zend Technologies Ltd. The Zend license
+`Zend/zend_inheritance.c`, and `Zend/zend_vm_def.h`, copyright (c) Zend
+Technologies Ltd. The Zend license
 below also applies to these adaptations.
 
 --------------------------------------------------------------------

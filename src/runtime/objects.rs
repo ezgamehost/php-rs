@@ -90,12 +90,12 @@ impl Runtime {
                 message.extend(b" used by ");
                 message.extend(&decl.name);
                 message.extend(b" is deprecated");
-                message.extend(self.deprecation_suffix(
+                message.extend(self.diagnostic_attribute_suffix(
                     attribute,
                     Some(class.clone()),
                     decl.line,
                 )?);
-                self.attribute_deprecation(&message, 16384, decl.line, false)?;
+                self.attribute_diagnostic(&message, 16384, decl.line, false)?;
             }
         }
         let class = self.link_class(decl)?;

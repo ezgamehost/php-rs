@@ -546,8 +546,32 @@ impl Runtime {
             ExprKind::Call(callee, args) if !expression.has_nullsafe_chain() => {
                 self.call(callee, args, expression.line, false).map(drop)
             }
+            ExprKind::Call(_, _) => self
+                .nullsafe_chain_result(expression, Access::Read, false)
+                .map(drop),
+            ExprKind::Binary(op, left, right) if op == "|>" => {
+                let value = self.eval(left)?;
+                let callable = self.eval(right)?;
+                self.pipe_call(callable, value, expression.line, false)
+                    .map(drop)
+            }
+            ExprKind::Unary(op, inner) if op == "@" => self.eval_silenced(inner, false).map(drop),
             _ => self.eval(expression).map(drop),
         }
+    }
+
+    fn eval_silenced(&mut self, expression: &Expr, result_used: bool) -> Result<Value, Error> {
+        let previous = self.diagnostics.reporting;
+        self.diagnostics.reporting &= FATAL_ERRORS;
+        let result = if result_used {
+            self.eval(expression)
+        } else {
+            self.eval_discard(expression).map(|()| Value::Null)
+        };
+        if self.diagnostics.reporting & !FATAL_ERRORS == 0 && previous & !FATAL_ERRORS != 0 {
+            self.diagnostics.reporting = previous;
+        }
+        result
     }
 
     fn eval_sequence(&mut self, expressions: &[Expr], result_used: bool) -> Result<Value, Error> {
@@ -1033,15 +1057,7 @@ impl Runtime {
             }
             ExprKind::Unary(op, expr) => {
                 if op == "@" {
-                    let previous = self.diagnostics.reporting;
-                    self.diagnostics.reporting &= FATAL_ERRORS;
-                    let result = self.eval(expr);
-                    if self.diagnostics.reporting & !FATAL_ERRORS == 0
-                        && previous & !FATAL_ERRORS != 0
-                    {
-                        self.diagnostics.reporting = previous;
-                    }
-                    return result;
+                    return self.eval_silenced(expr, true);
                 }
                 let value = self.eval(expr)?;
                 match op.as_str() {
@@ -1131,7 +1147,7 @@ impl Runtime {
                 if op == "|>" {
                     let value = self.eval(left)?;
                     let callable = self.eval(right)?;
-                    return self.pipe_call(callable, value, line);
+                    return self.pipe_call(callable, value, line, true);
                 }
                 if op == "??" {
                     let lhs = self.coalesce_read(left, Access::Coalesce)?;

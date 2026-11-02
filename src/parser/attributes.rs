@@ -310,7 +310,8 @@ impl Parser {
             if let Some(ty) = &function.return_type
                 && (ty.contains("void") || ty.contains("never"))
             {
-                return Err(Error::parse(
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
                     format!(
                         "A {} {} does not return a value, but #[\\NoDiscard] requires a return value",
                         if ty.contains("void") {
@@ -336,7 +337,8 @@ impl Parser {
                 .iter()
                 .any(|name| function.name.eq_ignore_ascii_case(name))
             {
-                return Err(Error::parse(
+                return Err(Error::new(
+                    crate::ErrorKind::CompileError,
                     format!(
                         "Method {}::{} cannot be #[\\NoDiscard]",
                         String::from_utf8_lossy(&self.class_name),
