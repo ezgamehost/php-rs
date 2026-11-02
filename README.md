@@ -406,6 +406,11 @@ new request. The CLI returns the low eight bits of the requested status.
   `call_user_func`, `call_user_func_array` with positional/named arguments,
   scalar/array type predicates, `array_keys`, `array_values`, `array_key_exists`,
   `function_exists`, and `get_included_files`/`get_required_files`.
+- `forward_static_call` and `forward_static_call_array` preserve late static
+  binding within the callback's inheritance chain. Object callbacks keep their
+  object's class; the array variant accepts named/reference arguments and works
+  at global scope. Native callbacks support deprecated `self`, `parent`, and
+  `static` class names with their scope and validation rules.
 - `echo`, blocks, `if` / `elseif` / `else`, `while`, `do … while`, `for`, `foreach`
   by value, numbered `break`/`continue`, and `return`. Loops support alternative
   `: … endfor` / `endwhile` / `endforeach` syntax.
@@ -484,11 +489,11 @@ reference captures, reference parameters/returns, and reference destructuring wo
 Traversable unpacking, complete reference coercion compatibility and diagnostics,
 and cycle collection remain unfinished.
 Reference cycles are not yet collected.
-Throwable property layouts, configurable trace settings, error/exception
+Throwable property layouts, configurable trace settings, error
 handlers, protected exception-property access (including severity), and complete compile-time fatal
 error distinctions remain unfinished.
-Other `declare` directives are not implemented. Shutdown callbacks, output
-handlers, and object destructor execution remain unimplemented.
+Other `declare` directives are not implemented. Output handlers and object
+destructor execution remain unimplemented.
 Automatic initialization and scope handling for the other superglobals are not
 implemented; `$GLOBALS` currently exposes the variables created by PHP code or
 provided through `Runtime::variables`. File loading currently

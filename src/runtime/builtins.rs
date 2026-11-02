@@ -131,6 +131,7 @@ pub(super) enum Builtin {
     ArrayReduce,
     CallUserFunc,
     CallUserFuncArray,
+    ForwardStaticCall(bool),
     FunctionExists,
     IsCallable,
     DebugBacktrace,
@@ -380,6 +381,8 @@ impl Builtin {
             b"array_reduce" => Self::ArrayReduce,
             b"call_user_func" => Self::CallUserFunc,
             b"call_user_func_array" => Self::CallUserFuncArray,
+            b"forward_static_call" => Self::ForwardStaticCall(false),
+            b"forward_static_call_array" => Self::ForwardStaticCall(true),
             b"array_key_exists" | b"key_exists" => Self::ArrayKeyExists,
             b"in_array" => Self::ArraySearch(false),
             b"array_search" => Self::ArraySearch(true),
@@ -781,8 +784,12 @@ impl Builtin {
                 ("haystack", false, false),
                 ("strict", true, false),
             ],
-            Self::CallUserFunc => &[("callback", false, false), ("args", false, true)],
-            Self::CallUserFuncArray => &[("callback", false, false), ("args", false, false)],
+            Self::CallUserFunc | Self::ForwardStaticCall(false) => {
+                &[("callback", false, false), ("args", false, true)]
+            }
+            Self::CallUserFuncArray | Self::ForwardStaticCall(true) => {
+                &[("callback", false, false), ("args", false, false)]
+            }
             Self::DebugBacktrace | Self::DebugPrintBacktrace => {
                 &[("options", true, false), ("limit", true, false)]
             }
@@ -1240,7 +1247,7 @@ impl Runtime {
             | Builtin::ArrayFillKeys
             | Builtin::ArrayPad => self.array_segments(builtin, &name, &args, line),
             Builtin::ArrayMap => self.array_map(&args, &extra, line),
-            Builtin::CallUserFunc | Builtin::CallUserFuncArray => {
+            Builtin::CallUserFunc | Builtin::CallUserFuncArray | Builtin::ForwardStaticCall(_) => {
                 self.call_user_function(builtin, &args, &extra, line)
             }
             Builtin::ArrayFilter => self.array_filter(&args, line),

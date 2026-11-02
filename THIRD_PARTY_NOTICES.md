@@ -11,6 +11,10 @@ http://www.zend.com.
 Andi Gutmans, Zeev Suraski, and Nikita Popov as authors. The Zend license below
 also applies to this adaptation.
 
+Contextual callback resolution in `src/runtime/method_visibility.rs` and
+`src/runtime/callbacks.rs` adapts PHP 8.5.0's `Zend/zend_API.c`, copyright (c)
+Zend Technologies Ltd. The Zend license below also applies to these adaptations.
+
 `src/runtime/exception_handlers.rs` adapts handler registration and dispatch from
 PHP 8.5.0's `Zend/zend_builtin_functions.c` and `Zend/zend.c`, copyright (c)
 Zend Technologies Ltd., by Andi Gutmans and Zeev Suraski. The Zend license below
@@ -216,6 +220,10 @@ copyright (c) The PHP Group. Their authors include Thies C. Arntzen and Wez Furl
 `src/runtime/shutdown.rs` adapts shutdown callback registration and invocation
 from PHP 8.5.0's `ext/standard/basic_functions.c`, copyright (c) The PHP Group.
 Its authors are Andi Gutmans and Zeev Suraski.
+
+Forwarding callback operations in `src/runtime/callbacks.rs` adapt PHP 8.5.0's
+`ext/standard/basic_functions.c`, copyright (c) The PHP Group, by Andi Gutmans
+and Zeev Suraski.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

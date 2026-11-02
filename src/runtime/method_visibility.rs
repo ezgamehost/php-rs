@@ -15,7 +15,10 @@ impl Runtime {
                     .map(|index| (name[..index].to_vec(), name[index + 2..].to_vec()))
             }
             Value::Array(array) if array.len() == 2 => {
-                match (array.get(&ArrayKey::Int(0)), array.get(&ArrayKey::Int(1))) {
+                match (
+                    array.get(&ArrayKey::Int(0)).map(Value::dereferenced),
+                    array.get(&ArrayKey::Int(1)).map(Value::dereferenced),
+                ) {
                     (Some(Value::String(class)), Some(Value::String(method))) => {
                         Some((class.to_vec(), method.to_vec()))
                     }
@@ -24,14 +27,24 @@ impl Runtime {
             }
             _ => None,
         };
-        if let Some((class, method)) = class_method {
+        if let Some((mut class, method)) = class_method {
+            let keyword = class.to_ascii_lowercase();
+            let contextual = matches!(keyword.as_slice(), b"self" | b"parent" | b"static");
+            if contextual {
+                class = self.contextual_class_name(&class, line)?;
+                self.diagnostics.push(format!(
+                    "Deprecated: Use of \"{}\" in callables is deprecated on line {line}",
+                    String::from_utf8_lossy(&keyword),
+                ));
+            }
             // PHP's internal callback validation can bind the active object
             // within the named class's scope. Ordinary variable calls cannot.
             let allow_this = self
                 .class_context
                 .as_ref()
                 .is_some_and(|context| context.scope.is_a(&class));
-            let target = self.resolve_class_method(&class, &method, false, allow_this, line)?;
+            let target =
+                self.resolve_class_method(&class, &method, contextual, allow_this, line)?;
             if method.eq_ignore_ascii_case(b"__construct") && target.magic_name.is_some() {
                 return Err(Error::new(
                     ErrorKind::Error,

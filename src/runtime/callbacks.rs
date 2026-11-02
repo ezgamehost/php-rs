@@ -38,6 +38,25 @@ impl Runtime {
             }
             _ => return "no array or string given".into(),
         };
+        let keyword = class.to_ascii_lowercase();
+        let class = if matches!(keyword.as_slice(), b"self" | b"parent" | b"static") {
+            match self.contextual_class_name(&class, error.line) {
+                Ok(class) => class,
+                Err(_) => {
+                    return format!(
+                        "cannot access \"{}\" when {}",
+                        String::from_utf8_lossy(&keyword),
+                        if self.class_context.is_none() {
+                            "no class scope is active"
+                        } else {
+                            "current class scope has no parent"
+                        },
+                    );
+                }
+            }
+        } else {
+            class
+        };
         let Some(class) = self.find_class(&class) else {
             return format!("class \"{}\" not found", String::from_utf8_lossy(&class));
         };
@@ -119,7 +138,7 @@ impl Runtime {
                 unreachable!()
             };
             let value = self.eval(array)?;
-            let arguments = callback_arguments(callback_array(&value, line)?, line)?;
+            let arguments = callback_arguments(callback_array(&value, name, line)?, line)?;
             self.invoke_at(target, &arguments, line, true, false)
         }
     }
@@ -141,36 +160,78 @@ impl Runtime {
             )?
             .unwrap();
         target.reference_values = true;
-        let values = if matches!(builtin, Builtin::CallUserFuncArray) {
-            callback_array(args[1].as_ref().unwrap(), line)?
+        if matches!(builtin, Builtin::ForwardStaticCall(false))
+            && extra
+                .entries()
+                .iter()
+                .any(|(key, _)| matches!(key, ArrayKey::String(_)))
+        {
+            return Err(Error::new(
+                ErrorKind::ArgumentCountError,
+                "forward_static_call() does not accept unknown named parameters",
+                line,
+            ));
+        }
+        let values = if matches!(
+            builtin,
+            Builtin::CallUserFuncArray | Builtin::ForwardStaticCall(true)
+        ) {
+            callback_array(
+                args[1].as_ref().unwrap(),
+                callback_builtin_name(builtin),
+                line,
+            )?
         } else {
             extra
         };
+        if matches!(builtin, Builtin::ForwardStaticCall(false)) && self.class_context.is_none() {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Cannot call forward_static_call() when no class scope is active",
+                line,
+            ));
+        }
+        // Forward only along the resolved callback's inheritance chain. An
+        // object-bound call derives its called class from the object itself.
+        if matches!(builtin, Builtin::ForwardStaticCall(_))
+            && target.this.is_none()
+            && let Some(caller) = &self.class_context
+            && let Some(context) = &mut target.context
+            && caller.called.is_a(&context.called.name)
+        {
+            context.called = caller.called.clone();
+        }
         let arguments = callback_arguments(values, line)?;
         // Dynamic, named, unpacked, and namespace-fallback calls use the actual
         // internal wrapper, whose callback arguments are weakly coerced.
         let previous_strict = std::mem::replace(&mut self.strict_types, false);
         let result = self.invoke_at(target, &arguments, line, true, true);
         self.strict_types = previous_strict;
-        result
+        if matches!(builtin, Builtin::ForwardStaticCall(_)) {
+            result.map(|value| value.dereferenced())
+        } else {
+            result
+        }
     }
 }
 
 fn callback_builtin_name(builtin: Builtin) -> &'static str {
-    if matches!(builtin, Builtin::CallUserFunc) {
-        "call_user_func"
-    } else {
-        "call_user_func_array"
+    match builtin {
+        Builtin::CallUserFunc => "call_user_func",
+        Builtin::CallUserFuncArray => "call_user_func_array",
+        Builtin::ForwardStaticCall(false) => "forward_static_call",
+        Builtin::ForwardStaticCall(true) => "forward_static_call_array",
+        _ => unreachable!(),
     }
 }
 
-fn callback_array(value: &Value, line: usize) -> Result<&PhpArray, Error> {
+fn callback_array<'a>(value: &'a Value, name: &str, line: usize) -> Result<&'a PhpArray, Error> {
     match value {
         Value::Array(array) => Ok(array),
         _ => Err(Error::new(
             ErrorKind::TypeError,
             format!(
-                "call_user_func_array(): Argument #2 ($args) must be of type array, {} given",
+                "{name}(): Argument #2 ($args) must be of type array, {} given",
                 builtins::debug_type(value)
             ),
             line,

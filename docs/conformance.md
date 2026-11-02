@@ -1975,6 +1975,32 @@ were added. Destructor and output-buffer shutdown phases, error handlers, and
 other missing builtins remain unfinished. Adapted shutdown rules retain PHP
 license attribution.
 
+The [forwarding callback slice](conformance/php-8.5.0-forward-static-call-hillclimb.txt)
+adds **sixteen upstream passes**: eleven Zend, one SPL, and four dedicated
+forwarding fixtures. Zend reaches **2173 / 2675 / 408** and SPL **23 / 661 / 94**;
+array, reflection, string, and math totals are unchanged. All six tracked suites
+have zero regressions. The focused selection records **5 / 1 / 0**, including one
+Zend fixture already counted in the full suite. Its remaining shutdown fixture
+now reaches the still-missing `hash_hkdf` callback.
+
+`forward_static_call` and `forward_static_call_array` reuse native callback
+validation and invocation, forwarding the called class only within the callback's
+inheritance chain. Object-bound calls retain the object's class. The variadic
+function requires class scope and rejects unknown named arguments after callback
+validation; the array function also works globally and forwards named/reference
+array entries. Calls use weak parameter coercion even from strict callers, preserve
+internal trace frames, and unwrap reference returns. Shared native callback
+resolution now supports deprecated `self`, `parent`, and `static` names, including
+inherited called scope, referenced array members, and context-specific errors.
+
+All 797 existing Rust tests, 57 project PHPT, formatting, and Clippy pass. Reference
+probes match ancestor/sibling calls, object and closure callbacks, first-class
+callables, global-scope differences, argument-validation order, strict callers,
+reference argument/return behavior, and contextual callbacks across exception and
+shutdown boundaries. No custom tests or generated matrices were added. Missing
+builtins, complete qualified callback forms, error handlers, and other documented
+runtime gaps remain unfinished. Adapted rules retain PHP/Zend license attribution.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1982,9 +2008,9 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2162 | 2686 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2173 | 2675 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 726 | 62 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
