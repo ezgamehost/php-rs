@@ -351,8 +351,8 @@ PHP Group. Related iterator dispatch, method forwarding, cloning restrictions,
 and garbage-collection edges follow those native handlers.
 
 IteratorIterator, filter/recursive/callback wrappers, ParentIterator, LimitIterator,
-NoRewindIterator, InfiniteIterator, EmptyIterator, CachingIterator, and
-RecursiveCachingIterator in
+NoRewindIterator, InfiniteIterator, EmptyIterator, CachingIterator,
+RecursiveCachingIterator, and AppendIterator in
 `src/runtime/dual_iterator.rs` adapt PHP 8.5.0's `ext/spl/spl_iterators.c` and
 `.stub.php`, copyright (c) The PHP Group. Cached user-iterator values and callable
 handling also follow `Zend/zend_interfaces.c` and `Zend/zend_API.c`; integration

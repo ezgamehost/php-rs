@@ -110,6 +110,10 @@ new request. The CLI returns the low eight bits of the requested status.
   Returned cache arrays observe native writes and resets; recursive caches can
   suppress child-fetch exceptions. Cached values participate in cycle collection,
   whose counts and complete lifecycle behavior remain incomplete.
+- `AppendIterator` chains iterators, exposes its queued inputs through ArrayIterator,
+  skips exhausted inputs, and can append inputs during traversal. Explicit current()
+  reads follow changes to the active inner cursor. Native iterator handles and cached
+  values are released when switching inputs; generator integration remains unfinished.
 - `RecursiveIteratorIterator` traverses recursive iterators in leaf-only, self-first,
   or child-first order, with depth limits, subclass hooks, child-error catching,
   inner-method forwarding, and native iterator lifetime handling.

@@ -1,0 +1,60 @@
+PHP 8.5.0 AppendIterator hillclimb
+Baseline: 288955a6c7153d7c55c3588deb10e7e8c0b95445
+
+zend
+Before: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+After: 5256 cases; 2582 passed, 2266 failed, 408 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 424 passed, 260 failed, 94 unsupported
+After: 778 cases; 437 passed, 247 failed, 94 unsupported
+New passes: 13; regressions: 0
+NEW PASS: ext/spl/tests/AppendIterator_invalid_ctor.phpt
+NEW PASS: ext/spl/tests/bug46031.phpt
+NEW PASS: ext/spl/tests/bug49972.phpt
+NEW PASS: ext/spl/tests/bug65387.phpt
+NEW PASS: ext/spl/tests/bug73471.phpt
+NEW PASS: ext/spl/tests/bug74519.phpt
+NEW PASS: ext/spl/tests/bug75155.phpt
+NEW PASS: ext/spl/tests/bug75173.phpt
+NEW PASS: ext/spl/tests/iterator_013.phpt
+NEW PASS: ext/spl/tests/iterator_031.phpt
+NEW PASS: ext/spl/tests/iterator_042.phpt
+NEW PASS: ext/spl/tests/iterator_067.phpt
+NEW PASS: ext/spl/tests/spl_006.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 773 passed, 15 failed, 52 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 123 passed, 12 failed, 28 unsupported
+After: 163 cases; 123 passed, 12 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT; cargo fmt --check;
+cargo clippy --locked --all-targets -- -D warnings; git diff --check.
+No custom tests or differential matrices added.
+Direct CLI comparisons match empty state, nested NoRewindIterator current-value
+caching, and inner callback order while traversing multiple and empty inputs.
+The remaining AppendIterator fixture requires generator support. Other SPL classes,
+collector accounting, INI configuration, and complete mutation/destructor timing
+remain unfinished.
+Full log prefix: /tmp/php-rs-append-*1.log.

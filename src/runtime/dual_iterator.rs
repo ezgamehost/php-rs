@@ -7,20 +7,26 @@ use crate::{
     object::{Class, ObjectHandle},
 };
 
+#[derive(Default)]
 pub(crate) struct DualIteratorData {
     current: Option<Value>,
     inner_current: Option<Value>,
     key: Option<Value>,
     // The native iterator handle is released before its retained inner object.
-    _wrapper: ObjectHandle,
-    inner: Rc<PhpObject>,
-    iterator: Rc<PhpObject>,
+    _wrapper: Option<ObjectHandle>,
+    inner: Option<Rc<PhpObject>>,
+    iterator: Option<Rc<PhpObject>>,
     callback: Option<functions::CallTarget>,
     callback_value: Option<Value>,
     position: i64,
     offset: i64,
     limit: i64,
     caching: Option<CachingData>,
+    append: Option<AppendData>,
+}
+struct AppendData {
+    _wrapper: ObjectHandle,
+    array: Rc<PhpObject>,
 }
 struct CachingData {
     flags: i64,
@@ -47,10 +53,16 @@ fn caching_flags(flags: i64, function: &str, position: usize, line: usize) -> Re
 }
 impl DualIteratorData {
     pub(super) fn values(&self) -> Vec<Value> {
-        let mut values = vec![
-            Value::Object(self.inner.clone()),
-            Value::Object(self.iterator.clone()),
-        ];
+        let mut values: Vec<_> = self
+            .inner
+            .iter()
+            .chain(&self.iterator)
+            .cloned()
+            .map(Value::Object)
+            .collect();
+        if let Some(append) = &self.append {
+            values.push(Value::Object(append.array.clone()));
+        }
         if let Some(cache) = &self.caching {
             values.push(Value::Array(cache.cache.clone()));
             values.extend(cache.children.iter().cloned());
@@ -154,6 +166,12 @@ impl Runtime {
                 "NoRewindIterator",
                 Some("IteratorIterator"),
                 "public function __construct(Iterator $iterator) {} public function rewind(): void {} public function valid(): bool {} public function key(): mixed {} public function current(): mixed {} public function next(): void {}",
+                None,
+            ),
+            b"appenditerator" => (
+                "AppendIterator",
+                Some("IteratorIterator"),
+                "public function __construct() {} public function append(Iterator $iterator): void {} public function rewind(): void {} public function valid(): bool {} public function current(): mixed {} public function next(): void {} public function getIteratorIndex(): ?int {} public function getArrayIterator(): ArrayIterator {}",
                 None,
             ),
             b"infiniteiterator" => (
@@ -278,7 +296,7 @@ impl Runtime {
             .dual_iterator
             .borrow()
             .as_ref()
-            .map(|d| d.inner.clone())
+            .and_then(|d| d.inner.clone())
     }
     fn dual_call(
         &mut self,
@@ -321,9 +339,15 @@ impl Runtime {
             .ok_or_else(|| missing(line))?
             .iterator
             .clone();
+        let Some(iterator) = iterator else {
+            return Ok(if name == b"valid" {
+                Value::Bool(false)
+            } else {
+                Value::Null
+            });
+        };
         let cache = !array_iterator::native_iteration(&iterator)
             && !recursive_iterator::native_iteration(&iterator)
-            && !native_iteration(&iterator)
             && !native_iterator::hidden_iterator(&iterator);
         if cache
             && name == b"current"
@@ -404,7 +428,12 @@ impl Runtime {
         let (inner, current, offset, limit) = {
             let data = object.dual_iterator.borrow();
             let data = data.as_ref().unwrap();
-            (data.inner.clone(), data.position, data.offset, data.limit)
+            (
+                data.inner.clone().ok_or_else(|| missing(line))?,
+                data.position,
+                data.offset,
+                data.limit,
+            )
         };
         if position < offset {
             return Err(self.array_iterator_exception(
@@ -477,6 +506,9 @@ impl Runtime {
         }
         if object.dual_iterator.borrow().is_none() {
             return Err(missing(line));
+        }
+        if owner == b"appenditerator" {
+            return self.append_iterator_step(object, name, raw, line);
         }
         if owner == b"cachingiterator" {
             return self.caching_iterator_step(object, name, line);
@@ -593,6 +625,21 @@ impl Runtime {
                     line,
                 ));
             }
+            if owner == b"appenditerator" {
+                let class = self.find_class(b"ArrayIterator").unwrap();
+                let Value::Object(array) = self.instantiate_class(class, &[], true, line)? else {
+                    unreachable!()
+                };
+                let wrapper = self.allocate_object_handle();
+                *object.dual_iterator.borrow_mut() = Some(DualIteratorData {
+                    append: Some(AppendData {
+                        _wrapper: wrapper,
+                        array,
+                    }),
+                    ..DualIteratorData::default()
+                });
+                return Ok(Value::Null);
+            }
             let Value::Object(mut inner) = self.lookup(b"iterator").unwrap() else {
                 unreachable!()
             };
@@ -673,15 +720,16 @@ impl Runtime {
                 current: None,
                 inner_current: None,
                 key: None,
-                inner,
-                iterator,
+                inner: Some(inner),
+                iterator: Some(iterator),
                 callback,
                 callback_value,
                 position: 0,
                 offset,
                 limit,
                 caching,
-                _wrapper: wrapper,
+                _wrapper: Some(wrapper),
+                append: None,
             });
             return Ok(Value::Null);
         }
@@ -690,6 +738,17 @@ impl Runtime {
         }
         if matches!(owner, b"cachingiterator" | b"recursivecachingiterator") {
             return self.caching_iterator_method(&object, name, line);
+        }
+        if owner == b"appenditerator" {
+            return self.append_iterator_method(&object, name, line);
+        }
+        if name == b"getinneriterator" {
+            if object.dual_iterator.borrow().is_none() {
+                return Err(missing(line));
+            }
+            return Ok(self
+                .dual_iterator_inner(&object)
+                .map_or(Value::Null, Value::Object));
         }
         let inner = self
             .dual_iterator_inner(&object)
@@ -768,7 +827,7 @@ impl Runtime {
             (
                 cache.flags,
                 cache.recursive,
-                data.inner.clone(),
+                data.inner.clone().ok_or_else(|| missing(line))?,
                 data.key.clone().unwrap(),
                 data.current.clone().unwrap(),
             )
@@ -1066,6 +1125,182 @@ impl Runtime {
                     ))?;
                 }
                 self.drain_destructors(Ok(value.unwrap_or(Value::Null).dereferenced()), line)
+            }
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Runtime {
+    fn append_iterator_array(
+        &self,
+        object: &PhpObject,
+        line: usize,
+    ) -> Result<Rc<PhpObject>, Error> {
+        object
+            .dual_iterator
+            .borrow()
+            .as_ref()
+            .and_then(|data| data.append.as_ref())
+            .map(|append| append.array.clone())
+            .ok_or_else(|| missing(line))
+    }
+    fn append_iterator_select(
+        &mut self,
+        object: &Rc<PhpObject>,
+        line: usize,
+    ) -> Result<bool, Error> {
+        self.dual_clear(object, line)?;
+        let (array, old) = {
+            let mut data = object.dual_iterator.borrow_mut();
+            let data = data.as_mut().unwrap();
+            let array = data
+                .append
+                .as_ref()
+                .ok_or_else(|| missing(line))?
+                .array
+                .clone();
+            let old = (
+                data.inner.take(),
+                data.iterator.take(),
+                data._wrapper.take(),
+            );
+            (array, old)
+        };
+        drop(old);
+        self.drain_destructors(Ok(()), line)?;
+        if !self.iterator_method(&array, b"valid", line)?.is_truthy() {
+            return Ok(false);
+        }
+        let value = self
+            .iterator_method(&array, b"current", line)?
+            .dereferenced();
+        let Value::Object(inner) = value else {
+            return Err(Error::new(
+                ErrorKind::TypeError,
+                "AppendIterator's iterator array must contain objects implementing Iterator",
+                line,
+            ));
+        };
+        if !inner.class.is_a(b"Iterator") {
+            return Err(Error::new(
+                ErrorKind::TypeError,
+                "AppendIterator's iterator array must contain objects implementing Iterator",
+                line,
+            ));
+        }
+        object.dual_iterator.borrow_mut().as_mut().unwrap().inner = Some(inner.clone());
+        let iterator = self.resolve_iterator(&inner, false, line)?;
+        let wrapper = self.allocate_object_handle();
+        {
+            let mut data = object.dual_iterator.borrow_mut();
+            let data = data.as_mut().unwrap();
+            data.iterator = Some(iterator);
+            data._wrapper = Some(wrapper);
+        }
+        self.dual_rewind(object, line)?;
+        Ok(true)
+    }
+    fn append_iterator_fetch(&mut self, object: &Rc<PhpObject>, line: usize) -> Result<(), Error> {
+        let array = self.append_iterator_array(object, line)?;
+        while !self.dual_inner_step(object, b"valid", line)?.is_truthy() {
+            self.iterator_method(&array, b"next", line)?;
+            if !self.append_iterator_select(object, line)? {
+                return Ok(());
+            }
+        }
+        self.dual_fetch(object, false, line).map(drop)
+    }
+    fn append_iterator_step(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        raw: bool,
+        line: usize,
+    ) -> Result<Value, Error> {
+        match name {
+            b"rewind" => {
+                let array = self.append_iterator_array(object, line)?;
+                self.iterator_method(&array, b"rewind", line)?;
+                if self.append_iterator_select(object, line)? {
+                    self.append_iterator_fetch(object, line)?;
+                }
+                Ok(Value::Null)
+            }
+            b"valid" => Ok(Value::Bool(
+                object
+                    .dual_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .current
+                    .is_some(),
+            )),
+            b"current" => {
+                self.dual_fetch(object, true, line)?;
+                let value = object
+                    .dual_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .current
+                    .clone()
+                    .unwrap_or(Value::Null);
+                Ok(if raw { value } else { value.dereferenced() })
+            }
+            b"next" => {
+                if self.dual_inner_step(object, b"valid", line)?.is_truthy() {
+                    self.dual_next(object, line)?;
+                }
+                self.append_iterator_fetch(object, line)?;
+                Ok(Value::Null)
+            }
+            _ => unreachable!(),
+        }
+    }
+    fn append_iterator_method(
+        &mut self,
+        object: &Rc<PhpObject>,
+        name: &[u8],
+        line: usize,
+    ) -> Result<Value, Error> {
+        let array = self.append_iterator_array(object, line)?;
+        match name {
+            b"getarrayiterator" => Ok(Value::Object(array)),
+            b"getiteratorindex" => self.iterator_method(&array, b"key", line),
+            b"append" => {
+                let Value::Object(inner) = self.lookup(b"iterator").unwrap() else {
+                    unreachable!()
+                };
+                let advance = self.iterator_method(&array, b"valid", line)?.is_truthy()
+                    && !self.dual_inner_step(object, b"valid", line)?.is_truthy();
+                self.dual_call(&array, b"append", &[Value::Object(inner.clone())], line)?;
+                if advance {
+                    self.iterator_method(&array, b"next", line)?;
+                }
+                let initialized = object
+                    .dual_iterator
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .iterator
+                    .is_some();
+                if !initialized || !self.dual_inner_step(object, b"valid", line)?.is_truthy() {
+                    if !self.iterator_method(&array, b"valid", line)?.is_truthy() {
+                        self.iterator_method(&array, b"rewind", line)?;
+                    }
+                    loop {
+                        if !self.append_iterator_select(object, line)? {
+                            break;
+                        }
+                        let selected = self.dual_iterator_inner(object);
+                        if selected.is_some_and(|selected| Rc::ptr_eq(&selected, &inner)) {
+                            break;
+                        }
+                    }
+                    self.append_iterator_fetch(object, line)?;
+                }
+                Ok(Value::Null)
             }
             _ => unreachable!(),
         }
