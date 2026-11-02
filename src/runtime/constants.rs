@@ -288,6 +288,9 @@ fn pathinfo_constant(name: &[u8]) -> Option<Value> {
         b"PATHINFO_EXTENSION" => 4,
         b"PATHINFO_FILENAME" => 8,
         b"PATHINFO_ALL" => 15,
+        b"SCANDIR_SORT_ASCENDING" => 0,
+        b"SCANDIR_SORT_DESCENDING" => 1,
+        b"SCANDIR_SORT_NONE" => 2,
         _ => return None,
     }))
 }

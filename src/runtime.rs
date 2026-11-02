@@ -42,6 +42,7 @@ mod constants;
 mod csv;
 mod destructuring;
 mod diagnostic_display;
+mod directories;
 mod enums;
 mod exporting;
 mod extract;
@@ -144,6 +145,7 @@ pub struct Runtime {
     exit_status: Option<i32>,
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
     resources: crate::resource::Store,
+    default_directory: Option<Rc<crate::PhpResource>>,
 }
 struct Location {
     offset_reference: Option<variables::Cell>,

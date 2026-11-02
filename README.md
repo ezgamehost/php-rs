@@ -135,6 +135,11 @@ new request. The CLI returns the low eight bits of the requested status.
   wrapper registration remain unfinished.
 - `file_get_contents` reads local files and supported wrappers, with include-path
   lookup, positive/negative offsets, length limits, and native read diagnostics.
+- `opendir`, `readdir`, `rewinddir`, `closedir`, and `scandir` support local
+  directories on macOS and 64-bit Linux. Handles survive directory renames;
+  default-handle lifetime, sorting constants, and directory stream operations
+  follow PHP. `Directory` objects, other platforms, configurable collation,
+  and general stream wrappers remain unfinished.
 - `STDIN`, `STDOUT`, `STDERR`, and their `php://` wrappers preserve resource identity,
   alias close state, pipe positions, and interleaved output. Input uses bounded
   buffered reads; closing stdout terminates later ordinary output. Redirected output

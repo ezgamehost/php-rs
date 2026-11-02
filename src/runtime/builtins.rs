@@ -21,6 +21,7 @@ pub(super) enum Builtin {
     Pathinfo,
     ScalarValue(crate::ast::CastKind),
     Settype,
+    Directory(directories::Operation),
     StrReplace(bool),
     Substr,
     SubstrReplace,
@@ -173,6 +174,11 @@ impl Builtin {
             b"boolval" => Self::ScalarValue(crate::ast::CastKind::Bool),
             b"strval" => Self::ScalarValue(crate::ast::CastKind::String),
             b"settype" => Self::Settype,
+            b"opendir" => Self::Directory(directories::Operation::Open),
+            b"readdir" => Self::Directory(directories::Operation::Read),
+            b"rewinddir" => Self::Directory(directories::Operation::Rewind),
+            b"closedir" => Self::Directory(directories::Operation::Close),
+            b"scandir" => Self::Directory(directories::Operation::Scan),
             b"str_replace" => Self::StrReplace(false),
             b"str_ireplace" => Self::StrReplace(true),
             b"substr" => Self::Substr,
@@ -527,6 +533,15 @@ impl Builtin {
             }
             Self::ScalarValue(_) => &[("value", false, false)],
             Self::Settype => &[("var", false, false), ("type", false, false)],
+            Self::Directory(directories::Operation::Open) => {
+                &[("directory", false, false), ("context", true, false)]
+            }
+            Self::Directory(directories::Operation::Scan) => &[
+                ("directory", false, false),
+                ("sorting_order", true, false),
+                ("context", true, false),
+            ],
+            Self::Directory(_) => &[("dir_handle", true, false)],
             Self::StrGetCsv => &[
                 ("string", false, false),
                 ("separator", true, false),
@@ -800,6 +815,18 @@ impl Builtin {
                             line: 0,
                         };
                     }
+                    if matches!(
+                        (self, *name),
+                        (
+                            Self::Directory(directories::Operation::Scan),
+                            "sorting_order"
+                        )
+                    ) {
+                        return Expr {
+                            kind: ExprKind::Constant(b"SCANDIR_SORT_ASCENDING".to_vec()),
+                            line: 0,
+                        };
+                    }
                     if matches!((self, *name), (Self::Math(math::Math::Log), "base")) {
                         return Expr {
                             kind: ExprKind::Constant(b"M_E".to_vec()),
@@ -988,6 +1015,9 @@ impl Runtime {
         }
         if matches!(builtin, Builtin::Settype) {
             return self.settype(args, references, line);
+        }
+        if let Builtin::Directory(operation) = builtin {
+            return self.directory_operation(operation, &name, &args, line);
         }
         if matches!(builtin, Builtin::ArraySplice) {
             return self.array_splice(args, references, line, result_used);
@@ -1355,6 +1385,7 @@ impl Runtime {
             Builtin::ArrayCursor(_) => unreachable!(),
             Builtin::ArrayWalk(_)
             | Builtin::Settype
+            | Builtin::Directory(_)
             | Builtin::ArraySort(_)
             | Builtin::ArrayUserSort(_)
             | Builtin::ArrayMultisort

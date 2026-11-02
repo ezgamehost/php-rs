@@ -321,6 +321,49 @@ impl Runtime {
         let Kind::Stream(stream) = &mut *kind else {
             return Err(invalid());
         };
+        if let Backend::Directory(directory) = &mut stream.backend {
+            match operation {
+                Operation::Close => {
+                    self.diagnostics.push(format!("{name}(): cannot close the provided stream, as it must not be manually closed on line {line}"));
+                    return Ok(Value::Bool(false));
+                }
+                Operation::Rewind | Operation::Seek => {
+                    if whence == 0 && offset < 0 {
+                        return Ok(Value::Int(-1));
+                    }
+                    directory.rewind();
+                    stream.eof = false;
+                    // The native directory seek callback leaves the logical
+                    // stream position untouched, regardless of rewind/offset.
+                    return Ok(if matches!(operation, Operation::Rewind) {
+                        Value::Bool(true)
+                    } else {
+                        Value::Int(0)
+                    });
+                }
+                Operation::Read => {
+                    if length as usize != crate::native_directory::RECORD_SIZE {
+                        return Ok(Value::Bool(false));
+                    }
+                    let mut record = vec![0; length as usize];
+                    return Ok(match stream.backend.read(&mut record) {
+                        Ok(count) => {
+                            stream.position = stream.position.wrapping_add(count as u64);
+                            record.truncate(count);
+                            Value::String(record.into())
+                        }
+                        Err(_) => Value::Bool(false),
+                    });
+                }
+                Operation::Write if !data.is_empty() => {
+                    self.diagnostics.push(format!(
+                        "Notice: {name}(): Stream is not writable on line {line}"
+                    ));
+                    return Ok(Value::Bool(false));
+                }
+                _ => {}
+            }
+        }
         if matches!(operation, Operation::Read)
             && let Backend::StandardInput(reader) = &mut stream.backend
         {

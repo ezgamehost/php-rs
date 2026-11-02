@@ -4,6 +4,7 @@ mod closure;
 mod diagnostics;
 mod error;
 mod lexer;
+mod native_directory;
 mod object;
 mod parser;
 pub mod phpt;

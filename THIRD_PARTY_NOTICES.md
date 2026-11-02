@@ -203,6 +203,11 @@ Rasmus Lerdorf, Stig Sæther Bakken, and Zeev Suraski as authors.
 `ext/standard/type.c`, copyright (c) The PHP Group. The source lists
 Rasmus Lerdorf as author.
 
+`src/runtime/directories.rs` and the directory branches in `src/resource.rs` and
+`src/runtime/streams.rs` adapt directory operations from PHP 8.5.0's
+`ext/standard/dir.c`, `main/streams/plain_wrapper.c`, and `main/streams/streams.c`,
+copyright (c) The PHP Group. Their authors include Thies C. Arntzen and Wez Furlong.
+
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:
 

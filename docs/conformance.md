@@ -1,6 +1,6 @@
 # Conformance baseline
 
-Measurements through 2026-10-28 with the PHP **8.5.0** release source and a locally built
+Measurements through 2026-11-02 with the PHP **8.5.0** release source and a locally built
 CLI reference. Upstream fixtures run as real files with the source checkout as
 their working directory. These are narrow measurements, not full PHP
 compatibility claims.
@@ -1879,6 +1879,29 @@ tests or generated matrices were added. Error-handler callbacks, destruction tim
 unsupported internal-object handlers, PHP configuration, and memory-limit behavior
 remain unfinished. Adapted conversion rules retain PHP notices/license.
 
+The [directory-stream slice](conformance/php-8.5.0-directories-hillclimb.txt) adds
+**twelve upstream passes**: five directory fixtures, three array fixtures, two
+scalar-predicate fixtures, one Zend fixture, and one string fixture. It implements
+`opendir`, `readdir`, `rewinddir`, `closedir`, and `scandir`, with native resource
+validation, default-directory lifetime, sorting constants, and stream behavior.
+A small POSIX adapter owns an open directory handle, so reading and rewinding
+continue after the directory is renamed. Raw directory records initialize unused
+bytes and preserve PHP's platform-specific record size and type byte.
+
+Zend reaches **2138 / 2710 / 408**, arrays **726 / 62 / 52**, and strings
+**391 / 187 / 152**. Reflection, SPL, and math are unchanged. The directory suite
+records **5 / 2 / 66**; its remaining executable failures need working-directory
+and disk-space functions. The two dedicated scalar-predicate fixtures both pass.
+There are zero regressions across these comparisons. All 797 existing Rust tests,
+57 reference-checked project PHPT, formatting, and Clippy pass. Reference probes
+match directory renames, raw records, seek positions, default-handle replacement,
+coercion/validation order, named arguments, and reflection defaults. No custom
+tests or generated matrices were added. Directory objects, non-POSIX platforms,
+configurable locale collation, general stream wrappers, and unsupported PHPT
+sections remain unfinished; unsupported fixtures are not counted as passes.
+The adapter supports macOS and 64-bit Linux; native execution was checked on macOS.
+Adapted directory rules retain PHP notices/license.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -1886,13 +1909,13 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2137 | 2711 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2138 | 2710 | 408 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 22 | 662 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 723 | 65 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 726 | 62 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
-| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 390 | 188 | 152 |
+| PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 391 | 187 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |

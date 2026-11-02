@@ -28,6 +28,7 @@ pub(crate) struct Stream {
 
 #[derive(Debug)]
 pub(crate) enum Backend {
+    Directory(crate::native_directory::Directory),
     File(File),
     StandardInput(BufReader<File>),
     StandardOutput(bool),
@@ -38,6 +39,24 @@ pub(crate) enum Backend {
 impl Read for Backend {
     fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
         match self {
+            Self::Directory(directory) => {
+                if bytes.len() != crate::native_directory::RECORD_SIZE {
+                    return Err(io::Error::from(io::ErrorKind::InvalidInput));
+                }
+                let Some((name, kind)) = directory.read() else {
+                    return Ok(0);
+                };
+                if name.len() >= bytes.len() - 1 {
+                    return Err(io::Error::from(io::ErrorKind::InvalidData));
+                }
+                // Native unused record bytes are unspecified. Initialize them
+                // so PHP code cannot observe uninitialized host memory.
+                bytes.fill(0);
+                bytes[..name.len()].copy_from_slice(&name);
+                let last = bytes.len() - 1;
+                bytes[last] = kind;
+                Ok(bytes.len())
+            }
             Self::File(file) => file.read(bytes),
             Self::StandardInput(file) => file.read(bytes),
             Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(9)),
@@ -54,6 +73,7 @@ impl Read for Backend {
 impl Write for Backend {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         match self {
+            Self::Directory(_) => Err(io::Error::from(io::ErrorKind::Unsupported)),
             Self::File(file) => file.write(bytes),
             Self::StandardInput(file) => file.get_mut().write(bytes),
             // Captured standard output is emitted by the runtime, which also
@@ -82,6 +102,7 @@ impl Write for Backend {
     }
     fn flush(&mut self) -> io::Result<()> {
         match self {
+            Self::Directory(_) => Ok(()),
             Self::File(file) => file.flush(),
             Self::StandardInput(file) => file.get_mut().flush(),
             Self::StandardOutput(_) => Ok(()),
@@ -93,6 +114,10 @@ impl Write for Backend {
 impl Seek for Backend {
     fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
         match self {
+            Self::Directory(directory) => {
+                directory.rewind();
+                Ok(0)
+            }
             Self::File(file) => file.seek(position),
             Self::StandardInput(file) => file.seek(position),
             Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(29)),
