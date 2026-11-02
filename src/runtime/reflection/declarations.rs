@@ -20,6 +20,8 @@ impl Runtime {
                 public function isUserDefined(): bool {}
                 public function isAnonymous(): bool {}
                 public function isInstantiable(): bool {}
+                public function isIterable(): bool {}
+                public function isIterateable(): bool {}
                 public function isCloneable(): bool {}
                 public function isInterface(): bool {}
                 public function isTrait(): bool {}

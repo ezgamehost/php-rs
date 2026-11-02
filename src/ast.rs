@@ -436,7 +436,9 @@ impl TypeDecl {
         self.contains("mixed")
             || self.members.iter().any(|member| {
                 if let Value::Object(object) = value
-                    && (member == "object" || object.class.is_a(member.as_bytes()))
+                    && (member == "object"
+                        || (member == "iterable" && object.class.is_a(b"Traversable"))
+                        || object.class.is_a(member.as_bytes()))
                 {
                     return true;
                 }

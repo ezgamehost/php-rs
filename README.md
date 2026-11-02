@@ -73,6 +73,10 @@ new request. The CLI returns the low eight bits of the requested status.
   result conversion, mode validation, tentative return types, and exceptions.
   Recursive array counting protects against cycles and warning-handler reentry;
   nested objects are counted as entries without invoking their count methods.
+- `Traversable`, `Iterator`, and `IteratorAggregate` support user-defined `foreach`,
+  nested aggregates, callback ordering, exceptions, and reference restrictions.
+  Iterable type checks, `is_iterable`, and reflection recognize these objects;
+  interface methods expose PHP's tentative return types.
 - `array_slice`, `array_reverse`, and `array_chunk`, including key preservation,
   numeric-key reindexing, clamped slices, and reference-aware element copying.
   `array_fill`, `array_fill_keys`, and `array_pad` support repeated values, converted

@@ -303,6 +303,7 @@ impl Builtin {
             b"is_object" => Self::Is("object"),
             b"is_array" => Self::Is("array"),
             b"is_countable" => Self::Is("countable"),
+            b"is_iterable" => Self::Is("iterable"),
             b"is_resource" => Self::Is("resource"),
             b"is_numeric" => Self::Is("numeric"),
             b"is_scalar" => Self::Is("scalar"),
@@ -1434,6 +1435,10 @@ impl Runtime {
                 };
                 Ok(Value::String(kind.as_bytes().to_vec().into()))
             }
+            Builtin::Is("iterable") => Ok(Value::Bool(
+                matches!(first, Value::Array(_))
+                    || matches!(first, Value::Object(object) if object.class.is_a(b"Traversable")),
+            )),
             Builtin::Is("countable") => Ok(Value::Bool(counting::is_countable(first))),
             Builtin::Is("numeric") => Ok(Value::Bool(match first {
                 Value::Int(_) | Value::Float(_) => true,

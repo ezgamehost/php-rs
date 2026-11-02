@@ -122,6 +122,7 @@ impl Runtime {
         if class.declaration.is_trait {
             return Ok(());
         }
+        self.validate_iterator_interfaces(class)?;
         self.validate_inheritance(class)?;
         self.validate_override_attributes(class)
     }

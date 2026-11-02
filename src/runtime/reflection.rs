@@ -354,6 +354,12 @@ impl Runtime {
                 Value::Bool(internal == (name == b"isinternal"))
             }
             b"isanonymous" => Value::Bool(class.name.contains(&0)),
+            b"isiterable" | b"isiterateable" => Value::Bool(
+                !decl.is_interface
+                    && !decl.is_trait
+                    && !decl.is_abstract
+                    && class.is_a(b"Traversable"),
+            ),
             b"isinstantiable" | b"iscloneable" => Value::Bool(
                 concrete
                     && objects::method(

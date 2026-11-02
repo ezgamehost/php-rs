@@ -57,9 +57,11 @@ paths, adapts PHP 8.5.0's `Zend/zend_objects.c`, `Zend/zend_objects_API.c`,
 copyright (c) Zend Technologies Ltd. The Zend license below also applies to
 these adaptations.
 
-The Countable declaration in `src/runtime/throwables.rs` adapts PHP 8.5.0's
-`Zend/zend_interfaces.stub.php`, copyright (c) Zend Technologies Ltd. The Zend
-license below also applies to this adaptation.
+The Countable and iterator declarations in `src/runtime/throwables.rs` adapt
+PHP 8.5.0's `Zend/zend_interfaces.stub.php`. User iteration and interface checks
+in `src/runtime/iterators.rs` adapt `Zend/zend_interfaces.c`,
+`Zend/zend_execute.c`, and `Zend/zend_vm_def.h`. These sources are copyright (c)
+Zend Technologies Ltd. The Zend license below also applies to these adaptations.
 
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00
@@ -295,6 +297,10 @@ Splice deletion, destructor timing, and mutation checks in `src/array.rs` and
 
 Counting in `src/runtime/counting.rs` adapts PHP 8.5.0's `ext/standard/array.c`
 and `ext/standard/type.c`, copyright (c) The PHP Group.
+
+Iterable inspection in `src/runtime/builtins.rs` and `src/runtime/reflection.rs`
+adapts PHP 8.5.0's `ext/standard/type.c` and `ext/reflection/php_reflection.c`,
+copyright (c) The PHP Group.
 
 This product includes PHP software, freely available from
 <http://www.php.net/software/>. The PHP license for these files follows:

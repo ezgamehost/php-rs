@@ -41,8 +41,18 @@ impl Runtime {
         if matches!(value, Value::Closure(_)) {
             return Ok(Flow::Next);
         }
-        if let Value::Object(object) = &value {
-            return self.foreach_object(object, key_target, value_target, true, body);
+        if let Value::Object(object) = value {
+            if object.class.is_a(b"Traversable") {
+                return self.foreach_iterator(
+                    object,
+                    key_target,
+                    value_target,
+                    true,
+                    body,
+                    expression.line,
+                );
+            }
+            return self.foreach_object(&object, key_target, value_target, true, body);
         }
         if !matches!(value, Value::Array(_)) {
             self.warn(format!(

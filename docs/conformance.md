@@ -2435,6 +2435,35 @@ Zend interface declarations, and scalar conversion code establish the behavior.
 Extension-native counting handlers, SPL containers/iterators, full reflection
 strings, intersection/DNF types, and other documented runtime gaps remain.
 
+The [user iterator slice](conformance/php-8.5.0-iterators-hillclimb.txt) adds
+**15 upstream passes** across the six full suites, with **zero regressions**:
+12 Zend, two reflection, and one SPL. Zend reaches **2514 / 2334 / 408**,
+reflection **285 / 170 / 37**, and SPL **26 / 658 / 94**. The array, string, and
+math counts are unchanged. All **14 additional upstream iteration fixtures** in
+`tests/classes/iterators_*.phpt` and `tests/lang/foreachLoopIterator*.phpt` pass;
+these are supplementary measurements, not counted in the 15-pass increase.
+
+Traversable, Iterator, and IteratorAggregate use native interface metadata,
+including tentative return types and ReturnTypeWillChange. Concrete classes must
+implement Traversable through Iterator or IteratorAggregate and cannot implement
+both. User-defined foreach resolves nested aggregates, calls rewind/valid/current/
+key/next in PHP order, obtains keys only when requested, preserves current-result
+references until assignment, and propagates exceptions and loop control. Invalid
+aggregate returns and iterator iteration by reference raise PHP's diagnostics.
+Temporary aggregates are released after initial rewind/valid, with the resolved
+iterator and cached current value kept alive for their required lifetimes.
+Iterable declarations, is_iterable, and ReflectionClass::isIterable/isIterateable
+recognize user iterators without invoking their methods.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT, formatting, and
+Clippy pass. No custom tests or generated matrices were added. Direct reference
+CLI checks also match temporary aggregate destruction, reference-returning current
+values changed by key(), reference restrictions, iterable declarations, tentative
+return reflection, and iterable enum reflection. The implementation follows PHP
+8.5.0's Zend interface/foreach source and native type/reflection functions.
+Generators, fibers, iterator argument/array unpacking, SPL iterator containers and
+helpers, property hooks, deep recursion limits, and prior reflection gaps remain.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2442,9 +2471,9 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2502 | 2346 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 283 | 172 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 25 | 659 | 94 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2514 | 2334 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 285 | 170 | 37 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 26 | 658 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
 | PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 772 | 16 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |

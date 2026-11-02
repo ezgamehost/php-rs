@@ -61,6 +61,7 @@ mod functions;
 mod garbage_collection;
 mod inheritance;
 mod interfaces;
+mod iterators;
 mod jumps;
 mod loading;
 mod magic_properties;
@@ -440,9 +441,19 @@ impl Runtime {
                     return self.foreach_reference(iter, key_target.as_ref(), value_target, body);
                 }
                 let value = self.eval(iter)?;
-                if let Value::Object(object) = &value {
+                if let Value::Object(object) = value {
+                    if object.class.is_a(b"Traversable") {
+                        return self.foreach_iterator(
+                            object,
+                            key_target.as_ref(),
+                            value_target,
+                            false,
+                            body,
+                            iter.line,
+                        );
+                    }
                     return self.foreach_object(
-                        object,
+                        &object,
                         key_target.as_ref(),
                         value_target,
                         false,

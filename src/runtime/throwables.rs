@@ -6,6 +6,9 @@ fn builtin_spec(name: &[u8]) -> Option<(&'static str, Option<&'static str>)> {
     Some(match name {
         b"arrayaccess" => ("ArrayAccess", None),
         b"countable" => ("Countable", None),
+        b"traversable" => ("Traversable", None),
+        b"iterator" => ("Iterator", None),
+        b"iteratoraggregate" => ("IteratorAggregate", None),
         b"unitenum" => ("UnitEnum", None),
         b"backedenum" => ("BackedEnum", None),
         b"stringable" => ("Stringable", None),
@@ -64,6 +67,19 @@ impl Runtime {
             .to_owned()
         } else if canonical == "Countable" {
             "<?php interface Countable { public function count(): int; }".to_owned()
+        } else if canonical == "Traversable" {
+            "<?php interface Traversable {}".to_owned()
+        } else if canonical == "IteratorAggregate" {
+            "<?php interface IteratorAggregate extends Traversable { public function getIterator(): Traversable; }".to_owned()
+        } else if canonical == "Iterator" {
+            "<?php interface Iterator extends Traversable {
+                public function current(): mixed;
+                public function next(): void;
+                public function key(): mixed;
+                public function valid(): bool;
+                public function rewind(): void;
+            }"
+            .to_owned()
         } else if canonical == "UnitEnum" {
             "<?php interface UnitEnum { public static function cases(): array; }".to_owned()
         } else if canonical == "BackedEnum" {
@@ -109,7 +125,10 @@ impl Runtime {
             let function = Rc::make_mut(function);
             if function.is_abstract {
                 function.native = Some(NativeMethod::Abstract);
-                if matches!(canonical, "ArrayAccess" | "Countable") {
+                if matches!(
+                    canonical,
+                    "ArrayAccess" | "Countable" | "Iterator" | "IteratorAggregate"
+                ) {
                     function.tentative_return_type = function.return_type.take();
                 }
                 continue;
@@ -132,7 +151,9 @@ impl Runtime {
             });
         }
         let parent = parent_name.and_then(|name| self.find_class(name.as_bytes()));
-        let interfaces = if canonical == "BackedEnum" {
+        let interfaces = if matches!(canonical, "Iterator" | "IteratorAggregate") {
+            vec![self.find_class(b"Traversable").unwrap()]
+        } else if canonical == "BackedEnum" {
             vec![self.find_class(b"UnitEnum").unwrap()]
         } else if canonical == "Exception" || canonical == "Error" {
             vec![self.find_class(b"Throwable").expect("Throwable interface")]
