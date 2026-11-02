@@ -1,0 +1,127 @@
+PHP 8.5.0 PHPT CLEAN runner coverage expansion
+Baseline: 833e91b10619de5caeda9292f98b97073c6cbe9c
+
+This slice expands harness coverage without changing runtime behavior.
+CLEAN executes in reference PHP after each FILE interpreter, including failed or
+timed-out Rust workers. Cleanup output, errors and timeouts fail the fixture.
+Reference cleanup never supplies the tested FILE output. Generated FILE/CLEAN
+siblings are created exclusively and removed by the parent harness.
+
+zend
+Before: 5256 cases; 2583 passed, 2265 failed, 408 unsupported
+After: 5256 cases; 2583 passed, 2273 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 538 passed, 146 failed, 94 unsupported
+After: 778 cases; 549 passed, 176 failed, 53 unsupported
+New passes: 11; regressions: 0
+NEW PASS: ext/spl/tests/RecursiveDirectoryIterator_getSubPath_basic.phpt
+NEW PASS: ext/spl/tests/RecursiveDirectoryIterator_getSubPathname_basic.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_getGroup_basic.phpt
+NEW PASS: ext/spl/tests/SplFileInfo_getOwner_basic.phpt
+NEW PASS: ext/spl/tests/bug42364.phpt
+NEW PASS: ext/spl/tests/bug51068.phpt
+NEW PASS: ext/spl/tests/bug68557.phpt
+NEW PASS: ext/spl/tests/bug77263.phpt
+NEW PASS: ext/spl/tests/bug78863.phpt
+NEW PASS: ext/spl/tests/dit_004.phpt
+NEW PASS: ext/spl/tests/filesystemiterator_no_skip_dots.phpt
+
+array
+Before: 840 cases; 773 passed, 15 failed, 52 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/array/array_count_values_variation.phpt
+
+strings
+Before: 730 cases; 405 passed, 173 failed, 152 unsupported
+After: 730 cases; 405 passed, 173 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 102 passed, 122 failed, 672 unsupported
+After: 896 cases; 135 passed, 253 failed, 508 unsupported
+New passes: 33; regressions: 0
+NEW PASS: ext/standard/tests/file/007_variation15.phpt
+NEW PASS: ext/standard/tests/file/007_variation16.phpt
+NEW PASS: ext/standard/tests/file/007_variation23.phpt
+NEW PASS: ext/standard/tests/file/007_variation24.phpt
+NEW PASS: ext/standard/tests/file/007_variation7.phpt
+NEW PASS: ext/standard/tests/file/007_variation8.phpt
+NEW PASS: ext/standard/tests/file/bug45181.phpt
+NEW PASS: ext/standard/tests/file/bug72666_variation1.phpt
+NEW PASS: ext/standard/tests/file/bug78296.phpt
+NEW PASS: ext/standard/tests/file/fgetcsv_default_escape_deprecation.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_basic001.phpt
+NEW PASS: ext/standard/tests/file/file_get_contents_variation7.phpt
+NEW PASS: ext/standard/tests/file/file_variation6.phpt
+NEW PASS: ext/standard/tests/file/file_variation8.phpt
+NEW PASS: ext/standard/tests/file/file_variation9.phpt
+NEW PASS: ext/standard/tests/file/filegroup_variation3.phpt
+NEW PASS: ext/standard/tests/file/fileinode_basic.phpt
+NEW PASS: ext/standard/tests/file/fileinode_variation3.phpt
+NEW PASS: ext/standard/tests/file/fileowner_basic.phpt
+NEW PASS: ext/standard/tests/file/fileowner_variation3.phpt
+NEW PASS: ext/standard/tests/file/fileperms_variation3.phpt
+NEW PASS: ext/standard/tests/file/filesize_basic.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_002.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_default_escape_deprecation.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation15.phpt
+NEW PASS: ext/standard/tests/file/fputcsv_variation18.phpt
+NEW PASS: ext/standard/tests/file/fwrite.phpt
+NEW PASS: ext/standard/tests/file/fwrite_error.phpt
+NEW PASS: ext/standard/tests/file/is_dir_basic.phpt
+NEW PASS: ext/standard/tests/file/is_dir_variation1.phpt
+NEW PASS: ext/standard/tests/file/is_dir_variation4.phpt
+NEW PASS: ext/standard/tests/file/is_file_basic.phpt
+NEW PASS: ext/standard/tests/file/is_file_variation4.phpt
+
+dir
+Before: 73 cases; 6 passed, 1 failed, 66 unsupported
+After: 73 cases; 18 passed, 11 failed, 44 unsupported
+New passes: 12; regressions: 0
+NEW PASS: ext/standard/tests/dir/chdir_basic.phpt
+NEW PASS: ext/standard/tests/dir/chdir_variation2.phpt
+NEW PASS: ext/standard/tests/dir/closedir_basic.phpt
+NEW PASS: ext/standard/tests/dir/closedir_variation2.phpt
+NEW PASS: ext/standard/tests/dir/getcwd_basic.phpt
+NEW PASS: ext/standard/tests/dir/opendir_basic.phpt
+NEW PASS: ext/standard/tests/dir/opendir_variation3.phpt
+NEW PASS: ext/standard/tests/dir/opendir_variation4.phpt
+NEW PASS: ext/standard/tests/dir/readdir_variation2.phpt
+NEW PASS: ext/standard/tests/dir/readdir_variation4.phpt
+NEW PASS: ext/standard/tests/dir/rewinddir_variation2.phpt
+NEW PASS: ext/standard/tests/dir/scandir_variation8.phpt
+
+streams
+Before: 157 cases; 14 passed, 84 failed, 59 unsupported
+After: 157 cases; 15 passed, 91 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/streams/gh17067.phpt
+
+Total: 9,556 fixtures; 4,946 passed, 3,169 failed, 1,441 unsupported.
+244 previously unsupported fixtures now execute: 58 pass and 186 fail.
+Zero regressions; no new runtime functionality is claimed for this slice.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+Unsupported CLEAN without --reference remains explicit. SKIPIF, INI, ENV,
+EXTENSIONS and other unsupported sections remain excluded from pass counts.
+Full logs: /tmp/php-rs-clean-*1.log.

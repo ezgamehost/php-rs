@@ -711,8 +711,11 @@ conformance. See [ROADMAP.md](ROADMAP.md) for the full target and validation pla
 The PHPT runner supports `TEST`, `FILE`, and exact `EXPECT` output,
 plus descriptive `DESCRIPTION` and `CREDITS` sections. With `--reference`, it also
 supports `EXPECTF` (including `%r` fragments) and `EXPECTREGEX`, using the reference
-PHP binary's PCRE engine to match output. Test programs still execute in Rust;
-the PHP matcher receives only patterns and output as byte strings. Other sections are reported
+PHP binary's PCRE engine to match output. It also supports `CLEAN`, running its
+cleanup script with reference PHP after the Rust worker and again after reference
+validation. Cleanup runs even after a failure or timeout; cleanup errors, output,
+or timeouts fail the fixture. The tested `FILE` program still executes in Rust;
+reference cleanup supplies no test output. Other sections are reported
 as unsupported and make the run exit unsuccessfully. Unexpected diagnostics also
 fail a test. `--reference` checks the PHP major/minor version and validates passing
 fixtures against both interpreters, including process exit status. Intentional
@@ -723,12 +726,13 @@ exception text, stack traces, and source locations. Exact ParseError/CompileErro
 classes use PHP's distinct display forms. Some parser and compile-error messages
 and classifications remain incomplete.
 The runner writes each supported `FILE` section to a temporary `.php` sibling
-of the `.phpt` fixture and runs both interpreters against that filename. It
+of the `.phpt` fixture and runs both interpreters against that filename. A nonempty
+`CLEAN` section gets a `.clean.php` sibling with the same directory context. It
 refuses to overwrite an existing file and removes generated files after the run.
 Use `--cwd /path/to/php-src` to select the suite root; the default is the current
 directory. Each fixture runs in a separate worker, so a Rust panic or stack
 overflow fails that fixture without aborting the suite. The parent removes the
-generated file even after worker failure. Worker and reference executions have a
+generated files even after worker failure. Worker, reference, and cleanup executions have a
 10-second timeout, adjustable with `--timeout SECONDS`. Test code is not sandboxed.
 Use upstream PHPT failures as the primary implementation backlog. Compare the
 same suite before and after each slice with `python3 tools/compare_phpt.py

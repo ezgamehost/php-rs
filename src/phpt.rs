@@ -13,6 +13,7 @@ use std::{
 pub struct Case {
     pub name: String,
     pub source: Vec<u8>,
+    cleanup: Option<Vec<u8>>,
     expected: Vec<u8>,
     unsupported: Vec<String>,
     expectation: String,
@@ -31,11 +32,17 @@ pub enum Outcome {
 pub struct PreparedCase<'a> {
     case: &'a Case,
     path: PathBuf,
+    cleanup_path: Option<PathBuf>,
 }
 
 impl PreparedCase<'_> {
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    /// The parent harness must execute this script after each FILE process.
+    pub fn cleanup_path(&self) -> Option<&Path> {
+        self.cleanup_path.as_deref()
     }
 
     pub fn run(&self, working_directory: &Path) -> Outcome {
@@ -71,6 +78,9 @@ impl Case {
 impl Drop for PreparedCase<'_> {
     fn drop(&mut self) {
         let _ = fs::remove_file(&self.path);
+        if let Some(path) = &self.cleanup_path {
+            let _ = fs::remove_file(path);
+        }
     }
 }
 
@@ -82,6 +92,21 @@ impl Case {
     /// PHP supplies PCRE matching for EXPECTF/EXPECTREGEX only; fixture programs
     /// still execute in the Rust runtime. Without it these formats are unsupported.
     pub fn parse_with_reference(bytes: &[u8], reference: Option<&Path>) -> Result<Self, String> {
+        Self::parse_sections(bytes, reference, false)
+    }
+
+    /// Parse for the process-isolating CLI harness, which owns CLEAN execution.
+    /// CLEAN requires reference PHP and runs after each interpreter, including
+    /// failed or timed-out workers. The ordinary library parser keeps it unsupported.
+    pub fn parse_for_runner(bytes: &[u8], reference: Option<&Path>) -> Result<Self, String> {
+        Self::parse_sections(bytes, reference, true)
+    }
+
+    fn parse_sections(
+        bytes: &[u8],
+        reference: Option<&Path>,
+        cleanup_enabled: bool,
+    ) -> Result<Self, String> {
         let mut sections: BTreeMap<String, Vec<u8>> = BTreeMap::new();
         let mut current = None;
         for line in bytes.split_inclusive(|c| *c == b'\n') {
@@ -134,13 +159,15 @@ impl Case {
             .keys()
             .filter(|key| {
                 !(["TEST", "FILE", "EXPECT", "DESCRIPTION", "CREDITS"].contains(&key.as_str())
-                    || reference.is_some() && ["EXPECTF", "EXPECTREGEX"].contains(&key.as_str()))
+                    || reference.is_some() && ["EXPECTF", "EXPECTREGEX"].contains(&key.as_str())
+                    || cleanup_enabled && reference.is_some() && key.as_str() == "CLEAN")
             })
             .cloned()
             .collect();
         Ok(Self {
             name,
             source: sections[files[0]].clone(),
+            cleanup: sections.get("CLEAN").cloned(),
             expected: sections[expected[0]].clone(),
             unsupported,
             expectation: expected[0].to_owned(),
@@ -158,24 +185,23 @@ impl Case {
         let path = fs::canonicalize(fixture)
             .map_err(|error| error.to_string())?
             .with_extension("php");
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-            .map_err(|error| {
-                if error.kind() == std::io::ErrorKind::AlreadyExists {
-                    format!(
-                        "Generated file already exists; refusing to overwrite {}",
-                        path.display()
-                    )
-                } else {
-                    format!("Cannot create {}: {error}", path.display())
-                }
-            })?;
-        let prepared = PreparedCase { case: self, path };
-        let written = file.write_all(&self.source);
+        let mut file = create_script(&path)?;
+        let mut prepared = PreparedCase {
+            case: self,
+            path,
+            cleanup_path: None,
+        };
+        file.write_all(&self.source)
+            .map_err(|error| error.to_string())?;
         drop(file);
-        written.map_err(|error| error.to_string())?;
+        if let Some(cleanup) = &self.cleanup
+            && !cleanup.iter().all(u8::is_ascii_whitespace)
+        {
+            let path = prepared.path.with_extension("clean.php");
+            let mut file = create_script(&path)?;
+            prepared.cleanup_path = Some(path);
+            file.write_all(cleanup).map_err(|error| error.to_string())?;
+        }
         Ok(prepared)
     }
 
@@ -287,4 +313,21 @@ fn normalize(bytes: &[u8]) -> Vec<u8> {
         .map(|p| p + 1)
         .unwrap_or(start);
     normalized[start..end].to_vec()
+}
+
+fn create_script(path: &Path) -> Result<fs::File, String> {
+    OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(|error| {
+            if error.kind() == std::io::ErrorKind::AlreadyExists {
+                format!(
+                    "Generated file already exists; refusing to overwrite {}",
+                    path.display()
+                )
+            } else {
+                format!("Cannot create {}: {error}", path.display())
+            }
+        })
 }

@@ -1,4 +1,4 @@
-use php_rs::phpt::{Case, Outcome};
+use php_rs::phpt::{Case, Outcome, PreparedCase};
 use std::{
     env,
     ffi::{OsStr, OsString},
@@ -52,7 +52,7 @@ fn run() -> Result<bool, String> {
             }
         } else if arg == "--help" {
             println!(
-                "Usage: php-rs-phpt [--reference PHP_8_5_BINARY] [--cwd SUITE_ROOT] [--timeout SECONDS] [FILE_OR_DIRECTORY ...]\nDefault directory: tests/phpt. Default per-process timeout: 10 seconds. EXPECTF/EXPECTREGEX require --reference. Unsupported tests make the run unsuccessful."
+                "Usage: php-rs-phpt [--reference PHP_8_5_BINARY] [--cwd SUITE_ROOT] [--timeout SECONDS] [FILE_OR_DIRECTORY ...]\nDefault directory: tests/phpt. Default per-process timeout: 10 seconds. EXPECTF/EXPECTREGEX and CLEAN require --reference. Unsupported tests make the run unsuccessful."
             );
             return Ok(true);
         } else if arg.as_encoded_bytes().starts_with(b"-") {
@@ -84,7 +84,7 @@ fn run() -> Result<bool, String> {
     let (mut passed, mut failed, mut unsupported) = (0, 0, 0);
     for path in files {
         let bytes = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-        let outcome = match Case::parse_with_reference(&bytes, reference.as_ref().map(Path::new)) {
+        let outcome = match Case::parse_for_runner(&bytes, reference.as_ref().map(Path::new)) {
             Err(error) => Outcome::Failed(format!("Malformed PHPT: {error}")),
             Ok(case) if !case.unsupported_sections().is_empty() => {
                 Outcome::Unsupported(case.unsupported_sections().to_vec())
@@ -94,16 +94,30 @@ fn run() -> Result<bool, String> {
                 Ok(prepared) => {
                     let (outcome, status) =
                         run_worker(&path, &working_directory, reference.as_deref(), timeout);
+                    let outcome = cleanup_after(
+                        outcome,
+                        reference.as_deref(),
+                        &prepared,
+                        &working_directory,
+                        timeout,
+                    );
                     if outcome == Outcome::Passed {
                         if let Some(binary) = &reference {
-                            reference_check(
+                            let outcome = reference_check(
                                 binary,
                                 &case,
                                 prepared.path(),
                                 &working_directory,
                                 status,
                                 timeout,
-                            )?
+                            );
+                            cleanup_after(
+                                outcome,
+                                Some(binary),
+                                &prepared,
+                                &working_directory,
+                                timeout,
+                            )
                         } else {
                             outcome
                         }
@@ -173,7 +187,7 @@ fn reference_check(
     working_directory: &Path,
     expected_status: u8,
     timeout: Duration,
-) -> Result<Outcome, String> {
+) -> Outcome {
     let mut command = Command::new(binary);
     command
         .args([
@@ -190,19 +204,58 @@ fn reference_check(
         .stdin(Stdio::null());
     let output = match timed_output(&mut command, timeout) {
         Ok(output) => output,
-        Err(error) => return Ok(Outcome::Failed(format!("Reference PHP: {error}"))),
+        Err(error) => return Outcome::Failed(format!("Reference PHP: {error}")),
     };
     if output.status.code() != Some(i32::from(expected_status)) || !output.stderr.is_empty() {
-        return Ok(Outcome::Failed(format!(
+        return Outcome::Failed(format!(
             "Reference PHP failed (expected exit status {expected_status}, got {}): {}",
             output.status,
             String::from_utf8_lossy(&output.stderr)
-        )));
+        ));
     }
-    Ok(match case.check_output(&output.stdout) {
+    match case.check_output(&output.stdout) {
         Outcome::Failed(reason) => Outcome::Failed(format!("Reference PHP mismatch: {reason}")),
         other => other,
-    })
+    }
+}
+
+// CLEAN is harness housekeeping, executed by the reference interpreter even
+// when FILE cannot run in Rust yet. It never supplies the tested FILE output.
+fn cleanup_after(
+    outcome: Outcome,
+    reference: Option<&OsStr>,
+    prepared: &PreparedCase<'_>,
+    working_directory: &Path,
+    timeout: Duration,
+) -> Outcome {
+    let Some(path) = prepared.cleanup_path() else {
+        return outcome;
+    };
+    let result = (|| -> Result<(), String> {
+        let binary = reference.ok_or("Missing reference PHP for CLEAN")?;
+        let mut command = Command::new(binary);
+        command
+            .args(["-n", "-d", "display_errors=1", "-d", "log_errors=0"])
+            .arg(path)
+            .current_dir(working_directory);
+        let output = timed_output(&mut command, timeout)?;
+        if !output.status.success() || !output.stdout.is_empty() || !output.stderr.is_empty() {
+            return Err(format!(
+                "{}: stdout {:?}, stderr {:?}",
+                output.status,
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+            ));
+        }
+        Ok(())
+    })();
+    match result {
+        Ok(()) => outcome,
+        Err(error) => match outcome {
+            Outcome::Failed(reason) => Outcome::Failed(format!("{reason}; CLEAN: {error}")),
+            _ => Outcome::Failed(format!("CLEAN: {error}")),
+        },
+    }
 }
 
 fn worker() -> ExitCode {
@@ -213,7 +266,7 @@ fn worker() -> ExitCode {
     let result = (|| -> Result<(), String> {
         let fixture = Path::new(&args[0]);
         let bytes = fs::read(fixture).map_err(|error| error.to_string())?;
-        let case = Case::parse_with_reference(&bytes, args.get(2).map(Path::new))?;
+        let case = Case::parse_for_runner(&bytes, args.get(2).map(Path::new))?;
         let path = fs::canonicalize(fixture)
             .map_err(|error| error.to_string())?
             .with_extension("php");

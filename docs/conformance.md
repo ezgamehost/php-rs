@@ -3068,6 +3068,23 @@ notices, metadata, and append-mode positions. Configurable sys_temp_dir/open_bas
 custom wrappers/filters, complete read buffering, temporary memory spill-to-disk,
 and non-Unix behavior remain unfinished.
 
+The [PHPT CLEAN coverage expansion](conformance/php-8.5.0-clean-runner-hillclimb.txt)
+enables **244 previously unsupported fixtures** without changing runtime behavior.
+The runner executes CLEAN using reference PHP after the Rust worker and after
+reference validation, including failure and timeout paths. Cleanup errors, output,
+and timeouts fail the fixture. FILE and CLEAN siblings use exclusive creation;
+the parent removes generated scripts after each fixture. Ordinary library parsing
+and CLI runs without reference PHP continue to report CLEAN as unsupported.
+
+Of the newly executed fixtures, **58 pass and 186 fail**. There are **zero lost
+passes** across **ten full suites (9,556 fixtures)**: **4,946 passed / 3,169 failed /
+1,441 unsupported**. The additional passes comprise **33 file**, **12 directory**,
+**11 SPL**, **one array**, and **one streams** case. These are newly measured passes,
+not runtime implementation gains. All **797 existing Rust tests**, **57
+reference-checked project PHPT**, formatting, Clippy, and diff checks pass. No
+custom tests or matrices were added. SKIPIF, INI, ENV, EXTENSIONS, and other
+unsupported sections remain excluded from pass counts.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -3075,17 +3092,17 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 6 | 0 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2583 | 2265 | 408 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2583 | 2273 | 400 |
 | PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 291 | 164 | 37 |
-| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 538 | 146 | 94 |
+| PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 549 | 176 | 53 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 773 | 15 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 774 | 15 | 51 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 52 | 2 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 405 | 173 | 152 |
 | PHP 8.5.0 all `ext/standard/tests/serialize`, Rust and reference PHP for passing cases | 124 | 11 | 28 |
-| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 102 | 122 | 672 |
-| PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 6 | 1 | 66 |
-| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 14 | 84 | 59 |
+| PHP 8.5.0 all `ext/standard/tests/file`, Rust and reference PHP for passing cases | 135 | 253 | 508 |
+| PHP 8.5.0 all `ext/standard/tests/dir`, Rust and reference PHP for passing cases | 18 | 11 | 44 |
+| PHP 8.5.0 all `ext/standard/tests/streams`, Rust and reference PHP for passing cases | 15 | 91 | 51 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |
 | PHP 8.5.0 `ext/standard/tests/strings/{strtolower,strtoupper,trim,ltrim,rtrim,chop,bin2hex}*.phpt`, Rust and reference PHP for passing cases | 16 | 3 | 0 |
 | PHP 8.5.0 `ext/standard/tests/strings/{printf,sprintf,vprintf,vsprintf}*.phpt`, Rust and reference PHP for passing cases | 51 | 10 | 40 |
