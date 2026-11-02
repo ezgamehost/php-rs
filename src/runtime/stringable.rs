@@ -22,7 +22,7 @@ impl Runtime {
             };
             return Ok(bytes.to_vec());
         }
-        string_bytes(value, line, &mut self.diagnostics)
+        string_bytes(value, line, self)
     }
 
     pub(super) fn binary(
@@ -53,7 +53,7 @@ impl Runtime {
                 }),
             });
         }
-        binary(op, left, right, line, &mut self.diagnostics)
+        binary(op, left, right, line, self)
     }
 }
 

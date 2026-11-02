@@ -80,13 +80,13 @@ impl Runtime {
                 Ok(position) => stream.position = position,
                 Err(error) => {
                     if error.raw_os_error() == Some(29) {
-                        self.diagnostics.push(format!(
+                        self.warn(format!(
                             "{NAME}(): Stream does not support seeking on line {line}"
-                        ));
+                        ))?;
                     }
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "{NAME}(): Failed to seek to position {offset} in the stream on line {line}"
-                    ));
+                    ))?;
                     return Ok(Value::Bool(false));
                 }
             }
@@ -141,7 +141,7 @@ impl Runtime {
                     }
                 }
                 Err(error) => {
-                    self.diagnostics.push(format!("Notice: {NAME}(): Read of {wanted} bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), streams::io_message(&error)));
+                    self.warn(format!("Notice: {NAME}(): Read of {wanted} bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), streams::io_message(&error)))?;
                     break;
                 }
             }

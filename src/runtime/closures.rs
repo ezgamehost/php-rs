@@ -18,11 +18,11 @@ impl Runtime {
             } else if lambda.arrow {
                 continue;
             } else {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Undefined variable ${} on line {}",
                     String::from_utf8_lossy(&capture.name),
                     lambda.function.line
-                ));
+                ))?;
                 CapturedValue::Value(Value::Null)
             };
             captures.push((capture.name.clone(), value));

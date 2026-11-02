@@ -47,6 +47,28 @@ impl Runtime {
         let value = reference.borrow().dereferenced();
         let mut pending = None;
         let converted = match kind {
+            CastKind::Array | CastKind::Object if matches!(value, Value::Float(n) if n.is_nan()) => {
+                let object = matches!(kind, CastKind::Object);
+                value.warn_nan(if object { "object" } else { "array" }, line, self)?;
+                // Native conversion moves the live slot after emitting its NaN
+                // warning. A handler may have replaced that slot's contents.
+                let value = reference.borrow().dereferenced();
+                let mut properties = PhpArray::default();
+                properties.insert(
+                    if object {
+                        ArrayKey::String(b"scalar".to_vec())
+                    } else {
+                        ArrayKey::Int(0)
+                    },
+                    value,
+                );
+                if object {
+                    self.object_from_properties(properties)
+                } else {
+                    Value::Array(Rc::new(properties))
+                }
+            }
+
             CastKind::String => match self.string_bytes(&value, line) {
                 Ok(bytes) => Value::String(bytes.into()),
                 Err(error) if error.kind == ErrorKind::UnwindExit => return Err(error),
@@ -59,10 +81,10 @@ impl Runtime {
             },
             CastKind::Object => self.cast_object(value, line)?,
             CastKind::Void => {
-                value.warn_nan("null", line, &mut self.diagnostics)?;
+                value.warn_nan("null", line, self)?;
                 Value::Null
             }
-            _ => casting::cast(kind, value, line, &mut self.diagnostics)?,
+            _ => casting::cast(kind, value, line, self)?,
         };
         let result = self
             .write_reference_value(&reference, converted, self.strict_types, line)
@@ -103,7 +125,7 @@ impl Runtime {
         if kind == CastKind::String {
             return Ok(Value::String(self.string_bytes(&value, line)?.into()));
         }
-        casting::cast(kind, value, line, &mut self.diagnostics)
+        casting::cast(kind, value, line, self)
     }
 }
 

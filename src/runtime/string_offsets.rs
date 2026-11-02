@@ -158,9 +158,9 @@ impl Runtime {
             ));
         };
         if bytes.len() > 1 {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Only the first byte will be assigned to the string offset on line {line}"
-            ));
+            ))?;
         }
         if pending.position >= pending.original_len {
             // Extension resumes with the original buffer, including copies

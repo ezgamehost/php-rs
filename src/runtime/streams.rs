@@ -133,11 +133,11 @@ impl Runtime {
             std::fs::remove_file(path)
         };
         if let Err(error) = result {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "unlink({}): {} on line {line}",
                 String::from_utf8_lossy(&filename),
                 io_message(&error)
-            ));
+            ))?;
             Ok(Value::Bool(false))
         } else {
             Ok(Value::Bool(true))
@@ -174,7 +174,7 @@ impl Runtime {
                     self.resources.allocate(Kind::Stream(stream)),
                 )),
                 None => {
-                    self.open_warning(name, filename, "operation failed", line);
+                    self.open_warning(name, filename, "operation failed", line)?;
                     Ok(Value::Bool(false))
                 }
             };
@@ -192,7 +192,7 @@ impl Runtime {
                     String::from_utf8_lossy(mode)
                 ),
                 line,
-            );
+            )?;
             return Ok(Value::Bool(false));
         }
         let plus = mode.contains(&b'+');
@@ -226,7 +226,7 @@ impl Runtime {
             match options.open(resolved) {
                 Ok(file) => Backend::File(file),
                 Err(error) => {
-                    self.open_warning(name, filename, &io_message(&error), line);
+                    self.open_warning(name, filename, &io_message(&error), line)?;
                     return Ok(Value::Bool(false));
                 }
             }
@@ -258,11 +258,18 @@ impl Runtime {
         Ok(Value::Resource(resource))
     }
 
-    fn open_warning(&mut self, name: &str, filename: &[u8], message: &str, line: usize) {
-        self.diagnostics.push(format!(
+    fn open_warning(
+        &mut self,
+        name: &str,
+        filename: &[u8],
+        message: &str,
+        line: usize,
+    ) -> Result<(), Error> {
+        self.warn(format!(
             "{name}({}): Failed to open stream: {message} on line {line}",
             String::from_utf8_lossy(filename)
-        ));
+        ))?;
+        Ok(())
     }
 
     pub(super) fn stream_operation(
@@ -324,7 +331,8 @@ impl Runtime {
         if let Backend::Directory(directory) = &mut stream.backend {
             match operation {
                 Operation::Close => {
-                    self.diagnostics.push(format!("{name}(): cannot close the provided stream, as it must not be manually closed on line {line}"));
+                    drop(kind);
+                    self.warn(format!("{name}(): cannot close the provided stream, as it must not be manually closed on line {line}"))?;
                     return Ok(Value::Bool(false));
                 }
                 Operation::Rewind | Operation::Seek => {
@@ -356,9 +364,10 @@ impl Runtime {
                     });
                 }
                 Operation::Write if !data.is_empty() => {
-                    self.diagnostics.push(format!(
+                    drop(kind);
+                    self.warn(format!(
                         "Notice: {name}(): Stream is not writable on line {line}"
-                    ));
+                    ))?;
                     return Ok(Value::Bool(false));
                 }
                 _ => {}
@@ -383,7 +392,8 @@ impl Runtime {
                         reader.consume(take);
                     }
                     Err(error) => {
-                        self.diagnostics.push(format!("Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)));
+                        drop(kind);
+                        self.warn(format!("Notice: {name}(): Read of 8192 bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)))?;
                         return Ok(Value::Bool(false));
                     }
                 }
@@ -423,17 +433,27 @@ impl Runtime {
                     2 => Some(SeekFrom::End(offset)),
                     _ => None,
                 };
-                let position = seek.and_then(|seek| match stream.backend.seek(seek) {
-                    Ok(position) => Some(position),
-                    Err(error) => {
-                        if error.raw_os_error() == Some(29) {
-                            self.diagnostics.push(format!(
-                                "{name}(): Stream does not support seeking on line {line}"
-                            ));
+                let position = if let Some(seek) = seek {
+                    match stream.backend.seek(seek) {
+                        Ok(position) => Some(position),
+                        Err(error) => {
+                            if error.raw_os_error() == Some(29) {
+                                drop(kind);
+                                self.warn(format!(
+                                    "{name}(): Stream does not support seeking on line {line}"
+                                ))?;
+                                return Ok(if matches!(operation, Operation::Rewind) {
+                                    Value::Bool(false)
+                                } else {
+                                    Value::Int(-1)
+                                });
+                            }
+                            None
                         }
-                        None
                     }
-                });
+                } else {
+                    None
+                };
                 let success = position.is_some();
                 if success {
                     stream.eof = false;
@@ -470,8 +490,9 @@ impl Runtime {
                             Value::Int(count as i64)
                         }
                         Err(error) => {
-                            self.diagnostics.push(format!("Notice: {name}(): Write of {} bytes failed with errno={} {} on line {line}", data.len(), error.raw_os_error().unwrap_or(0), io_message(&error)));
-                            Value::Bool(false)
+                            drop(kind);
+                            self.warn(format!("Notice: {name}(): Write of {} bytes failed with errno={} {} on line {line}", data.len(), error.raw_os_error().unwrap_or(0), io_message(&error)))?;
+                            return Ok(Value::Bool(false));
                         }
                     }
                 }
@@ -498,12 +519,16 @@ impl Runtime {
                             bytes.extend_from_slice(&buffer[..count]);
                         }
                         Err(error) => {
-                            let reported = if matches!(stream.backend, Backend::StandardOutput(_)) {
+                            let reported = if matches!(
+                                stream.backend,
+                                Backend::StandardOutput(_) | Backend::File(_)
+                            ) {
                                 8192
                             } else {
                                 wanted
                             };
-                            self.diagnostics.push(format!("Notice: {name}(): Read of {reported} bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)));
+                            drop(kind);
+                            self.warn(format!("Notice: {name}(): Read of {reported} bytes failed with errno={} {} on line {line}", error.raw_os_error().unwrap_or(0), io_message(&error)))?;
                             return Ok(Value::Bool(false));
                         }
                     }

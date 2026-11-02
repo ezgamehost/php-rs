@@ -33,7 +33,7 @@ impl Runtime {
         match self.invoke(target, &[], line, false)?.dereferenced() {
             Value::Array(properties) => Ok((*properties).clone()),
             Value::Null => {
-                self.diagnostics.push(format!("Deprecated: Returning null from {}::__debugInfo() is deprecated, return an empty array instead on line {line}", object.class_name));
+                self.warn(format!("Deprecated: Returning null from {}::__debugInfo() is deprecated, return an empty array instead on line {line}", object.class_name))?;
                 Ok(PhpArray::default())
             }
             _ => Err(Error::new(
@@ -98,7 +98,7 @@ impl Runtime {
                 seen.remove(&identity);
             }
             value => {
-                value.warn_nan("string", line, &mut self.diagnostics)?;
+                value.warn_nan("string", line, self)?;
                 output.extend(value.to_bytes());
             }
         }
@@ -135,8 +135,7 @@ impl Runtime {
                         }
                     }
                     Err(message) => {
-                        self.diagnostics
-                            .push(format!("Notice: {message} on line {line}"));
+                        self.warn(format!("Notice: {message} on line {line}"))?;
                         output.extend_from_slice(&raw);
                     }
                 }

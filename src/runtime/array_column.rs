@@ -39,7 +39,7 @@ impl Runtime {
                             line,
                         ));
                     }
-                    let key = ArrayKey::from_value(&key, line, &mut self.diagnostics)?;
+                    let key = ArrayKey::from_value(&key, line, self)?;
                     output.insert(key, value);
                 } else {
                     // The native function silently drops an unindexed row if a
@@ -99,7 +99,7 @@ impl Runtime {
     ) -> Result<Option<Value>, Error> {
         match row {
             Value::Array(array) => {
-                let key = ArrayKey::from_value(selector, line, &mut self.diagnostics)?;
+                let key = ArrayKey::from_value(selector, line, self)?;
                 Ok(array.get(&key).map(Value::dereferenced))
             }
             Value::Object(object) => {

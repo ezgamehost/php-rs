@@ -52,11 +52,7 @@ impl Runtime {
                         Value::Int(key) => ArrayKey::Int(key),
                         key => {
                             let text = self.string_bytes(&key, line)?;
-                            ArrayKey::from_value(
-                                &Value::String(text.into()),
-                                line,
-                                &mut self.diagnostics,
-                            )?
+                            ArrayKey::from_value(&Value::String(text.into()), line, self)?
                         }
                     };
                     array.insert(key, value.clone());

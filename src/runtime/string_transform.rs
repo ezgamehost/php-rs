@@ -34,9 +34,9 @@ impl Runtime {
         for (key, value) in from.entries() {
             let key = key.to_value().to_bytes();
             if key.is_empty() {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "strtr(): Ignoring replacement of empty string on line {line}"
-                ));
+                ))?;
             } else if key.len() <= bytes.len() {
                 patterns.push((key, value));
             }
@@ -86,7 +86,7 @@ impl Runtime {
             if bytes.is_empty() || characters.is_empty() {
                 return Ok(Value::String(bytes.into()));
             }
-            string_builtins::character_mask(&characters, name, line, &mut self.diagnostics)?
+            string_builtins::character_mask(&characters, name, line, self)?
         } else {
             std::array::from_fn(|index| matches!(index as u8, b'\'' | b'"' | b'\\' | 0))
         };

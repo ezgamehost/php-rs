@@ -196,7 +196,7 @@ fn finish(
                     }
                 }
                 let value = runtime.array_access_call(&object, b"offsetGet", vec![key], line)?;
-                runtime.warn_indirect_array_access(&object, &value, line);
+                runtime.warn_indirect_array_access(&object, &value, line)?;
                 result = Step::Follow(cell(value), 1);
             }
             Step::Follow(reference, consumed) => {

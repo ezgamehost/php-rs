@@ -49,7 +49,8 @@ impl ArrayKey {
     ) -> Result<Self, Error> {
         Ok(match value {
             Value::Reference(value) | Value::Indirect(value) => {
-                return Self::from_value(&value.borrow(), line, warnings);
+                let value = value.borrow().clone();
+                return Self::from_value(&value, line, warnings);
             }
             Value::Int(n) => Self::Int(*n),
             Value::Resource(resource) => {

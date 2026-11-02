@@ -66,10 +66,10 @@ impl Runtime {
                 } else {
                     "float"
                 };
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Notice: Object of class {} could not be converted to {kind} on line {line}",
                     builtins::debug_type(left)
-                ));
+                ))?;
                 self.compare_inner(&Int(1), right, line, seen)?
             }
             (Int(_) | Float(_), Object(_) | Closure(_)) => {
@@ -78,10 +78,10 @@ impl Runtime {
                 } else {
                     "float"
                 };
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Notice: Object of class {} could not be converted to {kind} on line {line}",
                     builtins::debug_type(right)
-                ));
+                ))?;
                 self.compare_inner(left, &Int(1), line, seen)?
             }
             (Object(_), Closure(_)) | (Closure(_), Object(_)) => None,

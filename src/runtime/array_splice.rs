@@ -33,7 +33,7 @@ impl Runtime {
             crate::ast::CastKind::Array,
             args.next().flatten().unwrap_or(Value::Null),
             line,
-            &mut self.diagnostics,
+            self,
         )?;
         let Value::Array(replacement) = replacement else {
             unreachable!()

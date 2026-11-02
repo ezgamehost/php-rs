@@ -34,7 +34,7 @@ impl Runtime {
             Builtin::Hex2Bin => {
                 let (pairs, remainder) = bytes.as_chunks::<2>();
                 if !remainder.is_empty() {
-                    self.diagnostics.push(format!("hex2bin(): Hexadecimal input string must have an even length on line {line}"));
+                    self.warn(format!("hex2bin(): Hexadecimal input string must have an even length on line {line}"))?;
                     return Ok(Value::Bool(false));
                 }
                 let mut result = Vec::with_capacity(pairs.len());
@@ -43,9 +43,9 @@ impl Runtime {
                         .to_digit(16)
                         .zip((pair[1] as char).to_digit(16));
                     let Some((high, low)) = digits else {
-                        self.diagnostics.push(format!(
+                        self.warn(format!(
                             "hex2bin(): Input string must be hexadecimal string on line {line}"
-                        ));
+                        ))?;
                         return Ok(Value::Bool(false));
                     };
                     result.push((high * 16 + low) as u8);
@@ -69,12 +69,7 @@ impl Runtime {
                     .transpose()?
                     .unwrap_or_else(|| b" \t\r\n\x0c\x0b".to_vec());
                 if !bytes.is_empty() {
-                    let mask = string_builtins::character_mask(
-                        &separators,
-                        name,
-                        line,
-                        &mut self.diagnostics,
-                    )?;
+                    let mask = string_builtins::character_mask(&separators, name, line, self)?;
                     bytes[0] = bytes[0].to_ascii_uppercase();
                     for index in 1..bytes.len() {
                         // PHP tests the preceding byte after any earlier capitalization.

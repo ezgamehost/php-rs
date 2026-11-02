@@ -2016,6 +2016,46 @@ All 797 existing Rust tests, 57 reference-checked project PHPT fixtures, formatt
 and Clippy pass. No custom tests or generated matrices were added. Runtime
 callback dispatch and reentrant writes still need implementation.
 
+The [error-handler dispatch slice](conformance/php-8.5.0-error-handlers-hillclimb.txt)
+adds **111 upstream passes**: 103 Zend, six array, and two reflection. Zend reaches
+**2276 / 2572 / 408**, array **732 / 56 / 52**, and reflection **282 / 173 / 37**;
+SPL, string, and math totals are unchanged. All six suites have zero regressions.
+The 195 handler-related fixtures selected from those same suites improve from
+**1 / 176 / 18** to **98 / 79 / 18**, without double-counting their gains.
+
+`set_error_handler`, `get_error_handler`, and `restore_error_handler` retain
+original callable values and a stack of handlers and signed 32-bit masks.
+Validation precedes registration. `trigger_error` and its `user_error` alias
+validate user levels, deprecate E_USER_ERROR, and preserve fatal shutdown and
+backtraces when default reporting applies. Handler masks are independent of
+`error_reporting` and `@`. Dispatch temporarily clears the active handler,
+re-resolves the callable in the current scope, invokes it with weak argument
+coercion and four diagnostic arguments, then restores it unless replaced.
+Only a literal false return falls back to default display. Handler exceptions
+and exits propagate through the existing fallible operation paths.
+
+Runtime conversions, operators, builtin diagnostics, property reads, and callable
+warnings now dispatch synchronously. Compile-time E_WARNING/deprecation messages
+from eval/includes can dispatch; E_COMPILE_WARNING remains excluded. Compiler
+state and source identity are restored across callback execution and failure.
+Failed includes retain their call frame and native OS error text. Stream failure
+paths release resource borrows before calling handlers. NaN-to-array/object
+`settype` conversion wraps the live slot after its warning, observing handler
+changes. Diagnostic text now preserves quoted string array keys and PHP's
+increment/decrement warning/deprecation messages.
+
+All 797 existing Rust tests, 57 reference-checked project PHPT fixtures,
+formatting, and Clippy pass. Four temporary reference probes match exact output
+and exit status for registration stacks, masks, nested/replaced handlers, fallback,
+strict callers, referenced/invalid callbacks, binary messages, eval warnings,
+reentrant stream closure, thrown exceptions, handler exits, fatal errors, and
+shutdown. No custom tests or generated matrices were added. Warning-producing
+array/reference write traversal, string-offset preparation, and malformed-property
+var_dump notices still bypass dispatch. Compound assignment and increment mutation
+semantics, last-error APIs, destructor/attribute diagnostics, and other documented
+runtime gaps remain unfinished. This supersedes earlier notes listing all error
+handler APIs as absent; PHP/Zend attribution covers the adapted dispatch rules.
+
 The full suite rows below include these changes. Subset rows retain the historical
 measurements reported by their individual slices.
 
@@ -2023,11 +2063,11 @@ measurements reported by their individual slices.
 | --- | ---: | ---: | ---: |
 | Project `tests/phpt`, Rust and reference PHP | 57 | 0 | 0 |
 | PHP 8.5.0 `ext/standard/tests/general_functions/print_r*.phpt`, Rust and reference PHP for passing cases | 5 | 1 | 7 |
-| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2173 | 2675 | 408 |
-| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 280 | 175 | 37 |
+| PHP 8.5.0 all `Zend/tests`, Rust and reference PHP for passing cases | 2276 | 2572 | 408 |
+| PHP 8.5.0 `ext/reflection/tests`, Rust and reference PHP for passing cases | 282 | 173 | 37 |
 | PHP 8.5.0 all `ext/spl/tests`, Rust and reference PHP for passing cases | 23 | 661 | 94 |
 | PHP 8.5.0 `ext/standard/tests/{general_functions,array}/var_export*.phpt`, Rust and reference PHP for passing cases | 11 | 2 | 6 |
-| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 726 | 62 | 52 |
+| PHP 8.5.0 all `ext/standard/tests/array`, Rust and reference PHP for passing cases | 732 | 56 | 52 |
 | PHP 8.5.0 all `ext/standard/tests/math`, Rust and reference PHP for passing cases | 51 | 3 | 117 |
 | PHP 8.5.0 all `ext/standard/tests/strings`, Rust and reference PHP for passing cases | 396 | 182 | 152 |
 | PHP 8.5.0 related string replacement fixtures (27), Rust and reference PHP for passing cases | 8 | 14 | 5 |

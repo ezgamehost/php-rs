@@ -118,12 +118,16 @@ impl Runtime {
                 }
             }
             value => {
-                value.warn_nan("object", line, &mut self.diagnostics)?;
+                value.warn_nan("object", line, self)?;
                 properties.insert(ArrayKey::String(b"scalar".to_vec()), value);
             }
         }
+        Ok(self.object_from_properties(properties))
+    }
+
+    pub(super) fn object_from_properties(&mut self, properties: PhpArray) -> Value {
         let handle = self.allocate_object_handle();
-        Ok(Value::Object(Rc::new(crate::PhpObject {
+        Value::Object(Rc::new(crate::PhpObject {
             class: self.find_class(b"stdClass").expect("built-in stdClass"),
             class_name: "stdClass".to_owned(),
             properties: RefCell::new(properties),
@@ -135,7 +139,7 @@ impl Runtime {
             throwable: RefCell::new(None),
             object_id: handle.id,
             _handle: handle,
-        })))
+        }))
     }
 }
 

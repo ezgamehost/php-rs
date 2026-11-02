@@ -149,7 +149,7 @@ impl Runtime {
                         },
                     )?;
                     if overloaded {
-                        self.warn_indirect_magic(&object, &name, &value, expr.line);
+                        self.warn_indirect_magic(&object, &name, &value, expr.line)?;
                     }
                     let cached = overloaded.then(|| value.clone());
                     Ok((
@@ -166,12 +166,12 @@ impl Runtime {
                     ))
                 } else {
                     if !silent {
-                        self.diagnostics.push(format!(
+                        self.warn(format!(
                             "Attempt to read property \"{}\" on {} on line {}",
                             String::from_utf8_lossy(&name),
                             builtins::debug_type(&value),
                             expr.line
-                        ));
+                        ))?;
                     }
                     Ok((Value::Null, None))
                 }

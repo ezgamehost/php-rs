@@ -43,7 +43,7 @@ impl Runtime {
                     Some(value) => self.native_string(value, name, 2, line)?,
                     None => b" \t\n\r\x0b\0".to_vec(),
                 };
-                let mask = character_mask(&characters, name, line, &mut self.diagnostics)?;
+                let mask = character_mask(&characters, name, line, self)?;
                 let mut start = 0;
                 let mut end = bytes.len();
                 if mode & 1 != 0 {
@@ -61,7 +61,7 @@ impl Runtime {
             Builtin::Chr => {
                 let code = self.native_int(first, "chr", 1, line)?;
                 if !(0..=255).contains(&code) {
-                    self.diagnostics.push(format!("Deprecated: chr(): Providing a value not in-between 0 and 255 is deprecated, this is because a byte value must be in the [0, 255] interval. The value used will be constrained using % 256 on line {line}"));
+                    self.warn(format!("Deprecated: chr(): Providing a value not in-between 0 and 255 is deprecated, this is because a byte value must be in the [0, 255] interval. The value used will be constrained using % 256 on line {line}"))?;
                 }
                 Ok(Value::String(vec![code as u8].into()))
             }
@@ -73,8 +73,7 @@ impl Runtime {
                     } else {
                         "Providing a string that is not one byte long is deprecated. Use ord($str[0]) instead"
                     };
-                    self.diagnostics
-                        .push(format!("Deprecated: ord(): {message} on line {line}"));
+                    self.warn(format!("Deprecated: ord(): {message} on line {line}"))?;
                 }
                 Ok(Value::Int(bytes.first().copied().unwrap_or(0) as i64))
             }

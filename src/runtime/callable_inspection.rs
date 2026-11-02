@@ -59,10 +59,10 @@ impl Runtime {
                     Ok(name) => name,
                     Err(_) => return Ok(false),
                 };
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Deprecated: Use of \"{}\" in callables is deprecated on line {line}",
                     String::from_utf8_lossy(&keyword),
-                ));
+                ))?;
                 name
             } else {
                 class
@@ -138,11 +138,11 @@ impl Runtime {
         let Some(target) = target.filter(|target| class.is_a(&target.name)) else {
             return Ok(false);
         };
-        self.diagnostics.push(format!(
+        self.warn(format!(
             "Deprecated: Callables of the form [\"{}\", \"{}\"] are deprecated on line {line}",
             class.display_name(),
             String::from_utf8_lossy(method),
-        ));
+        ))?;
         if let Some(function) = objects::method(&target, &method[separator + 2..])
             && self.check_method_access(&function, line).is_ok()
         {

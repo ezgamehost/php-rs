@@ -23,9 +23,9 @@ impl Runtime {
             string
         };
         let Some((text, cursor)) = &mut self.string_token_state else {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "strtok(): Both arguments must be provided when starting tokenization on line {line}"
-            ));
+            ))?;
             return Ok(Value::Bool(false));
         };
         if *cursor >= text.len() {

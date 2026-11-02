@@ -88,7 +88,10 @@ pub(super) fn read_offset(
             if access == Access::Read {
                 warnings.warn(format!(
                     "Undefined array key {} on line {line}",
-                    String::from_utf8_lossy(&key.to_value().to_bytes())
+                    match &key {
+                        ArrayKey::String(key) => format!("\"{}\"", String::from_utf8_lossy(key)),
+                        ArrayKey::Int(key) => key.to_string(),
+                    }
                 ))?;
             }
             Ok(Value::Null)

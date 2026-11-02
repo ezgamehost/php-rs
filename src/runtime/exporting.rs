@@ -18,7 +18,7 @@ impl Runtime {
             &mut output,
             &mut HashSet::new(),
             line,
-        );
+        )?;
         if return_output {
             Ok(Value::String(output.into()))
         } else {
@@ -34,7 +34,7 @@ impl Runtime {
         output: &mut Vec<u8>,
         seen: &mut HashSet<(bool, usize)>,
         line: usize,
-    ) {
+    ) -> Result<(), Error> {
         let value = value.dereferenced();
         let (table, identity, object) = match &value {
             Value::Array(array) => (array.clone(), (false, Rc::as_ptr(array) as usize), false),
@@ -50,11 +50,11 @@ impl Runtime {
             ),
             Value::Null | Value::Resource(_) => {
                 output.extend(b"NULL");
-                return;
+                return Ok(());
             }
             Value::Bool(b) => {
                 output.extend(if *b { b"true".as_slice() } else { b"false" });
-                return;
+                return Ok(());
             }
             Value::Int(n) => {
                 if *n == i64::MIN {
@@ -62,24 +62,24 @@ impl Runtime {
                 } else {
                     output.extend(n.to_string().bytes());
                 }
-                return;
+                return Ok(());
             }
             Value::Float(n) => {
                 output.extend(export_float(*n).bytes());
-                return;
+                return Ok(());
             }
             Value::String(s) => {
                 export_string(&s.bytes(), true, output);
-                return;
+                return Ok(());
             }
             Value::Reference(_) | Value::Indirect(_) => unreachable!(),
         };
         if !seen.insert(identity) {
             output.extend(b"NULL");
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Warning: var_export does not handle circular references on line {line}"
-            ));
-            return;
+            ))?;
+            return Ok(());
         }
         if level > 1 {
             output.push(b'\n');
@@ -104,7 +104,7 @@ impl Runtime {
                                 .to_bytes(),
                         );
                         seen.remove(&identity);
-                        return;
+                        return Ok(());
                     }
                 } else {
                     output.extend(b"Closure");
@@ -123,8 +123,7 @@ impl Runtime {
                         match crate::object::property_name(name) {
                             Ok(name) => name.name,
                             Err(message) => {
-                                self.diagnostics
-                                    .push(format!("Notice: {message} on line {line}"));
+                                self.warn(format!("Notice: {message} on line {line}"))?;
                                 name
                             }
                         }
@@ -135,7 +134,7 @@ impl Runtime {
                 }
             }
             output.extend(b" => ");
-            self.export_value(value, level + 2, output, seen, line);
+            self.export_value(value, level + 2, output, seen, line)?;
             output.extend(b",\n");
         }
         if level > 1 {
@@ -146,6 +145,7 @@ impl Runtime {
             output.push(b')');
         }
         seen.remove(&identity);
+        Ok(())
     }
 }
 

@@ -45,10 +45,10 @@ impl Runtime {
             return self.foreach_object(object, key_target, value_target, true, body);
         }
         if !matches!(value, Value::Array(_)) {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "foreach() argument must be of type array|object on line {}",
                 expression.line
-            ));
+            ))?;
             return Ok(Flow::Next);
         }
         let source = if let Some(reference) = reference_source {

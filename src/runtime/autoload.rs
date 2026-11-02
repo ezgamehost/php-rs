@@ -148,7 +148,7 @@ impl Runtime {
                     .transpose()?
                     .unwrap_or(false);
                 if !throw {
-                    self.diagnostics.push(format!("Notice: spl_autoload_register(): Argument #2 ($do_throw) has been ignored, spl_autoload_register() will always throw on line {line}"));
+                    self.warn(format!("Notice: spl_autoload_register(): Argument #2 ($do_throw) has been ignored, spl_autoload_register() will always throw on line {line}"))?;
                 }
                 if matches!(loader.target.builtin, Some(Builtin::AutoloadCall)) {
                     return Err(Error::new(
@@ -174,7 +174,7 @@ impl Runtime {
             Builtin::AutoloadUnregister => {
                 let loader = self.autoloader(args[0].as_ref().unwrap(), false, line)?;
                 if matches!(loader.target.builtin, Some(Builtin::AutoloadCall)) {
-                    self.diagnostics.push(format!("Deprecated: Using spl_autoload_call() as a callback for spl_autoload_unregister() is deprecated, to remove all registered autoloaders, call spl_autoload_unregister() for all values returned from spl_autoload_functions() on line {line}"));
+                    self.warn(format!("Deprecated: Using spl_autoload_call() as a callback for spl_autoload_unregister() is deprecated, to remove all registered autoloaders, call spl_autoload_unregister() for all values returned from spl_autoload_functions() on line {line}"))?;
                     for slot in &mut self.autoloaders {
                         *slot = None;
                     }

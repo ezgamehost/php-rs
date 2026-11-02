@@ -83,14 +83,14 @@ impl Runtime {
             (Some(_), Some(_)) => {
                 if matches!(start, Boundary::Character(_)) || matches!(end, Boundary::Character(_))
                 {
-                    self.range_warning("Argument #3 ($step) must be of type int when generating an array of characters, inputs converted to 0", line);
+                    self.range_warning("Argument #3 ($step) must be of type int when generating an array of characters, inputs converted to 0", line)?;
                 }
             }
             (Some(_), None) if matches!(start, Boundary::Character(_)) => {
-                self.range_warning("Argument #2 ($end) must be a single byte string if argument #1 ($start) is a single byte string, argument #1 ($start) converted to 0", line);
+                self.range_warning("Argument #2 ($end) must be a single byte string if argument #1 ($start) is a single byte string, argument #1 ($start) converted to 0", line)?;
             }
             (None, Some(_)) if matches!(end, Boundary::Character(_)) => {
-                self.range_warning("Argument #1 ($start) must be a single byte string if argument #2 ($end) is a single byte string, argument #2 ($end) converted to 0", line);
+                self.range_warning("Argument #1 ($start) must be a single byte string if argument #2 ($end) is a single byte string, argument #2 ($end) converted to 0", line)?;
             }
             _ => {}
         }
@@ -128,7 +128,7 @@ impl Runtime {
         if !self.strict_types {
             match value {
                 Value::Null => {
-                    self.warn_null(value, "range", position, kind, line);
+                    self.warn_null(value, "range", position, kind, line)?;
                     return Ok(Value::Int(0));
                 }
                 Value::Bool(value) => return Ok(Value::Int(i64::from(*value))),
@@ -169,7 +169,7 @@ impl Runtime {
                             parameter(position)
                         ),
                         line,
-                    );
+                    )?;
                     return Ok(Boundary::Int(0));
                 }
                 match numeric_string(&bytes) {
@@ -184,7 +184,7 @@ impl Runtime {
                     }
                     None => {
                         if bytes.len() != 1 {
-                            self.range_warning(&format!("Argument #{position} (${}) must be a single byte, subsequent bytes are ignored", parameter(position)), line);
+                            self.range_warning(&format!("Argument #{position} (${}) must be a single byte, subsequent bytes are ignored", parameter(position)), line)?;
                         }
                         Ok(Boundary::Character(bytes[0]))
                     }
@@ -195,9 +195,9 @@ impl Runtime {
         }
     }
 
-    fn range_warning(&mut self, message: &str, line: usize) {
-        self.diagnostics
-            .push(format!("range(): {message} on line {line}"));
+    fn range_warning(&mut self, message: &str, line: usize) -> Result<(), Error> {
+        self.warn(format!("range(): {message} on line {line}"))?;
+        Ok(())
     }
 }
 

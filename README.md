@@ -30,9 +30,9 @@ retained while the existing `output` and `warnings` fields remain separate.
 including registered exception handlers, user-defined exception `__toString()`,
 and any output or exit they cause. A successfully handled exception preserves an
 earlier exit status, or sets it to 0 when none was set.
-Internal warning-producing conversions and operators propagate errors, preparing
-for synchronous PHP error-handler callbacks. User error-handler dispatch remains
-unfinished; this plumbing preserves the current conformance totals.
+Runtime diagnostics invoke registered PHP error handlers synchronously and
+propagate exceptions from them. Some mutation paths still need this integration;
+see the coverage notes below.
 Parsing happens before execution.
 Use `Runtime::execute_file` for file source identity and relative includes, or
 `Runtime::execute_code` for code without an opening PHP tag.
@@ -297,6 +297,16 @@ new request. The CLI returns the low eight bits of the requested status.
   Exceptions thrown from `finally` retain the pending exception as their previous.
   Throwable string conversion includes saved traces and previous exceptions,
   honors subclass overrides, and terminates cyclic previous-exception chains.
+- `set_error_handler`, `get_error_handler`, and `restore_error_handler` preserve
+  callable identity, handler stacks, and signed 32-bit level masks. `trigger_error`
+  and `user_error` dispatch user notices, warnings, deprecations, and fatal errors.
+  Handlers run independently of display suppression, including `@`; only a literal
+  false return requests default reporting. Active handlers are disabled during
+  invocation, with replacement/restored handlers honored. Exceptions and exits
+  propagate synchronously. Handleable compile warnings from eval/includes also
+  dispatch; compile-only warnings bypass user handlers. Array/reference write
+  traversal, string-offset preparation, malformed-property dump notices, and
+  several mutation-during-warning cases remain incomplete.
 - `set_exception_handler`, `get_exception_handler`, and `restore_exception_handler`
   preserve callable identity and handler stacks, including null entries. Uncaught
   file/stdin exceptions dispatch at the request boundary; replacement handlers can

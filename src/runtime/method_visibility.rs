@@ -32,10 +32,10 @@ impl Runtime {
             let contextual = matches!(keyword.as_slice(), b"self" | b"parent" | b"static");
             if contextual {
                 class = self.contextual_class_name(&class, line)?;
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Deprecated: Use of \"{}\" in callables is deprecated on line {line}",
                     String::from_utf8_lossy(&keyword),
-                ));
+                ))?;
             }
             // PHP's internal callback validation can bind the active object
             // within the named class's scope. Ordinary variable calls cannot.

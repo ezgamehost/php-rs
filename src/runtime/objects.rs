@@ -603,14 +603,20 @@ impl Runtime {
         })?;
         self.method_target(function, object.class.clone(), Some(object), line)
     }
-    fn warn_static_as_instance(&mut self, object: &PhpObject, name: &[u8], line: usize) {
+    fn warn_static_as_instance(
+        &mut self,
+        object: &PhpObject,
+        name: &[u8],
+        line: usize,
+    ) -> Result<(), Error> {
         if self.instance_static_owner(&object.class, name).is_some() {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Notice: Accessing static property {}::${} as non static on line {line}",
                 object.class_name,
                 String::from_utf8_lossy(name)
-            ));
+            ))?;
         }
+        Ok(())
     }
     pub(super) fn read_property_storage(
         &mut self,
@@ -629,7 +635,7 @@ impl Runtime {
         }
         if !silent {
             validate_property_name(name, line)?;
-            self.warn_static_as_instance(object, name, line);
+            self.warn_static_as_instance(object, name, line)?;
         }
         if let Some(value) = object
             .properties
@@ -648,11 +654,11 @@ impl Runtime {
             {
                 return Err(Self::uninitialized_property(&owner, name, line));
             }
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Undefined property: {}::${} on line {line}",
                 object.class_name,
                 String::from_utf8_lossy(name)
-            ));
+            ))?;
         }
         Ok(Value::Null)
     }
@@ -695,7 +701,7 @@ impl Runtime {
         if let Some(owner) = self.instance_static_owner(&object.class, name) {
             self.check_static_property_access(&object.class, &owner, name, line, false)?;
         }
-        self.warn_static_as_instance(object, name, line);
+        self.warn_static_as_instance(object, name, line)?;
         let key = self.instance_property_key(object, name);
         if (object.class.declaration.is_readonly || object.class.forbid_dynamic)
             && self.instance_property_owner(&object.class, name).is_none()
@@ -714,11 +720,11 @@ impl Runtime {
             && !object.class.allow_dynamic
             && self.instance_property_owner(&object.class, name).is_none()
         {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Deprecated: Creation of dynamic property {}::${} is deprecated on line {line}",
                 object.class_name,
                 String::from_utf8_lossy(name)
-            ));
+            ))?;
         }
         let value = if let Some(owner) = self.instance_property_owner(&object.class, name) {
             let property = owner
@@ -772,7 +778,7 @@ impl Runtime {
         if let Some(owner) = self.instance_static_owner(&object.class, name) {
             self.check_static_property_access(&object.class, &owner, name, line, false)?;
         }
-        self.warn_static_as_instance(object, name, line);
+        self.warn_static_as_instance(object, name, line)?;
         Ok(())
     }
 
@@ -853,8 +859,7 @@ impl Runtime {
                 let name = match crate::object::property_name(&raw) {
                     Ok(name) => name.name,
                     Err(message) => {
-                        self.diagnostics
-                            .push(format!("Notice: {message} on line {}", target.line));
+                        self.warn(format!("Notice: {message} on line {}", target.line))?;
                         &raw
                     }
                 };

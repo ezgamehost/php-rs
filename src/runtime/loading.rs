@@ -117,11 +117,14 @@ impl Runtime {
         }
         let previous_compiling = std::mem::replace(&mut self.diagnostics.compiling, true);
         let diagnostic_source = std::mem::replace(&mut self.diagnostics.source, source.clone());
-        self.diagnostics.extend(warnings);
-        self.scope.reserve_variables(&statements);
-        let prepared = self
-            .prepare_functions(&mut statements)
-            .map_err(|error| self.materialize_error_from(error, &source.name));
+        let prepared = (|| {
+            for warning in warnings {
+                self.warn(warning)?;
+            }
+            self.scope.reserve_variables(&statements);
+            self.prepare_functions(&mut statements)
+        })()
+        .map_err(|error| self.materialize_error_from(error, &source.name));
         self.diagnostics.compiling = previous_compiling;
         self.diagnostics.source = diagnostic_source;
         prepared?;
@@ -216,11 +219,24 @@ impl Runtime {
         let (path, code) = match loaded {
             Ok(loaded) => loaded,
             Err(error) => {
-                self.diagnostics.push(format!(
-                    "{label}({}): Failed to open stream: {error} on line {line}",
-                    String::from_utf8_lossy(name)
-                ));
-                return self.include_failure(label, name, required, line);
+                let frame = traces::TraceFrame::unit(
+                    self,
+                    label.as_bytes(),
+                    Some(line),
+                    Some(PhpArray::default()),
+                );
+                self.trace_frames.push(frame);
+                let result = (|| {
+                    self.warn(format!(
+                        "{label}({}): Failed to open stream: {} on line {line}",
+                        String::from_utf8_lossy(name),
+                        streams::io_message(&error)
+                    ))?;
+                    self.include_failure(label, name, required, line)
+                })()
+                .map_err(|error| self.materialize_error(error));
+                self.trace_frames.pop();
+                return result;
             }
         };
         if once {
@@ -248,9 +264,9 @@ impl Runtime {
                 line,
             ))
         } else {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "{label}(): Failed opening '{name}' for inclusion on line {line}"
-            ));
+            ))?;
             Ok(Value::Bool(false))
         }
     }

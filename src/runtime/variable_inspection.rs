@@ -47,7 +47,7 @@ impl Runtime {
         let values = std::iter::once(args[0].as_ref().unwrap())
             .chain(extra.entries().iter().map(|(_, value)| value));
         for (index, value) in values.enumerate() {
-            self.compact_names(value, index + 1, line, &mut state);
+            self.compact_names(value, index + 1, line, &mut state)?;
         }
         match state.error {
             Some(error) => Err(error),
@@ -61,7 +61,7 @@ impl Runtime {
         position: usize,
         line: usize,
         state: &mut CompactState,
-    ) {
+    ) -> Result<(), Error> {
         match names.dereferenced() {
             Value::String(name) => {
                 let name = name.to_vec();
@@ -70,10 +70,10 @@ impl Runtime {
                         .result
                         .insert(ArrayKey::String(name), variable.borrow().dereferenced());
                 } else if name != b"this" {
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "Warning: compact(): Undefined variable ${} on line {line}",
                         String::from_utf8_lossy(&name)
-                    ));
+                    ))?;
                 }
             }
             Value::Array(array) => {
@@ -93,10 +93,10 @@ impl Runtime {
                             previous.throwable;
                     }
                     state.error = Some(error);
-                    return;
+                    return Ok(());
                 }
                 for (_, value) in array.entries() {
-                    self.compact_names(value, position, line, state);
+                    self.compact_names(value, position, line, state)?;
                 }
                 state.active.remove(&identity);
             }
@@ -106,9 +106,10 @@ impl Runtime {
                     Value::Bool(false) => "false",
                     _ => builtins::debug_type(&value),
                 };
-                self.diagnostics.push(format!("Warning: compact(): Argument #{position} must be string or array of strings, {kind} given on line {line}"));
+                self.warn(format!("Warning: compact(): Argument #{position} must be string or array of strings, {kind} given on line {line}"))?;
             }
         }
+        Ok(())
     }
 }
 

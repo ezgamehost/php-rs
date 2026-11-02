@@ -108,13 +108,14 @@ impl Runtime {
         object: &PhpObject,
         value: &Value,
         line: usize,
-    ) {
+    ) -> Result<(), Error> {
         if !matches!(
             value,
             Value::Reference(_) | Value::Indirect(_) | Value::Object(_) | Value::Closure(_)
         ) {
-            self.diagnostics.push(format!("Notice: Indirect modification of overloaded element of {} has no effect on line {line}", object.class_name));
+            self.warn(format!("Notice: Indirect modification of overloaded element of {} has no effect on line {line}", object.class_name))?;
         }
+        Ok(())
     }
 
     pub(super) fn read_offset(
@@ -125,7 +126,7 @@ impl Runtime {
         access: Access,
     ) -> Result<Value, Error> {
         let Value::Object(object) = value.dereferenced() else {
-            return offsets::read_offset(value, offset, line, access, &mut self.diagnostics);
+            return offsets::read_offset(value, offset, line, access, self);
         };
         if self.in_constant_expression {
             return Err(Error::new(

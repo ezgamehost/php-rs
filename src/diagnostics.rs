@@ -57,24 +57,29 @@ impl Diagnostics {
     pub fn is_empty(&self) -> bool {
         self.messages.is_empty()
     }
-    pub fn extend(&mut self, messages: impl IntoIterator<Item = String>) {
-        for message in messages {
-            self.push(message);
-        }
-    }
 }
 
 impl Diagnostics {
-    pub fn push(&mut self, message: String) {
-        let level = if message.starts_with("Deprecated:") {
+    pub fn level(&self, message: &str) -> i64 {
+        if message.starts_with("Deprecated:") {
             8192
         } else if message.starts_with("Notice:") {
             8
-        } else if self.compiling {
+        } else if self.compiling
+            && (message.starts_with("Private methods cannot be final")
+                || message.contains("will be interpreted as a class name")
+                || message.starts_with("Unsupported declare")
+                || message.starts_with("Unsupported encoding")
+                || message.starts_with("declare(encoding="))
+        {
             128
         } else {
             2
-        };
+        }
+    }
+
+    pub fn push(&mut self, message: String) {
+        let level = self.level(&message);
         if self.reporting & level != 0 {
             let (label, text) = if let Some(text) = message.strip_prefix("Deprecated: ") {
                 ("Deprecated", text)

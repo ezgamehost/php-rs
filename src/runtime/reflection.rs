@@ -548,7 +548,7 @@ impl Runtime {
                 match class.constant_owner(&name) {
                     Some(owner) => self.evaluate_class_constant(&owner, &name, line)?,
                     None => {
-                        self.diagnostics.push(format!("Deprecated: ReflectionClass::getConstant() for a non-existent constant is deprecated, use ReflectionClass::hasConstant() to check if the constant exists on line {line}"));
+                        self.warn(format!("Deprecated: ReflectionClass::getConstant() for a non-existent constant is deprecated, use ReflectionClass::hasConstant() to check if the constant exists on line {line}"))?;
                         Value::Bool(false)
                     }
                 }

@@ -19,10 +19,10 @@ impl Runtime {
             self.find_class(&name)
         };
         let Some(class) = class else {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Class \"{}\" not found on line {line}",
                 String::from_utf8_lossy(&name)
-            ));
+            ))?;
             return Ok(Value::Bool(false));
         };
         let alias = spelling
@@ -59,9 +59,9 @@ impl Runtime {
             ));
         }
         if alias == b"_" {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Deprecated: Using \"_\" as a class alias is deprecated since 8.4 on line {line}"
-            ));
+            ))?;
         }
         if self.find_class(&alias).is_some() || alias == b"closure" {
             let kind = if class.declaration.is_interface {
@@ -71,10 +71,10 @@ impl Runtime {
             } else {
                 "class"
             };
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Cannot redeclare {kind} {} on line {line}",
                 String::from_utf8_lossy(&spelling)
-            ));
+            ))?;
             return Ok(Value::Bool(false));
         }
         class.aliases.borrow_mut().push(alias.clone());

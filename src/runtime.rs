@@ -44,6 +44,7 @@ mod destructuring;
 mod diagnostic_display;
 mod directories;
 mod enums;
+mod error_handlers;
 mod exception_handlers;
 mod exporting;
 mod extract;
@@ -148,6 +149,9 @@ pub struct Runtime {
     object_store: Rc<RefCell<crate::object::ObjectStore>>,
     resources: crate::resource::Store,
     default_directory: Option<Rc<crate::PhpResource>>,
+    error_handler: Option<Value>,
+    error_handler_reporting: i64,
+    error_handlers: Vec<(Option<Value>, i64)>,
     exception_handler: Option<Value>,
     exception_handlers: Vec<Option<Value>>,
     uncaught_handler_allowed: bool,
@@ -310,7 +314,7 @@ impl Runtime {
                         value,
                         attributes.clone(),
                         expr.line,
-                    );
+                    )?;
                 }
             }
             Stmt::Class(class) => self.register_class(class.clone())?,
@@ -330,7 +334,7 @@ impl Runtime {
             }
             Stmt::Block(stmts) => return self.block(stmts),
             Stmt::If(cond, yes, no) => {
-                if self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics)? {
+                if self.eval(cond)?.to_bool(cond.line, self)? {
                     return self.statement(yes);
                 }
                 if let Some(no) = no {
@@ -338,7 +342,7 @@ impl Runtime {
                 }
             }
             Stmt::While(cond, body) => {
-                while self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics)? {
+                while self.eval(cond)?.to_bool(cond.line, self)? {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -352,16 +356,16 @@ impl Runtime {
                     Flow::Break(1) => break,
                     flow => return Ok(flow.leave_level()),
                 }
-                if !self.eval(cond)?.to_bool(cond.line, &mut self.diagnostics)? {
+                if !self.eval(cond)?.to_bool(cond.line, self)? {
                     break;
                 }
             },
             Stmt::For(init, cond, step, body) => {
                 self.eval_sequence(init, false)?;
-                while self.eval_sequence(cond, true)?.to_bool(
-                    cond.last().map_or(0, |expr| expr.line),
-                    &mut self.diagnostics,
-                )? {
+                while self
+                    .eval_sequence(cond, true)?
+                    .to_bool(cond.last().map_or(0, |expr| expr.line), self)?
+                {
                     match self.block(std::slice::from_ref(body))? {
                         Flow::Next | Flow::Continue(1) => {}
                         Flow::Break(1) => break,
@@ -433,10 +437,10 @@ impl Runtime {
                         }
                     }
                 } else if !matches!(value, Value::Closure(_)) {
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "foreach() argument must be of type array|object on line {}",
                         iter.line
-                    ));
+                    ))?;
                 }
             }
             Stmt::Unset(targets) => {
@@ -456,7 +460,7 @@ impl Runtime {
                                 target.line,
                                 Access::Read,
                             )?;
-                            self.warn_indirect_magic(object, &location.name, &value, target.line);
+                            self.warn_indirect_magic(object, &location.name, &value, target.line)?;
                             unset_path(&mut value, &mut location.keys, target.line, self)?;
                             continue;
                         }
@@ -564,10 +568,10 @@ impl Runtime {
         Ok(if let Some(value) = self.lookup(name) {
             value
         } else {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Undefined variable ${} on line {line}",
                 String::from_utf8_lossy(name)
-            ));
+            ))?;
             Value::Null
         })
     }
@@ -669,7 +673,7 @@ impl Runtime {
                 },
             )?;
             if overloaded {
-                self.warn_indirect_magic(object, &location.name, &value, line);
+                self.warn_indirect_magic(object, &location.name, &value, line)?;
                 location.overloaded = Some(value.clone());
             }
             value = value.dereferenced();
@@ -695,11 +699,11 @@ impl Runtime {
                                 .replacen("Typed property", "Typed static property", 1);
                         return Err(error);
                     }
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "Undefined {}variable ${} on line {line}",
                         if location.global { "global " } else { "" },
                         String::from_utf8_lossy(&location.name)
-                    ));
+                    ))?;
                 }
                 Value::Null
             }
@@ -727,7 +731,7 @@ impl Runtime {
                 } else if self.magic_get_applicable(object, &location.name) {
                     let value =
                         self.read_property_value(object, &location.name, line, Access::Read)?;
-                    self.warn_indirect_magic(object, &location.name, &value, line);
+                    self.warn_indirect_magic(object, &location.name, &value, line)?;
                     Some(value)
                 } else {
                     None
@@ -854,7 +858,7 @@ impl Runtime {
                 } else if matches!(kind, crate::ast::CastKind::Object) {
                     self.cast_object(value, line)
                 } else {
-                    casting::cast(*kind, value, line, &mut self.diagnostics)
+                    casting::cast(*kind, value, line, self)
                 }
             }
             ExprKind::Match(subject, arms) => self.match_expression(subject, arms, line),
@@ -887,11 +891,11 @@ impl Runtime {
                 if let Value::Object(object) = value {
                     self.read_property_value(&object, &name, line, Access::Read)
                 } else {
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "Attempt to read property \"{}\" on {} on line {line}",
                         String::from_utf8_lossy(&name),
                         builtins::debug_type(&value)
-                    ));
+                    ))?;
                     Ok(Value::Null)
                 }
             }
@@ -949,11 +953,7 @@ impl Runtime {
                         }
                     };
                     let key = match key {
-                        Some(key) => Some(ArrayKey::from_value(
-                            &self.eval(key)?,
-                            key.line,
-                            &mut self.diagnostics,
-                        )?),
+                        Some(key) => Some(ArrayKey::from_value(&self.eval(key)?, key.line, self)?),
                         None => None,
                     };
                     let value = if by_reference {
@@ -992,7 +992,7 @@ impl Runtime {
             ExprKind::Empty(arg) => Ok(Value::Bool(
                 !self
                     .coalesce_read(arg, Access::Empty)?
-                    .to_bool(line, &mut self.diagnostics)?,
+                    .to_bool(line, self)?,
             )),
             ExprKind::Constant(name) => self.read_constant(name, line),
             ExprKind::NamespacedName(name) => {
@@ -1025,13 +1025,13 @@ impl Runtime {
                 }
                 let value = self.eval(expr)?;
                 match op.as_str() {
-                    "!" => Ok(Value::Bool(!value.to_bool(line, &mut self.diagnostics)?)),
+                    "!" => Ok(Value::Bool(!value.to_bool(line, self)?)),
                     "~" => match value {
                         Value::String(s) => Ok(Value::String(
                             s.bytes().iter().map(|b| !b).collect::<Vec<_>>().into(),
                         )),
                         Value::Int(_) | Value::Float(_) => {
-                            Ok(Value::Int(!value.integer(line, &mut self.diagnostics)?))
+                            Ok(Value::Int(!value.integer(line, self)?))
                         }
                         _ => Err(Error::new(
                             ErrorKind::TypeError,
@@ -1039,8 +1039,8 @@ impl Runtime {
                             line,
                         )),
                     },
-                    "+" => value.number(line, &mut self.diagnostics),
-                    "-" => match value.number(line, &mut self.diagnostics)? {
+                    "+" => value.number(line, self),
+                    "-" => match value.number(line, self)? {
                         Value::Int(n) => Ok(n
                             .checked_neg()
                             .map(Value::Int)
@@ -1088,7 +1088,7 @@ impl Runtime {
                 self.check_static_set_access(&location, true, line)?;
                 self.validate_property_increment(&location, &old, *delta, line)?;
                 self.validate_reference_increment(&mut location, &old, *delta, line)?;
-                let new = increment(&old, *delta, line, &mut self.diagnostics)?;
+                let new = increment(&old, *delta, line, self)?;
                 let new = if let Some(reference) = &location.offset_reference {
                     self.write_reference_value(reference, new, self.strict_types, line)?
                 } else {
@@ -1098,7 +1098,7 @@ impl Runtime {
             }
             ExprKind::Conditional(cond, yes, no) => {
                 let value = self.eval(cond)?;
-                if value.to_bool(cond.line, &mut self.diagnostics)? {
+                if value.to_bool(cond.line, self)? {
                     match yes {
                         Some(yes) => self.eval(yes),
                         None => Ok(value),
@@ -1123,12 +1123,12 @@ impl Runtime {
                 }
                 let lhs = self.eval(left)?;
                 if matches!(op.as_str(), "&&" | "and" | "||" | "or") {
-                    let truth = lhs.to_bool(line, &mut self.diagnostics)?;
+                    let truth = lhs.to_bool(line, self)?;
                     if truth == matches!(op.as_str(), "||" | "or") {
                         return Ok(Value::Bool(truth));
                     }
                     let rhs = self.eval(right)?;
-                    return Ok(Value::Bool(rhs.to_bool(line, &mut self.diagnostics)?));
+                    return Ok(Value::Bool(rhs.to_bool(line, self)?));
                 }
                 let rhs = self.eval(right)?;
                 self.binary(op, lhs, rhs, line)
@@ -1284,7 +1284,7 @@ fn increment(
     match value {
         Bool(_) | Null if matches!(value, Bool(_)) || delta < 0 => {
             warnings.warn(format!(
-                "{} on type {} has no effect on line {line}",
+                "{} on type {} has no effect, this will change in the next major version of PHP on line {line}",
                 if delta > 0 { "Increment" } else { "Decrement" },
                 if matches!(value, Bool(_)) {
                     "bool"
@@ -1295,10 +1295,14 @@ fn increment(
             Ok(value.clone())
         }
         String(s) if crate::value::numeric_string(&s.bytes()).is_none() => {
-            warnings.warn(format!(
-                "Deprecated: {} on non-numeric string on line {line}",
-                if delta > 0 { "Increment" } else { "Decrement" }
-            ))?;
+            let message = if delta > 0 {
+                "Increment on non-numeric string is deprecated, use str_increment() instead"
+            } else if s.is_empty() {
+                "Decrement on empty string is deprecated as non-numeric"
+            } else {
+                "Decrement on non-numeric string has no effect and is deprecated"
+            };
+            warnings.warn(format!("Deprecated: {message} on line {line}"))?;
             if delta < 0 {
                 return Ok(value.clone());
             }

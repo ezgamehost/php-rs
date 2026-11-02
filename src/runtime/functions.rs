@@ -6,7 +6,11 @@ use std::collections::HashSet;
 
 impl Runtime {
     pub(super) fn prepare_functions(&mut self, stmts: &mut [Stmt]) -> Result<(), Error> {
-        diagnose_functions(stmts, &mut self.diagnostics);
+        let mut warnings = Vec::new();
+        diagnose_functions(stmts, &mut warnings);
+        for warning in warnings {
+            self.warn(warning)?;
+        }
         self.prepare_classes(stmts)?;
         let mut declarations = Vec::new();
         take_hoisted(stmts, &mut declarations);
@@ -175,6 +179,16 @@ impl Runtime {
         values: &[Value],
         line: usize,
     ) -> Result<Value, Error> {
+        self.call_callback_at(target, values, line, true)
+    }
+
+    pub(super) fn call_callback_at(
+        &mut self,
+        target: &CallTarget,
+        values: &[Value],
+        line: usize,
+        internal: bool,
+    ) -> Result<Value, Error> {
         let arguments: Vec<_> = values
             .iter()
             .map(|value| {
@@ -189,7 +203,7 @@ impl Runtime {
         let caller_strict = std::mem::replace(&mut self.strict_types, false);
         let mut target = target.clone();
         target.reference_values = true;
-        let result = self.invoke_at(target, &arguments, line, true, true);
+        let result = self.invoke_at(target, &arguments, line, true, internal);
         self.strict_types = caller_strict;
         result
     }
@@ -562,11 +576,11 @@ impl Runtime {
             if prefer_reference {
                 return Ok((value, None));
             }
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "{}(): Argument #{}{label} must be passed by reference, value given on line {line}",
                 String::from_utf8_lossy(&target.name),
                 index + 1
-            ));
+            ))?;
             return Ok((value, None));
         }
         let mut expr = expr;
@@ -597,9 +611,9 @@ impl Runtime {
             return Ok((value, None));
         }
         if matches!(expr.kind, ExprKind::Call(_, _) | ExprKind::New(_, _)) {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Notice: Only variables should be passed by reference on line {line}"
-            ));
+            ))?;
             return Ok((value, None));
         }
         Err(Error::new(
@@ -1037,11 +1051,11 @@ fn overwritten(name: &[u8], line: usize) -> Error {
     )
 }
 
-fn diagnose_functions(stmts: &[Stmt], warnings: &mut Diagnostics) {
+fn diagnose_functions(stmts: &[Stmt], warnings: &mut Vec<String>) {
     diagnose_statements(stmts, warnings, &mut Vec::new());
 }
 
-fn diagnose_statements(stmts: &[Stmt], warnings: &mut Diagnostics, switches: &mut Vec<bool>) {
+fn diagnose_statements(stmts: &[Stmt], warnings: &mut Vec<String>, switches: &mut Vec<bool>) {
     for stmt in stmts {
         match stmt {
             Stmt::Class(class) => {

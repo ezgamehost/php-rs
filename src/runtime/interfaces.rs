@@ -67,10 +67,10 @@ impl Runtime {
                         .iter()
                         .any(|a| a.name.eq_ignore_ascii_case(b"ReturnTypeWillChange"))
                 {
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "Deprecated: Return type of {} should either be compatible with {}: {tentative}, or the #[\\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice on line {}",
                         method_signature(&implementation), method_signature(required), implementation.line
-                    ));
+                    ))?;
                 }
             }
             for name in interface.constant_names() {

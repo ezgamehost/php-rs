@@ -168,7 +168,7 @@ impl Runtime {
         if access != Access::Read {
             let has_isset = objects::method(&object.class, Magic::Isset.name()).is_some();
             if let Some(value) = self.call_property_magic(object, name, Magic::Isset, None, line)? {
-                if !value.to_bool(line, &mut self.diagnostics)? {
+                if !value.to_bool(line, self)? {
                     return Ok(Value::Null);
                 }
                 if access == Access::Probe {
@@ -242,12 +242,13 @@ impl Runtime {
         name: &[u8],
         value: &Value,
         line: usize,
-    ) {
+    ) -> Result<(), Error> {
         if !matches!(
             value,
             Value::Object(_) | Value::Closure(_) | Value::Reference(_)
         ) {
-            self.diagnostics.push(format!("Notice: Indirect modification of overloaded property {}::${} has no effect on line {line}", object.class_name, String::from_utf8_lossy(name)));
+            self.warn(format!("Notice: Indirect modification of overloaded property {}::${} has no effect on line {line}", object.class_name, String::from_utf8_lossy(name)))?;
         }
+        Ok(())
     }
 }

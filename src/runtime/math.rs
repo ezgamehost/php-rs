@@ -67,12 +67,7 @@ impl Runtime {
         }
         let first = args[0].as_ref().unwrap();
         if matches!(kind, Math::Pow) {
-            return power(
-                first,
-                args[1].as_ref().unwrap(),
-                line,
-                &mut self.diagnostics,
-            );
+            return power(first, args[1].as_ref().unwrap(), line, self);
         }
         if matches!(kind, Math::Intdiv) {
             let a = self.native_int(first, name, 1, line)?;
@@ -192,7 +187,7 @@ impl Runtime {
         if !self.strict_types {
             match value {
                 Value::Null => {
-                    self.warn_null(value, name, position, expected, line);
+                    self.warn_null(value, name, position, expected, line)?;
                     return Ok(Value::Int(0));
                 }
                 Value::Bool(n) => return Ok(Value::Int(i64::from(*n))),

@@ -143,6 +143,10 @@ pub(super) enum Builtin {
     FuncNumArgs,
     FuncGetArg,
     FuncGetArgs,
+    SetErrorHandler,
+    GetErrorHandler,
+    RestoreErrorHandler,
+    TriggerError,
     ErrorReporting,
     SetExceptionHandler,
     RegisterShutdownFunction,
@@ -436,6 +440,10 @@ impl Builtin {
             b"func_num_args" => Self::FuncNumArgs,
             b"func_get_arg" => Self::FuncGetArg,
             b"func_get_args" => Self::FuncGetArgs,
+            b"set_error_handler" => Self::SetErrorHandler,
+            b"get_error_handler" => Self::GetErrorHandler,
+            b"restore_error_handler" => Self::RestoreErrorHandler,
+            b"trigger_error" | b"user_error" => Self::TriggerError,
             b"error_reporting" => Self::ErrorReporting,
             b"set_exception_handler" => Self::SetExceptionHandler,
             b"register_shutdown_function" => Self::RegisterShutdownFunction,
@@ -524,6 +532,9 @@ impl Builtin {
             Self::AutoloadCall => &[("class", false, false)],
             Self::Autoload => &[("class", false, false), ("file_extensions", true, false)],
             Self::AutoloadExtensions => &[("file_extensions", true, false)],
+            Self::SetErrorHandler => &[("callback", false, false), ("error_levels", true, false)],
+            Self::GetErrorHandler | Self::RestoreErrorHandler => &[],
+            Self::TriggerError => &[("message", false, false), ("error_level", true, false)],
             Self::ErrorReporting => &[("error_level", true, false)],
             Self::SetExceptionHandler => &[("callback", false, false)],
             Self::RegisterShutdownFunction => &[("callback", false, false), ("args", false, true)],
@@ -965,6 +976,15 @@ impl Runtime {
         ) {
             return self.exception_handler_builtin(builtin, &args, line);
         }
+        if matches!(
+            builtin,
+            Builtin::SetErrorHandler
+                | Builtin::GetErrorHandler
+                | Builtin::RestoreErrorHandler
+                | Builtin::TriggerError
+        ) {
+            return self.error_handler_builtin(builtin, &args, line);
+        }
         if matches!(builtin, Builtin::ErrorReporting) {
             let previous = self.diagnostics.reporting;
             if let Some(value) = args[0]
@@ -972,7 +992,7 @@ impl Runtime {
                 .filter(|value| !matches!(value, Value::Null))
             {
                 self.diagnostics.reporting = self.native_int(value, "error_reporting", 1, line).map_err(|error| {
-                    if error.kind != ErrorKind::TypeError { return error; }
+                    if error.throwable.is_some() || error.kind != ErrorKind::TypeError { return error; }
                     let given = match value {
                         Value::Bool(true) => "true",
                         Value::Bool(false) => "false",
@@ -1133,7 +1153,11 @@ impl Runtime {
             | Builtin::CountChars
             | Builtin::StrPad
             | Builtin::StrPbrk => self.byte_string_builtin(builtin, &args, line),
-            Builtin::ErrorReporting
+            Builtin::SetErrorHandler
+            | Builtin::GetErrorHandler
+            | Builtin::RestoreErrorHandler
+            | Builtin::TriggerError
+            | Builtin::ErrorReporting
             | Builtin::SetExceptionHandler
             | Builtin::GetExceptionHandler
             | Builtin::RestoreExceptionHandler
@@ -1273,13 +1297,13 @@ impl Runtime {
                 if let Some(flag) = &args[2]
                     && self.native_bool(flag, &name, 3, line)?
                 {
-                    self.diagnostics.push(format!("define(): Argument #3 ($case_insensitive) is ignored since declaration of case-insensitive constants is no longer supported on line {line}"));
+                    self.warn(format!("define(): Argument #3 ($case_insensitive) is ignored since declaration of case-insensitive constants is no longer supported on line {line}"))?;
                 }
                 Ok(Value::Bool(self.define_constant(
                     constant,
                     args[1].as_ref().unwrap().clone(),
                     line,
-                )))
+                )?))
             }
             Builtin::Defined | Builtin::Constant => {
                 let constant = self.native_string(first, &name, 1, line)?;
@@ -1402,7 +1426,7 @@ impl Runtime {
                     mode == 1,
                     &mut HashSet::new(),
                     line,
-                    &mut self.diagnostics,
+                    self,
                 )?))
             }
             Builtin::ArrayValues => {
@@ -1464,7 +1488,7 @@ impl Runtime {
             }
             Builtin::ArrayKeyExists => {
                 let array = require_array(args[1].as_ref().unwrap(), &name, 2, line)?;
-                let key = ArrayKey::from_value(first, line, &mut self.diagnostics)?;
+                let key = ArrayKey::from_value(first, line, self)?;
                 Ok(Value::Bool(array.get(&key).is_some()))
             }
             Builtin::ArraySearch(return_key) => {
@@ -1498,26 +1522,19 @@ impl Runtime {
                 };
                 let mut total = Value::Int(i64::from(product));
                 for (_, value) in array.entries() {
-                    match binary(
-                        op,
-                        total.clone(),
-                        value.clone(),
-                        line,
-                        &mut self.diagnostics,
-                    ) {
+                    match binary(op, total.clone(), value.clone(), line, self) {
                         Ok(result) => total = result,
                         Err(error) if error.kind == ErrorKind::TypeError => {
                             // PHP keeps its historical zero fallback for direct
                             // nonnumeric strings, while other invalid entries
                             // (including references to those strings) are skipped.
                             if matches!(value, Value::String(_)) {
-                                total =
-                                    binary(op, total, Value::Int(0), line, &mut self.diagnostics)?;
+                                total = binary(op, total, Value::Int(0), line, self)?;
                             }
-                            self.diagnostics.push(format!(
+                            self.warn(format!(
                                 "{name}(): {operation} is not supported on type {} on line {line}",
                                 debug_type(&value.dereferenced())
-                            ));
+                            ))?;
                         }
                         Err(error) => return Err(error),
                     }
@@ -1564,8 +1581,8 @@ impl Runtime {
         {
             return Err(type_error(value, function, position, kind, line));
         }
-        self.warn_null(value, function, position, kind, line);
-        value.warn_nan("string", line, &mut self.diagnostics)?;
+        self.warn_null(value, function, position, kind, line)?;
+        value.warn_nan("string", line, self)?;
         Ok(value.to_bytes())
     }
 
@@ -1596,7 +1613,7 @@ impl Runtime {
         {
             return Err(type_error(value, function, position, kind, line));
         }
-        self.warn_null(value, function, position, kind, line);
+        self.warn_null(value, function, position, kind, line)?;
         Ok(Value::String(self.string_bytes(value, line)?.into()))
     }
     pub(super) fn native_int(
@@ -1638,15 +1655,15 @@ impl Runtime {
         if let (Value::String(bytes), Value::Float(n)) = (value, &number) {
             let converted = *n as i64;
             if *n != converted as f64 {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Deprecated: Implicit conversion from float-string \"{}\" to int loses precision on line {line}",
                     String::from_utf8_lossy(&bytes.bytes())
-                ));
+                ))?;
             }
             return Ok(converted);
         }
-        self.warn_null(value, function, position, kind, line);
-        value.integer(line, &mut self.diagnostics)
+        self.warn_null(value, function, position, kind, line)?;
+        value.integer(line, self)
     }
     pub(super) fn native_bool(
         &mut self,
@@ -1662,8 +1679,8 @@ impl Runtime {
         {
             return Err(type_error(value, function, position, "bool", line));
         }
-        self.warn_null(value, function, position, "bool", line);
-        value.to_bool(line, &mut self.diagnostics)
+        self.warn_null(value, function, position, "bool", line)?;
+        value.to_bool(line, self)
     }
     pub(super) fn warn_null(
         &mut self,
@@ -1672,10 +1689,11 @@ impl Runtime {
         position: usize,
         kind: &str,
         line: usize,
-    ) {
+    ) -> Result<(), Error> {
         if matches!(value, Value::Null) {
-            self.diagnostics.push(format!("Deprecated: {function}(): Passing null to parameter #{position}{} of type {kind} is deprecated on line {line}", parameter_label(function, position)));
+            self.warn(format!("Deprecated: {function}(): Passing null to parameter #{position}{} of type {kind} is deprecated on line {line}", parameter_label(function, position)))?;
         }
+        Ok(())
     }
 }
 fn parameter_label(function: &str, position: usize) -> String {

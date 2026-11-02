@@ -110,12 +110,8 @@ impl Runtime {
             Value::Array(array) => match array.entries().get(index) {
                 Some((_, value)) => {
                     // Elements use explicit integer conversion even with strict_types.
-                    let Value::Int(value) = casting::cast(
-                        crate::ast::CastKind::Int,
-                        value.dereferenced(),
-                        line,
-                        &mut self.diagnostics,
-                    )?
+                    let Value::Int(value) =
+                        casting::cast(crate::ast::CastKind::Int, value.dereferenced(), line, self)?
                     else {
                         unreachable!()
                     };

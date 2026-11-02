@@ -116,12 +116,17 @@ impl Runtime {
             )
         })?;
         if name.strip_prefix(b"\\").unwrap_or(name) == b"E_STRICT" {
-            self.diagnostics.push(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"));
+            self.warn(format!("Deprecated: Constant E_STRICT is deprecated since 8.4, the error level was removed on line {line}"))?;
         }
         Ok(value)
     }
 
-    pub(super) fn define_constant(&mut self, name: Vec<u8>, value: Value, line: usize) -> bool {
+    pub(super) fn define_constant(
+        &mut self,
+        name: Vec<u8>,
+        value: Value,
+        line: usize,
+    ) -> Result<bool, Error> {
         self.define_constant_with_attributes(name, value, Vec::new(), line)
     }
 
@@ -131,14 +136,14 @@ impl Runtime {
         value: Value,
         attributes: Vec<Attribute>,
         line: usize,
-    ) -> bool {
+    ) -> Result<bool, Error> {
         let key = key(&name);
         if self.constants.contains_key(&key) || predefined(&name).is_some() {
-            self.diagnostics.push(format!(
+            self.warn(format!(
                 "Constant {} already defined, this will be an error in PHP 9 on line {line}",
                 String::from_utf8_lossy(&name)
-            ));
-            return false;
+            ))?;
+            return Ok(false);
         }
         self.constants.insert(
             key,
@@ -151,7 +156,7 @@ impl Runtime {
                 extension: None,
             }),
         );
-        true
+        Ok(true)
     }
 }
 

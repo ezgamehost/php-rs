@@ -112,9 +112,9 @@ impl Runtime {
         match self.eval_inner(expression)? {
             Value::Reference(reference) => Ok(reference),
             value => {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Notice: Only variables should be assigned by reference on line {line}"
-                ));
+                ))?;
                 Ok(cell(value))
             }
         }

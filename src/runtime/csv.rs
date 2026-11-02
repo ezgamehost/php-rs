@@ -44,7 +44,7 @@ impl Runtime {
             }
             escape.first().copied()
         } else {
-            self.diagnostics.push(format!("Deprecated: str_getcsv(): the $escape parameter must be provided as its default value will change on line {line}"));
+            self.warn(format!("Deprecated: str_getcsv(): the $escape parameter must be provided as its default value will change on line {line}"))?;
             Some(b'\\')
         };
         parse_record(text, separator[0], enclosure[0], escape, line)

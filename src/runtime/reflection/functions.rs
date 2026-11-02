@@ -91,7 +91,7 @@ impl Runtime {
             .starts_with(b"reflectionmethod::")
         {
             if supplied == 1 {
-                self.diagnostics.push(format!("Deprecated: Calling ReflectionMethod::__construct() with 1 argument is deprecated, use ReflectionMethod::createFromMethodName() instead on line {line}"));
+                self.warn(format!("Deprecated: Calling ReflectionMethod::__construct() with 1 argument is deprecated, use ReflectionMethod::createFromMethodName() instead on line {line}"))?;
             }
             let subject = self.lookup(b"objectOrMethod").unwrap();
             let (subject, name) = match self.lookup(b"method").unwrap() {
@@ -359,7 +359,7 @@ impl Runtime {
                 ReflectionData::Class(target.context.as_ref().unwrap().scope.clone()),
             ),
             b"setaccessible" => {
-                self.diagnostics.push(format!("Deprecated: Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect on line {line}"));
+                self.warn(format!("Deprecated: Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect on line {line}"))?;
                 Value::Null
             }
             b"getclosure" | b"invoke" | b"invokeargs" => {

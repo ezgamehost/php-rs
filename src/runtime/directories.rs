@@ -29,7 +29,7 @@ impl Runtime {
         }
         let resource = match args[0].as_ref() {
             None | Some(Value::Null) => {
-                self.diagnostics.push(format!("Deprecated: {name}(): Passing null is deprecated, instead the last opened directory stream should be provided on line {line}"));
+                self.warn(format!("Deprecated: {name}(): Passing null is deprecated, instead the last opened directory stream should be provided on line {line}"))?;
                 self.default_directory
                     .clone()
                     .ok_or_else(|| Error::new(ErrorKind::TypeError, "No resource supplied", line))?
@@ -154,15 +154,15 @@ impl Runtime {
             Ok(directory) => directory,
             Err(error) => {
                 let message = streams::io_message(&error);
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "{name}({}): Failed to open directory: {message} on line {line}",
                     String::from_utf8_lossy(&path)
-                ));
+                ))?;
                 if scan {
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "{name}(): (errno {}): {message} on line {line}",
                         error.raw_os_error().unwrap_or(0)
-                    ));
+                    ))?;
                 }
                 return Ok(Value::Bool(false));
             }

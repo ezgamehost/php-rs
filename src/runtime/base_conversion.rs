@@ -17,7 +17,7 @@ impl Runtime {
         }
         let number = self.native_string(first, name, 1, line)?;
         if let builtins::Builtin::BaseDecode(base) = kind {
-            return decode(&number, base, line, &mut self.diagnostics);
+            return decode(&number, base, line, self);
         }
         let from = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
         let to = self.native_int(args[2].as_ref().unwrap(), name, 3, line)?;
@@ -33,7 +33,7 @@ impl Runtime {
                 ));
             }
         }
-        let value = decode(&number, from as u8, line, &mut self.diagnostics)?;
+        let value = decode(&number, from as u8, line, self)?;
         let bytes = match value {
             Value::Int(n) => encode_integer(n as u64, to as u8),
             Value::Float(n) => encode_float(n, to as u8, line)?,

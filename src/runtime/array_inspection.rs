@@ -36,10 +36,10 @@ impl Runtime {
                 for (key, value) in array.entries() {
                     let value = value.dereferenced();
                     if !matches!(value, Value::Int(_) | Value::String(_)) {
-                        self.diagnostics.push(format!("{name}(): Can only {} string and integer values, entry skipped on line {line}", if flip { "flip" } else { "count" }));
+                        self.warn(format!("{name}(): Can only {} string and integer values, entry skipped on line {line}", if flip { "flip" } else { "count" }))?;
                         continue;
                     }
-                    let value_key = ArrayKey::from_value(&value, line, &mut self.diagnostics)?;
+                    let value_key = ArrayKey::from_value(&value, line, self)?;
                     let entry = if flip {
                         key.to_value()
                     } else {
@@ -70,11 +70,7 @@ impl Runtime {
                         Value::Int(n) => ArrayKey::Int(n),
                         value => {
                             let bytes = self.string_bytes(&value, line)?;
-                            ArrayKey::from_value(
-                                &Value::String(bytes.into()),
-                                line,
-                                &mut self.diagnostics,
-                            )?
+                            ArrayKey::from_value(&Value::String(bytes.into()), line, self)?
                         }
                     };
                     result.insert(key, value.copy_array_entry());

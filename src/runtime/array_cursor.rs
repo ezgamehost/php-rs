@@ -26,15 +26,15 @@ impl Runtime {
                 Ok(move_array_cursor(&mut value, action))
             }
             Value::Object(object) => {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Deprecated: {name}(): Calling {name}() on an object is deprecated on line {line}"
-                ));
+                ))?;
                 Ok(object_cursor(object, action, result_used))
             }
             Value::Closure(_) => {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Deprecated: {name}(): Calling {name}() on an object is deprecated on line {line}"
-                ));
+                ))?;
                 Ok(cursor_result(action, None))
             }
             _ => Err(builtins::type_error(&value, name, 1, "array|object", line)),

@@ -66,10 +66,10 @@ impl Runtime {
                         self,
                     )?
                 } else {
-                    self.diagnostics.push(format!(
+                    self.warn(format!(
                         "Notice: Attempting to set reference to non referenceable value on line {}",
                         destination.line
-                    ));
+                    ))?;
                     let value = source.borrow().clone();
                     cell(self.destructure_read(value, &mut offset, destination.line)?)
                 };
@@ -100,10 +100,10 @@ impl Runtime {
             }
             Value::Null => Ok(Value::Null),
             other => {
-                self.diagnostics.push(format!(
+                self.warn(format!(
                     "Cannot use {} as array on line {line}",
                     builtins::debug_type(&other)
-                ));
+                ))?;
                 Ok(Value::Null)
             }
         }

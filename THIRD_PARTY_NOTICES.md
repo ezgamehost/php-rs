@@ -15,10 +15,11 @@ Contextual callback resolution in `src/runtime/method_visibility.rs` and
 `src/runtime/callbacks.rs` adapts PHP 8.5.0's `Zend/zend_API.c`, copyright (c)
 Zend Technologies Ltd. The Zend license below also applies to these adaptations.
 
-`src/runtime/exception_handlers.rs` adapts handler registration and dispatch from
+`src/runtime/exception_handlers.rs` and `src/runtime/error_handlers.rs` adapt
+handler registration and dispatch from
 PHP 8.5.0's `Zend/zend_builtin_functions.c` and `Zend/zend.c`, copyright (c)
 Zend Technologies Ltd., by Andi Gutmans and Zeev Suraski. The Zend license below
-also applies to this adaptation.
+also applies to these adaptations.
 
 --------------------------------------------------------------------
                 The Zend Engine License, Version 2.00

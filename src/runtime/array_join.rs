@@ -111,14 +111,14 @@ impl Runtime {
                 array.append(Value::Null, line)?;
                 Value::Array(Rc::new(array))
             } else {
-                casting::cast(CastKind::Array, previous, line, &mut self.diagnostics)?
+                casting::cast(CastKind::Array, previous, line, self)?
             };
             let Value::Array(array) = converted else {
                 unreachable!()
             };
             let mut nested = (*array).clone();
             if matches!(incoming, Value::Object(_) | Value::Closure(_)) {
-                incoming = casting::cast(CastKind::Array, incoming, line, &mut self.diagnostics)?;
+                incoming = casting::cast(CastKind::Array, incoming, line, self)?;
             }
             if let Value::Array(array) = incoming {
                 let protected = if replace { src_id } else { dest_id };

@@ -119,8 +119,8 @@ impl Runtime {
         let b = b.dereferenced();
         match flags & !8 {
             1 => {
-                let a = self.sort_number(&a, line);
-                let b = self.sort_number(&b, line);
+                let a = self.sort_number(&a, line, error);
+                let b = self.sort_number(&b, line, error);
                 a.partial_cmp(&b).unwrap_or(Ordering::Greater)
             }
             2 | 5 | 6 => {
@@ -201,7 +201,7 @@ impl Runtime {
         }
     }
 
-    fn sort_number(&mut self, value: &Value, line: usize) -> f64 {
+    fn sort_number(&mut self, value: &Value, line: usize, error: &mut Option<Error>) -> f64 {
         match value {
             Value::Float(n) => *n,
             Value::Int(n) => *n as f64,
@@ -210,10 +210,12 @@ impl Runtime {
                 crate::value::numeric_prefix(&s.bytes()).map_or(0.0, |(n, _)| n.as_float())
             }
             Value::Object(_) | Value::Closure(_) => {
-                self.diagnostics.push(format!(
-                    "Warning: Object of class {} could not be converted to float on line {line}",
-                    builtins::debug_type(value)
-                ));
+                if error.is_none() {
+                    *error = self.warn(format!(
+                        "Warning: Object of class {} could not be converted to float on line {line}",
+                        builtins::debug_type(value)
+                    )).err();
+                }
                 1.0
             }
             _ => {
@@ -312,7 +314,7 @@ impl Runtime {
         let result = self.call_callback(callback, &values, line)?;
         if let Value::Bool(value) = result {
             if !self.sort_compare_deprecated {
-                self.diagnostics.push(format!("Deprecated: {name}(): Returning bool from comparison function is deprecated, return an integer less than, equal to, or greater than zero on line {line}"));
+                self.warn(format!("Deprecated: {name}(): Returning bool from comparison function is deprecated, return an integer less than, equal to, or greater than zero on line {line}"))?;
                 self.sort_compare_deprecated = true;
             }
             if !value {
@@ -331,12 +333,8 @@ impl Runtime {
     ) -> Result<Ordering, Error> {
         // zval_get_long_func(..., false) accepts every value, truncates fractional
         // returns without a precision deprecation, and retains overflow warnings.
-        let Value::Int(result) = casting::cast(
-            crate::ast::CastKind::Int,
-            result.dereferenced(),
-            line,
-            &mut self.diagnostics,
-        )?
+        let Value::Int(result) =
+            casting::cast(crate::ast::CastKind::Int, result.dereferenced(), line, self)?
         else {
             unreachable!()
         };

@@ -406,7 +406,7 @@ impl Runtime {
                 let Some(Value::Array(array)) = value.map(|v| v.dereferenced()) else {
                     return Ok(());
                 };
-                let key = key.array_key(line, false, &mut self.diagnostics)?;
+                let key = key.array_key(line, false, self)?;
                 value = array.get(&key).cloned();
             }
             let Some(Value::Reference(reference)) = value else {

@@ -284,7 +284,7 @@ impl Runtime {
                     None => None,
                 };
                 if value.is_none() {
-                    self.diagnostics.push(format!("Deprecated: ReflectionProperty::getDefaultValue() for a property without a default value is deprecated, use ReflectionProperty::hasDefaultValue() to check if the default value exists on line {line}"));
+                    self.warn(format!("Deprecated: ReflectionProperty::getDefaultValue() for a property without a default value is deprecated, use ReflectionProperty::hasDefaultValue() to check if the default value exists on line {line}"))?;
                 }
                 value.unwrap_or(Value::Null)
             }
@@ -299,7 +299,7 @@ impl Runtime {
                 );
             }
             b"setaccessible" => {
-                self.diagnostics.push(format!("Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect on line {line}"));
+                self.warn(format!("Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect on line {line}"))?;
                 Value::Null
             }
             b"getvalue" | b"setvalue" | b"isinitialized" => {
@@ -367,13 +367,13 @@ impl Runtime {
         let result = (|| {
             if write {
                 let value = if property.is_static && supplied == 1 {
-                    self.diagnostics.push(format!("Deprecated: Calling ReflectionProperty::setValue() with a single argument is deprecated on line {line}"));
+                    self.warn(format!("Deprecated: Calling ReflectionProperty::setValue() with a single argument is deprecated on line {line}"))?;
                     value
                 } else {
                     if property.is_static
                         && !matches!(value, Value::Null | Value::Object(_) | Value::Closure(_))
                     {
-                        self.diagnostics.push(format!("Deprecated: Calling ReflectionProperty::setValue() with a 1st argument which is not null or an object is deprecated on line {line}"));
+                        self.warn(format!("Deprecated: Calling ReflectionProperty::setValue() with a 1st argument which is not null or an object is deprecated on line {line}"))?;
                     }
                     self.lookup(b"value").unwrap()
                 };

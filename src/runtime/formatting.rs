@@ -131,12 +131,7 @@ impl Runtime {
                         bytes
                     }
                     b'd' | b'u' | b'b' | b'o' | b'x' | b'X' | b'c' => {
-                        let integer = casting::cast(
-                            CastKind::Int,
-                            value.clone(),
-                            line,
-                            &mut self.diagnostics,
-                        )?;
+                        let integer = casting::cast(CastKind::Int, value.clone(), line, self)?;
                         let Value::Int(n) = integer else {
                             unreachable!()
                         };
@@ -167,16 +162,11 @@ impl Runtime {
                         }
                     }
                     b'e' | b'E' | b'f' | b'F' | b'g' | b'G' | b'h' | b'H' => {
-                        let number = casting::cast(
-                            CastKind::Float,
-                            value.clone(),
-                            line,
-                            &mut self.diagnostics,
-                        )?
-                        .as_float();
+                        let number =
+                            casting::cast(CastKind::Float, value.clone(), line, self)?.as_float();
                         let mut precision = precision.unwrap_or(6);
                         if precision > 53 {
-                            self.diagnostics.push(format!("Notice: {name}(): Requested precision of {precision} digits was truncated to PHP maximum of 53 digits on line {line}"));
+                            self.warn(format!("Notice: {name}(): Requested precision of {precision} digits was truncated to PHP maximum of 53 digits on line {line}"))?;
                             precision = 53;
                         }
                         if !number.is_finite() {

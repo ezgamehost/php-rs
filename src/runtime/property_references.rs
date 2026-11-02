@@ -25,7 +25,7 @@ impl Runtime {
             }
             if self.magic_get_applicable(object, &location.name) {
                 let value = self.read_property_value(object, &location.name, line, Access::Read)?;
-                self.warn_indirect_magic(object, &location.name, &value, line);
+                self.warn_indirect_magic(object, &location.name, &value, line)?;
                 return Ok(match value {
                     Value::Reference(reference) => reference,
                     value => cell(value),
@@ -120,7 +120,7 @@ impl Runtime {
         if let Some(object) = &location.object {
             if self.magic_get_applicable(object, &location.name) {
                 let value = self.read_property_value(object, &location.name, line, Access::Read)?;
-                self.warn_indirect_magic(object, &location.name, &value, line);
+                self.warn_indirect_magic(object, &location.name, &value, line)?;
                 return Err(Error::new(
                     ErrorKind::Error,
                     "Cannot assign by reference to overloaded object",

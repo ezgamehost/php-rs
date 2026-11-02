@@ -86,9 +86,7 @@ impl Runtime {
                 _ => false,
             };
             if !prefer_float && in_range {
-                return Ok(Some(Value::Int(
-                    number.integer(line, &mut self.diagnostics)?,
-                )));
+                return Ok(Some(Value::Int(number.integer(line, self)?)));
             }
         }
         if ty.contains("float")
@@ -97,13 +95,11 @@ impl Runtime {
             return Ok(Some(Value::Float(number.as_float())));
         }
         if ty.contains("string") {
-            value.warn_nan("string", line, &mut self.diagnostics)?;
+            value.warn_nan("string", line, self)?;
             return Ok(Some(Value::String(value.to_bytes().into())));
         }
         if ty.contains("bool") {
-            return Ok(Some(Value::Bool(
-                value.to_bool(line, &mut self.diagnostics)?,
-            )));
+            return Ok(Some(Value::Bool(value.to_bool(line, self)?)));
         }
         Ok(None)
     }
@@ -158,7 +154,7 @@ impl Runtime {
             && !ty.contains("null")
             && (ty.contains("string") || ty.contains("int"))
         {
-            self.diagnostics.push(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)));
+            self.warn(format!("Deprecated: {}(): Passing null to parameter #{position} (${}) of type {ty} is deprecated on line {line}",String::from_utf8_lossy(&function.name),String::from_utf8_lossy(&param.name)))?;
             return Ok(if ty.contains("string") {
                 Value::String(Vec::new().into())
             } else {
@@ -241,7 +237,7 @@ impl Runtime {
                 self.write_reference_value(&reference, value, true, line)?;
                 reference
             } else {
-                self.diagnostics.push(format!("Notice: Only variable references should be returned by reference on line {line}"));
+                self.warn(format!("Notice: Only variable references should be returned by reference on line {line}"))?;
                 cell(value)
             };
             Ok(Value::Reference(reference))
