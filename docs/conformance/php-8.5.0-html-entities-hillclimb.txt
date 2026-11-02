@@ -1,0 +1,152 @@
+PHP 8.5.0 HTML entity hillclimb
+Baseline: ff74d7680d1f7b48ff6c85b55eb5e796bf01a3a2
+
+zend
+Before: 5256 cases; 2592 passed, 2264 failed, 400 unsupported
+After: 5256 cases; 2593 passed, 2263 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/named_params/bug80096.phpt
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 553 passed, 172 failed, 53 unsupported
+After: 778 cases; 553 passed, 172 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 776 passed, 13 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 479 passed, 99 failed, 152 unsupported
+After: 730 cases; 532 passed, 46 failed, 152 unsupported
+New passes: 53; regressions: 0
+NEW PASS: ext/standard/tests/strings/bug20934.phpt
+NEW PASS: ext/standard/tests/strings/bug21338.phpt
+NEW PASS: ext/standard/tests/strings/bug25707.phpt
+NEW PASS: ext/standard/tests/strings/bug29119.phpt
+NEW PASS: ext/standard/tests/strings/bug43927.phpt
+NEW PASS: ext/standard/tests/strings/bug44703.phpt
+NEW PASS: ext/standard/tests/strings/bug45485.phpt
+NEW PASS: ext/standard/tests/strings/bug49785.phpt
+NEW PASS: ext/standard/tests/strings/bug53021.phpt
+NEW PASS: ext/standard/tests/strings/bug54322.phpt
+NEW PASS: ext/standard/tests/strings/bug60965.phpt
+NEW PASS: ext/standard/tests/strings/bug61374.phpt
+NEW PASS: ext/standard/tests/strings/bug73817.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic1.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic10.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic3.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic4.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic5.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic6.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic7.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic8.phpt
+NEW PASS: ext/standard/tests/strings/get_html_translation_table_basic9.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode1.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode2.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode3.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_cp866.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_html4.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_html5.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_iso8859-15.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_iso8859-5.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_koi8-r.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_macroman.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_win1251.phpt
+NEW PASS: ext/standard/tests/strings/html_entity_decode_win1252.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities-utf-3.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities17.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities18.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities19.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities20.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities21.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities22.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities23.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities24.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities_html4.phpt
+NEW PASS: ext/standard/tests/strings/htmlentities_html5.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_basic.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_decode_basic.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_decode_variation3.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_decode_variation4.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_decode_variation5.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_decode_variation6.phpt
+NEW PASS: ext/standard/tests/strings/htmlspecialchars_decode_variation7.phpt
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 125 passed, 10 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 31 passed, 75 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 28 passed, 3 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,588 fixtures; 5,321 passed, 2,825 failed, 1,442 unsupported.
+54 new passes; zero regressions across all eleven suites.
+
+htmlspecialchars, htmlentities, htmlspecialchars_decode, html_entity_decode
+and get_html_translation_table now follow PHP's HTML 4.01, XML1, XHTML and
+HTML5 behavior. This includes named aliases, numeric references, multi-codepoint
+entities, quote flags, invalid-sequence substitution/ignoring, disallowed-codepoint
+rules, preserved existing references when double_encode is false, empty-input
+shortcuts, and native charset warning/notice behavior.
+All 14 PHP charset modes are handled, including UTF-8, single-byte Unicode maps
+and the partial entity support of Big5, Big5-HKSCS, GB2312, Shift-JIS and EUC-JP.
+Native malformed multibyte consumption, nonrepresentable references, MacRoman's
+ASCII reverse mapping and translation-table ordering are preserved. HTML/ENT
+constants are exposed with standard extension metadata.
+
+Mapping data is generated from PHP 8.5.0 html_tables.h: 253/1,511 canonical
+HTML4/HTML5 entries and 253/2,125 inverse entries, plus single-byte charset maps
+and charset aliases. tools/generate_html_tables.py uses a temporary C extractor;
+no C code or external conversion library is used by the Rust runtime. Regenerating
+the checked-in table file is byte-identical after rustfmt (SHA256
+0dd87192a40dce793ddc8caa3f67eb02eebd9093da723323cd5f1e5b2cda8680).
+
+Direct PHP comparisons match 1,176 translation-table combinations, 1,344
+byte-by-byte encoding combinations, 25,872 numeric-entity decoding cases and
+15,523 malformed multibyte cases, plus named/numeric reference preservation,
+all document modes, binary inputs, nullable and strict argument errors, named
+arguments, Stringable conversion, warning/notice shortcuts and throwing-handler
+traces. The comparisons exposed and resolved MacRoman reverse-ASCII handling
+and nullable encoding parameter labels.
+The default charset remains UTF-8; request charset INI settings are unfinished.
+The remaining get_html_translation_table_basic2 and bug61116 fixtures need
+setlocale and ReflectionFunction string rendering respectively. Existing generic
+non-UTF8 diagnostic limitations remain. PHP source attribution is retained in
+THIRD_PARTY_NOTICES.md.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No test files or fixtures added.
+Upstream logs: /tmp/php-rs-html-*2.log.
+Rust validation logs: /tmp/php-rs-html-{tests,clippy}1.log.

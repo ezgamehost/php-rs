@@ -30,6 +30,7 @@ pub(super) enum Builtin {
     Utf8(bool),
     UrlCodec(bool, bool),
     ParseUrl,
+    Html(html::Operation),
     Digest(crate::digest::Algorithm, bool),
     Clock(clocks::Operation),
     Base64(bool),
@@ -251,6 +252,11 @@ impl Builtin {
             b"rawurlencode" => Self::UrlCodec(true, true),
             b"rawurldecode" => Self::UrlCodec(false, true),
             b"parse_url" => Self::ParseUrl,
+            b"htmlspecialchars" => Self::Html(html::Operation::Encode(false)),
+            b"htmlentities" => Self::Html(html::Operation::Encode(true)),
+            b"htmlspecialchars_decode" => Self::Html(html::Operation::Decode(false)),
+            b"html_entity_decode" => Self::Html(html::Operation::Decode(true)),
+            b"get_html_translation_table" => Self::Html(html::Operation::Table),
             b"md5" => Self::Digest(crate::digest::Algorithm::Md5, false),
             b"time" => Self::Clock(clocks::Operation::Time),
             b"microtime" => Self::Clock(clocks::Operation::Microtime),
@@ -854,6 +860,25 @@ impl Builtin {
             | Self::Utf8(_)
             | Self::UrlCodec(..) => &[("string", false, false)],
             Self::ParseUrl => &[("url", false, false), ("component", true, false)],
+            Self::Html(html::Operation::Encode(_)) => &[
+                ("string", false, false),
+                ("flags", true, false),
+                ("encoding", true, false),
+                ("double_encode", true, false),
+            ],
+            Self::Html(html::Operation::Decode(false)) => {
+                &[("string", false, false), ("flags", true, false)]
+            }
+            Self::Html(html::Operation::Decode(true)) => &[
+                ("string", false, false),
+                ("flags", true, false),
+                ("encoding", true, false),
+            ],
+            Self::Html(html::Operation::Table) => &[
+                ("table", true, false),
+                ("flags", true, false),
+                ("encoding", true, false),
+            ],
             Self::Phonetic(false) => &[("string", false, false)],
             Self::Phonetic(true) => &[("string", false, false), ("max_phonemes", true, false)],
             Self::Trim(..) => &[("string", false, false), ("characters", true, false)],
@@ -1231,6 +1256,12 @@ impl Builtin {
                             (Self::Phonetic(true), "max_phonemes") => Value::Int(0),
                             (Self::Unpack, "offset") => Value::Int(0),
                             (Self::ParseUrl, "component") => Value::Int(-1),
+                            (Self::Html(_), "flags") => Value::Int(11),
+                            (Self::Html(_), "double_encode") => Value::Bool(true),
+                            (Self::Html(html::Operation::Table), "table") => Value::Int(0),
+                            (Self::Html(html::Operation::Table), "encoding") => {
+                                Value::String(b"UTF-8".to_vec().into())
+                            }
                             (Self::Wordwrap, "width") => Value::Int(75),
                             (Self::Wordwrap, "break") => Value::String(b"\n".to_vec().into()),
                             (Self::Wordwrap, "cut_long_words") => Value::Bool(false),
@@ -1418,6 +1449,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::Html(operation) = builtin {
+            return self.html_builtin(operation, &name, &args, line);
+        }
         if let Builtin::Clock(operation) = builtin {
             return self.clock_builtin(operation, &name, &args, line);
         }
@@ -1620,7 +1654,9 @@ impl Runtime {
             Builtin::RandomInt => self.random_int(&args, line),
             Builtin::ArrayRand => self.array_rand(&args, line),
             Builtin::CollectCycles => unreachable!(),
-            Builtin::Clock(_) => unreachable!("handled before required arguments"),
+            Builtin::Clock(_) | Builtin::Html(_) => {
+                unreachable!("handled before required arguments")
+            }
             Builtin::StrShuffle => self.shuffle_string(first, line),
             Builtin::ArrayShuffle => unreachable!(),
             Builtin::MtSeed | Builtin::MtRand(_) | Builtin::RandMax | Builtin::LcgValue => {

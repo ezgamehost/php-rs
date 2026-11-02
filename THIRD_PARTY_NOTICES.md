@@ -724,6 +724,12 @@ copyright (c) The PHP Group, originally authored by Kirill Maximov.
 `src/runtime/urls.rs` adapts PHP 8.5.0's `ext/standard/url.c`, copyright (c)
 The PHP Group, originally authored by Jim Winstead.
 
+`src/runtime/html/` adapts PHP 8.5.0's `ext/standard/html.c`, `html.h` and
+`html_tables.h`, copyright (c) The PHP Group. Original authors include Rasmus
+Lerdorf, Jaakko Hyvätti, Wez Furlong and Gustavo Lopes. The Rust mapping data is
+generated from PHP's tables using `tools/generate_html_tables.py`; the generator
+uses a temporary C extractor, while the runtime itself uses only Rust.
+
 CRC32 in `src/digest.rs` adapts PHP 8.5.0's `ext/standard/crc32.c` and
 `crc32.h`, copyright (c) The PHP Group. Its lookup table is generated at compile
 time from the reflected AUTODIN II polynomial.

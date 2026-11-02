@@ -280,6 +280,11 @@ new request. The CLI returns the low eight bits of the requested status.
   credentials, bracketed hosts, file paths and empty query/fragment components.
   `urlencode`, `urldecode`, `rawurlencode` and `rawurldecode` support binary input,
   PHP's space/plus and tilde rules, and permissive malformed-escape handling.
+- `htmlspecialchars`, `htmlentities`, their decode functions and
+  `get_html_translation_table` support PHP's HTML 4.01, XML, XHTML and HTML5 rules,
+  named and numeric entities, multi-codepoint entities, quote/substitution flags,
+  double-encoding control and legacy charsets. The default charset remains UTF-8;
+  request-level charset INI settings are unfinished.
 - `pack` and `unpack` support PHP's binary integer, float, string, hexadecimal,
   padding and cursor formats, including explicit byte order, repeat counts,
   named unpacked fields and input offsets. Packing preserves conversion and

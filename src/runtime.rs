@@ -72,6 +72,7 @@ mod functions;
 mod garbage_collection;
 mod hashes;
 pub(crate) mod heap;
+mod html;
 mod include_paths;
 mod inheritance;
 mod interfaces;

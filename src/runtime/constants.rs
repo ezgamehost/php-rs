@@ -75,6 +75,7 @@ impl Runtime {
             || seek_constant(name).is_some()
             || pathinfo_constant(name).is_some()
             || url_constant(name).is_some()
+            || html_constant(name).is_some()
             || extract_constant(name).is_some()
         {
             "standard"
@@ -255,6 +256,9 @@ fn predefined(name: &[u8]) -> Option<Value> {
     if let Some(value) = url_constant(name) {
         return Some(value);
     }
+    if let Some(value) = html_constant(name) {
+        return Some(value);
+    }
     if let Some(value) = seek_constant(name) {
         return Some(value);
     }
@@ -344,6 +348,22 @@ fn predefined(name: &[u8]) -> Option<Value> {
         b"DEBUG_BACKTRACE_IGNORE_ARGS" => Value::Int(2),
         _ => return math_constant(name).map(Value::Float),
     })
+}
+
+fn html_constant(name: &[u8]) -> Option<Value> {
+    Some(Value::Int(match name {
+        b"HTML_SPECIALCHARS" | b"ENT_NOQUOTES" | b"ENT_HTML401" => 0,
+        b"HTML_ENTITIES" => 1,
+        b"ENT_COMPAT" => 2,
+        b"ENT_QUOTES" => 3,
+        b"ENT_IGNORE" => 4,
+        b"ENT_SUBSTITUTE" => 8,
+        b"ENT_XML1" => 16,
+        b"ENT_XHTML" => 32,
+        b"ENT_HTML5" => 48,
+        b"ENT_DISALLOWED" => 128,
+        _ => return None,
+    }))
 }
 
 fn url_constant(name: &[u8]) -> Option<Value> {
