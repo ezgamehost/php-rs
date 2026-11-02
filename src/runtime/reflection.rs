@@ -20,6 +20,7 @@ mod native_signatures;
 mod parameters;
 mod properties;
 mod property_hooks;
+mod references;
 use properties::PropertyReflection;
 
 #[derive(Clone)]
@@ -39,6 +40,7 @@ pub(crate) enum ReflectionData {
         index: usize,
     },
     Type(crate::ast::TypeDecl),
+    Reference(Rc<RefCell<Value>>),
     Attribute {
         owner: AttributeContext,
         attribute: Attribute,
@@ -252,6 +254,13 @@ impl Runtime {
         if self
             .current_function
             .as_ref()
+            .is_some_and(|name| name.ends_with(b"::fromarrayelement"))
+        {
+            return self.reflection_reference_from_array(line);
+        }
+        if self
+            .current_function
+            .as_ref()
             .is_some_and(|name| name.ends_with(b"::getmodifiernames"))
         {
             return self.reflection_modifier_names(line);
@@ -278,6 +287,12 @@ impl Runtime {
             return Err(self.reflection_error("Cannot clone object using __clone()", line));
         }
         if name == b"__construct" {
+            if object.class.is_a(b"ReflectionReference") {
+                return Err(self.reflection_error(
+                    "Cannot directly instantiate ReflectionReference. Use ReflectionReference::fromArrayElement() instead",
+                    line,
+                ));
+            }
             if object.class.is_a(b"ReflectionConstant") {
                 return self.reflection_constant_constructor(&object, line);
             }
@@ -341,6 +356,9 @@ impl Runtime {
             });
             return Ok(Value::Null);
         }
+        if object.class.is_a(b"ReflectionReference") && object.reflection.borrow().is_none() {
+            return Err(self.reflection_error("Corrupted ReflectionReference object", line));
+        }
         let data = object.reflection.borrow().clone().ok_or_else(|| {
             Error::new(
                 ErrorKind::Error,
@@ -349,6 +367,7 @@ impl Runtime {
             )
         })?;
         match data {
+            ReflectionData::Reference(reference) => self.reflection_reference_id(&reference, line),
             ReflectionData::Constant(constant) => {
                 self.reflect_constant_method(&constant, &name, line)
             }
@@ -779,8 +798,10 @@ impl Runtime {
                     Some(Value::Array(args)) => callbacks::callback_arguments(&args, line)?,
                     _ => Vec::new(),
                 };
-                if name == b"newinstancewithoutconstructor" && class.is_a(b"InternalIterator") {
-                    return Err(self.reflection_error("Class InternalIterator is an internal class marked as final that cannot be instantiated without invoking its constructor", line));
+                if name == b"newinstancewithoutconstructor"
+                    && (class.is_a(b"InternalIterator") || class.is_a(b"ReflectionReference"))
+                {
+                    return Err(self.reflection_error(format!("Class {} is an internal class marked as final that cannot be instantiated without invoking its constructor", class.display_name()), line));
                 }
                 if name != b"newinstancewithoutconstructor" {
                     if let Some(constructor) = objects::method(class, b"__construct") {

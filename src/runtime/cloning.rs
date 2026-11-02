@@ -51,7 +51,8 @@ impl Runtime {
                 || object.class.is_a(b"ReflectionProperty")
                 || object.class.is_a(b"ReflectionClassConstant")
                 || object.class.is_a(b"ReflectionConstant")
-                || object.class.is_a(b"ReflectionExtension"))
+                || object.class.is_a(b"ReflectionExtension")
+                || object.class.is_a(b"ReflectionReference"))
         {
             return Err(Error::new(
                 ErrorKind::Error,

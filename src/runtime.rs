@@ -191,6 +191,7 @@ pub struct Runtime {
     /// Global inputs before execute, and the global values after it returns.
     pub variables: HashMap<Vec<u8>, Value>,
     reference_constraints: HashMap<usize, reference_types::Constraints>,
+    reflection_reference_key: Option<[u8; 16]>,
     scope: Scope,
     callers: Vec<Scope>,
     trace_frames: Vec<traces::TraceFrame>,

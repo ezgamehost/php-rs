@@ -1,5 +1,12 @@
 # Third-party notices
 
+Reference reflection in `src/runtime/reflection/references.rs` follows PHP
+8.5.0's `ext/reflection/php_reflection.c` and `php_reflection.stub.php`, copyright
+(c) The PHP Group. It uses the existing SHA-1 and random-byte adaptations listed
+below. Constructor visibility diagnostics follow `Zend/zend_object_handlers.c`,
+copyright (c) Zend Technologies Ltd. The PHP and Zend licenses below apply to the
+respective adaptations.
+
 Reflection modifier-name decoding in `src/runtime/reflection.rs` follows PHP
 8.5.0's `ext/reflection/php_reflection.c` and `php_reflection.stub.php`, copyright
 (c) The PHP Group. The PHP license below applies to these adaptations.

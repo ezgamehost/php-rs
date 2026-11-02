@@ -616,7 +616,7 @@ impl Runtime {
             ));
         }
         if call_constructor && let Some(constructor) = method(&class, b"__construct") {
-            self.check_method_access(&constructor, line)?;
+            self.check_constructor_access(&constructor, line)?;
         }
         let object = self.allocate_class_object(class, line)?;
         if !call_constructor {

@@ -203,6 +203,7 @@ impl Runtime {
                 b"ReflectionConstant",
                 b"ReflectionAttribute",
                 b"ReflectionExtension",
+                b"ReflectionReference",
             ]
             .iter()
             .any(|name| class.is_a(name));

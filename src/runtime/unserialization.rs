@@ -100,6 +100,7 @@ fn native_serialization_forbidden(class: &Class) -> bool {
             b"ReflectionConstant",
             b"ReflectionAttribute",
             b"ReflectionExtension",
+            b"ReflectionReference",
         ]
         .iter()
         .any(|name| class.is_a(name))

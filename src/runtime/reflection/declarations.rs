@@ -8,6 +8,14 @@ impl Runtime {
                 None,
                 "public static function getModifierNames(int $modifiers): array {}",
             ),
+            b"reflectionreference" => (
+                "ReflectionReference",
+                None,
+                "public static function fromArrayElement(array $array, string|int $key): ?ReflectionReference {}
+                public function getId(): string {}
+                private function __clone(): void {}
+                private function __construct() {}",
+            ),
             b"reflectionclass" => (
                 "ReflectionClass",
                 None,
@@ -315,8 +323,11 @@ impl Runtime {
             "),
             _ => return None,
         };
-        let abstract_ = if matches!(canonical, "ReflectionFunctionAbstract" | "ReflectionType") {
+        let class_modifier = if matches!(canonical, "ReflectionFunctionAbstract" | "ReflectionType")
+        {
             "abstract "
+        } else if canonical == "ReflectionReference" {
+            "final "
         } else {
             ""
         };
@@ -335,7 +346,7 @@ impl Runtime {
         } else {
             ""
         };
-        let code = format!("<?php {abstract_}class {canonical}{implements} {{ {body} }}");
+        let code = format!("<?php {class_modifier}class {canonical}{implements} {{ {body} }}");
         let (mut statements, _, _) =
             parser::parse(lexer::lex(code.as_bytes()).expect("reflection source"))
                 .expect("reflection declarations");

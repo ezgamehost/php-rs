@@ -67,6 +67,23 @@ impl Runtime {
         method: &FunctionDecl,
         line: usize,
     ) -> Result<(), Error> {
+        self.check_member_call_access(method, line, false)
+    }
+
+    pub(super) fn check_constructor_access(
+        &self,
+        constructor: &FunctionDecl,
+        line: usize,
+    ) -> Result<(), Error> {
+        self.check_member_call_access(constructor, line, true)
+    }
+
+    fn check_member_call_access(
+        &self,
+        method: &FunctionDecl,
+        line: usize,
+        construction: bool,
+    ) -> Result<(), Error> {
         if method.visibility == Visibility::Public {
             return Ok(());
         }
@@ -103,7 +120,8 @@ impl Runtime {
         Err(Error::new(
             ErrorKind::Error,
             format!(
-                "Call to {visibility} method {}() from {}",
+                "Call to {visibility} {}{}() from {}",
+                if construction { "" } else { "method " },
                 String::from_utf8_lossy(&method.name),
                 self.class_context.as_ref().map_or_else(
                     || "global scope".to_owned(),

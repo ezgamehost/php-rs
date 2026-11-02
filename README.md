@@ -544,6 +544,11 @@ new request. The CLI returns the low eight bits of the requested status.
   reports abstract, final, virtual, visibility, asymmetric setter, static, and
   readonly flags in PHP's order. Conflicting visibility bits and unknown flags
   follow the native mask rules.
+- [`ReflectionReference`](docs/conformance/php-8.5.0-reference-reflection-hillclimb.txt)
+  detects shared array references and self-referential arrays, retains reference
+  lifetime, and provides stable opaque IDs within a runtime. Numeric string keys
+  use literal string lookup. Construction, cloning, and serialization follow the
+  native restrictions.
 - Property reflection supports declared/inherited/dynamic discovery, filters, types,
   defaults, attributes, promoted/readonly/asymmetric flags, mangled names, and
   initialization checks. Reflective reads and writes bypass visibility while retaining
