@@ -148,9 +148,16 @@ new request. The CLI returns the low eight bits of the requested status.
 - `SplFileInfo` provides path components, metadata and access queries, symlink
   targets, canonical paths, cloning, debug output, and file-info class factories.
   Native stat/lstat caches are cleared by `clearstatcache()` and ordinary file I/O.
-  File-info objects cannot be serialized. `openFile()` still requires the missing
-  SplFileObject implementation; custom stream wrappers,
-  and PHP's realpath cache remain unfinished.
+  File-info objects cannot be serialized. `openFile()` creates the selected file
+  class with its mode, include-path setting, and stream context. Custom stream
+  wrappers and PHP's realpath cache remain unfinished.
+- [`SplFileObject` and `SplTempFileObject`](docs/conformance/php-8.5.0-file-objects-hillclimb.txt)
+  provide line and CSV iteration, seeking, read-ahead and empty-line flags,
+  configurable CSV controls, scanning into references, byte I/O, metadata,
+  truncation, flushing, and file locking. Temporary files spill to disk at their
+  memory threshold. Constructors, subclass line readers, debug output, clone
+  restrictions, and shutdown handle cleanup follow the native file objects.
+  Custom stream-wrapper integration remains unfinished.
 - `DirectoryIterator`, `FilesystemIterator`, and `RecursiveDirectoryIterator`
   provide native directory cursors, seeking, key/current modes, dot filtering,
   recursive children, subpaths, and independent cloned handles. Native filesystem
@@ -291,13 +298,14 @@ new request. The CLI returns the low eight bits of the requested status.
   warning order, including pending exceptions and `*` string-argument replacement.
 - Basic file streams support `fopen`, `fclose`, `fread`, `fgetc`, `fwrite`/`fputs`, `feof`,
   `ftell`, `fseek`, `rewind`, and `fflush`, plus `file_exists` and `unlink`.
-  `php://memory` and the in-memory part of `php://temp` are supported; temporary
-  spill-to-disk and general wrapper registration remain unfinished.
+  `php://memory` and `php://temp` are supported, including temporary spill to disk
+  and `/maxmemory:` thresholds. General wrapper registration remains unfinished.
   Supported `php://` names are case-insensitive and retain their original URI spelling.
 - `stream_is_local` classifies existing streams and supported wrapper names with
   native string-conversion and unknown-wrapper diagnostics. `stream_supports_lock`
   queries the backend capability without acquiring a lock; memory and directory
-  streams report false. General wrapper registration and `flock` remain unfinished.
+  streams report false. General wrapper registration and the standalone `flock`
+  function remain unfinished; `SplFileObject::flock` is available.
 - `ftruncate` shrinks or extends file, memory, and temporary streams with native
   read-only behavior. It preserves logical position, EOF, and stat caches; memory
   streams clamp their internal cursor on shrink and zero-fill newly added bytes.

@@ -112,6 +112,20 @@ impl Runtime {
         if object.suppresses_destructor() {
             return Ok(());
         }
+        let result = self.invoke_user_destructor(object, line);
+        if let Some(file) = object
+            .file_info
+            .borrow()
+            .as_ref()
+            .and_then(|info| info.file.as_ref())
+        {
+            file.borrow_mut().close();
+            object._handle.destructor_called.set(true);
+        }
+        result
+    }
+
+    fn invoke_user_destructor(&mut self, object: &Rc<PhpObject>, line: usize) -> Result<(), Error> {
         let Some(method) = objects::method(&object.class, b"__destruct") else {
             return Ok(());
         };

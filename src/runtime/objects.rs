@@ -139,6 +139,7 @@ impl Runtime {
             || self.builtin_dual_iterator_class(&name).is_some()
             || self.builtin_directory_iterator_class(&name).is_some()
             || self.builtin_file_info_class(&name).is_some()
+            || self.builtin_file_object_class(&name).is_some()
             || self.builtin_heap_class(&name).is_some()
             || self.builtin_object_storage_class(&name).is_some()
             || self.builtin_linked_list_class(&name).is_some()
@@ -343,6 +344,9 @@ impl Runtime {
             return Some(class);
         }
         if let Some(class) = self.builtin_directory_iterator_class(&name) {
+            return Some(class);
+        }
+        if let Some(class) = self.builtin_file_object_class(&name) {
             return Some(class);
         }
         if let Some(class) = self.builtin_file_info_class(&name) {
@@ -675,6 +679,19 @@ impl Runtime {
                 line,
             ));
         };
+        if object.class.is_a(b"SplFileObject")
+            && object
+                .file_info
+                .borrow()
+                .as_ref()
+                .is_none_or(|info| info.original_path.is_none())
+        {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "The parent constructor was not called: the object is in an invalid state",
+                line,
+            ));
+        }
         if object.class.name == b"__PHP_Incomplete_Class" {
             return Err(self.incomplete_object_error(&object, "call a method", line));
         }

@@ -113,7 +113,7 @@ impl Runtime {
     }
 }
 
-fn create_temporary(directory: &Path, prefix: &[u8]) -> io::Result<(File, PathBuf)> {
+pub(crate) fn create_temporary(directory: &Path, prefix: &[u8]) -> io::Result<(File, PathBuf)> {
     let directory = fs::canonicalize(directory)?;
     let mut entropy = [0; 14];
     for _ in 0..128 {

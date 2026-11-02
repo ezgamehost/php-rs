@@ -480,7 +480,7 @@ fn mapped_remaining(resource: &Rc<PhpResource>) -> Option<u64> {
             file.metadata().ok()?
         }
         Backend::StandardInput(reader) => reader.get_ref().metadata().ok()?,
-        Backend::Temporary(inner) => return mapped_remaining(inner),
+        Backend::Temporary(inner, _) => return mapped_remaining(inner),
         _ => return None,
     };
     if !mapping_aligned(stream.position) || !metadata.is_file() {

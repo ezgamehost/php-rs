@@ -402,6 +402,7 @@ impl Runtime {
                         || (!class.is_a(b"RecursiveIteratorIterator")
                             && !class.is_a(b"InternalIterator")
                             && !class.is_a(b"GlobIterator")
+                            && !class.is_a(b"SplFileObject")
                             && !class.is_a(b"Throwable")
                             && !class.is_a(b"ReflectionClass")
                             && !class.is_a(b"ReflectionAttribute")

@@ -40,6 +40,7 @@ impl Runtime {
                 || object.class.is_a(b"IteratorIterator")
                 || object.class.is_a(b"InternalIterator")
                 || object.class.is_a(b"GlobIterator")
+                || object.class.is_a(b"SplFileObject")
                 || object.class.is_a(b"Throwable")
                 || object.class.declaration.is_enum
                 || object.class.is_a(b"ReflectionClass")

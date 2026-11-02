@@ -81,7 +81,7 @@ fn stat_stream(stream: &Stream, line: usize) -> Result<Value, Error> {
         Backend::StandardInput(reader) => reader.get_ref().metadata(),
         Backend::StandardOutput(stderr) => output_metadata(*stderr),
         Backend::Directory(_) => return Ok(Value::Bool(false)),
-        Backend::Temporary(resource) => {
+        Backend::Temporary(resource, _) => {
             let kind = resource.kind.borrow();
             let Kind::Stream(inner) = &*kind else {
                 return Ok(Value::Bool(false));

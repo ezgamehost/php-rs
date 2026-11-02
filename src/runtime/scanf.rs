@@ -89,7 +89,12 @@ impl Runtime {
                         if variables.is_empty() {
                             values[index] = value;
                         } else {
-                            self.scan_assign(&variables[index], value, &mut pending, line)?;
+                            self.assign_native_reference(
+                                &variables[index],
+                                value,
+                                &mut pending,
+                                line,
+                            )?;
                         }
                     }
                     conversions += 1;
@@ -116,7 +121,7 @@ impl Runtime {
         Ok(Value::Array(Rc::new(result)))
     }
 
-    fn scan_assign(
+    pub(super) fn assign_native_reference(
         &mut self,
         reference: &variables::Cell,
         value: Value,

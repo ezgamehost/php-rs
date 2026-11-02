@@ -447,6 +447,15 @@ Group, including work by Marcus Boerger. Stat/lstat caching, access checks, and
 follows `main/streams/plain_wrapper.c`. Path components reuse the string and
 Zend dirname adaptations described above.
 
+SplFileObject and SplTempFileObject in `src/runtime/file_object.rs`, their
+FileInfo factories and shutdown handling adapt the same `ext/spl/spl_directory.c`
+and `.stub.php` sources. Locking follows `ext/standard/file.c`; typed reference
+assignment reuses the Zend API adaptation described above. Memory EOF propagation
+and temporary stream spill thresholds in `src/resource.rs` and
+`src/runtime/streams.rs` follow `main/streams/memory.c` and
+`ext/standard/php_fopen_wrapper.c`, copyright (c) The PHP Group. The PHP license
+below applies to these stream and SPL adaptations.
+
 DirectoryIterator, FilesystemIterator, and RecursiveDirectoryIterator in
 `src/runtime/directory_iterator.rs`, including native cursor wrappers, independent
 directory clones, cached current values, and recursive child construction, adapt

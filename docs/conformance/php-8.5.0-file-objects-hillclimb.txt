@@ -1,0 +1,203 @@
+PHP 8.5.0 SPL file-object hillclimb
+Baseline: 79bf3a4c5937f36896f74cec2a415417f3fb21c3
+
+zend
+Before: 5256 cases; 2778 passed, 2078 failed, 400 unsupported
+After: 5256 cases; 2778 passed, 2078 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 555 passed, 170 failed, 53 unsupported
+After: 778 cases; 656 passed, 69 failed, 53 unsupported
+New passes: 101; regressions: 0
+NEW PASS: ext/spl/tests/SplFileInfo_setFileClass_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_current_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_current_variation001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_delimiter_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_delimiter_error.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_enclosure_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_enclosure_error.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_escape_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_escape_default.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_escape_empty.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fgetcsv_escape_error.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fpassthru_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation1.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation10.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation11.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation12.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation13.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation14.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation15.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation16.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation5.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation6.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation7.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fputcsv_variation8.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fscanf_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fwrite_variation_001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_fwrite_variation_002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_getCsvControl_basic_001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_getCurrentLine_invalid_override.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_getchildren_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_getflags_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_getflags_error001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_getflags_variation001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_haschildren_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_key_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_key_error001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_key_error002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_key_fgets_and_seek.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_next_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_next_variation001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_next_variation002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_rewind_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_rewind_variation001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_seek_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_seek_error002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_seek_error_001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_setCsvControl_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_setCsvControl_error001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_setCsvControl_error002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_setCsvControl_variation001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/SplFileObject_setCsvControl_variation002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug46053.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug46569.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug51374.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug51532.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug52573.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug54292.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug60201.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug62004.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug64782.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug65545.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug67805.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug68479.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug72884.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug75917.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug77024.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug78976.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug79710.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug80933.phpt
+NEW PASS: ext/spl/tests/SplFileObject/bug81477.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fgetcsv_blank_file.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_002.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_003.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_004.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_005.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_checktype_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_getbasename_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_getcurrentline_basic.phpt
+NEW PASS: ext/spl/tests/SplFileObject/fileobject_setmaxlinelen_error001.phpt
+NEW PASS: ext/spl/tests/SplFileObject/gh8121.phpt
+NEW PASS: ext/spl/tests/SplFileObject/gh8273.phpt
+NEW PASS: ext/spl/tests/SplTempFileObject_constructor_basic.phpt
+NEW PASS: ext/spl/tests/SplTempFileObject_constructor_error.phpt
+NEW PASS: ext/spl/tests/SplTempFileObject_constructor_maxmemory_basic.phpt
+NEW PASS: ext/spl/tests/SplTempFileObject_constructor_memory_lt1_variation.phpt
+NEW PASS: ext/spl/tests/bug46051.phpt
+NEW PASS: ext/spl/tests/bug55701.phpt
+NEW PASS: ext/spl/tests/bug69181.phpt
+NEW PASS: ext/spl/tests/bug72888.phpt
+NEW PASS: ext/spl/tests/gh13685.phpt
+NEW PASS: ext/spl/tests/gh16477-2.phpt
+NEW PASS: ext/spl/tests/gh16477.phpt
+NEW PASS: ext/spl/tests/gh16604_2.phpt
+NEW PASS: ext/spl/tests/gh17463.phpt
+NEW PASS: ext/spl/tests/gh17516.phpt
+NEW PASS: ext/spl/tests/gh8318.phpt
+NEW PASS: ext/spl/tests/gh9883-extra.phpt
+NEW PASS: ext/spl/tests/gh9883.phpt
+
+array
+Before: 840 cases; 776 passed, 13 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 533 passed, 45 failed, 152 unsupported
+After: 730 cases; 533 passed, 45 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 125 passed, 10 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/serialize/bug67072.phpt
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 31 passed, 75 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 1; regressions: 0
+NEW PASS: ext/standard/tests/streams/temp_stream_seek.phpt
+
+url
+Before: 32 cases; 28 passed, 3 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,588 fixtures; 5,658 passed, 2,488 failed, 1,442 unsupported.
+Net gain: 103 upstream passes; zero regressions across all eleven suites.
+
+Validation:
+- cargo build --locked --bins
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match for temporary spill and locking, memory and
+  temporary EOF, byte reads, mixed buffered reads/writes, typed lock-output
+  references, uninitialized objects, and CSV controls with seeking.
+- No new test files or upstream fixture changes.
+
+Implementation:
+- SplFileObject and SplTempFileObject constructors, inherited file-info metadata,
+  include-path resolution, class factories, clone restrictions, and debug output.
+- Line/CSV iteration with read-ahead, skip-empty and drop-newline flags; keys,
+  seeking, subclass line readers, maximum line length, and CSV control diagnostics.
+- Byte I/O, scanning into references, flushing, truncation, stat and file locking.
+- Native shutdown releases file handles after user destructors.
+- Temporary streams honor memory thresholds, preserve position when spilling,
+  remove backing files on close, and propagate EOF through buffered line reads.
+- Native reference assignment is shared by scanning and flock output handling.
+
+Remaining limits:
+- Two SplFileObject directory cases still require user-defined stream wrappers:
+  SplFileObject_fflush_basic_001 and SplFileObject_ftruncate_error_001.
+- General stream wrappers, filters and the standalone flock function remain
+  unfinished. Other upstream failures and unsupported sections remain as recorded.
+- This is a conformance increment, not completion of PHP 8.5 compatibility.
+
+Evidence logs: /tmp/php-rs-fileobject-{suite}4.log;
+/tmp/php-rs-fileobject-compare-{suite}4.log;
+/tmp/php-rs-fileobject-tests4.log; /tmp/php-rs-fileobject-clippy4.log;
+/tmp/php-rs-fileobject-final-probes.log. Reference: PHP 8.5.0 at
+/tmp/php-rs-reference/php-8.5.0/sapi/cli/php.

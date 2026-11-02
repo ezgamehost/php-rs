@@ -213,6 +213,11 @@ impl WarningSink for Runtime {
             .rsplit_once(" on line ")
             .and_then(|(text, line)| line.parse::<usize>().ok().map(|line| (text, line)))
             .unwrap_or((text, 0));
+        if level == 2
+            && let Some(class) = self.native_warning_exception.clone()
+        {
+            return Err(self.array_iterator_exception(&class, text.to_owned(), line));
+        }
         let file = self.diagnostics.source.name.clone();
         if !self.dispatch_error_handler(level, text.as_bytes(), &file, line, None)? {
             self.diagnostics.output_position = self.output.len();

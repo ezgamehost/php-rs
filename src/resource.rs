@@ -84,7 +84,7 @@ impl Stream {
         match &self.backend {
             Backend::File(_) | Backend::StandardInput(_) | Backend::StandardOutput(_) => true,
             Backend::Memory(_) | Backend::Directory(_) => false,
-            Backend::Temporary(resource) => {
+            Backend::Temporary(resource, _) => {
                 matches!(&*resource.kind.borrow(), Kind::Stream(inner) if inner.supports_lock())
             }
         }
@@ -131,7 +131,17 @@ impl Stream {
             self.read_buffer.consume(buffered);
             return Ok(buffered);
         }
-        self.backend.read(bytes)
+        let count = self.backend.read(bytes)?;
+        match &self.backend {
+            Backend::Memory(_) if count == 0 && !bytes.is_empty() => self.eof = true,
+            Backend::Temporary(resource, _) => {
+                if let Kind::Stream(inner) = &*resource.kind.borrow() {
+                    self.eof = inner.at_eof();
+                }
+            }
+            _ => {}
+        }
+        Ok(count)
     }
 
     pub(crate) fn seek(&mut self, position: SeekFrom) -> io::Result<u64> {
@@ -161,7 +171,7 @@ impl Stream {
             Backend::StandardOutput(stderr) => {
                 output_file(*stderr).and_then(|file| file.set_len(size))
             }
-            Backend::Temporary(resource) => {
+            Backend::Temporary(resource, _) => {
                 let mut kind = resource.kind.borrow_mut();
                 let Kind::Stream(inner) = &mut *kind else {
                     return Some(Err(io::Error::from_raw_os_error(9)));
@@ -192,6 +202,7 @@ impl Stream {
         if self.read_buffer.len() != 0 && self.backend.seek(SeekFrom::Start(self.position)).is_ok()
         {
             self.read_buffer.clear();
+            self.eof = false;
         }
         if self.mode.starts_with(b"a")
             && let Backend::Memory(buffer) = &mut self.backend
@@ -217,7 +228,7 @@ pub(crate) enum Backend {
     StandardInput(BufReader<File>),
     StandardOutput(bool),
     Memory(Cursor<Vec<u8>>),
-    Temporary(Rc<PhpResource>),
+    Temporary(Rc<PhpResource>, usize),
 }
 
 impl Read for Backend {
@@ -245,13 +256,18 @@ impl Read for Backend {
             Self::StandardInput(file) => file.read(bytes),
             Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(9)),
             Self::Memory(buffer) => buffer.read(bytes),
-            Self::Temporary(resource) => resource.with_stream(|stream| {
-                let count = stream.read_bytes(bytes)?;
-                stream.position += count as u64;
-                if count == 0 {
-                    stream.eof = true;
+            Self::Temporary(resource, _) => resource.with_stream(|stream| {
+                let mut total = 0;
+                while total < bytes.len() {
+                    let count = stream.read_bytes(&mut bytes[total..])?;
+                    if count == 0 {
+                        stream.eof = true;
+                        break;
+                    }
+                    total += count;
                 }
-                Ok(count)
+                stream.position += total as u64;
+                Ok(total)
             }),
         }
     }
@@ -279,7 +295,24 @@ impl Write for Backend {
                 }
                 buffer.write(bytes)
             }
-            Self::Temporary(resource) => resource.with_stream(|stream| {
+            Self::Temporary(resource, limit) => resource.with_stream(|stream| {
+                if let Backend::Memory(buffer) = &stream.backend
+                    && buffer.position().saturating_add(bytes.len() as u64) >= *limit as u64
+                {
+                    let (mut file, path) = crate::runtime::temporary_files::create_temporary(
+                        &std::env::temp_dir(),
+                        b"php",
+                    )?;
+                    let copied = file
+                        .write_all(buffer.get_ref())
+                        .and_then(|()| file.seek(SeekFrom::Start(buffer.position())));
+                    if let Err(error) = copied {
+                        let _ = std::fs::remove_file(path);
+                        return Err(error);
+                    }
+                    stream.backend = Backend::File(file);
+                    stream.remove_on_close = Some(path);
+                }
                 let count = stream.write_bytes(bytes)?;
                 stream.position += count as u64;
                 Ok(count)
@@ -293,7 +326,7 @@ impl Write for Backend {
             Self::StandardInput(file) => file.get_mut().flush(),
             Self::StandardOutput(_) => Ok(()),
             Self::Memory(buffer) => buffer.flush(),
-            Self::Temporary(resource) => resource.with_stream(|stream| stream.backend.flush()),
+            Self::Temporary(resource, _) => resource.with_stream(|stream| stream.backend.flush()),
         }
     }
 }
@@ -308,7 +341,7 @@ impl Seek for Backend {
             Self::StandardInput(file) => file.seek(position),
             Self::StandardOutput(_) => Err(io::Error::from_raw_os_error(29)),
             Self::Memory(buffer) => buffer.seek(position),
-            Self::Temporary(resource) => resource.with_stream(|stream| {
+            Self::Temporary(resource, _) => resource.with_stream(|stream| {
                 let position = stream.seek(position)?;
                 stream.position = position;
                 stream.eof = false;

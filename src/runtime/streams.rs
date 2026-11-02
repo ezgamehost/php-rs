@@ -42,7 +42,7 @@ impl Runtime {
             ),
             Backend::StandardOutput(_) => ("PHP", "STDIO", stream.position != u64::MAX, 0),
             Backend::Memory(_) => ("PHP", "MEMORY", true, 0),
-            Backend::Temporary(_) => ("PHP", "TEMP", true, 0),
+            Backend::Temporary(_, _) => ("PHP", "TEMP", true, 0),
             Backend::Directory(directory) => {
                 let glob = directory.glob().is_some();
                 (
@@ -57,7 +57,7 @@ impl Runtime {
         let mut add = |key: &[u8], value| {
             metadata.insert(ArrayKey::String(key.to_vec()), value);
         };
-        if !matches!(stream.backend, Backend::Temporary(_)) {
+        if !matches!(stream.backend, Backend::Temporary(_, _)) {
             add(b"timed_out", Value::Bool(false));
             add(b"blocked", Value::Bool(true));
             add(b"eof", Value::Bool(stream.at_eof()));
@@ -230,6 +230,17 @@ impl Runtime {
         limit: Option<usize>,
         line: usize,
     ) -> Result<Option<Vec<u8>>, Error> {
+        self.stream_read_line_inner(value, name, limit, line, true)
+    }
+
+    fn stream_read_line_inner(
+        &mut self,
+        value: &Value,
+        name: &str,
+        limit: Option<usize>,
+        line: usize,
+        buffered: bool,
+    ) -> Result<Option<Vec<u8>>, Error> {
         self.validate_stream(value, name, line)?;
         let Value::Resource(resource) = value else {
             unreachable!()
@@ -247,7 +258,31 @@ impl Runtime {
             if stream.read_uses_stdio() {
                 self.file_stat_cache = [None, None];
             }
-            match stream.read_bytes(&mut byte) {
+            let read = (|| {
+                // get_line fills an 8 KiB buffer even for NO_BUFFER memory
+                // wrappers. A temporary wrapper's inner read drains to EOF;
+                // a direct memory read discovers EOF on the next fill.
+                if buffered
+                    && stream.read_buffer.len() == 0
+                    && matches!(
+                        stream.backend,
+                        Backend::Memory(_) | Backend::Temporary(_, _)
+                    )
+                {
+                    if stream.eof {
+                        return Ok(0);
+                    }
+                    stream.read_buffer.fill_space()?;
+                    let mut chunk = [0; 8192];
+                    let count = stream.read_bytes(&mut chunk)?;
+                    stream.read_buffer.append(&chunk[..count])?;
+                    if count == 0 {
+                        return Ok(0);
+                    }
+                }
+                stream.read_bytes(&mut byte)
+            })();
+            match read {
                 Ok(0) => {
                     stream.eof = true;
                     break;
@@ -484,7 +519,34 @@ impl Runtime {
                 }
             };
         }
-        let memory = wrapper_name == b"php://memory" || wrapper_name == b"php://temp";
+        let temporary = wrapper_name.starts_with(b"php://temp");
+        let memory = wrapper_name == b"php://memory" || temporary;
+        let memory_limit = if let Some(limit) = wrapper_name.strip_prefix(b"php://temp/maxmemory:")
+        {
+            let limit = limit.trim_ascii_start();
+            let negative = limit.starts_with(b"-");
+            let digits = if matches!(limit.first(), Some(b'+' | b'-')) {
+                &limit[1..]
+            } else {
+                limit
+            };
+            let limit = digits
+                .iter()
+                .take_while(|b| b.is_ascii_digit())
+                .fold(0usize, |n, b| {
+                    n.saturating_mul(10).saturating_add(usize::from(b - b'0'))
+                });
+            if negative && limit != 0 {
+                return Err(Error::new(
+                    ErrorKind::ValueError,
+                    format!("{name}(): Argument #2 ($mode) must be greater than or equal to 0"),
+                    line,
+                ));
+            }
+            limit
+        } else {
+            2 * 1024 * 1024
+        };
         let first = mode.first().copied().unwrap_or(0);
         // These wrappers only distinguish read-only mode from writable mode;
         // ordinary files validate the leading mode character.
@@ -566,7 +628,7 @@ impl Runtime {
             read_buffer: Default::default(),
             position: 0,
         }));
-        if wrapper_name == b"php://temp" {
+        if temporary {
             // PHP's temporary stream owns a separate registered backing stream.
             let mut kind = resource.kind.borrow_mut();
             let Kind::Stream(stream) = &mut *kind else {
@@ -587,7 +649,7 @@ impl Runtime {
                 read_buffer: Default::default(),
                 position: 0,
             }));
-            stream.backend = Backend::Temporary(inner);
+            stream.backend = Backend::Temporary(inner, memory_limit);
         }
         Ok(Value::Resource(resource))
     }
@@ -645,7 +707,7 @@ impl Runtime {
         }
         if matches!(operation, Operation::GetChar) {
             return self
-                .stream_read_line(first, name, Some(1), line)
+                .stream_read_line_inner(first, name, Some(1), line, false)
                 .map(|text| text.map_or(Value::Bool(false), |text| Value::String(text.into())));
         }
         match operation {

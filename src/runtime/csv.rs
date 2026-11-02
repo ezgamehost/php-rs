@@ -206,7 +206,7 @@ impl Runtime {
     }
 }
 
-fn parse_record(
+pub(super) fn parse_record(
     mut text: Vec<u8>,
     separator: u8,
     enclosure: u8,

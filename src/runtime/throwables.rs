@@ -282,6 +282,9 @@ impl Runtime {
         if matches!(method, NativeMethod::DirectoryIterator) {
             return self.native_directory_iterator_method(line);
         }
+        if matches!(method, NativeMethod::FileObject) {
+            return self.native_file_object_method(supplied, line);
+        }
         if matches!(method, NativeMethod::FileInfo) {
             return self.native_file_info_method(line);
         }

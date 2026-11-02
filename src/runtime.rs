@@ -60,6 +60,7 @@ mod extrema;
 mod file_contents;
 pub(crate) mod file_info;
 mod file_links;
+mod file_object;
 mod file_operations;
 mod file_stat;
 mod file_writing;
@@ -134,7 +135,7 @@ mod string_transform;
 mod stringable;
 mod strip_tags;
 mod substrings;
-mod temporary_files;
+pub(crate) mod temporary_files;
 mod termination;
 mod throwable_properties;
 mod throwables;
@@ -213,6 +214,7 @@ pub struct Runtime {
     error_handler: Option<Value>,
     error_handler_reporting: i64,
     native_warning_suppressed: bool,
+    native_warning_exception: Option<Vec<u8>>,
     error_handlers: Vec<(Option<Value>, i64)>,
     exception_handler: Option<Value>,
     exception_handlers: Vec<Option<Value>>,

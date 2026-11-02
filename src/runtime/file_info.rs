@@ -6,8 +6,10 @@ use crate::{PhpObject, ast::NativeMethod, object::Class};
 
 #[derive(Clone, Default)]
 pub(crate) struct FileInfoData {
+    pub(super) file: Option<Rc<RefCell<file_object::FileData>>>,
     pub(super) directory: Option<Rc<RefCell<directory_iterator::DirectoryData>>>,
     pub(super) filename: Option<Vec<u8>>,
+    pub(super) original_path: Option<Vec<u8>>,
     pub(super) path: Vec<u8>,
     pub(super) info_class: Option<Rc<Class>>,
     pub(super) file_class: Option<Rc<Class>>,
@@ -256,10 +258,22 @@ impl Runtime {
                         ),
                     );
                 }
+                if let Some(file) = &data.file {
+                    let file = file.borrow();
+                    for (name, value) in [
+                        (b"openMode".as_slice(), file.mode.clone()),
+                        (b"delimiter", vec![file.separator]),
+                        (b"enclosure", vec![file.enclosure]),
+                    ] {
+                        let mut key = b"\0SplFileObject\0".to_vec();
+                        key.extend(name);
+                        props.insert(ArrayKey::String(key), Value::String(value.into()));
+                    }
+                }
                 Ok(Value::Array(Rc::new(props)))
             }
             b"getrealpath" => {
-                let Some(filename) = data.filename else {
+                let Some(filename) = data.original_path.or(data.filename) else {
                     return Ok(Value::Bool(false));
                 };
                 let path = self
@@ -325,6 +339,10 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<Value, Error> {
+        if name == b"openfile" {
+            let context = self.lookup(b"context").unwrap();
+            self.stream_context(Some(&context), "SplFileInfo::openFile", 3, line)?;
+        }
         let data = object.file_info.borrow().as_ref().unwrap().clone();
         let file = matches!(name, b"setfileclass" | b"openfile");
         let base = if file {
@@ -436,6 +454,8 @@ impl Runtime {
         let args = vec![
             Value::String(filename.into()),
             self.lookup(b"mode").unwrap(),
+            self.lookup(b"useIncludePath").unwrap(),
+            self.lookup(b"context").unwrap(),
         ];
         let target =
             self.unchecked_method_target(constructor, class, Some(result.clone()), line)?;
