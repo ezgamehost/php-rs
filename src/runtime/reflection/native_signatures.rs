@@ -633,6 +633,27 @@ pub(super) fn lookup(name: &[u8]) -> Option<NativeSignature> {
             defaults: &[None, Some("true")],
             by_value: &[true, true],
         },
+        b"class_implements" => NativeSignature {
+            name: "class_implements",
+            extension: "SPL",
+            declaration: "<?php function __native($object_or_class, bool $autoload = true): array|false {}",
+            defaults: &[None, Some("true")],
+            by_value: &[true, true],
+        },
+        b"class_parents" => NativeSignature {
+            name: "class_parents",
+            extension: "SPL",
+            declaration: "<?php function __native($object_or_class, bool $autoload = true): array|false {}",
+            defaults: &[None, Some("true")],
+            by_value: &[true, true],
+        },
+        b"class_uses" => NativeSignature {
+            name: "class_uses",
+            extension: "SPL",
+            declaration: "<?php function __native($object_or_class, bool $autoload = true): array|false {}",
+            defaults: &[None, Some("true")],
+            by_value: &[true, true],
+        },
         b"clearstatcache" => NativeSignature {
             name: "clearstatcache",
             extension: "standard",

@@ -36,6 +36,7 @@ mod callbacks;
 mod casting;
 mod class_aliases;
 mod class_inspection;
+mod class_queries;
 mod class_scope;
 mod clocks;
 mod cloning;

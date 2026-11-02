@@ -780,7 +780,7 @@ impl Runtime {
     }
 }
 
-fn collect_interfaces(class: &Rc<Class>, result: &mut Vec<Rc<Class>>) {
+pub(super) fn collect_interfaces(class: &Rc<Class>, result: &mut Vec<Rc<Class>>) {
     if let Some(parent) = &class.parent {
         let mut inherited = Vec::new();
         collect_interfaces(parent, &mut inherited);

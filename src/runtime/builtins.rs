@@ -119,6 +119,7 @@ pub(super) enum Builtin {
     Stream(streams::Operation),
     GetClass,
     GetParentClass,
+    ClassRelations(class_queries::Relation),
     GetCalledClass,
     ClassExists,
     EnumExists,
@@ -379,6 +380,9 @@ impl Builtin {
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
             b"get_parent_class" => Self::GetParentClass,
+            b"class_parents" => Self::ClassRelations(class_queries::Relation::Parents),
+            b"class_implements" => Self::ClassRelations(class_queries::Relation::Interfaces),
+            b"class_uses" => Self::ClassRelations(class_queries::Relation::Traits),
             b"get_called_class" => Self::GetCalledClass,
             b"class_exists" => Self::ClassExists,
             b"enum_exists" => Self::EnumExists,
@@ -796,6 +800,9 @@ impl Builtin {
             Self::GetClass => &[("object", true, false)],
             Self::Clone => &[("object", false, false), ("withProperties", true, false)],
             Self::GetParentClass => &[("object_or_class", true, false)],
+            Self::ClassRelations(_) => {
+                &[("object_or_class", false, false), ("autoload", true, false)]
+            }
             Self::GetCalledClass => &[],
             Self::GetClassVars => &[("class", false, false)],
             Self::GetClassMethods => &[("object_or_class", false, false)],
@@ -1449,6 +1456,9 @@ impl Runtime {
             return self.debug_backtrace(builtin, &args, line);
         }
         let name = String::from_utf8_lossy(name);
+        if let Builtin::ClassRelations(relation) = builtin {
+            return self.class_relations(relation, &name, &args, line);
+        }
         if let Builtin::Html(operation) = builtin {
             return self.html_builtin(operation, &name, &args, line);
         }
@@ -1654,7 +1664,7 @@ impl Runtime {
             Builtin::RandomInt => self.random_int(&args, line),
             Builtin::ArrayRand => self.array_rand(&args, line),
             Builtin::CollectCycles => unreachable!(),
-            Builtin::Clock(_) | Builtin::Html(_) => {
+            Builtin::Clock(_) | Builtin::Html(_) | Builtin::ClassRelations(_) => {
                 unreachable!("handled before required arguments")
             }
             Builtin::StrShuffle => self.shuffle_string(first, line),

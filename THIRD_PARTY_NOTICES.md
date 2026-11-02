@@ -16,6 +16,11 @@ extracted with `tools/generate_native_signatures.py`. `class_modules.rs` contain
 extension ownership extracted with `tools/generate_class_modules.py`. The PHP license
 below applies to these adaptations.
 
+SPL class queries in `src/runtime/class_queries.rs` adapt PHP 8.5.0's
+`ext/spl/php_spl.c`, `ext/spl/spl_functions.c`, and `ext/spl/php_spl.stub.php`,
+copyright (c) The PHP Group, including work by Marcus Boerger. The PHP license
+below applies to these adaptations.
+
 Interface enumeration in `src/runtime/reflection.rs` follows PHP 8.5.0's
 `Zend/zend_inheritance.c`, copyright (c) Zend Technologies Ltd. The Zend license
 below applies to this adaptation.

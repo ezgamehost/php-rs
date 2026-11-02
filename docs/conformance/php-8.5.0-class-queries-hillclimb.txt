@@ -1,0 +1,108 @@
+PHP 8.5.0 class-query hillclimb
+Baseline: 1f9b5937f8a901fb3b15543ca213c4a902d0c1d8
+
+zend
+Before: 5256 cases; 2778 passed, 2078 failed, 400 unsupported
+After: 5256 cases; 2779 passed, 2077 failed, 400 unsupported
+New passes: 1; regressions: 0
+NEW PASS: Zend/tests/anon/bug77652.phpt
+
+reflection
+Before: 492 cases; 337 passed, 118 failed, 37 unsupported
+After: 492 cases; 337 passed, 118 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 656 passed, 69 failed, 53 unsupported
+After: 778 cases; 666 passed, 59 failed, 53 unsupported
+New passes: 10; regressions: 0
+NEW PASS: ext/spl/tests/bug77360.phpt
+NEW PASS: ext/spl/tests/class_implements_basic.phpt
+NEW PASS: ext/spl/tests/class_implements_basic2.phpt
+NEW PASS: ext/spl/tests/class_implements_variation.phpt
+NEW PASS: ext/spl/tests/class_implements_variation1.phpt
+NEW PASS: ext/spl/tests/class_uses_basic.phpt
+NEW PASS: ext/spl/tests/class_uses_basic2.phpt
+NEW PASS: ext/spl/tests/class_uses_variation.phpt
+NEW PASS: ext/spl/tests/class_uses_variation1.phpt
+NEW PASS: ext/spl/tests/spl_003.phpt
+
+array
+Before: 840 cases; 776 passed, 13 failed, 51 unsupported
+After: 840 cases; 776 passed, 13 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 533 passed, 45 failed, 152 unsupported
+After: 730 cases; 533 passed, 45 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 314 passed, 74 failed, 508 unsupported
+After: 896 cases; 314 passed, 74 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 28 passed, 3 failed, 1 unsupported
+After: 32 cases; 28 passed, 3 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,588 fixtures; 5,669 passed, 2,477 failed, 1,442 unsupported.
+Net gain: 11 upstream passes; zero regressions across all eleven suites.
+
+Validation:
+- cargo build --locked --bins
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Direct PHP 8.5.0 comparisons match for relation ordering, aliases, inherited
+  interfaces, direct traits, closures, leading namespace separators, validation
+  order, reflection signatures, autoload success, and pending loader exceptions.
+- Pending loader exceptions preserve default warnings and suppress matching
+  user warning callbacks, including their error_get_last behavior.
+- No new test files or upstream fixture changes.
+
+Implementation:
+- class_parents walks the full parent chain in nearest-parent-first order.
+- class_implements shares native interface enumeration with reflection.
+- class_uses lists direct traits with canonical names and duplicate elimination.
+- All three accept objects or uncoerced class-name strings, honor autoload
+  controls, and return canonical names as both array keys and values.
+- Native reflection metadata now covers 420 implemented function names.
+
+Remaining limits:
+- Other SPL and Zend failures remain as recorded. This slice does not implement
+  missing classes, regular expressions, user stream wrappers, or property hooks.
+- This is a conformance increment, not completion of PHP 8.5 compatibility.
+
+Evidence logs: /tmp/php-rs-classqueries-{suite}1.log;
+/tmp/php-rs-classqueries-compare-{suite}1.log;
+/tmp/php-rs-classqueries-tests1.log; /tmp/php-rs-classqueries-clippy1.log;
+/tmp/php-rs-classqueries-final-probes.log. Reference: PHP 8.5.0 at
+/tmp/php-rs-reference/php-8.5.0/sapi/cli/php.

@@ -509,7 +509,7 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion, non-public methods, and closure creation.
   Function, method, and parameter declaration strings include defaults, documentation,
   source locations, closure captures, and inheritance/prototype flags. Native function
-  metadata covers all 417 implemented function names, including types, symbolic defaults,
+  metadata covers all 420 implemented function names, including types, symbolic defaults,
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, full reflector
@@ -717,6 +717,11 @@ new request. The CLI returns the low eight bits of the requested status.
   recursion guards across nested calls, numeric/property keys, and null-return
   deprecations. Dump-time handler exceptions are deferred until traversal ends;
   invalid hook results or hook exceptions produce native fatal errors.
+- [`class_parents`, `class_implements`, and `class_uses`](docs/conformance/php-8.5.0-class-queries-hillclimb.txt)
+  return canonical class names as array keys and values. Parent queries walk the
+  inheritance chain, interface queries include inherited interfaces in native
+  order, and trait queries report only directly used traits. Objects, aliases,
+  closures, autoload controls, and native validation/warning behavior are supported.
 - `get_class_methods` lists methods in declaration/inheritance order with caller-scope
   visibility. Trait aliases precede their original method. `get_class_vars` returns
   visible instance and static declaration defaults, including null for uninitialized
