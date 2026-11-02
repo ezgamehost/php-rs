@@ -256,6 +256,61 @@ impl Runtime {
         Ok(Value::Bool(true))
     }
 
+    fn stat_path_bytes<'a>(
+        &mut self,
+        filename: &'a [u8],
+        name: &str,
+        line: usize,
+        pending: &mut Option<Error>,
+    ) -> Result<Option<&'a [u8]>, Error> {
+        let length = filename
+            .iter()
+            .take_while(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'-' | b'.'))
+            .count();
+        let protocol = length > 1
+            && filename.get(length) == Some(&b':')
+            && (filename[length..].starts_with(b"://") || filename.starts_with(b"data:"));
+        if !protocol {
+            return Ok(Some(filename));
+        }
+        let scheme = &filename[..length];
+        if scheme.eq_ignore_ascii_case(b"file") {
+            let bytes = if filename
+                .get(..17)
+                .is_some_and(|p| p.eq_ignore_ascii_case(b"file://localhost/"))
+            {
+                &filename[16..]
+            } else {
+                let bytes = &filename[7..];
+                if !bytes.is_empty() && !bytes.starts_with(b"/") {
+                    return Ok(None);
+                }
+                bytes
+            };
+            if bytes.is_empty() {
+                return Ok(Some(b"/"));
+            }
+            let slashes = bytes.iter().take_while(|&&b| b == b'/').count();
+            return Ok(Some(&bytes[slashes.saturating_sub(1)..]));
+        }
+        if matches!(
+            scheme.to_ascii_lowercase().as_slice(),
+            b"php" | b"glob" | b"data" | b"http" | b"ftp"
+        ) {
+            // These built-in wrappers do not provide local file stat callbacks.
+            return Ok(None);
+        }
+        if let Err(error) = self.warn(format!(
+            "{name}(): Unable to find the wrapper \"{}\" - did you forget to enable it when you configured PHP? on line {line}",
+            String::from_utf8_lossy(&scheme[..scheme.len().min(31)]),
+        )) {
+            if error.kind == ErrorKind::UnwindExit { return Err(error); }
+            self.set_error(error, pending);
+        }
+        // Unknown protocols fall back to a plain filename, even after an exception.
+        Ok(Some(filename))
+    }
+
     fn filesystem_stat(
         &mut self,
         filename: &[u8],
@@ -272,49 +327,61 @@ impl Runtime {
             }
             return Ok(Value::Bool(false));
         }
-        let bytes = if filename
-            .get(..7)
-            .is_some_and(|p| p.eq_ignore_ascii_case(b"file://"))
-        {
-            &filename[7..]
-        } else {
-            filename
-        };
-        let path = self
-            .working_directory()
-            .join(crate::source::path_from_bytes(bytes));
-        if matches!(query, b"isreadable" | b"iswritable" | b"isexecutable") {
-            return Ok(Value::Bool(file_info::native_access(
-                &path,
-                match query {
-                    b"isreadable" => 4,
-                    b"iswritable" => 2,
-                    _ => 1,
-                },
-            )));
-        }
-        let link = matches!(query, b"gettype" | b"islink");
+        let access = matches!(query, b"isreadable" | b"iswritable" | b"isexecutable");
+        let link = matches!(query, b"gettype" | b"islink" | b"lstat");
         let slot = usize::from(link);
         let cached = self.file_stat_cache[slot]
             .as_ref()
-            .filter(|(key, _)| key == filename)
+            .filter(|(key, _)| !access && key == filename)
             .map(|(_, m)| m.clone());
-        let metadata = cached.map(Ok).unwrap_or_else(|| {
-            if link {
-                fs::symlink_metadata(&path)
-            } else {
-                fs::metadata(&path)
+        let mut pending = None;
+        let metadata = if let Some(metadata) = cached {
+            Ok(metadata)
+        } else {
+            let bytes = self.stat_path_bytes(filename, name, line, &mut pending)?;
+            // A wrapper warning can run user code that changes the working directory.
+            let path = bytes.map(|bytes| {
+                self.working_directory()
+                    .join(crate::source::path_from_bytes(bytes))
+            });
+            if access {
+                let value = Value::Bool(path.is_some_and(|path| {
+                    file_info::native_access(
+                        &path,
+                        match query {
+                            b"isreadable" => 4,
+                            b"iswritable" => 2,
+                            _ => 1,
+                        },
+                    )
+                }));
+                return pending.map_or(Ok(value), Err);
             }
-        });
+            match path {
+                Some(path) if link => fs::symlink_metadata(path),
+                Some(path) => fs::metadata(path),
+                None => Err(io::Error::from(io::ErrorKind::Unsupported)),
+            }
+        };
         match metadata {
             Ok(metadata) => {
                 self.file_stat_cache[slot] = Some((filename.to_vec(), metadata.clone()));
                 if link && !metadata.file_type().is_symlink() {
                     self.file_stat_cache[0] = Some((filename.to_vec(), metadata.clone()));
                 }
-                file_info::metadata_value(&metadata, query, line)
+                if let Some(error) = pending {
+                    return Err(error);
+                }
+                if matches!(query, b"stat" | b"lstat") {
+                    file_stat::from_metadata(&metadata, line)
+                } else {
+                    file_info::metadata_value(&metadata, query, line)
+                }
             }
             Err(_) => {
+                if let Some(error) = pending {
+                    return Err(error);
+                }
                 if !quiet {
                     self.warn(format!(
                         "{name}(): {}stat failed for {} on line {line}",

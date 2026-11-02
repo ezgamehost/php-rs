@@ -16,6 +16,7 @@ pub(super) enum Operation {
     Rewind,
     Flush,
     Metadata,
+    Stat,
 }
 
 impl Runtime {
@@ -580,6 +581,9 @@ impl Runtime {
         if matches!(operation, Operation::Metadata) {
             return self.stream_metadata(first, name, line);
         }
+        if matches!(operation, Operation::Stat) {
+            return self.stream_stat(first, name, line);
+        }
         match operation {
             Operation::Read => {
                 length = self.native_int(args[1].as_ref().unwrap(), name, 2, line)?;
@@ -697,7 +701,7 @@ impl Runtime {
             return Ok(Value::String(bytes.into()));
         }
         Ok(match operation {
-            Operation::Metadata => unreachable!(),
+            Operation::Metadata | Operation::Stat => unreachable!(),
             Operation::Close => {
                 if resource.id == 3
                     && self

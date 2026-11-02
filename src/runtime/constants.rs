@@ -272,6 +272,20 @@ fn predefined(name: &[u8]) -> Option<Value> {
         return Some(Value::Null);
     }
     Some(match name {
+        b"PHP_OS" => Value::String(platform_os().as_bytes().to_vec().into()),
+        b"PHP_OS_FAMILY" => Value::String(
+            match platform_os() {
+                "WINNT" => "Windows",
+                "Darwin" => "Darwin",
+                "Linux" => "Linux",
+                "FreeBSD" | "OpenBSD" | "NetBSD" | "DragonFly" => "BSD",
+                "SunOS" => "Solaris",
+                _ => "Unknown",
+            }
+            .as_bytes()
+            .to_vec()
+            .into(),
+        ),
         b"PHP_VERSION" => Value::String(b"8.5.0".to_vec().into()),
         b"PHP_VERSION_ID" => Value::Int(80500),
         b"PHP_MAJOR_VERSION" | b"PHP_INT_SIZE" => Value::Int(8),
@@ -373,4 +387,20 @@ fn math_constant(name: &[u8]) -> Option<f64> {
         b"M_SQRT3" => 3.0_f64.sqrt(),
         _ => return None,
     })
+}
+
+fn platform_os() -> &'static str {
+    match std::env::consts::OS {
+        "macos" | "ios" | "tvos" | "watchos" | "visionos" => "Darwin",
+        "linux" | "android" => "Linux",
+        "windows" => "WINNT",
+        "freebsd" => "FreeBSD",
+        "openbsd" => "OpenBSD",
+        "netbsd" => "NetBSD",
+        "dragonfly" => "DragonFly",
+        "solaris" | "illumos" => "SunOS",
+        "aix" => "AIX",
+        "haiku" => "Haiku",
+        name => name,
+    }
 }

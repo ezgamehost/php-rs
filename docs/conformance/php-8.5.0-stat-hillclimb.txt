@@ -1,0 +1,79 @@
+PHP 8.5.0 stat/lstat/fstat metadata hillclimb
+Baseline: 1e4d9041ae02a237cfc0ba2583cedae55c729224
+
+zend
+Before: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+After: 5256 cases; 2587 passed, 2269 failed, 400 unsupported
+New passes: 0; regressions: 0
+
+reflection
+Before: 492 cases; 291 passed, 164 failed, 37 unsupported
+After: 492 cases; 291 passed, 164 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 550 passed, 175 failed, 53 unsupported
+After: 778 cases; 550 passed, 175 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 774 passed, 15 failed, 51 unsupported
+After: 840 cases; 774 passed, 15 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 419 passed, 159 failed, 152 unsupported
+After: 730 cases; 419 passed, 159 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 124 passed, 11 failed, 28 unsupported
+After: 163 cases; 124 passed, 11 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 230 passed, 158 failed, 508 unsupported
+After: 896 cases; 240 passed, 148 failed, 508 unsupported
+New passes: 10; regressions: 0
+NEW PASS: ext/standard/tests/file/directory_wrapper_fstat_basic.phpt
+NEW PASS: ext/standard/tests/file/fflush_basic.phpt
+NEW PASS: ext/standard/tests/file/fstat.phpt
+NEW PASS: ext/standard/tests/file/fstat_basic.phpt
+NEW PASS: ext/standard/tests/file/fstat_variation8.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_error.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_variation18.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_variation19.phpt
+NEW PASS: ext/standard/tests/file/lstat_stat_variation7.phpt
+NEW PASS: ext/standard/tests/file/statcache-corruption.phpt
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 26 passed, 80 failed, 51 unsupported
+After: 157 cases; 26 passed, 80 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+Total: 9,556 fixtures; 5,089 passed, 3,026 failed, 1,441 unsupported.
+10 new passes; zero regressions.
+
+Validation: 797 existing Rust tests; 57 reference-checked project PHPT;
+cargo fmt --check; cargo clippy --locked --all-targets -- -D warnings;
+git diff --check. No custom tests or differential matrices added.
+Direct PHP comparisons match memory-stream metadata and read-only modes,
+temporary-file sizes and positions, null-byte paths, file URLs, unsupported
+wrapper diagnostics, PHP_OS/PHP_OS_FAMILY, and an unknown-wrapper warning
+handler that changes directories and throws while native stat fills its cache.
+stat/lstat share existing path caches; fstat reads fresh handle metadata.
+Numeric fields precede named fields and are independent scalar values.
+Directory handles return false; memory and temporary streams expose their
+underlying metadata without changing stream position or EOF.
+Custom/network stat wrappers, open_basedir and non-Unix metadata remain unfinished.
+Full logs: /tmp/php-rs-stat-*2.log.

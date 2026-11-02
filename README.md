@@ -271,6 +271,12 @@ new request. The CLI returns the low eight bits of the requested status.
   exposes supported wrapper types, modes, URI, EOF, seekability, and buffered input
   counts; memory and temporary streams honor append mode. Configurable
   sys_temp_dir/open_basedir and complete stream metadata/buffering remain unfinished.
+- `stat`, `lstat`, and `fstat` expose PHP's 26-entry numeric/named metadata arrays.
+  Path calls share the stat/lstat caches; handle calls read fresh metadata without
+  moving the stream position. Memory streams use native synthetic fields, and
+  directory handles return false. File URLs and unknown-wrapper diagnostics are
+  supported; custom stat wrappers and non-Unix metadata remain unfinished.
+  `PHP_OS` and `PHP_OS_FAMILY` identify the runtime platform.
 - `chmod` changes Unix file/directory permissions, follows symlinks, and clears
   cached metadata on success. It preserves native path/wrapper diagnostics and
   permission changes that occur while a wrapper warning exception is pending.

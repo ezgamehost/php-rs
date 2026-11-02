@@ -306,6 +306,13 @@ request-local working directories, and metadata/access queries from PHP 8.5.0's
 copyright (c) The PHP Group. These operations reuse the native access adapter and
 metadata conversion in `src/runtime/file_info.rs`.
 
+`src/runtime/file_stat.rs` adapts stat-array construction and open-stream metadata
+from PHP 8.5.0's `ext/standard/file.c`, `filestat.c`, and
+`main/streams/{memory,plain_wrapper}.c`, copyright (c) The PHP Group. Metadata
+wrapper selection in `src/runtime/filesystem.rs` follows `main/streams/streams.c`;
+platform constants in `src/runtime/constants.rs` follow `main/php.h`,
+`main/main.stub.php`, and `main/main_arginfo.h`.
+
 `src/runtime/directories.rs` and the directory branches in `src/resource.rs` and
 `src/runtime/streams.rs` adapt directory operations from PHP 8.5.0's
 `ext/standard/dir.c`, `main/streams/plain_wrapper.c`, and `main/streams/streams.c`,

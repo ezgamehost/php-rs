@@ -231,6 +231,7 @@ impl Builtin {
             b"tempnam" => Self::TemporaryName,
             b"sys_get_temp_dir" => Self::TemporaryDirectory,
             b"stream_get_meta_data" => Self::Stream(streams::Operation::Metadata),
+            b"fstat" => Self::Stream(streams::Operation::Stat),
             b"stream_get_contents" => Self::StreamGetContents,
             b"file" => Self::FileLines,
             b"basename" => Self::Basename,
@@ -369,6 +370,8 @@ impl Builtin {
             b"filemtime" => Self::Filesystem(filesystem::Operation::Stat(b"getmtime")),
             b"filectime" => Self::Filesystem(filesystem::Operation::Stat(b"getctime")),
             b"filetype" => Self::Filesystem(filesystem::Operation::Stat(b"gettype")),
+            b"stat" => Self::Filesystem(filesystem::Operation::Stat(b"stat")),
+            b"lstat" => Self::Filesystem(filesystem::Operation::Stat(b"lstat")),
 
             b"clearstatcache" => Self::ClearStatCache,
             b"stream_context_create" => Self::StreamContext(stream_contexts::Operation::Create),
