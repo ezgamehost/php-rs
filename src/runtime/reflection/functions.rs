@@ -148,8 +148,14 @@ impl Runtime {
                     (string(&name[..split]), name[split + 2..].to_vec())
                 }
             };
-            let class = self.reflected_class(subject, false, line)?;
-            self.reflected_method(&class, &name, line)?
+            if let Value::Closure(closure) = &subject
+                && name.eq_ignore_ascii_case(b"__invoke")
+            {
+                self.reflected_closure_invoke(Some(closure.clone()), line)?
+            } else {
+                let class = self.reflected_class(subject, false, line)?;
+                self.reflected_method(&class, &name, line)?
+            }
         } else {
             let value = self.lookup(b"function").unwrap();
             if let Value::String(name) = &value {
@@ -211,6 +217,27 @@ impl Runtime {
         Ok(object)
     }
 
+    pub(super) fn reflected_closure_invoke(
+        &mut self,
+        closure: Option<Rc<crate::Closure>>,
+        line: usize,
+    ) -> Result<FunctionReflection, Error> {
+        let class = self.find_class(b"Closure").unwrap();
+        let mut declaration = (*objects::method(&class, b"__construct").unwrap()).clone();
+        declaration.name = b"Closure::__invoke".to_vec();
+        declaration.visibility = Visibility::Public;
+        if let Some(closure) = closure {
+            let function = FunctionReflection {
+                target: self.resolve_callable(Value::Closure(closure), line)?,
+                is_method: false,
+            };
+            declaration.parameters = function.parameters();
+            declaration.return_type = function.return_type();
+            declaration.returns_reference = function.returns_reference();
+        }
+        Ok(self.declared_method_reflection(&class, Rc::new(declaration)))
+    }
+
     pub(super) fn reflected_method(
         &mut self,
         class: &Rc<Class>,
@@ -247,6 +274,7 @@ impl Runtime {
                 function: Some(function),
                 builtin: None,
                 closure: None,
+                closure_receiver: None,
                 this: None,
                 context: Some(ClassContext {
                     scope,
@@ -450,6 +478,34 @@ impl Runtime {
             b"getclosure" | b"invoke" | b"invokeargs" => {
                 let mut target = target.clone();
                 if reflection.is_method {
+                    let supplied = self.lookup(b"object").unwrap();
+                    if let Value::Closure(closure) = &supplied
+                        && target
+                            .context
+                            .as_ref()
+                            .is_some_and(|context| context.scope.name == b"Closure")
+                        && !target.function.as_ref().unwrap().is_static
+                    {
+                        let method = reflection.name();
+                        if method.eq_ignore_ascii_case(b"__invoke") {
+                            target =
+                                self.resolve_callable(Value::Closure(closure.clone()), line)?;
+                        } else {
+                            target.closure_receiver = Some(closure.clone());
+                        }
+                        if name == b"getclosure" {
+                            return Ok(self.closure_from_target(target));
+                        }
+                        let Value::Array(args) = self.lookup(b"args").unwrap() else {
+                            unreachable!()
+                        };
+                        let args = callbacks::callback_arguments(&args, line)?;
+                        target.reference_values = true;
+                        let strict = std::mem::replace(&mut self.strict_types, false);
+                        let result = self.invoke_at(target, &args, line, true, true);
+                        self.strict_types = strict;
+                        return result.map(|value| value.dereferenced());
+                    }
                     let function = target.function.as_ref().unwrap();
                     if name != b"getclosure" && function.is_abstract {
                         return Err(self.reflection_error(
@@ -498,6 +554,7 @@ impl Runtime {
                     }
                     let handle = self.allocate_object_handle();
                     return Ok(Value::Closure(Rc::new(crate::Closure {
+                        native_receiver: None,
                         magic_name: target.magic_name,
                         name: target.name,
                         this: target.this,

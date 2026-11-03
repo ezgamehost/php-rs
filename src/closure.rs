@@ -4,6 +4,8 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 /// An opaque PHP closure or first-class callable. Clones of its `Rc` share identity.
 #[derive(Debug)]
 pub struct Closure {
+    // Receiver of a first-class callable for a native Closure method.
+    pub(crate) native_receiver: Option<Rc<Closure>>,
     pub(crate) magic_name: Option<Vec<u8>>,
     pub(crate) name: Vec<u8>,
     pub(crate) this: Option<Rc<crate::PhpObject>>,
@@ -37,7 +39,8 @@ impl Closure {
         if self.environment.is_some() || other.environment.is_some() {
             return std::ptr::eq(self, other);
         }
-        if self.this != other.this
+        if self.native_receiver != other.native_receiver
+            || self.this != other.this
             || self.context != other.context
             || self.magic_name != other.magic_name
         {

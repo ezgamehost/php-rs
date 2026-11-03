@@ -1,0 +1,168 @@
+PHP 8.5.0 Closure binding and reflection hillclimb
+Baseline: ad495fa8a42063f0a4cf1902248041a055b0033c
+
+zend
+Before: 5256 cases; 3239 passed, 1617 failed, 400 unsupported
+After: 5256 cases; 3291 passed, 1565 failed, 400 unsupported
+New passes: 52; regressions: 0
+NEW PASS: Zend/tests/anon/013.phpt
+NEW PASS: Zend/tests/asymmetric_visibility/scope_rebinding.phpt
+NEW PASS: Zend/tests/bug70681.phpt
+NEW PASS: Zend/tests/bug75079_2.phpt
+NEW PASS: Zend/tests/bug75474.phpt
+NEW PASS: Zend/tests/bug81626.phpt
+NEW PASS: Zend/tests/class_name/bug66811.phpt
+NEW PASS: Zend/tests/closures/bug50146.phpt
+NEW PASS: Zend/tests/closures/bug70630.phpt
+NEW PASS: Zend/tests/closures/bug70685.phpt
+NEW PASS: Zend/tests/closures/bug70987.phpt
+NEW PASS: Zend/tests/closures/bug78658.phpt
+NEW PASS: Zend/tests/closures/bug78689.phpt
+NEW PASS: Zend/tests/closures/bug80929.phpt
+NEW PASS: Zend/tests/closures/closure_036.phpt
+NEW PASS: Zend/tests/closures/closure_038.phpt
+NEW PASS: Zend/tests/closures/closure_039.phpt
+NEW PASS: Zend/tests/closures/closure_040.phpt
+NEW PASS: Zend/tests/closures/closure_041.phpt
+NEW PASS: Zend/tests/closures/closure_042.phpt
+NEW PASS: Zend/tests/closures/closure_043.phpt
+NEW PASS: Zend/tests/closures/closure_044.phpt
+NEW PASS: Zend/tests/closures/closure_045.phpt
+NEW PASS: Zend/tests/closures/closure_046.phpt
+NEW PASS: Zend/tests/closures/closure_057.phpt
+NEW PASS: Zend/tests/closures/closure_060.phpt
+NEW PASS: Zend/tests/closures/closure_061.phpt
+NEW PASS: Zend/tests/closures/closure_062.phpt
+NEW PASS: Zend/tests/closures/closure_063.phpt
+NEW PASS: Zend/tests/closures/closure_bindTo_preserves_used_variables.phpt
+NEW PASS: Zend/tests/closures/closure_call.phpt
+NEW PASS: Zend/tests/closures/closure_call_bind.phpt
+NEW PASS: Zend/tests/closures/closure_compare.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_basic.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_error.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_gc.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_lsb.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_non_static_statically.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_rebinding.phpt
+NEW PASS: Zend/tests/closures/closure_from_callable_reflection.phpt
+NEW PASS: Zend/tests/closures/closure_get_current.phpt
+NEW PASS: Zend/tests/closures/closure_instantiate.phpt
+NEW PASS: Zend/tests/closures/closure_static_property_error.phpt
+NEW PASS: Zend/tests/constants/dynamic_class_const_fetch_cache_slot.phpt
+NEW PASS: Zend/tests/dynamic_call/dynamic_call_to_ref_returning_function.phpt
+NEW PASS: Zend/tests/gh8962.phpt
+NEW PASS: Zend/tests/named_params/call_user_func.phpt
+NEW PASS: Zend/tests/no_class_const_propagation_in_closures.phpt
+NEW PASS: Zend/tests/readonly_props/cache_slot.phpt
+NEW PASS: Zend/tests/readonly_props/initialization_scope.phpt
+NEW PASS: Zend/tests/type_declarations/typed_properties_048.phpt
+NEW PASS: Zend/tests/weakrefs/notify.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 381 passed, 74 failed, 37 unsupported
+New passes: 10; regressions: 0
+NEW PASS: ext/reflection/tests/ReflectionClass_getMethods_004.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_getClosureCalledClass.phpt
+NEW PASS: ext/reflection/tests/ReflectionFunction_isDeprecated_magic_call.phpt
+NEW PASS: ext/reflection/tests/bug52057.phpt
+NEW PASS: ext/reflection/tests/bug62384.phpt
+NEW PASS: ext/reflection/tests/bug75186.phpt
+NEW PASS: ext/reflection/tests/closures_001.phpt
+NEW PASS: ext/reflection/tests/closures_003.phpt
+NEW PASS: ext/reflection/tests/closures_004.phpt
+NEW PASS: ext/reflection/tests/types/ReflectionType_002.phpt
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,318 passed, 1,902 failed, 1,456 unsupported.
+Net gain: 62 upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Exact native PHP 8.5.0 comparisons cover binding, independent static storage,
+  Closure-method first-class callables and their identity, clone behavior,
+  class metadata, synthetic __invoke signatures, reflection-held lifetimes,
+  serialization restrictions, weak call coercion under strict_types,
+  callable-resolution errors, and reflective invocation with references.
+- No new tests, upstream fixture changes, or dependencies.
+
+Implementation:
+- Registered the internal final Closure class and its six declared methods.
+  Direct instantiation and reflection without construction are prohibited.
+- Implemented bind, bindTo, and call with native scope/receiver validation,
+  PHP 9 transition warnings, captured references, separate bound static storage,
+  and weak internal-call coercion. Calls preserve the original closure state.
+- Implemented fromCallable using caller scope/object resolution, native error
+  wording, existing-closure identity, and method/first-class callable conversion.
+  getCurrent returns the active anonymous closure and rejects ordinary functions
+  and first-class callables wrapping named functions.
+- Closure method receivers are represented separately from the invoked closure,
+  preserving identity and receiver lifetime through first-class callables.
+- ReflectionClass/ReflectionObject accept closure values. Synthetic __invoke
+  methods expose actual parameter and return metadata and support reflective
+  invocation, argument arrays, parameter reflection, and getClosure identity.
+
+Remaining limits:
+- Binding a Closure value as $this remains unsupported; ordinary object receivers
+  work. Complete closure debug output, some synthetic-method declaration strings,
+  and closure-specific type/default reflection still need work.
+- Generator closures and closure-cycle collection remain incomplete. This focused
+  gate does not establish full PHP conformance.

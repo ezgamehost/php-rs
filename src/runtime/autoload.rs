@@ -23,6 +23,7 @@ impl Autoloader {
             && self.target.magic_name == target.magic_name
             && same(&self.target.this, &target.this)
             && same(&self.target.closure, &target.closure)
+            && same(&self.target.closure_receiver, &target.closure_receiver)
             && self.target.context.as_ref().map(|c| &c.called.name)
                 == target.context.as_ref().map(|c| &c.called.name)
     }

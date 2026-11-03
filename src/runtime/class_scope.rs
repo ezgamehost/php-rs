@@ -248,6 +248,7 @@ impl Runtime {
             function: Some(function),
             builtin: None,
             closure: None,
+            closure_receiver: None,
             this,
             context: Some(ClassContext { scope, called }),
         })

@@ -460,6 +460,13 @@ new request. The CLI returns the low eight bits of the requested status.
   Instance methods bind `$this`, support named/typed arguments, and
   expose bound first-class callables. Non-static closures retain `$this`.
   Method-array callbacks and invokable objects work with pipes and array callbacks.
+- [Closure binding and reflection](docs/conformance/php-8.5.0-closures-hillclimb.txt)
+  support `bind`, `bindTo`, `call`, `fromCallable`, and `getCurrent`, including
+  scope/receiver checks, captured references, independent bound static variables,
+  native call coercion, and first-class callables for Closure methods. Reflection
+  exposes the internal final class and synthetic `__invoke` parameter signatures.
+  Binding a Closure value as `$this`, complete closure debug output, and some
+  reflective declaration formatting remain unfinished.
 - Request-local object handles are shared by objects and closures and recycled
   after their last owning reference is released. `spl_object_id` and `spl_object_hash`
   expose those handles.
@@ -538,7 +545,7 @@ new request. The CLI returns the low eight bits of the requested status.
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, full reflector
-  interfaces, complete internal class layouts, closure-object reflection, and advanced
+  interfaces, complete internal class layouts, closure-object declaration strings, and advanced
   default-expression folding remain unfinished.
 - [`Reflection::getModifierNames`](docs/conformance/php-8.5.0-modifier-names-hillclimb.txt)
   reports abstract, final, virtual, visibility, asymmetric setter, static, and

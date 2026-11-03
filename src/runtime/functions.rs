@@ -80,11 +80,16 @@ impl Runtime {
                 line,
             ));
         }
+        Ok(self.closure_from_target(target))
+    }
+
+    pub(super) fn closure_from_target(&mut self, target: CallTarget) -> Value {
         if let Some(closure) = target.closure {
-            return Ok(Value::Closure(closure));
+            return Value::Closure(closure);
         }
         let handle = self.allocate_object_handle();
-        Ok(Value::Closure(Rc::new(crate::Closure {
+        Value::Closure(Rc::new(crate::Closure {
+            native_receiver: target.closure_receiver,
             magic_name: target.magic_name,
             name: if matches!(target.builtin, Some(Builtin::Exit)) {
                 b"exit".to_vec()
@@ -97,7 +102,7 @@ impl Runtime {
             object_id: handle.id,
             _handle: handle,
             environment: None,
-        })))
+        }))
     }
 
     pub(super) fn pipe_call(
@@ -277,6 +282,7 @@ impl Runtime {
                 } else {
                     None
                 },
+                closure_receiver: closure.native_receiver.clone(),
                 closure: Some(closure),
             }),
             value => Err(Error::new(
@@ -326,6 +332,7 @@ impl Runtime {
             function,
             builtin,
             closure: None,
+            closure_receiver: None,
         })
     }
 
@@ -669,6 +676,7 @@ impl Runtime {
             function,
             builtin,
             closure,
+            closure_receiver,
             this,
             context,
         } = target;
@@ -944,7 +952,10 @@ impl Runtime {
                         error
                     })?;
                     value
-                } else if param.variadic {
+                } else if param.variadic
+                    || matches!(function.native, Some(crate::ast::NativeMethod::Closure))
+                        && param.name == b"callback"
+                {
                     value
                 } else {
                     self.check_argument(value, param, &function, index + 1, caller_strict, line)?
@@ -962,6 +973,14 @@ impl Runtime {
                 if let Some(object) = this {
                     self.scope
                         .insert(b"this".to_vec(), cell(Value::Object(object)));
+                }
+                if matches!(native, crate::ast::NativeMethod::Closure) {
+                    return self.native_closure_method(
+                        closure_receiver,
+                        caller_closure.clone(),
+                        caller_context.clone(),
+                        line,
+                    );
                 }
                 if matches!(native, crate::ast::NativeMethod::DualIterator) {
                     return self.native_dual_iterator_method(line, native_callback_target.take());
@@ -1219,6 +1238,7 @@ pub(super) struct CallTarget {
     pub(super) function: Option<Rc<FunctionDecl>>,
     pub(super) builtin: Option<Builtin>,
     pub(super) closure: Option<Rc<crate::Closure>>,
+    pub(super) closure_receiver: Option<Rc<crate::Closure>>,
     pub(super) this: Option<Rc<crate::PhpObject>>,
     pub(super) context: Option<crate::object::ClassContext>,
 }

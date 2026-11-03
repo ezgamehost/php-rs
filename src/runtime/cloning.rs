@@ -122,6 +122,7 @@ impl Runtime {
                 ),
             });
             return Ok(Value::Closure(Rc::new(crate::Closure {
+                native_receiver: closure.native_receiver.clone(),
                 magic_name: closure.magic_name.clone(),
                 name: closure.name.clone(),
                 this: closure.this.clone(),

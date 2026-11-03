@@ -1,5 +1,11 @@
 # Third-party notices
 
+Closure class metadata, binding, calls, callable conversion, and closure reflection
+in `src/runtime/closures.rs` and its integration sites follow PHP 8.5.0
+`Zend/zend_closures.c` and `zend_closures.stub.php`, copyright (c) Zend Technologies
+Ltd., and `ext/reflection/php_reflection.c`, copyright (c) The PHP Group. The Zend
+and PHP licenses below apply to these altered adaptations, respectively.
+
 Declared class/interface/trait queries and ordered registration in
 `src/runtime/class_queries.rs` and its integration sites follow PHP 8.5.0's
 `Zend/zend_builtin_functions.c`, copyright (c) Zend Technologies Ltd. Native

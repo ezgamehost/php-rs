@@ -410,6 +410,9 @@ impl Runtime {
         if let Some(class) = self.builtin_array_iterator_class(&name) {
             return Some(class);
         }
+        if let Some(class) = self.builtin_closure_class(&name) {
+            return Some(class);
+        }
         if let Some(class) = self.builtin_weak_reference_class(&name) {
             return Some(class);
         }
@@ -606,6 +609,13 @@ impl Runtime {
         call_constructor: bool,
         line: usize,
     ) -> Result<Value, Error> {
+        if class.name == b"Closure" {
+            return Err(Error::new(
+                ErrorKind::Error,
+                "Instantiation of class Closure is not allowed",
+                line,
+            ));
+        }
         if class.declaration.is_enum {
             return Err(Error::new(
                 ErrorKind::Error,
@@ -710,8 +720,38 @@ impl Runtime {
         name: &[u8],
         line: usize,
     ) -> Result<CallTarget, Error> {
-        if matches!(value, Value::Closure(_)) && name.eq_ignore_ascii_case(b"__invoke") {
-            return self.resolve_callable(value, line);
+        if let Value::Closure(closure) = &value {
+            if name.eq_ignore_ascii_case(b"__invoke") {
+                return self.resolve_callable(value, line);
+            }
+            let class = self.find_class(b"Closure").unwrap();
+            let function = method(&class, name).ok_or_else(|| {
+                Error::new(
+                    ErrorKind::Error,
+                    format!(
+                        "Call to undefined method Closure::{}()",
+                        String::from_utf8_lossy(name)
+                    ),
+                    line,
+                )
+            })?;
+            self.check_method_access(&function, line)?;
+            let receiver = (!function.is_static).then(|| closure.clone());
+            return Ok(CallTarget {
+                result_used: true,
+                reference_values: false,
+                magic_name: None,
+                name: function.name.clone(),
+                function: Some(function),
+                builtin: None,
+                this: None,
+                context: Some(crate::object::ClassContext {
+                    scope: class.clone(),
+                    called: class,
+                }),
+                closure: None,
+                closure_receiver: receiver,
+            });
         }
         let Value::Object(object) = value else {
             return Err(Error::new(

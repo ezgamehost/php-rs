@@ -40,6 +40,7 @@ pub(crate) enum ReflectionData {
         name: Vec<u8>,
     },
     Object(Rc<PhpObject>),
+    ClosureObject(Rc<crate::Closure>),
     Constant(Rc<super::constants::GlobalConstant>),
     Extension(String),
     Property(PropertyReflection),
@@ -199,6 +200,9 @@ impl Runtime {
                 return match &*object.reflection.borrow() {
                     Some(ReflectionData::Class(class)) => Ok(class.clone()),
                     Some(ReflectionData::Object(object)) => Ok(object.class.clone()),
+                    Some(ReflectionData::ClosureObject(_)) => {
+                        Ok(self.find_class(b"Closure").unwrap())
+                    }
                     _ => Err(Error::new(
                         ErrorKind::Error,
                         "Internal error: Failed to retrieve the reflection object",
@@ -207,6 +211,9 @@ impl Runtime {
                 };
             }
             return Ok(object.class.clone());
+        }
+        if matches!(value, Value::Closure(_)) {
+            return Ok(self.find_class(b"Closure").unwrap());
         }
         let name = value.to_bytes();
         self.load_class(&name, line)?.ok_or_else(|| {
@@ -356,14 +363,17 @@ impl Runtime {
                 .properties
                 .borrow_mut()
                 .insert(ArrayKey::String(b"name".to_vec()), string(&class.name));
-            *object.reflection.borrow_mut() = Some(if object.class.is_a(b"ReflectionObject") {
-                let Value::Object(target) = value else {
-                    unreachable!()
-                };
-                ReflectionData::Object(target)
-            } else {
-                ReflectionData::Class(class)
-            });
+            *object.reflection.borrow_mut() = Some(
+                if matches!(value, Value::Closure(_)) || object.class.is_a(b"ReflectionObject") {
+                    match value {
+                        Value::Object(target) => ReflectionData::Object(target),
+                        Value::Closure(target) => ReflectionData::ClosureObject(target),
+                        _ => unreachable!(),
+                    }
+                } else {
+                    ReflectionData::Class(class)
+                },
+            );
             return Ok(Value::Null);
         }
         if object.class.is_a(b"ReflectionReference") && object.reflection.borrow().is_none() {
@@ -385,10 +395,14 @@ impl Runtime {
                 self.reflect_extension_method(&extension, &name)
             }
             ReflectionData::Class(class) => {
-                self.reflect_class_method(&class, None, &name, supplied, line)
+                self.reflect_class_method(&class, None, None, &name, supplied, line)
             }
             ReflectionData::Object(object) => {
-                self.reflect_class_method(&object.class, Some(&object), &name, supplied, line)
+                self.reflect_class_method(&object.class, Some(&object), None, &name, supplied, line)
+            }
+            ReflectionData::ClosureObject(closure) => {
+                let class = self.find_class(b"Closure").unwrap();
+                self.reflect_class_method(&class, None, Some(&closure), &name, supplied, line)
             }
             ReflectionData::ClassConstant {
                 owner,
@@ -416,6 +430,7 @@ impl Runtime {
         &mut self,
         class: &Rc<Class>,
         object: Option<&Rc<PhpObject>>,
+        closure: Option<&Rc<crate::Closure>>,
         name: &[u8],
         supplied: usize,
         line: usize,
@@ -604,7 +619,13 @@ impl Runtime {
                 if name == b"getconstructor" && objects::method(class, &method_name).is_none() {
                     Value::Null
                 } else {
-                    let function = self.reflected_method(class, &method_name, line)?;
+                    let function = if class.name == b"Closure"
+                        && method_name.eq_ignore_ascii_case(b"__invoke")
+                    {
+                        self.reflected_closure_invoke(closure.cloned(), line)?
+                    } else {
+                        self.reflected_method(class, &method_name, line)?
+                    };
                     self.reflection_object(b"ReflectionMethod", ReflectionData::Function(function))
                 }
             }
@@ -626,11 +647,26 @@ impl Runtime {
                         line,
                     )?;
                 }
+                if class.name == b"Closure" && !matches!(filter, Value::Int(mask) if mask & 1 == 0)
+                {
+                    let function = self.reflected_closure_invoke(closure.cloned(), line)?;
+                    result.append(
+                        self.reflection_object(
+                            b"ReflectionMethod",
+                            ReflectionData::Function(function),
+                        ),
+                        line,
+                    )?;
+                }
                 Value::Array(Rc::new(result))
             }
-            b"hasmethod" => Value::Bool(
-                objects::method(class, &self.lookup(b"name").unwrap().to_bytes()).is_some(),
-            ),
+            b"hasmethod" => {
+                let name = self.lookup(b"name").unwrap().to_bytes();
+                Value::Bool(
+                    objects::method(class, &name).is_some()
+                        || class.name == b"Closure" && name.eq_ignore_ascii_case(b"__invoke"),
+                )
+            }
             b"hasproperty" | b"getproperty" | b"getproperties" => {
                 return self.reflect_class_properties(class, object, name, line);
             }
@@ -812,7 +848,8 @@ impl Runtime {
                 if name == b"newinstancewithoutconstructor"
                     && (class.is_a(b"InternalIterator")
                         || class.is_a(b"ReflectionReference")
-                        || class.is_a(b"WeakReference"))
+                        || class.is_a(b"WeakReference")
+                        || class.is_a(b"Closure"))
                 {
                     return Err(self.reflection_error(format!("Class {} is an internal class marked as final that cannot be instantiated without invoking its constructor", class.display_name()), line));
                 }

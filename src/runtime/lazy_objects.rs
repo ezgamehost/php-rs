@@ -150,6 +150,7 @@ impl Runtime {
         let class = match reflector.reflection.borrow().as_ref().unwrap() {
             reflection::ReflectionData::Class(class) => class.clone(),
             reflection::ReflectionData::Object(object) => object.class.clone(),
+            reflection::ReflectionData::ClosureObject(_) => self.find_class(b"Closure").unwrap(),
             _ => unreachable!(),
         };
         let name = self.current_function.as_ref().unwrap();

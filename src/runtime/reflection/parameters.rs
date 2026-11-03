@@ -12,9 +12,15 @@ impl Runtime {
                 let (Some(class), Some(method)) = (array.get(&ArrayKey::Int(0)), array.get(&ArrayKey::Int(1))) else {
                     return Err(self.reflection_error("Expected array($object, $method) or array($classname, $method)", line));
                 };
-                let class = self.reflected_class(class.dereferenced(), false, line)?;
                 let name = self.string_bytes(&method.dereferenced(), line)?;
-                self.reflected_method(&class, &name, line)?
+                if let Value::Closure(closure) = class.dereferenced()
+                    && name.eq_ignore_ascii_case(b"__invoke")
+                {
+                    self.reflected_closure_invoke(Some(closure), line)?
+                } else {
+                    let class = self.reflected_class(class.dereferenced(), false, line)?;
+                    self.reflected_method(&class, &name, line)?
+                }
             }
             Value::Object(object) => self.reflected_method(&object.class, b"__invoke", line)?,
             Value::Closure(_) => FunctionReflection { target: self.resolve_callable(value, line)?, is_method: false },
