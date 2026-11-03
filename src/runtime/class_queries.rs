@@ -9,7 +9,77 @@ pub(super) enum Relation {
     Traits,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum DeclarationKind {
+    Classes,
+    Interfaces,
+    Traits,
+}
+
 impl Runtime {
+    pub(super) fn insert_class_name(&mut self, name: Vec<u8>, class: Rc<crate::object::Class>) {
+        if !self.classes.contains_key(&name) {
+            self.class_order.push(name.clone());
+        }
+        self.classes.insert(name, class);
+    }
+
+    pub(super) fn declared_classes(
+        &self,
+        kind: DeclarationKind,
+        line: usize,
+    ) -> Result<Value, Error> {
+        let mut result = PhpArray::default();
+        let selected = |class: &crate::object::Class| match kind {
+            DeclarationKind::Classes => {
+                !class.declaration.is_interface && !class.declaration.is_trait
+            }
+            DeclarationKind::Interfaces => class.declaration.is_interface,
+            DeclarationKind::Traits => class.declaration.is_trait,
+        };
+        if kind != DeclarationKind::Traits {
+            for name in reflection::internal_class_names(kind == DeclarationKind::Interfaces) {
+                if (kind == DeclarationKind::Classes && *name == "Closure")
+                    || self
+                        .find_class(name.as_bytes())
+                        .as_deref()
+                        .is_some_and(|class| {
+                            selected(class)
+                                && self
+                                    .builtin_classes
+                                    .borrow()
+                                    .contains_key(&name.as_bytes().to_ascii_lowercase())
+                        })
+                {
+                    result.append(Value::String(name.as_bytes().to_vec().into()), line)?;
+                }
+            }
+        }
+        for key in &self.class_order {
+            if key.first().is_none_or(|first| *first == 0) {
+                continue;
+            }
+            let Some(class) = self.classes.get(key).filter(|class| selected(class)) else {
+                continue;
+            };
+            // A declaration being resolved is visible to variance checks, but
+            // PHP omits it from these queries until linking has completed.
+            if self
+                .unlinked_classes
+                .contains(&class.name.to_ascii_lowercase())
+            {
+                continue;
+            }
+            let name = if key.eq_ignore_ascii_case(&class.name) {
+                &class.name
+            } else {
+                key
+            };
+            result.append(Value::String(name.clone().into()), line)?;
+        }
+        Ok(Value::Array(Rc::new(result)))
+    }
+
     pub(super) fn class_relations(
         &mut self,
         relation: Relation,

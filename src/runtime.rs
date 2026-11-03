@@ -212,6 +212,8 @@ pub struct Runtime {
     current_closure: Option<Rc<crate::Closure>>,
     current_arguments: Option<function_arguments::FunctionArguments>,
     classes: HashMap<Vec<u8>, Rc<crate::object::Class>>,
+    class_order: Vec<Vec<u8>>,
+    unlinked_classes: HashSet<Vec<u8>>,
     builtin_classes: RefCell<HashMap<Vec<u8>, Rc<crate::object::Class>>>,
     functions: HashMap<Vec<u8>, Rc<FunctionDecl>>,
     constants: HashMap<Vec<u8>, Rc<constants::GlobalConstant>>,

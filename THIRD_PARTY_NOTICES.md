@@ -1,5 +1,11 @@
 # Third-party notices
 
+Declared class/interface/trait queries and ordered registration in
+`src/runtime/class_queries.rs` and its integration sites follow PHP 8.5.0's
+`Zend/zend_builtin_functions.c`, copyright (c) Zend Technologies Ltd. Native
+class-order and function-signature tables are generated from PHP 8.5.0
+reflection metadata. The Zend license below applies to these adaptations.
+
 Declaration modifier validation and fatal/catchable compile errors in
 `src/parser.rs`, `src/parser/objects.rs`, `src/parser/traits.rs`, and their
 error/loading integration follow PHP 8.5.0's `Zend/zend_compile.c` and

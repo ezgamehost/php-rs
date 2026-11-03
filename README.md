@@ -534,7 +534,7 @@ new request. The CLI returns the low eight bits of the requested status.
   coercion, non-public methods, and closure creation.
   Function, method, and parameter declaration strings include defaults, documentation,
   source locations, closure captures, and inheritance/prototype flags. Native function
-  metadata covers all 430 implemented function names, including types, symbolic defaults,
+  metadata covers all 433 implemented function names, including types, symbolic defaults,
   extension ownership, SensitiveParameter attributes, and by-reference modes.
   Method prototype queries and function/method documentation queries are supported.
   Complete native method signatures, static-variable queries, full reflector
@@ -803,6 +803,10 @@ new request. The CLI returns the low eight bits of the requested status.
   preserve catchable compile errors for invalid modifiers in `eval`, while
   abstract/interface method and missing-body violations terminate as native
   compile failures. Messages retain declaration names and source locations.
+- [Declared type queries](docs/conformance/php-8.5.0-declared-classes-hillclimb.txt)
+  provide `get_declared_classes`, `get_declared_interfaces`, and
+  `get_declared_traits`, including available built-in types, user declaration
+  order, enums, and aliases with PHP's normalized spelling.
 - `#[Override]` validates methods and properties against inherited declarations,
   including interfaces, trait requirements, static members, and promoted
   properties. Private parent members and concrete constructors do not qualify.

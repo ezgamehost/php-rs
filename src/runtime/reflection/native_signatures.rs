@@ -1248,6 +1248,27 @@ pub(super) fn lookup(name: &[u8]) -> Option<NativeSignature> {
             defaults: &[None],
             by_value: &[true],
         },
+        b"get_declared_classes" => NativeSignature {
+            name: "get_declared_classes",
+            extension: "Core",
+            declaration: "<?php function __native(): array {}",
+            defaults: &[],
+            by_value: &[],
+        },
+        b"get_declared_interfaces" => NativeSignature {
+            name: "get_declared_interfaces",
+            extension: "Core",
+            declaration: "<?php function __native(): array {}",
+            defaults: &[],
+            by_value: &[],
+        },
+        b"get_declared_traits" => NativeSignature {
+            name: "get_declared_traits",
+            extension: "Core",
+            declaration: "<?php function __native(): array {}",
+            defaults: &[],
+            by_value: &[],
+        },
         b"get_defined_vars" => NativeSignature {
             name: "get_defined_vars",
             extension: "Core",

@@ -20,6 +20,8 @@ impl Runtime {
         for class in linked {
             self.validate_trait_values(&class)?;
             self.validate_overrides(&class)?;
+            self.unlinked_classes
+                .remove(&class.name.to_ascii_lowercase());
         }
         Ok(())
     }
@@ -60,8 +62,9 @@ impl Runtime {
                     {
                         continue;
                     }
-                    self.classes
-                        .insert(class.name.to_ascii_lowercase(), class.clone());
+                    let key = class.name.to_ascii_lowercase();
+                    self.unlinked_classes.insert(key.clone());
+                    self.insert_class_name(key, class.clone());
                     linked.push(class);
                     *statement = Stmt::Block(Vec::new());
                 }
@@ -116,14 +119,18 @@ impl Runtime {
         }
         let class = self.link_class(decl)?;
         let name = class.name.to_ascii_lowercase();
-        self.classes.insert(name.clone(), class.clone());
+        self.unlinked_classes.insert(name.clone());
+        self.insert_class_name(name.clone(), class.clone());
         if let Err(error) = self
             .validate_trait_values(&class)
             .and_then(|_| self.validate_overrides(&class))
         {
             self.classes.remove(&name);
+            self.class_order.retain(|key| key != &name);
+            self.unlinked_classes.remove(&name);
             return Err(error);
         }
+        self.unlinked_classes.remove(&name);
         Ok(())
     }
     fn link_class(&mut self, decl: Rc<ClassDecl>) -> Result<Rc<Class>, Error> {

@@ -8,6 +8,7 @@ use crate::{
 mod attributes;
 mod class_display;
 mod class_modules;
+
 mod constants;
 mod declarations;
 mod display;
@@ -22,6 +23,14 @@ mod properties;
 mod property_hooks;
 mod references;
 use properties::PropertyReflection;
+
+pub(super) fn internal_class_names(interfaces: bool) -> &'static [&'static str] {
+    if interfaces {
+        class_modules::DECLARED_INTERFACES
+    } else {
+        class_modules::DECLARED_CLASSES
+    }
+}
 
 #[derive(Clone)]
 pub(crate) enum ReflectionData {

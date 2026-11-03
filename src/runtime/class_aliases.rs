@@ -78,7 +78,7 @@ impl Runtime {
             return Ok(Value::Bool(false));
         }
         class.aliases.borrow_mut().push(alias.clone());
-        self.classes.insert(alias, class);
+        self.insert_class_name(alias, class);
         Ok(Value::Bool(true))
     }
 

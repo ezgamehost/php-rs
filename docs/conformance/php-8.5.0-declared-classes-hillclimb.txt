@@ -1,0 +1,110 @@
+PHP 8.5.0 declared type query hillclimb
+Baseline: 45f487ec39e54907be0ec20310b881f064043b93
+
+zend
+Before: 5256 cases; 3233 passed, 1623 failed, 400 unsupported
+After: 5256 cases; 3239 passed, 1617 failed, 400 unsupported
+New passes: 6; regressions: 0
+NEW PASS: Zend/tests/class_alias/bug62343.phpt
+NEW PASS: Zend/tests/instantiate_all_classes.phpt
+NEW PASS: Zend/tests/traits/get_declared_traits_001.phpt
+NEW PASS: Zend/tests/traits/get_declared_traits_002.phpt
+NEW PASS: Zend/tests/traits/get_declared_traits_003.phpt
+NEW PASS: Zend/tests/traits/get_declared_traits_004.phpt
+
+reflection
+Before: 492 cases; 371 passed, 84 failed, 37 unsupported
+After: 492 cases; 371 passed, 84 failed, 37 unsupported
+New passes: 0; regressions: 0
+
+spl
+Before: 778 cases; 669 passed, 56 failed, 53 unsupported
+After: 778 cases; 669 passed, 56 failed, 53 unsupported
+New passes: 0; regressions: 0
+
+json
+Before: 88 cases; 74 passed, 0 failed, 14 unsupported
+After: 88 cases; 74 passed, 0 failed, 14 unsupported
+New passes: 0; regressions: 0
+
+array
+Before: 840 cases; 777 passed, 12 failed, 51 unsupported
+After: 840 cases; 777 passed, 12 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+strings
+Before: 730 cases; 539 passed, 39 failed, 152 unsupported
+After: 730 cases; 539 passed, 39 failed, 152 unsupported
+New passes: 0; regressions: 0
+
+math
+Before: 171 cases; 52 passed, 2 failed, 117 unsupported
+After: 171 cases; 52 passed, 2 failed, 117 unsupported
+New passes: 0; regressions: 0
+
+serialize
+Before: 163 cases; 126 passed, 9 failed, 28 unsupported
+After: 163 cases; 126 passed, 9 failed, 28 unsupported
+New passes: 0; regressions: 0
+
+file
+Before: 896 cases; 322 passed, 66 failed, 508 unsupported
+After: 896 cases; 322 passed, 66 failed, 508 unsupported
+New passes: 0; regressions: 0
+
+dir
+Before: 73 cases; 26 passed, 3 failed, 44 unsupported
+After: 73 cases; 26 passed, 3 failed, 44 unsupported
+New passes: 0; regressions: 0
+
+streams
+Before: 157 cases; 32 passed, 74 failed, 51 unsupported
+After: 157 cases; 32 passed, 74 failed, 51 unsupported
+New passes: 0; regressions: 0
+
+url
+Before: 32 cases; 29 passed, 2 failed, 1 unsupported
+After: 32 cases; 29 passed, 2 failed, 1 unsupported
+New passes: 0; regressions: 0
+
+project
+Before: 57 cases; 57 passed, 0 failed, 0 unsupported
+After: 57 cases; 57 passed, 0 failed, 0 unsupported
+New passes: 0; regressions: 0
+
+Upstream total: 9,676 fixtures; 6,256 passed, 1,964 failed, 1,456 unsupported.
+Net gain: six upstream passes; zero regressions across all twelve suites.
+
+Validation:
+- cargo clippy --locked --all-targets -- -D warnings
+- cargo test --locked: all 797 existing Rust tests pass
+- cargo build --locked --bins
+- project PHPT: all 57 pass
+- cargo fmt --check; git diff --check
+- Native PHP 8.5.0 comparisons match user class/interface/trait ordering,
+  enum inclusion, alias spelling and position, reflection signatures, and
+  omission of pending declarations during recursive dependency loading, and
+  omission of failed early-bound declarations from shutdown-time queries.
+  Fatal comparisons normalize the leading diagnostic newline.
+- Regenerated native class-order/module metadata and all 433 implemented
+  global-function signatures from the PHP 8.5.0 reference binary.
+- No new tests, upstream fixture changes, or dependencies.
+
+Implementation:
+- Added get_declared_classes(), get_declared_interfaces(), and
+  get_declared_traits(), each with the native zero-argument array signature.
+- User class registration retains insertion order, including aliases. Original
+  declarations preserve spelling; aliases use their normalized table keys.
+  Failed runtime registrations remove their entries from the ordered table.
+- Built-in results use native declaration order and include the types currently
+  available in this runtime. Queries populate class metadata without invoking
+  autoloaders or constructing instances.
+- Pending/failed declarations and hidden table keys are omitted until class
+  linking completes. Early binding and runtime registration record successful
+  validation separately from the class table used by variance checks.
+
+Remaining limits:
+- The available built-in set is smaller than native PHP's complete extension
+  set. ReflectionClass('Closure') remains incomplete; the newly reachable
+  weakrefs/notify fixture exposes that independent limitation. This focused
+  gate does not establish full PHP conformance.

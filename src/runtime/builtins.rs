@@ -118,6 +118,7 @@ pub(super) enum Builtin {
     Unlink,
     Stream(streams::Operation),
     GetClass,
+    GetDeclared(class_queries::DeclarationKind),
     GetParentClass,
     ClassRelations(class_queries::Relation),
     Json(json::Operation),
@@ -383,6 +384,11 @@ impl Builtin {
             b"gettype" => Self::GetType,
             b"get_debug_type" => Self::GetDebugType,
             b"get_class" => Self::GetClass,
+            b"get_declared_classes" => Self::GetDeclared(class_queries::DeclarationKind::Classes),
+            b"get_declared_interfaces" => {
+                Self::GetDeclared(class_queries::DeclarationKind::Interfaces)
+            }
+            b"get_declared_traits" => Self::GetDeclared(class_queries::DeclarationKind::Traits),
             b"get_parent_class" => Self::GetParentClass,
             b"getenv" => Self::Environment(false),
             b"putenv" => Self::Environment(true),
@@ -870,6 +876,7 @@ impl Builtin {
             ],
             Self::Exit => &[("status", true, false)],
             Self::GetIncludedFiles
+            | Self::GetDeclared(_)
             | Self::FuncNumArgs
             | Self::FuncGetArgs
             | Self::GetDefinedVars => &[],
@@ -1473,6 +1480,9 @@ impl Runtime {
                 line,
             );
         }
+        if let Builtin::GetDeclared(kind) = builtin {
+            return self.declared_classes(kind, line);
+        }
         if matches!(builtin, Builtin::GetDefinedVars) {
             return self.defined_variables(dynamic, line);
         }
@@ -1742,6 +1752,7 @@ impl Runtime {
             Builtin::ClassAlias => self.class_alias(&args, line),
             Builtin::IsA | Builtin::IsSubclassOf => self.inspect_inheritance(builtin, &args, line),
             Builtin::GetClass | Builtin::GetParentClass | Builtin::GetCalledClass => unreachable!(),
+            Builtin::GetDeclared(_) => unreachable!(),
             Builtin::GetClassVars | Builtin::GetClassMethods => {
                 self.class_inspection(builtin, first, line)
             }
